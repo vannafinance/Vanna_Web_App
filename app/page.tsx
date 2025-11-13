@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/button";
 import { Checkbox } from "@/components/ui/Checkbox";
+import { Radio, RadioGroup } from "@/components/ui/Radio";
 
 import Image from "next/image";
 import { useState } from "react";
@@ -12,7 +13,10 @@ import { useState } from "react";
 export default function Home() {
 
 
-  const [agree,setAgree]=useState(false)
+  const [agree, setAgree] = useState(false)
+
+  const [gender, setGender] = useState("male");
+
 
 
 
@@ -20,40 +24,59 @@ export default function Home() {
 
   return (
     <>
-    <div className="flex flex-col justify-center items-center pt-4">
-      <Button disabled={false} text="Button" size="small" type="solid"/>
-    
-    </div>
-    
 
+      {/* /////////////////////
 
-    <div className="p-10">
+      Button test 
 
-      <Checkbox
+    //////////////////////
+     */}
+      <div className="flex flex-col justify-center items-center pt-4">
+        <Button disabled={false} text="Button" size="small" type="solid" />
 
-      label="Accept Terms & Conditions"
-      checked={agree}
-      onChange={(e) => setAgree(e.target.checked)}
-      
-      />
-        <p className="mt-4">Checked: {agree.toString()}</p>
+      </div>
 
+      {/* /////////////////////
 
-    </div>
+      Checkbox test 
 
+    ////////////////////// */}
 
-    <Checkbox error label="Error State" />
+      <div>
+        <Checkbox label="Accept Terms & Conditions" />
 
-    <Checkbox label="Focus Test" />
-    <Checkbox label="Hover Test" />
+      </div>
 
 
 
+      {/* /////////////////////
+
+      Radion box  
+
+    ////////////////////// */}
+
+      <div>
+
+        <RadioGroup
+          name="gender"
+          value={gender}
+          onChange={setGender}
+          error={false}
+        >
+          <Radio label="Male" value="male" />
+          <Radio label="Female" value="female" />
+          <Radio label="Other" value="other" />
+        </RadioGroup>
+
+      </div>
 
 
 
 
-    
+
+
+
+
     </>
   );
 }
