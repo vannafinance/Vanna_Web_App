@@ -2,9 +2,9 @@
 
 
 import { Button } from "@/components/button";
-import { Checkbox } from "@/components/ui/Checkbox";
-import { Radio, RadioGroup } from "@/components/ui/RadioButton";
-import ToggleButton from "@/components/ui/Toogle";
+import { Dropdown } from "@/components/dropdown";
+import { Navbar } from "@/components/navbar";
+import { dropdownItems, navbarItems } from "@/lib/constants";
 import Image from "next/image";
 import { useState } from "react";
 
@@ -17,7 +17,7 @@ export default function Home() {
     <>
     
     <div className="flex flex-col justify-center items-center pt-4">
-      <Button disabled={false} text="Button" size="small" type="solid"/>
+      hello main
     </div>
 
     <div>
