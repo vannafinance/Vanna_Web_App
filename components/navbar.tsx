@@ -1,7 +1,7 @@
 "use client";
 
 import { redirect, usePathname } from "next/navigation";
-import { Button } from "./button";
+import { Button } from "./ui/button";
 import Image from "next/image";
 import { motion } from "framer-motion";
 

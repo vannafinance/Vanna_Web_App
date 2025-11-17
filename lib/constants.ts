@@ -177,6 +177,17 @@ export const chains: readonly Chain[] = [
   }
 ] as const
 
+
+export const DropdownOptions = [{
+    id:"usdt",
+    name:"USDT",
+    icon:"/icons/usdc-icon.svg"
+},{
+    id:"usdc",
+    name:"USDC",
+    icon:"/icons/usdt-icon.svg"
+}]
+
 export const networkOptions = [
   {
     id: "base",

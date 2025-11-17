@@ -17,11 +17,11 @@ export const Button = (props: Button) => {
       whileTap={{ scale: 0.1 }}
       disabled={props.disabled}
       onClick={props.onClick}
-      className={`${
+      className={`w-full ${
         props.size == "medium"
           ? "text-md py-2 px-10"
           : props.size == "large"
-          ? "text-xl py-2 px-12"
+          ? "rounded-[16px] text-[20px] py-[20px] px-[16px]"
           : "text-sm py-2 px-8"
       } disabled:cursor-not-allowed transition  cursor-pointer rounded-[8px] font-medium ${
         props.type == "solid"
