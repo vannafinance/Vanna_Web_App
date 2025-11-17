@@ -1,18 +1,11 @@
 "use client";
 
+import { networkOptions } from "@/lib/constants";
 import { motion, AnimatePresence } from "framer-motion";
-import { redirect } from "next/navigation";
+import Image from "next/image";
 import { useState } from "react";
 
-interface Dropdown {
-  heading: string;
-  items: {
-    title: string;
-    link: string;
-  }[];
-}
-
-export const Dropdown = (props: Dropdown) => {
+export const NetworkDropdown = () => {
   const [isHover, setIsHover] = useState(false);
   return (
     <div
@@ -20,8 +13,8 @@ export const Dropdown = (props: Dropdown) => {
       onMouseLeave={() => setIsHover(false)}
       className="relative inline-block "
     >
-      <div className="font-medium text-lg cursor-pointer flex gap-2 justify-center items-center">
-        {props.heading}
+      <div className="bg-[#F5F5F5] rounded-[8px] py-[12px] pr-[12px] pl-[20px] font-medium text-lg cursor-pointer flex gap-2 justify-center items-center">
+        Network: 
 
         <motion.svg
           xmlns="http://www.w3.org/2000/svg"
@@ -47,19 +40,19 @@ export const Dropdown = (props: Dropdown) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="p-2 text-center shadow-lg rounded-[6px]"
+            className="absolute p-2 top-15  shadow-lg rounded-[6px]"
           >
-            {props.items.map((item, idx) => {
+            {networkOptions.map((item, idx) => {
               return (
                 <motion.div
                   whileTap={{ scale: 0.85 }}
-                  className="font-medium rounded-[6px] text-sm cursor-pointer py-2 px-8  hover:bg-[#F2EBFE]"
+                  className="flex gap-[10px] font-medium rounded-[6px]  text-sm cursor-pointer py-2 px-8  hover:bg-[#F2EBFE]"
                   key={idx}
                   onClick={() => {
-                    redirect(item.link);
                   }}
                 >
-                  {item.title}
+                  <Image src={item.icon} width={20} height={20} alt={item.name}/>
+                  {item.name}
                 </motion.div>
               );
             })}
