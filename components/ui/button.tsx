@@ -19,11 +19,11 @@ export const Button = (props: Button) => {
       onClick={props.onClick}
       className={`w-full ${
         props.size == "medium"
-          ? "text-md py-2 px-10"
+          ? "py-[16px] px-[12px] text-[16px] rounded-[12px]"
           : props.size == "large"
           ? "rounded-[16px] text-[20px] py-[20px] px-[16px]"
-          : "text-sm py-2 px-8"
-      } disabled:cursor-not-allowed transition  cursor-pointer rounded-[8px] font-medium ${
+          : "text-[12px] py-[12px] px-[8px] rounded-[8px]"
+      } disabled:cursor-not-allowed transition  cursor-pointer rounded-[8px] font-semibold ${
         props.type == "solid"
           ? "bg-[#703AE6] disabled:bg-[#A7A7A7]  hover:bg-[#6635D1] active:bg-[#6635D1] text-white"
           : props.type == "gradient"
