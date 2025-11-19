@@ -112,6 +112,74 @@ export const carouselItems = [
     }
 ]
 
+export const position = [
+  {
+    positionId: 1,
+    collateral: { asset: "0xUSDT", amount: "1000" }, // 100 USDT
+    collateralUsdValue: 100,
+
+    borrowed: [
+      {
+        assetData: { asset: "0xUSDC", amount: "1000" },
+        percentage: 60,
+        usdValue: 100
+      },
+      {
+        assetData: { asset: "0xETH", amount: "22000" }, // 0.022 ETH
+        percentage: 40,
+        usdValue: 403.67
+      }
+    ],
+
+    leverage: 5,
+    interestAccrued: 30,
+    isOpen: true,
+    user: "0x123"
+  },
+
+  {
+    positionId: 2,
+    collateral: { asset: "0xUSDT", amount: "500" }, // 5000 USDT
+    collateralUsdValue: 5000,
+
+    borrowed: [
+      {
+        assetData: { asset: "0xUSDC", amount: "2000" }, // 20,000 USDC
+        percentage: 100,
+        usdValue: 20000
+      }
+    ],
+
+    leverage: 5,
+    interestAccrued: 20,
+    isOpen: false,
+    user: "0x123"
+  },
+
+  
+  {
+    positionId: 4,
+    collateral: { asset: "0xETH", amount: "300" }, // 0.30 ETH
+    collateralUsdValue: 550,
+
+    borrowed: [
+      {
+        assetData: { asset: "0xUSDT", amount: "4500" }, // 450 USDT
+        percentage: 100,
+        usdValue: 450
+      }
+    ],
+
+    leverage: 3,
+    interestAccrued: 18,
+    isOpen: true,
+    user: "0x123"
+  },
+
+  
+]
+
+
 
 
 

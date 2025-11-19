@@ -27,7 +27,9 @@ export const Button = (props: Button) => {
         props.type == "solid"
           ? "bg-[#703AE6] disabled:bg-[#A7A7A7]  hover:bg-[#6635D1] active:bg-[#6635D1] text-white"
           : props.type == "gradient"
-          ? " disabled:bg-[#A7A7A7] bg-gradient-to-r from-[#FC5457] to-[#703AE6]  text-white hover:bg-[#703AE6] active:bg-[#703AE6]"
+          ? props.disabled
+            ? "bg-[#A7A7A7] text-white"
+            : "bg-gradient-to-r from-[#FC5457] to-[#703AE6] text-white hover:from-[#703AE6] hover:to-[#703AE6] active:from-[#703AE6] active:to-[#703AE6]"
           : " disabled:text-[#A7A7A7] text-black hover:text-[#703AE6] focus:text-[#703AE6]"
       }`}
     >

@@ -8,6 +8,7 @@ import { Radio, RadioGroup } from "@/components/ui/RadioButton";
 import ToggleButton from "@/components/ui/Toogle";
 import Image from "next/image";
 import { useState } from "react";
+import { Popup } from "@/components/ui/popup";
 
 export default function Home() {
 
@@ -17,29 +18,7 @@ export default function Home() {
   return (
     <>
     
-    <div className="flex flex-col justify-center items-center pt-4">
-      hello main
-    </div>
-
-    <div>
-    <Checkbox />
-
-    </div>
-    
-    <div>
-
-      <RadioGroup name="sanu">
-        <Radio/>
-      </RadioGroup>
-    
-    </div>
-
-    <div>
-    <ToggleButton onToggle={(value) => console.log("State:", value)} />
-
-    </div>
-
-
+    <Popup buttonOnClick={()=>{}} buttonText="Close Position" closeButtonText="Cancel" description="Are you sure you want to close this position? This action will lock in your current P&L and cannot be undone." icon="/assets/exclamation.png"/>
 
     </>
 
