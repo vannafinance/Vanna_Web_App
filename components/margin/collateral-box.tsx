@@ -126,18 +126,8 @@ export const Collateral = (props: Collateral) => {
   };
 
   // Handler for percentage click
-  // Calculates amount based on percentage of unified balance (for WB) or sets percentage for display
   const handlePercentageClick = (item: number) => {
     setPercentage(item);
-    // If WB is selected and there's a unified balance, calculate the amount
-    if (
-      isWBSelected &&
-      props.collaterals &&
-      props.collaterals.unifiedBalance > 0
-    ) {
-      const calculatedAmount = (props.collaterals.unifiedBalance * item) / 100;
-      setValueInput(calculatedAmount.toFixed(2));
-    }
   };
 
   // Handler for PB balance type click
@@ -209,13 +199,13 @@ export const Collateral = (props: Collateral) => {
             <div className="px-[10px] flex flex-col gap-[8px]">
               <div>
                 <label
-                  htmlFor={`collateral-amount-input-${props.index ?? 0}`}
+                  htmlFor={`collateral-amount-input-${props.index}`}
                   className="sr-only"
                 >
                   Collateral amount
                 </label>
                 <input
-                  id={`collateral-amount-input-${props.index ?? 0}`}
+                  id={`collateral-amount-input-${props.index}`}
                   onChange={handleInputChange}
                   className="w-full text-[20px] focus:border-[0px] focus:outline-none font-medium"
                   type="text"
@@ -224,7 +214,10 @@ export const Collateral = (props: Collateral) => {
                   aria-label="Enter collateral amount"
                 />
               </div>
-              <div className="text-[12px] font-medium text-[#76737B]" aria-live="polite">
+              <div
+                className="text-[12px] font-medium text-[#76737B]"
+                aria-live="polite"
+              >
                 {valueInUsd} USD
               </div>
 
@@ -289,7 +282,11 @@ export const Collateral = (props: Collateral) => {
             }}
           >
             {/* Percentage buttons */}
-            <div className="flex gap-[8px]" role="group" aria-label="Deposit percentage">
+            <div
+              className="flex gap-[8px]"
+              role="group"
+              aria-label="Deposit percentage"
+            >
               {depositPercentage.map((item) => {
                 return (
                   <motion.button
@@ -316,7 +313,11 @@ export const Collateral = (props: Collateral) => {
             {/* Balance type selector and unified balance */}
             <div className="flex flex-col justify-end items-end gap-[4px]">
               {/* PB/WB toggle */}
-              <div className="items-center flex rounded-[4px] gap-[4px]" role="group" aria-label="Balance type">
+              <div
+                className="items-center flex rounded-[4px] gap-[4px]"
+                role="group"
+                aria-label="Balance type"
+              >
                 <motion.button
                   type="button"
                   onClick={handlePBClick}
@@ -339,8 +340,8 @@ export const Collateral = (props: Collateral) => {
                     height="11"
                     viewBox="0 0 12 11"
                     fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
                     aria-hidden="true"
+                    xmlns="http://www.w3.org/2000/svg"
                   >
                     <path
                       d="M10.9986 6.75H0.125171C0.0564207 6.75 0.000170742 6.80625 0.000170742 6.875V7.8125C0.000170742 7.88125 0.0564207 7.9375 0.125171 7.9375H9.58142L7.32673 10.7969C7.26267 10.8781 7.32048 11 7.42517 11H8.55798C8.63455 11 8.70642 10.9656 8.75486 10.9047L11.3924 7.55937C11.6502 7.23125 11.4174 6.75 10.9986 6.75ZM11.3752 3.0625H1.91892L4.17361 0.203125C4.23767 0.121875 4.17986 0 4.07517 0H2.94236C2.8658 0 2.79392 0.0343751 2.74548 0.0953126L0.107983 3.44063C-0.149829 3.76875 0.0829833 4.25 0.500171 4.25H11.3752C11.4439 4.25 11.5002 4.19375 11.5002 4.125V3.1875C11.5002 3.11875 11.4439 3.0625 11.3752 3.0625Z"
