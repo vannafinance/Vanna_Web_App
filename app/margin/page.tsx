@@ -12,14 +12,17 @@ import {
 import { motion } from "framer-motion";
 import { useState } from "react";
 import Image from "next/image";
-import { InfoCard } from "@/components/margin/infoCard";
-import { LeverageCollateral } from "@/components/margin/LeverageCollateral";
+import { InfoCard } from "@/components/margin/info-card";
+import { LeverageCollateral } from "@/components/margin/leverage-collateral";
 import { Positionstable } from "@/components/margin/positions-table";
 import { Position } from "@/lib/types";
+import { useMarginAccountInfoStore } from "@/store/margin-account-info-store";
 
 const Margin = () => {
-  const [positions,setpositions] = useState<Position[]>(position)
-  
+  // Store positions data
+  const [positions, setpositions] = useState<Position[]>(position);
+
+  // Account statistics state
   const [accountStats, setAccountStats] = useState({
     netHealthFactor: 567777,
     collateralLeftBeforeLiquidation: 173663,
@@ -27,22 +30,50 @@ const Margin = () => {
     netAmountBorrowed: 770,
     netProfitAndLoss: 0,
   });
-  const [marginAccountInfo, setMarginAccountInfo] = useState({
-    totalBorrowedValue: 100,
-    totalCollateralValue: 2,
-    totalValue: 0,
-    avgHealthFactor: 0,
-    timeToLiquidation: 0,
-    borrowRate: 0,
-    liquidationPremium: 0,
-    liquidationFee: 0,
-    debtLimit: 0,
-    minDebt: 0,
-    maxDebt: 0,
-  });
+
+  // Get margin account info from global store using selector to prevent unnecessary re-renders
+  const totalBorrowedValue = useMarginAccountInfoStore(
+    (state) => state.totalBorrowedValue
+  );
+  const totalCollateralValue = useMarginAccountInfoStore(
+    (state) => state.totalCollateralValue
+  );
+  const totalValue = useMarginAccountInfoStore((state) => state.totalValue);
+  const avgHealthFactor = useMarginAccountInfoStore(
+    (state) => state.avgHealthFactor
+  );
+  const timeToLiquidation = useMarginAccountInfoStore(
+    (state) => state.timeToLiquidation
+  );
+  const borrowRate = useMarginAccountInfoStore((state) => state.borrowRate);
+  const liquidationPremium = useMarginAccountInfoStore(
+    (state) => state.liquidationPremium
+  );
+  const liquidationFee = useMarginAccountInfoStore(
+    (state) => state.liquidationFee
+  );
+  const debtLimit = useMarginAccountInfoStore((state) => state.debtLimit);
+  const minDebt = useMarginAccountInfoStore((state) => state.minDebt);
+  const maxDebt = useMarginAccountInfoStore((state) => state.maxDebt);
+
+  // Format data for InfoCard component
+  const marginAccountInfo = {
+    totalBorrowedValue,
+    totalCollateralValue,
+    totalValue,
+    avgHealthFactor,
+    timeToLiquidation,
+    borrowRate,
+    liquidationPremium,
+    liquidationFee,
+    debtLimit,
+    minDebt,
+    maxDebt,
+  };
 
   return (
     <div className=" w-full">
+      {/* Carousel section - displays promotional items */}
       <motion.div
         className="w-full pb-[30px] px-[80px] pt-[80px]"
         initial={{ opacity: 0, y: 50 }}
@@ -55,6 +86,8 @@ const Margin = () => {
       >
         <Carousel items={carouselItems} autoplayInterval={5000} />
       </motion.div>
+
+      {/* Account stats section - shows key metrics */}
       <motion.div
         className="pb-[30px] px-[80px] pt-[50px] w-full"
         initial={{ opacity: 0, y: 30 }}
@@ -64,6 +97,7 @@ const Margin = () => {
       >
         <div className="border-[1px] border-[#E2E2E2] bg-[#F7F7F7] rounded-[24px] ">
           <div className="grid grid-cols-3 gap-[20px] p-[20px]">
+            {/* Map through account stats items */}
             {accountStatsItems.map((item, idx) => {
               return (
                 <motion.div
@@ -121,6 +155,8 @@ const Margin = () => {
           </div>
         </div>
       </motion.div>
+
+      {/* Main leverage section */}
       <motion.div
         className="w-full pb-[30px] px-[80px] pt-[50px] flex flex-col gap-[48px]"
         initial={{ opacity: 0, y: 30 }}
@@ -128,6 +164,7 @@ const Margin = () => {
         viewport={{ once: true, margin: "-100px" }}
         transition={{ duration: 0.5, ease: "easeOut" }}
       >
+        {/* Section header with network dropdown */}
         <motion.div
           className="w-full flex gap-[20px] items-center"
           initial={{ opacity: 0, x: -20 }}
@@ -142,8 +179,13 @@ const Margin = () => {
             <NetworkDropdown />
           </div>
         </motion.div>
+
+        {/* Two column layout: Leverage form and Info card */}
         <div className="flex gap-[36px]">
+          {/* Left: Leverage collateral form */}
           <LeverageCollateral />
+
+          {/* Right: Margin account info card */}
           <motion.div
             className="flex flex-col gap-[20px] w-full h-full"
             initial={{ opacity: 0, x: 20 }}
@@ -151,6 +193,7 @@ const Margin = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.4, ease: "easeOut" }}
           >
+            {/* Info card header */}
             <motion.div
               className="flex gap-[10px]"
               initial={{ opacity: 0, y: 20 }}
@@ -158,6 +201,7 @@ const Margin = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.4, ease: "easeOut" }}
             >
+              {/* Vanna logo icon */}
               <motion.div
                 className="border-[1px] border-[#E2E2E2] flex flex-col justify-center items-center p-2 rounded-[11px] w-[62px] h-[62px]"
                 initial={{ scale: 0, rotate: -180 }}
@@ -181,6 +225,8 @@ const Margin = () => {
                 </div>
               </div>
             </motion.div>
+
+            {/* Info card with expandable sections */}
             <InfoCard
               data={marginAccountInfo}
               items={marginAccountInfoItems}
@@ -204,6 +250,7 @@ const Margin = () => {
         </div>
       </motion.div>
 
+      {/* Positions table section */}
       {positions && (
         <motion.div
           className="pb-[30px] px-[80px] pt-[50px]"

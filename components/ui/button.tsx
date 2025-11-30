@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import {motion} from "framer-motion"
+import { motion } from "framer-motion";
 
 interface Button {
   text: string;
@@ -9,14 +9,16 @@ interface Button {
   onClick?: React.MouseEventHandler<HTMLButtonElement>;
   disabled: boolean;
   icon?: Element;
+  ariaLabel?: string;
 }
 
 export const Button = (props: Button) => {
   return (
     <motion.button
-      whileTap={{ scale: 0.1 }}
+      whileTap={{ scale: 0.95 }}
       disabled={props.disabled}
       onClick={props.onClick}
+      aria-label={props.ariaLabel || props.text}
       className={`w-full ${
         props.size == "medium"
           ? "py-[16px] px-[12px] text-[16px] rounded-[12px]"

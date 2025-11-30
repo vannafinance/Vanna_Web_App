@@ -30,6 +30,7 @@ export const InfoCard = ({
   expandableSections = [],
   showExpandable = false,
 }: InfoProps) => {
+  // Track expanded state for each section
   const [expandedStates, setExpandedStates] = useState<{
     [key: string]: boolean;
   }>(
@@ -39,6 +40,7 @@ export const InfoCard = ({
     }, {} as { [key: string]: boolean })
   );
 
+  // Toggle section expand/collapse
   const toggleExpanded = (title: string) => {
     setExpandedStates((prev) => ({
       ...prev,
@@ -46,8 +48,65 @@ export const InfoCard = ({
     }));
   };
 
+  // Format value with appropriate unit based on field ID
+  const formatValue = (
+    id: string,
+    value: number | null | undefined
+  ): string => {
+    // Default to 0 if null/undefined
+    const numValue = value === null || value === undefined ? 0 : value;
+
+    // Format number with commas
+    const formatNumber = (num: number, decimals: number = 2): string => {
+      return num.toLocaleString("en-US", {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+      });
+    };
+
+    // Format large numbers (K for thousands, M for millions)
+    const formatLargeNumber = (num: number): string => {
+      if (num >= 1000000) {
+        return `${(num / 1000000).toFixed(2)}M`;
+      } else if (num >= 1000) {
+        return `${(num / 1000).toFixed(2)}K`;
+      }
+      return formatNumber(num);
+    };
+
+    // Format based on field type
+    switch (id) {
+      case "totalBorrowedValue":
+      case "totalCollateralValue":
+        return `${formatLargeNumber(numValue)} USD`;
+
+      case "totalValue":
+        return `${formatNumber(numValue, 0)} WBTC`;
+
+      case "avgHealthFactor":
+        return formatNumber(numValue, 1);
+
+      case "timeToLiquidation":
+        return `${numValue}m`;
+
+      case "borrowRate":
+      case "liquidationPremium":
+      case "liquidationFee":
+        return `${formatNumber(numValue, 2)}%`;
+
+      case "debtLimit":
+      case "minDebt":
+      case "maxDebt":
+        return `${formatLargeNumber(numValue)} USDC`;
+
+      default:
+        return formatNumber(numValue);
+    }
+  };
+
   return (
     <>
+      {/* Main info items */}
       <motion.div
         className="bg-[#F7F7F7] flex flex-col gap-[24px] w-full h-full p-[24px] border-[1px] border-[#E2E2E2] rounded-[16px]"
         initial={{ opacity: 0, y: 20 }}
@@ -55,6 +114,7 @@ export const InfoCard = ({
         viewport={{ once: true }}
         transition={{ duration: 0.4, ease: "easeOut" }}
       >
+        {/* Map through main items */}
         {items.map((item, idx) => {
           return (
             <motion.div
@@ -67,16 +127,14 @@ export const InfoCard = ({
             >
               <div className="text-[14px] font-medium">{item.name}</div>
               <div className="text-[14px] font-medium">
-                {data[item.id] === 0 ||
-                data[item.id] === null ||
-                data[item.id] === undefined
-                  ? "--"
-                  : data[item.id]}
+                {formatValue(item.id, data[item.id])}
               </div>
             </motion.div>
           );
         })}
       </motion.div>
+
+      {/* Expandable sections */}
       {showExpandable &&
         expandableSections.map((section, sectionIdx) => (
           <motion.div
@@ -91,21 +149,28 @@ export const InfoCard = ({
               ease: "easeOut",
             }}
           >
-            <motion.div
+            {/* Section header with toggle */}
+            <motion.button
+              type="button"
               onClick={() => {
                 toggleExpanded(section.title);
               }}
-              className="items-center cursor-pointer flex justify-between text-[16px] font-bold"
+              className="items-center cursor-pointer flex justify-between text-[16px] font-bold w-full"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
+              aria-expanded={expandedStates[section.title]}
+              aria-controls={`section-${section.title}`}
+              aria-label={`${expandedStates[section.title] ? 'Collapse' : 'Expand'} ${section.title} section`}
             >
               {section.title}
+              {/* Expand/collapse arrow */}
               <motion.svg
                 width="13"
                 height="8"
                 viewBox="0 0 13 8"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
                 animate={{ rotate: expandedStates[section.title] ? 180 : 0 }}
                 transition={{ duration: 0.3 }}
               >
@@ -114,16 +179,22 @@ export const InfoCard = ({
                   fill="black"
                 />
               </motion.svg>
-            </motion.div>
+            </motion.button>
+
+            {/* Expandable content */}
             <AnimatePresence>
               {expandedStates[section.title] && (
                 <motion.div
+                  id={`section-${section.title}`}
                   className="flex flex-col gap-[24px]"
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.3 }}
+                  role="region"
+                  aria-labelledby={`section-header-${section.title}`}
                 >
+                  {/* Map through section items */}
                   {section.items.map((item, idx) => {
                     return (
                       <motion.div
@@ -136,13 +207,16 @@ export const InfoCard = ({
                         <div className="text-[14px] font-medium">
                           {item.name}
                         </div>
-                        <div className="text-[14px] font-medium">
-                          {data[item.id] === 0 ||
-                          data[item.id] === null ||
-                          data[item.id] === undefined
-                            ? "--"
-                            : data[item.id]}
-                        </div>
+                        {item.name == "totalBorrowedValue" ||
+                        item.name == "totalCollateralValue" ? (
+                          <div className="text-[14px] font-medium">
+                            {formatValue(item.id, data[item.id])} 
+                          </div>
+                        ) : (
+                          <div className="text-[14px] font-medium">
+                            {formatValue(item.id, data[item.id])}
+                          </div>
+                        )}
                       </motion.div>
                     );
                   })}
@@ -154,4 +228,3 @@ export const InfoCard = ({
     </>
   );
 };
-

@@ -31,4 +31,10 @@ export interface Position {
   }
   
   export type PositionsArray = Position[];
+
+  export interface Collaterals{ asset:string,
+    amount:number,
+    amountInUsd:number,
+    balanceType:string,
+    unifiedBalance:number}
   

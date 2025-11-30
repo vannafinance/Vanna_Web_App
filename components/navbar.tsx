@@ -14,11 +14,14 @@ interface Navbar {
 }
 
 export const Navbar = (props: Navbar) => {
+  // Get current pathname for active link detection
   const pathname = usePathname();
+
+  // Theme state
   const [isDark, setIsDark] = useState(false);
 
+  // Load saved theme from localStorage on mount
   useEffect(() => {
-    // Check localStorage for saved theme preference
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme === "dark") {
       setIsDark(true);
@@ -29,6 +32,7 @@ export const Navbar = (props: Navbar) => {
     }
   }, []);
 
+  // Toggle between light and dark theme
   const toggleTheme = () => {
     const newTheme = !isDark;
     setIsDark(newTheme);
@@ -42,6 +46,18 @@ export const Navbar = (props: Navbar) => {
     }
   };
 
+  // Handler for navigation item click
+  const handleNavItemClick = (link: string) => {
+    redirect(link);
+  };
+
+  // Handler for nav item click with link
+  const handleNavItemClickWithLink = (link: string) => {
+    return () => {
+      handleNavItemClick(link);
+    };
+  };
+
   return (
     <motion.div
       className="p-4 w-full flex justify-between"
@@ -49,8 +65,11 @@ export const Navbar = (props: Navbar) => {
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
     >
-      <motion.div
+      {/* Logo section */}
+      <motion.a
+        href="/"
         className="cursor-pointer"
+        aria-label="Vanna home page"
         initial={{
           scale: 0,
           rotate: -180,
@@ -85,19 +104,23 @@ export const Navbar = (props: Navbar) => {
         whileTap={{ scale: 0.95 }}
       >
         <Image alt="Vanna" width={153.4} height={48} src={"/logos/vanna.png"} />
-      </motion.div>
+      </motion.a>
+
+      {/* Navigation items */}
       <div className="flex gap-16 items-center ">
         {props.items.map((item, idx) => {
+          // Check if current item is active
           const isActive = pathname === item.link;
           return (
-            <motion.div
-              key={idx}
-              onClick={() => {
-                redirect(item.link);
-              }}
+            <motion.a
+              key={item.link}
+              href={item.link}
+              onClick={handleNavItemClickWithLink(item.link)}
               className={`font-medium group flex gap-2 items-center hover:text-[#FF007A] cursor-pointer transition-colors ${
                 isActive ? "text-[#FF007A]" : ""
               }`}
+              aria-label={`Navigate to ${item.title}`}
+              aria-current={isActive ? "page" : undefined}
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{
@@ -111,6 +134,7 @@ export const Navbar = (props: Navbar) => {
               }}
               whileTap={{ scale: 0.95 }}
             >
+              {/* Margin icon (only for Margin item) */}
               {item.title == "Margin" && (
                 <svg
                   width="8"
@@ -118,6 +142,7 @@ export const Navbar = (props: Navbar) => {
                   viewBox="0 0 8 13"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
+                  aria-hidden="true"
                 >
                   <path
                     opacity="0.3"
@@ -157,20 +182,25 @@ export const Navbar = (props: Navbar) => {
                 </svg>
               )}
               {item.title}
-            </motion.div>
+            </motion.a>
           );
         })}
       </div>
 
+      {/* Right section: Theme toggle and Login button */}
       <motion.div
         className="flex gap-6"
         initial={{ opacity: 0, x: 50 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
       >
-        <motion.div
+        {/* Theme toggle button */}
+        <motion.button
+          type="button"
           className="p-2 flex flex-col justify-center items-center cursor-pointer"
           onClick={toggleTheme}
+          aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
+          aria-pressed={isDark}
           whileHover={{
             scale: 1.1,
             rotate: 180,
@@ -178,6 +208,7 @@ export const Navbar = (props: Navbar) => {
           }}
           whileTap={{ scale: 0.9 }}
         >
+          {/* Sun icon (dark mode) */}
           {isDark ? (
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -186,6 +217,7 @@ export const Navbar = (props: Navbar) => {
               strokeWidth={1.5}
               stroke="#FF007A"
               className="size-6"
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"
@@ -194,6 +226,7 @@ export const Navbar = (props: Navbar) => {
               />
             </svg>
           ) : (
+            // Moon icon (light mode)
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="#FF007A"
@@ -201,6 +234,7 @@ export const Navbar = (props: Navbar) => {
               strokeWidth={1.5}
               stroke="#FF007A"
               className="size-6"
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"
@@ -209,7 +243,9 @@ export const Navbar = (props: Navbar) => {
               />
             </svg>
           )}
-        </motion.div>
+        </motion.button>
+
+        {/* Login button */}
         <motion.div
           className="w-[88px] flex flex-col justify-center items-center"
           whileHover={{
@@ -223,6 +259,7 @@ export const Navbar = (props: Navbar) => {
             type="gradient"
             disabled={false}
             text="Login"
+            ariaLabel="Login to your account"
           ></Button>
         </motion.div>
       </motion.div>

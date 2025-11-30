@@ -24,12 +24,19 @@ export const Dropdown = (props: Dropdown) => {
       onMouseLeave={() => setIsHover(false)}
       className="relative inline-block "
     >
-      <div className="rounded-[8px]   font-medium text-[15.5px] cursor-pointer flex gap-2 justify-center items-center">
+      <button
+        type="button"
+        className="rounded-[8px] font-medium text-[15.5px] cursor-pointer flex gap-2 justify-center items-center"
+        aria-label={`Selected: ${props.selectedOption.name}. Click to change option`}
+        aria-expanded={isHover}
+        aria-haspopup="listbox"
+      >
         <Image
           src={props.selectedOption.icon}
           width={20}
           height={20}
-          alt={props.selectedOption.id}
+          alt=""
+          aria-hidden="true"
         />{" "}
         {props.selectedOption.name}
         <motion.svg
@@ -39,6 +46,7 @@ export const Dropdown = (props: Dropdown) => {
           strokeWidth={1.5}
           stroke="currentColor"
           className="size-5"
+          aria-hidden="true"
           animate={{ rotate: isHover ? 180 : 0 }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
         >
@@ -48,7 +56,7 @@ export const Dropdown = (props: Dropdown) => {
             d="m19.5 8.25-7.5 7.5-7.5-7.5"
           />
         </motion.svg>
-      </div>
+      </button>
       <AnimatePresence>
         {isHover && (
           <motion.div
@@ -57,25 +65,32 @@ export const Dropdown = (props: Dropdown) => {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
             className="absolute z-50 bg-white  p-2 top-8 -left-4  shadow-lg rounded-[6px]"
+            role="listbox"
+            aria-label="Options"
           >
             {props.items.map((item, idx) => {
               return (
-                <motion.div
+                <motion.button
+                  type="button"
                   whileTap={{ scale: 0.85 }}
-                  className="flex gap-[10px] font-medium rounded-[6px]  text-sm cursor-pointer py-2 px-8  hover:bg-[#F2EBFE]"
-                  key={idx}
+                  className="flex gap-[10px] font-medium rounded-[6px]  text-sm cursor-pointer py-2 px-8  hover:bg-[#F2EBFE] w-full text-left"
+                  key={item.id}
+                  role="option"
+                  aria-selected={props.selectedOption.id === item.id}
                   onClick={() => {
                     props.setSelectedOption(item);
                   }}
+                  aria-label={`Select ${item.name}`}
                 >
                   <Image
                     src={item.icon}
                     width={20}
                     height={20}
-                    alt={item.name}
+                    alt=""
+                    aria-hidden="true"
                   />
                   {item.name}
-                </motion.div>
+                </motion.button>
               );
             })}
           </motion.div>

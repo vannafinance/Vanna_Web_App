@@ -38,7 +38,7 @@ export const Carousel = (props: Carousel) => {
         src={"/assets/background.jpg"}
         className="absolute inset-0 w-full h-full opacity-18 object-cover"
       />
-      <div className="relative z-10 h-full flex flex-col justify-center">
+      <div className="relative z-10 h-full flex flex-col justify-center" role="region" aria-label="Carousel" aria-live="polite">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentIndex}
@@ -47,6 +47,8 @@ export const Carousel = (props: Carousel) => {
             exit={{ opacity: 0, x: -100 }}
             transition={{ duration: 0.5, ease: "easeInOut" }}
             className="flex justify-between"
+            role="tabpanel"
+            aria-label={`Slide ${currentIndex + 1} of ${props.items.length}`}
           >
             <div className="flex gap-[24px]">
               <Image
@@ -68,14 +70,18 @@ export const Carousel = (props: Carousel) => {
         </AnimatePresence>
       </div>
       {/* Carousel indicators */}
-      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
-        {props.items.map((_, index) => (
+      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2" role="tablist" aria-label="Carousel navigation">
+        {props.items.map((item, index) => (
           <button
-            key={index}
+            key={`carousel-${item.title}-${index}`}
+            type="button"
             onClick={() => setCurrentIndex(index)}
             className={`w-2 h-2 rounded-full transition-all ${
               index === currentIndex ? "bg-white w-8" : "bg-white/50"
             }`}
+            aria-label={`Go to slide ${index + 1}: ${item.title}`}
+            aria-selected={index === currentIndex}
+            role="tab"
           />
         ))}
       </div>
