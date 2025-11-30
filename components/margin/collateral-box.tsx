@@ -28,7 +28,6 @@ interface Collateral {
 }
 
 export const depositPercentage = [10, 25, 50, 100];
-type mode = "editing" | "standard";
 
 export const percentageColors: Record<number, string> = {
   10: "bg-[#703AE6]",
