@@ -210,7 +210,6 @@ export const Collateral = (props: Collateral) => {
                   type="text"
                   placeholder="0.0"
                   value={valueInput}
-                  aria-label="Enter collateral amount"
                 />
               </div>
               <div

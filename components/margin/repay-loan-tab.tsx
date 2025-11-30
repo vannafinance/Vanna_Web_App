@@ -206,7 +206,6 @@ export const RepayLoanTab = ({ repayStats }: RepayLoanTabProps) => {
                 type="text"
                 placeholder="0.0"
                 value={repayAmount}
-                aria-label="Enter repay amount"
               />
             </motion.div>
 

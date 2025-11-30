@@ -332,7 +332,6 @@ export const BorrowBox = ({
                             type="text"
                             placeholder="0.0"
                             value={inputValues[idx]?.toString() || ""}
-                            aria-label={`Enter borrow amount for ${selectedOption.name}`}
                           />
                         </div>
                         <div className="text-[12px] font-medium text-[#76737B]" aria-live="polite">
