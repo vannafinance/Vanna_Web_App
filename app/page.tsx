@@ -14,27 +14,6 @@ export default function Home() {
   return (
     <>
     
-    <div className="flex flex-col justify-center items-center pt-4">
-      hello main
-    </div>
-
-    <div>
-    <Checkbox />
-
-    </div>
-    
-    <div>
-
-      <RadioGroup name="sanu">
-        <Radio/>
-      </RadioGroup>
-    
-    </div>
-
-    <div>
-    <ToggleButton onToggle={(value) => console.log("State:", value)} />
-
-    </div>
 
 
 
