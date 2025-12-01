@@ -1,6 +1,9 @@
 "use client";
 
+import { iconPaths } from "@/lib/constants";
+import { useCollateralBorrowStore } from "@/store/collateral-borrow-store";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 import { useState } from "react";
 
 interface InfoItem {
@@ -40,6 +43,8 @@ export const InfoCard = ({
     }, {} as { [key: string]: boolean })
   );
 
+  const borrowedItems = useCollateralBorrowStore((state) => state.borrowItems);
+  const collateralItems = useCollateralBorrowStore((state) => state.collaterals);
   // Toggle section expand/collapse
   const toggleExpanded = (title: string) => {
     setExpandedStates((prev) => ({
@@ -126,8 +131,24 @@ export const InfoCard = ({
               transition={{ duration: 0.3, delay: idx * 0.05 }}
             >
               <div className="text-[14px] font-medium">{item.name}</div>
-              <div className="text-[14px] font-medium">
+              <div className="text-[14px] font-medium flex items-center gap-1">
                 {formatValue(item.id, data[item.id])}
+                {item.id === "totalBorrowedValue" && borrowedItems.length > 0 && (
+                  <div className="w-full h-full flex items-center gap-1">
+                    {borrowedItems.map((borrowedItem) => {
+                      const assetName = borrowedItem.assetData.asset.split("0x")[1];
+                      return (
+                        <Image
+                          key={borrowedItem.assetData.asset}
+                          src={iconPaths[assetName as keyof typeof iconPaths]}
+                          alt={`${assetName} icon`}
+                          width={20}
+                          height={20}
+                        />
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </motion.div>
           );
@@ -207,16 +228,9 @@ export const InfoCard = ({
                         <div className="text-[14px] font-medium">
                           {item.name}
                         </div>
-                        {item.name == "totalBorrowedValue" ||
-                        item.name == "totalCollateralValue" ? (
-                          <div className="text-[14px] font-medium">
+                        <div className="text-[14px] font-medium">
                             {formatValue(item.id, data[item.id])} 
-                          </div>
-                        ) : (
-                          <div className="text-[14px] font-medium">
-                            {formatValue(item.id, data[item.id])}
-                          </div>
-                        )}
+                        </div>
                       </motion.div>
                     );
                   })}
