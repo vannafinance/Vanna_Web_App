@@ -281,6 +281,7 @@ export const LeverageAssetsTab = ({
                   <Collateral
                     collaterals={collateral}
                     isEditing={editingIndex === index}
+                    isAnyOtherEditing={editingIndex !== null && editingIndex !== index}
                     onEdit={handleEditCollateralClick(index)}
                     onSave={handleSaveCollateralClick(index)}
                     onCancel={handleCancelEdit}
@@ -300,6 +301,7 @@ export const LeverageAssetsTab = ({
                 <Collateral
                   collaterals={null}
                   isEditing={true}
+                  isAnyOtherEditing={false}
                   onEdit={() => {}}
                   onSave={handleEmptyCollateralSave}
                   onCancel={handleCancelEdit}

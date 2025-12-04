@@ -161,7 +161,7 @@ export const Collateral = (props: Collateral) => {
 
   return (
     <motion.div
-      className="relative flex justify-between gap-[20px] bg-white w-full p-[20px] rounded-[16px] border-[1px] border-[#E2E2E2]"
+      className="relative flex justify-between gap-[20px] bg-white w-full p-[20px] rounded-[16px] border-[1px] border-[#E2E2E2] overflow-hidden"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
@@ -499,7 +499,7 @@ export const Collateral = (props: Collateral) => {
         {isEditing && (
           <motion.div
             key="editing-right"
-            className="flex flex-col gap-[12px]"
+            className="flex flex-col gap-[12px] min-w-[32px] flex-shrink-0"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
@@ -512,9 +512,9 @@ export const Collateral = (props: Collateral) => {
             <motion.button
               type="button"
               onClick={handleSave}
-              className="cursor-pointer flex flex-col justify-center items-center w-[32px] h-[32px] rounded-[8px] p-[12px] bg-[#703AE6]"
-              whileHover={{ scale: 1.1, backgroundColor: "#5A2DB8" }}
-              whileTap={{ scale: 0.9 }}
+              className="cursor-pointer flex flex-col justify-center items-center w-[32px] h-[32px] rounded-[8px] p-[12px] bg-[#703AE6] flex-shrink-0"
+              whileHover={{ scale: 1.05, backgroundColor: "#5A2DB8" }}
+              whileTap={{ scale: 0.95 }}
               transition={{ duration: 0.1 }}
               aria-label="Save collateral"
             >
@@ -537,9 +537,9 @@ export const Collateral = (props: Collateral) => {
             <motion.button
               type="button"
               onClick={handleCancel}
-              className="cursor-pointer flex flex-col justify-center items-center w-[32px] h-[32px] rounded-[8px] p-[12px]"
-              whileHover={{ scale: 1.1, backgroundColor: "#F0F0F0" }}
-              whileTap={{ scale: 0.9 }}
+              className="cursor-pointer flex flex-col justify-center items-center w-[32px] h-[32px] rounded-[8px] p-[12px] flex-shrink-0"
+              whileHover={{ scale: 1.05, backgroundColor: "#F0F0F0" }}
+              whileTap={{ scale: 0.95 }}
               transition={{ duration: 0.1 }}
               aria-label="Cancel editing"
             >

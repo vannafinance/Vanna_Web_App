@@ -25,25 +25,35 @@ export const BorrowBox = ({
   totalDeposit,
   onBorrowItemsChange,
 }: BorrowBoxProps) => {
+  // Mode-specific configuration
+  const modeConfig = {
+    Deposit: {
+      maxItems: 1,
+      showTotal: false,
+      showInputBoxes: false,
+    },
+    Borrow: {
+      maxItems: 2,
+      showTotal: true,
+      showInputBoxes: true,
+    },
+  };
+
+  const config = modeConfig[mode];
+
   // Local state for borrow items
   const [borrowItems, setBorrowItems] = useState<BorrowInfo[]>([]);
 
   // Form state
-  const [selectedOptionAsset1, setSelectedOptionAsset1] = useState(
-    DropdownOptions[0]
-  );
   const [selectedOptions, setSelectedOptions] = useState<
     Record<number, (typeof DropdownOptions)[0]>
   >({});
   const [inputValues, setInputValues] = useState<Record<number, number>>({});
 
-  // Mode-based max items: Deposit = 1, Borrow = 2
-  const maxItems = mode === "Deposit" ? 1 : 2;
-  
   // Slice items based on mode limit
   const displayItems = useMemo(
-    () => borrowItems.slice(0, maxItems),
-    [borrowItems, maxItems]
+    () => borrowItems.slice(0, config.maxItems),
+    [borrowItems, config.maxItems]
   );
 
   // Reset form when items array is empty
@@ -57,17 +67,18 @@ export const BorrowBox = ({
   // Create BorrowInfo items from user input
   useEffect(() => {
     const newBorrowItems: BorrowInfo[] = [];
-    
-    for (let idx = 0; idx < maxItems; idx++) {
+
+    for (let idx = 0; idx < config.maxItems; idx++) {
       const selectedOption = selectedOptions[idx];
       const inputValue = inputValues[idx] || 0;
-      
+
       if (selectedOption && inputValue > 0) {
         // Calculate USD value (1:1 conversion)
         const usdValue = inputValue;
         // Calculate percentage of total deposit
-        const percentage = totalDeposit > 0 ? (usdValue / totalDeposit) * 100 : 0;
-        
+        const percentage =
+          totalDeposit > 0 ? (usdValue / totalDeposit) * 100 : 0;
+
         newBorrowItems.push({
           assetData: {
             asset: `0x${selectedOption.name}`,
@@ -78,9 +89,9 @@ export const BorrowBox = ({
         });
       }
     }
-    
+
     setBorrowItems(newBorrowItems);
-  }, [selectedOptions, inputValues, maxItems, totalDeposit]);
+  }, [selectedOptions, inputValues, config.maxItems, totalDeposit]);
 
   // Notify parent when borrow items change
   useEffect(() => {
@@ -89,22 +100,19 @@ export const BorrowBox = ({
     }
   }, [borrowItems, onBorrowItemsChange]);
 
-  // Calculate total borrowed value
-  const totalBorrowedValue = useMemo(
-    () => displayItems.reduce((sum, item) => sum + item.usdValue, 0),
-    [displayItems]
-  );
+  // Calculate total borrowed value from input values
+  const totalBorrowedValue = useMemo(() => {
+    if (mode === "Borrow") {
+      return (inputValues[0] || 0) + (inputValues[1] || 0);
+    }
+    // Deposit mode: only first item
+    return inputValues[0] || 0;
+  }, [mode, inputValues]);
 
-  // UI visibility flags
-  const showSingleItemUI = useMemo(
-    () => mode === "Deposit" && (displayItems.length === 0 || displayItems.length === 1),
-    [mode, displayItems]
-  );
-  
-  const showMultipleItemsUI = useMemo(
-    () => mode === "Borrow" && (displayItems.length === 0 || displayItems.length >= 1),
-    [mode, displayItems]
-  );
+  // Simplified UI visibility flags
+  const showInputBoxes = config.showInputBoxes;
+  const showTotal = config.showTotal;
+  const isDepositMode = mode === "Deposit";
 
   // Handler for max leverage click
   const handleMaxLeverage = () => {
@@ -113,7 +121,11 @@ export const BorrowBox = ({
 
   // Handler for selected option change
   const handleSetSelectedOption = (idx: number) => {
-    return (option: typeof DropdownOptions[0] | ((prev: typeof DropdownOptions[0]) => typeof DropdownOptions[0])) => {
+    return (
+      option:
+        | (typeof DropdownOptions)[0]
+        | ((prev: (typeof DropdownOptions)[0]) => (typeof DropdownOptions)[0])
+    ) => {
       const selected =
         typeof option === "function"
           ? option(selectedOptions[idx] || DropdownOptions[0])
@@ -146,22 +158,20 @@ export const BorrowBox = ({
       {/* Top section: Asset selector or borrowed items display */}
       <div className="flex justify-between">
         {/* Deposit mode: Single asset selector */}
-        <AnimatePresence mode="wait">
-          {showSingleItemUI && (
+        {isDepositMode && (
+          <>
             <motion.div
-              key="single-item"
               className="flex gap-[10px] items-center"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
             >
               {/* Asset dropdown */}
               <div>
                 <Dropdown
                   items={DropdownOptions}
-                  selectedOption={selectedOptionAsset1}
-                  setSelectedOption={setSelectedOptionAsset1}
+                  selectedOption={selectedOptions[0] || DropdownOptions[0]}
+                  setSelectedOption={handleSetSelectedOption(0)}
                 />
               </div>
 
@@ -181,90 +191,132 @@ export const BorrowBox = ({
                       ? "bg-gradient text-white"
                       : "bg-white "
                   } `}
-                  animate={{
-                    backgroundColor:
-                      leverage === maxLeverage ? undefined : undefined,
-                  }}
                 >
                   Max Value
                 </motion.div>
               </motion.button>
             </motion.div>
-          )}
-        </AnimatePresence>
 
-        {/* Borrow mode: Display borrowed items */}
-        <AnimatePresence mode="wait">
-          {showMultipleItemsUI && (
+            {/* Borrowed Amount section for Deposit mode */}
             <motion.div
-              key="multiple-items"
-              className="w-full flex justify-between"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              transition={{ duration: 0.4 }}
+              className="flex flex-col justify-end items-end gap-[12px]"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3 }}
             >
-              {/* Borrowed items list */}
               <div className="flex flex-col gap-[12px]">
                 <div className="text-[14px] font-medium">Borrowed Amount:</div>
                 <div className="flex gap-[12px]">
-                  {displayItems.length > 0 ? (
-                    displayItems.map((item, idx) => {
-                      return (
-                        <motion.div
-                          key={item.assetData.asset}
-                          className="flex gap-[12px]"
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ duration: 0.3, delay: idx * 0.1 }}
-                        >
-                          <div className="flex gap-[4px] justify-start">
-                            <div className="flex flex-col justify-top items-top">
-                              <Image
-                                src={
-                                  iconPaths[item.assetData.asset.split("0x")[1]]
-                                }
-                                alt={item.assetData.asset}
-                                width={16}
-                                height={16}
-                              />
-                            </div>
+                  {Array.from({ length: 1 }).map((_, idx) => {
+                    const selectedOption =
+                      selectedOptions[0] || DropdownOptions[0];
+                    const inputValue = inputValues[0] || 0;
+                    const usdValue = inputValue; // 1:1 conversion
 
-                            <div className="text-[12px] font-medium flex flex-col gap-[4px]">
-                              <div>
-                                {item.assetData.amount}{" "}
-                                {item.assetData.asset.split("0x")[1]}
-                              </div>
-                              <div className="text-[10px] text-[#111111]">
-                                {item.usdValue} USD
-                              </div>
+                    return (
+                      <motion.div
+                        key={`deposit-borrowed-display-${selectedOption.id}`}
+                        className="flex gap-[12px]"
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <div className="flex gap-[4px] justify-start">
+                          <div className="flex flex-col justify-top items-top">
+                            <Image
+                              src={iconPaths[selectedOption.name]}
+                              alt={selectedOption.name}
+                              width={16}
+                              height={16}
+                            />
+                          </div>
+
+                          <div className="text-[12px] font-medium flex flex-col gap-[4px]">
+                            <div>
+                              {inputValue > 0 ? inputValue : "0"}{" "}
+                              {selectedOption.name}
+                            </div>
+                            <div className="text-[10px] text-[#111111]">
+                              {usdValue > 0 ? usdValue.toFixed(2) : "0.00"} USD
                             </div>
                           </div>
-                          {idx < displayItems.length - 1 && (
-                            <motion.span
-                              className="text-[20px] font-bold"
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              transition={{
-                                duration: 0.3,
-                                delay: (idx + 1) * 0.1,
-                              }}
-                            >
-                              :
-                            </motion.span>
-                          )}
-                        </motion.div>
-                      );
-                    })
-                  ) : (
-                    <div className="text-[12px] font-medium text-[#76737B]">
-                      No borrowed items
-                    </div>
-                  )}
+                        </div>
+                      </motion.div>
+                    );
+                  })}
                 </div>
               </div>
+            </motion.div>
+          </>
+        )}
 
-              {/* Total borrowed value */}
+        {/* Borrow mode: Display borrowed items */}
+        {!isDepositMode && (
+          <motion.div
+            className="w-full flex justify-between items-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            {/* Borrowed items list */}
+            <div className="flex flex-col gap-[12px]">
+              <div className="text-[14px] font-medium">Borrowed Amount:</div>
+              <div className="flex gap-[12px]">
+                {Array.from({ length: config.maxItems }).map((_, idx) => {
+                  const selectedOption =
+                    selectedOptions[idx] || DropdownOptions[0];
+                  const inputValue = inputValues[idx] || 0;
+                  const usdValue = inputValue; // 1:1 conversion
+
+                  return (
+                    <motion.div
+                      key={`borrowed-display-${idx}-${selectedOption.id}`}
+                      className="flex gap-[12px]"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3, delay: idx * 0.1 }}
+                    >
+                      <div className="flex gap-[4px] justify-start">
+                        <div className="flex flex-col justify-top items-top">
+                          <Image
+                            src={iconPaths[selectedOption.name]}
+                            alt={selectedOption.name}
+                            width={16}
+                            height={16}
+                          />
+                        </div>
+
+                        <div className="text-[12px] font-medium flex flex-col gap-[4px]">
+                          <div>
+                            {inputValue > 0 ? inputValue : "0"}{" "}
+                            {selectedOption.name}
+                          </div>
+                          <div className="text-[10px] text-[#111111]">
+                            {usdValue > 0 ? usdValue.toFixed(2) : "0.00"} USD
+                          </div>
+                        </div>
+                      </div>
+                      {idx < config.maxItems - 1 && (
+                        <motion.span
+                          className="text-[20px] font-bold"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{
+                            duration: 0.3,
+                            delay: (idx + 1) * 0.1,
+                          }}
+                        >
+                          :
+                        </motion.span>
+                      )}
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Total borrowed value */}
+            {showTotal && (
               <div className="flex flex-col justify-end items-end gap-[12px]">
                 <div className="text-[14px] font-medium">
                   Total Borrowed Value:
@@ -277,24 +329,21 @@ export const BorrowBox = ({
                   })}
                 </div>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            )}
+          </motion.div>
+        )}
       </div>
 
       {/* Input boxes for borrow items */}
-      <AnimatePresence>
-        {showMultipleItemsUI && (
-          <motion.div
-            key="input-boxes"
-            className="flex gap-[8px] items-center justify-center"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            transition={{ duration: 0.4, delay: 0.1 }}
-          >
-            {/* Map through max items */}
-            {Array.from({ length: maxItems }).map((_, idx) => {
+      {showInputBoxes && (
+        <motion.div
+          className="flex gap-[8px] items-center justify-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+        >
+          {/* Map through max items */}
+          {Array.from({ length: config.maxItems }).map((_, idx) => {
               const item = displayItems[idx];
               const selectedOption = selectedOptions[idx] || DropdownOptions[0];
               return (
@@ -322,7 +371,10 @@ export const BorrowBox = ({
                       </div>
                       <div className="flex flex-col gap-[4px]">
                         <div>
-                          <label htmlFor={`borrow-amount-input-${idx}`} className="sr-only">
+                          <label
+                            htmlFor={`borrow-amount-input-${idx}`}
+                            className="sr-only"
+                          >
                             Borrow amount for {selectedOption.name}
                           </label>
                           <input
@@ -334,7 +386,10 @@ export const BorrowBox = ({
                             value={inputValues[idx]?.toString() || ""}
                           />
                         </div>
-                        <div className="text-[12px] font-medium text-[#76737B]" aria-live="polite">
+                        <div
+                          className="text-[12px] font-medium text-[#76737B]"
+                          aria-live="polite"
+                        >
                           {item
                             ? (
                                 (inputValues[idx] || 0) *
@@ -383,7 +438,7 @@ export const BorrowBox = ({
                       </div>
                     </div>
                   </motion.div>
-                  {idx < maxItems - 1 && (
+                  {idx < config.maxItems - 1 && (
                     <motion.div
                       className="text-[20px] font-bold w-[36px] h-[36px] rounded-[48px] flex items-center justify-center"
                       initial={{ opacity: 0, scale: 0 }}
@@ -396,9 +451,8 @@ export const BorrowBox = ({
                 </motion.div>
               );
             })}
-          </motion.div>
-        )}
-      </AnimatePresence>
+        </motion.div>
+      )}
 
       {/* Leverage slider */}
       <motion.div
