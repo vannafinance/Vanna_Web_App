@@ -2,6 +2,7 @@ import { Position } from "@/lib/types";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { Button } from "../ui/button";
+import { useCollateralBorrowStore } from "@/store/collateral-borrow-store";
 
 const tableRowHeadings = [
   "Collateral Deposited",
@@ -16,7 +17,12 @@ const coinIcons = {
   "0xUSDT": "/icons/usdt-icon.svg",
 };
 
-export const Positionstable = ({ positions }: { positions: Position[] }) => {
+interface PositionstableProps {
+  onRepayClick?: () => void;
+}
+
+export const Positionstable = ({ onRepayClick }: PositionstableProps) => {
+  const positions = useCollateralBorrowStore((state) => state.position);
   return (
     <div className="flex flex-col gap-[16px]">
       {/* Table title */}
@@ -27,7 +33,7 @@ export const Positionstable = ({ positions }: { positions: Position[] }) => {
         viewport={{ once: true }}
         transition={{ duration: 0.4, ease: "easeOut" }}
       >
-        Position Table
+        Positions
       </motion.div>
 
       <div className="rounded-[12px] w-full">
@@ -241,6 +247,7 @@ export const Positionstable = ({ positions }: { positions: Position[] }) => {
                       type="gradient"
                       disabled={item.isOpen ? false : true}
                       text={item.isOpen ? "Repay" : "Repaid"}
+                      onClick={item.isOpen && onRepayClick ? onRepayClick : undefined}
                     />
                   </div>
                 </motion.div>

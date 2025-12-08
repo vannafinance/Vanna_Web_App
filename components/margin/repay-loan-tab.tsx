@@ -9,16 +9,14 @@ import { depositPercentage, percentageColors } from "./collateral-box";
 import { Dropdown } from "../ui/dropdown";
 import { Popup } from "@/components/ui/popup";
 
-interface RepayLoanTabProps {
-  repayStats: {
-    netOutstandingAmountToPay: number;
-    availableBalance: number;
-    frozenBalance: number;
-  };
-}
-
-export const RepayLoanTab = ({ repayStats }: RepayLoanTabProps) => {
+export const RepayLoanTab = () => {
   // Repay form state
+  // Repay loan statistics
+  const [repayStats, setRepayStats] = useState({
+    netOutstandingAmountToPay: 0,
+    availableBalance: 0,
+    frozenBalance: 0,
+  });
   const [selectedRepayCurrency, setSelectedRepayCurrency] =
     useState<DropdownOptionsType>(DropdownOptions[0]);
   const [selectedRepayPercentage, setSelectedRepayPercentage] =
@@ -59,6 +57,9 @@ export const RepayLoanTab = ({ repayStats }: RepayLoanTabProps) => {
   const handleCloseFlashClosePopup = () => {
     setIsFlashClosePopupOpen(false);
   };
+
+  // Check if buttons should be disabled (when input is 0 or empty)
+  const isInputEmpty = repayAmount === 0 || repayAmount === null || repayAmount === undefined;
 
   return (
     <motion.div
@@ -239,15 +240,15 @@ export const RepayLoanTab = ({ repayStats }: RepayLoanTabProps) => {
               damping: 25,
               delay: 0.5,
             }}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={isInputEmpty ? {} : { scale: 1.02 }}
+            whileTap={isInputEmpty ? {} : { scale: 0.98 }}
           >
             <Button
               text="Pay Now"
               size="large"
               type="gradient"
               onClick={handlePayNowClick}
-              disabled={false}
+              disabled={isInputEmpty}
             />
           </motion.div>
 
@@ -261,15 +262,15 @@ export const RepayLoanTab = ({ repayStats }: RepayLoanTabProps) => {
               damping: 25,
               delay: 0.6,
             }}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={isInputEmpty ? {} : { scale: 1.02 }}
+            whileTap={isInputEmpty ? {} : { scale: 0.98 }}
           >
             <Button
               text="Flash Close"
               size="large"
               type="ghost"
               onClick={handleFlashCloseClick}
-              disabled={false}
+              disabled={isInputEmpty}
             />
           </motion.div>
         </motion.div>

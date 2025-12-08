@@ -20,6 +20,7 @@ interface Collateral {
     unifiedBalance: number;
   } | null;
   isEditing?: boolean;
+  isAnyOtherEditing?: boolean;
   onEdit?: () => void;
   onSave?: (collateral: Collaterals) => void;
   onCancel?: () => void;
@@ -133,6 +134,8 @@ export const Collateral = (props: Collateral) => {
   const handlePBClick = () => {
     setSelectedBalanceType("PB");
   };
+
+  
 
   // Handler for WB balance type click
   const handleWBClick = () => {
@@ -465,13 +468,22 @@ export const Collateral = (props: Collateral) => {
             </div>
 
             {/* Edit button */}
-            <div>
+            <div className="min-w-[32px] flex-shrink-0">
               <motion.button
                 type="button"
                 onClick={props.onEdit}
-                className="cursor-pointer p-[8.73px] rounded-[8px] bg-[#F4F4F4] h-fit"
-                whileHover={{ scale: 1.1, backgroundColor: "#E8E8E8" }}
-                whileTap={{ scale: 0.9 }}
+                disabled={props.isAnyOtherEditing}
+                className={`p-[8.73px] rounded-[8px] bg-[#F4F4F4] h-fit min-w-[32px] flex-shrink-0 ${
+                  props.isAnyOtherEditing
+                    ? "opacity-50 cursor-not-allowed"
+                    : "cursor-pointer"
+                }`}
+                whileHover={
+                  props.isAnyOtherEditing
+                    ? {}
+                    : { scale: 1.1, backgroundColor: "#E8E8E8" }
+                }
+                whileTap={props.isAnyOtherEditing ? {} : { scale: 0.9 }}
                 transition={{ duration: 0.1 }}
                 aria-label="Edit collateral"
               >

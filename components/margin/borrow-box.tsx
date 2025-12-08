@@ -156,12 +156,12 @@ export const BorrowBox = ({
       transition={{ duration: 0.4, ease: "easeOut" }}
     >
       {/* Top section: Asset selector or borrowed items display */}
-      <div className="flex justify-between">
+      <div className="flex justify-between ">
         {/* Deposit mode: Single asset selector */}
         {isDepositMode && (
           <>
             <motion.div
-              className="flex gap-[10px] items-center"
+              className="flex gap-[10px] items-top "
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.3 }}
@@ -176,10 +176,11 @@ export const BorrowBox = ({
               </div>
 
               {/* Max Value button */}
-              <motion.button
+              <div className="flex flex-col gap-[6px] items-center">
+               <motion.button
                 type="button"
                 onClick={handleMaxLeverage}
-                className="cursor-pointer rounded-[8px] bg-gradient p-[1px]"
+                className="h-fit cursor-pointer rounded-[8px] bg-gradient p-[1px]"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 transition={{ duration: 0.2 }}
@@ -194,7 +195,11 @@ export const BorrowBox = ({
                 >
                   Max Value
                 </motion.div>
+                
               </motion.button>
+              <div className="text-[12px] font-medium text-neutral-400">18000 USDC</div> 
+              </div>
+              
             </motion.div>
 
             {/* Borrowed Amount section for Deposit mode */}
@@ -204,7 +209,7 @@ export const BorrowBox = ({
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.3 }}
             >
-              <div className="flex flex-col gap-[12px]">
+              <div className="flex flex-col items-end gap-[12px]">
                 <div className="text-[14px] font-medium">Borrowed Amount:</div>
                 <div className="flex gap-[12px]">
                   {Array.from({ length: 1 }).map((_, idx) => {
@@ -465,6 +470,7 @@ export const BorrowBox = ({
           onChange={setLeverage}
           max={maxLeverage}
           min={0}
+          step={1}
         />
       </motion.div>
     </motion.div>

@@ -1,10 +1,12 @@
 import createNewStore from "@/zustand/index";
-import { BorrowInfo, Collaterals } from "@/lib/types";
+import { BorrowInfo, Collaterals, Position } from "@/lib/types";
+import { position } from "@/lib/constants";
 
 // Types
 export interface CollateralBorrowStateType {
   collaterals: Collaterals[];
   borrowItems: BorrowInfo[];
+  position: Position[];
 }
 
 // Initial State
@@ -22,6 +24,7 @@ const initialState: CollateralBorrowStateType = {
       usdValue: 403.67,
     },
   ] ,
+  position: position,
 };
 
 // Export Store

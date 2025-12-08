@@ -10,17 +10,35 @@ import {
   position,
 } from "@/lib/constants";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { InfoCard } from "@/components/margin/info-card";
 import { LeverageCollateral } from "@/components/margin/leverage-collateral";
 import { Positionstable } from "@/components/margin/positions-table";
 import { Position } from "@/lib/types";
 import { useMarginAccountInfoStore } from "@/store/margin-account-info-store";
+import { useCollateralBorrowStore } from "@/store/collateral-borrow-store";
 
 const Margin = () => {
-  // Store positions data
-  const [positions, setpositions] = useState<Position[]>(position);
+  
+  // State to trigger tab switch to Repay Loan
+  const [switchToRepayTab, setSwitchToRepayTab] = useState(false);
+  
+  // Ref for scrolling to LeverageCollateral component
+  const leverageCollateralRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to LeverageCollateral when repay is clicked
+  useEffect(() => {
+    if (switchToRepayTab && leverageCollateralRef.current) {
+      // Small delay to ensure tab switch happens first
+      setTimeout(() => {
+        leverageCollateralRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 100);
+    }
+  }, [switchToRepayTab]);
 
   // Account statistics state
   const [accountStats, setAccountStats] = useState({
@@ -181,9 +199,12 @@ const Margin = () => {
         </motion.div>
 
         {/* Two column layout: Leverage form and Info card */}
-        <div className="flex gap-[36px]">
+        <div className="flex gap-[36px]" ref={leverageCollateralRef}>
           {/* Left: Leverage collateral form */}
-          <LeverageCollateral />
+          <LeverageCollateral 
+            switchToRepayTab={switchToRepayTab}
+            onTabSwitched={() => setSwitchToRepayTab(false)}
+          />
 
           {/* Right: Margin account info card */}
           <motion.div
@@ -251,7 +272,6 @@ const Margin = () => {
       </motion.div>
 
       {/* Positions table section */}
-      {positions && (
         <motion.div
           className="pb-[30px] px-[80px] pt-[50px]"
           initial={{ opacity: 0, y: 30 }}
@@ -259,9 +279,10 @@ const Margin = () => {
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.5, ease: "easeOut" }}
         >
-          <Positionstable positions={positions} />
+          <Positionstable
+            onRepayClick={() => setSwitchToRepayTab(true)}
+          />
         </motion.div>
-      )}
     </div>
   );
 };

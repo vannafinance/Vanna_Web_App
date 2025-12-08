@@ -8,49 +8,17 @@ import { DropdownOptions } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Collateral } from "./collateral-box";
 import { BorrowBox } from "./borrow-box";
+import { Dialogue } from "@/components/ui/dialogue";
 import { useCollateralBorrowStore } from "@/store/collateral-borrow-store";
 
 type Modes = "Deposit" | "Borrow";
 
 interface LeverageAssetsTabProps {
-  onCreateMarginAccount: () => void;
-  depositAmount: number;
-  setDepositAmount: (value: number) => void;
-  depositCurrency: string;
-  setDepositCurrency: (value: string) => void;
-  totalDeposit: number;
-  setTotalDeposit: (value: number) => void;
-  leverage: number;
-  setLeverage: (value: number) => void;
-  platformPoints: number;
-  vannaPoints: number;
-  fees: number;
-  feesCurrency: string;
-  updatedCollateral: number;
-  netHealthFactor: number;
-  onDataChange?: (data: {
-    collaterals: Collaterals[];
-    borrowItems: BorrowInfo[];
-  }) => void;
+  hasMarginAccount?: boolean;
 }
 
 export const LeverageAssetsTab = ({
-  onCreateMarginAccount,
-  depositAmount,
-  setDepositAmount,
-  depositCurrency,
-  setDepositCurrency,
-  totalDeposit,
-  setTotalDeposit,
-  leverage,
-  setLeverage,
-  platformPoints,
-  vannaPoints,
-  fees,
-  feesCurrency,
-  updatedCollateral,
-  netHealthFactor,
-  onDataChange,
+  hasMarginAccount = true,
 }: LeverageAssetsTabProps) => {
   // Get collaterals from global store using selector to prevent unnecessary re-renders
   const collaterals = useCollateralBorrowStore((state) => state.collaterals);
@@ -60,6 +28,23 @@ export const LeverageAssetsTab = ({
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [mode, setMode] = useState<Modes>("Deposit");
   const [borrowItems, setBorrowItems] = useState<BorrowInfo[]>([]);
+  const [leverage, setLeverage] = useState(2);
+  const [depositAmount, setDepositAmount] = useState(0);
+  const [depositCurrency, setDepositCurrency] = useState("USDT");
+  const feesCurrency = "USDT";
+
+  // Dialogue visibility states
+  const [isCreateMarginDialogueOpen, setIsCreateMarginDialogueOpen] =
+    useState(false);
+  const [isSecondDialogueOpen, setIsSecondDialogueOpen] = useState(false);
+
+  // Local state to collect data from child component
+  const [currentCollaterals, setCurrentCollaterals] = useState<Collaterals[]>(
+    []
+  );
+  const [currentBorrowItems, setCurrentBorrowItems] = useState<BorrowInfo[]>(
+    []
+  );
 
   // Initialize with one empty collateral if none exist
   useEffect(() => {
@@ -97,35 +82,48 @@ export const LeverageAssetsTab = ({
   );
 
   // Calculate fees: 0.0234% of total deposit
-  const calculatedFees = useMemo(
+  const fees = useMemo(
     () => (totalDepositValue > 0 ? totalDepositValue * 0.000234 : 0),
     [totalDepositValue]
+  );
+
+  // Calculate total deposit including fees
+  const totalDeposit = useMemo(
+    () => totalDepositValue + fees,
+    [totalDepositValue, fees]
+  );
+
+  // Derived values calculated using useMemo
+  const platformPoints = useMemo(
+    () => Number((leverage * 0.575).toFixed(1)),
+    [leverage]
+  );
+
+  const updatedCollateral = useMemo(
+    () => Math.round(depositAmount * leverage * 0.6),
+    [depositAmount, leverage]
+  );
+
+  const netHealthFactor = useMemo(
+    () => Number((2.0 - leverage * 0.0875).toFixed(2)),
+    [leverage]
   );
 
   // Update deposit amount and currency when collaterals change
   useEffect(() => {
     setDepositAmount(totalDepositValue);
-    setTotalDeposit(totalDepositValue + calculatedFees);
 
     // Use currency from first collateral
     if (collaterals.length > 0 && collaterals[0].asset) {
       setDepositCurrency(collaterals[0].asset);
     }
-  }, [
-    totalDepositValue,
-    calculatedFees,
-    collaterals,
-    setDepositAmount,
-    setTotalDeposit,
-    setDepositCurrency,
-  ]);
+  }, [totalDepositValue, collaterals]);
 
-  // Notify parent component when data changes
+  // Update local state when collaterals or borrowItems change
   useEffect(() => {
-    if (onDataChange) {
-      onDataChange({ collaterals, borrowItems });
-    }
-  }, [collaterals, borrowItems, onDataChange]);
+    setCurrentCollaterals(collaterals);
+    setCurrentBorrowItems(borrowItems);
+  }, [collaterals, borrowItems]);
 
   // Add new collateral
   // Prevents adding if already editing or in Borrow mode with 1 collateral
@@ -221,7 +219,32 @@ export const LeverageAssetsTab = ({
     setEditingIndex(null);
   };
 
+  // Handle create margin account button click
+  // Updates global store and opens first dialogue
+  const handleButtonClick = () => {
+    set({
+      collaterals: currentCollaterals,
+      borrowItems: currentBorrowItems,
+    });
+    setIsCreateMarginDialogueOpen(true);
+  };
+
+  // Dialogue handlers
+  const handleCloseFirstDialogue = () => {
+    setIsCreateMarginDialogueOpen(false);
+  };
+
+  const handleCloseSecondDialogue = () => {
+    setIsSecondDialogueOpen(false);
+  };
+
+  const handleFirstDialogueButtonClick = () => {
+    setIsCreateMarginDialogueOpen(false);
+    setIsSecondDialogueOpen(true);
+  };
+
   return (
+    <>
     <motion.div
       className="w-full flex flex-col gap-[36px] pt-8"
       initial={{ opacity: 0 }}
@@ -396,8 +419,8 @@ export const LeverageAssetsTab = ({
             hasLink: false,
           },
           {
-            title: "Vanna Points",
-            value: `${vannaPoints}x`,
+            title: "Leverage",
+            value: `${leverage}x`,
             hasLink: false,
           },
           {
@@ -463,11 +486,124 @@ export const LeverageAssetsTab = ({
         <Button
           disabled={false}
           size="large"
-          text={"Create your Margin Account"}
+          text={hasMarginAccount ? "Deposit & Borrow" : "Create your Margin Account"}
           type="gradient"
-          onClick={onCreateMarginAccount}
+          onClick={handleButtonClick}
         />
       </motion.div>
     </motion.div>
+
+    {/* First dialogue: Create Margin Account */}
+    <AnimatePresence>
+      {isCreateMarginDialogueOpen && (
+        <motion.div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#45454566] "
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          onClick={handleCloseFirstDialogue}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            transition={{ duration: 0.3 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Dialogue
+              buttonOnClick={handleFirstDialogueButtonClick}
+              buttonText="Create Your Account"
+              content={[
+                { line: "Connect your wallet to get started." },
+                {
+                  line: "Confirm your Margin Account we will generate a unique address for you.",
+                },
+                { line: "Make a deposit to activate borrowing." },
+              ]}
+              heading="Create Margin Account"
+              onClose={handleCloseFirstDialogue}
+            />
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+
+    {/* Second dialogue: Review and Sign Agreement */}
+    <AnimatePresence>
+      {isSecondDialogueOpen && (
+        <motion.div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#45454566] "
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          onClick={handleCloseSecondDialogue}
+        >
+          <motion.div
+            className="w-full max-w-[891px]"
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            transition={{ duration: 0.3 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Dialogue
+              description="Before you proceed, please review and accept the terms of borrowing on VANNA. This agreement ensures you understand the risks, responsibilities, and conditions associated with using the platform."
+              buttonOnClick={handleCloseSecondDialogue}
+              buttonText="Sign Agreement"
+              content={[
+                {
+                  line: "Collateral Requirement",
+                  points: [
+                    "All borrowed positions must remain fully collateralized.",
+                    "If collateral value falls below the liquidation threshold, your position may be liquidated.",
+                  ],
+                },
+                {
+                  line: "Borrow Limits & Leverage",
+                  points: [
+                    "You may only borrow assets up to the maximum Loan-to-Value (LTV) allowed.",
+                    "Leverage is enabled only when collateral value supports it.",
+                  ],
+                },
+                {
+                  line: "Interest & Fees",
+                  points: [
+                    "Interest rates are variable and accrue in real time.",
+                    "Additional protocol fees may apply for borrowing or liquidation events.",
+                  ],
+                },
+                {
+                  line: "Liquidation Risk",
+                  points: [
+                    "Market volatility can reduce collateral value.",
+                    "If your position health factor drops below safe limits, collateral may be partially or fully liquidated without prior notice.",
+                  ],
+                },
+                {
+                  line: "User Responsibility",
+                  points: [
+                    "You are responsible for monitoring your positions, balances, and risks.",
+                    "VANNA is a non-custodial protocol; all actions are initiated by your wallet.",
+                  ],
+                },
+                {
+                  line: "No Guarantee of Returns",
+                  points: [
+                    "Using borrowed assets in trading, farming, or external protocols involves risk.",
+                    "VANNA does not guarantee profits or protection against losses.",
+                  ],
+                },
+              ]}
+              heading="Review and Sign Agreement"
+              checkboxContent="I have read and agree to the VANNA Borrow Agreement."
+              onClose={handleCloseSecondDialogue}
+            />
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  </>
   );
 };
