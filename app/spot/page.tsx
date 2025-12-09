@@ -1,6 +1,9 @@
 "use client";
 
 import Orderbook from "@/components/spot/OrderBook";
+import OrderPlacementForm from "@/components/spot/OrderPlacementForm";
+import OrderPlacementTable from "@/components/spot/OrderPlacementTable";
+import PositionHistory from "@/components/spot/Position-History";
 import Toolbar from "@/components/spot/Toolbar";
 
 const spot = () => {
@@ -35,12 +38,18 @@ const spot = () => {
               </div>
             </div>
 
-            <div className="min-h-[260px] rounded-2xl bg-white shadow">
-              Open Orders / Trade History
+            <div className="h-[449px]  bg-white flex flex-col">
+              {/* <div className="bg-black h-[35px]"></div>
+              <div className="bg-[#F7F7F7] h-[402px]"></div> */}
+
+              <PositionHistory />
             </div>
           </section>
 
-          <aside className="rounded-2xl bg-white shadow p-4">Order Form</aside>
+          <aside className="rounded-2xl bg-white  ">
+            <OrderPlacementForm />
+            {/* <OrderPlacementTable /> */}
+          </aside>
         </div>
       </div>
     </main>
