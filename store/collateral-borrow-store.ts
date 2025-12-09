@@ -11,7 +11,29 @@ export interface CollateralBorrowStateType {
 
 // Initial State
 const initialState: CollateralBorrowStateType = {
-  collaterals: [],
+  collaterals: [
+    {
+      asset: "USDT",
+      amount: 1500,
+      amountInUsd: 1500,
+      balanceType: "pb",
+      unifiedBalance: 1500,
+    },
+    {
+      asset: "USDC",
+      amount: 1200,
+      amountInUsd: 1200,
+      balanceType: "mb",
+      unifiedBalance: 1200,
+    },
+    {
+      asset: "ETH",
+      amount: 0.8,
+      amountInUsd: 2200,
+      balanceType: "wb",
+      unifiedBalance: 2200,
+    },
+  ],
   borrowItems:[
     {
       assetData: { asset: "0xUSDC", amount: "1000" },
