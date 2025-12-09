@@ -18,7 +18,7 @@ export const RepayLoanTab = () => {
     frozenBalance: 0,
   });
   const [selectedRepayCurrency, setSelectedRepayCurrency] =
-    useState<DropdownOptionsType>(DropdownOptions[0]);
+    useState<string>(DropdownOptions[0]);
   const [selectedRepayPercentage, setSelectedRepayPercentage] =
     useState<number>(10);
   const [repayAmount, setRepayAmount] = useState<number>(0);

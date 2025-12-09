@@ -58,7 +58,7 @@ export const LeverageCollateral = ({
 
   return (
     <motion.div
-        className="flex flex-col justify-between rounded-[26px] bg-[#E2E2E2] py-[36px] px-[16px] min-w-[691px] h-full"
+        className="flex flex-col justify-between rounded-[26px] bg-[#F7F7F7] border-[1px] border-[#E2E2E2] py-[36px] px-[16px] min-w-[691px] h-full"
         initial={{ opacity: 0, scale: 0.95 }}
         whileInView={{ opacity: 1, scale: 1 }}
         viewport={{ once: true }}

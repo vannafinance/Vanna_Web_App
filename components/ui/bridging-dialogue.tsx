@@ -83,7 +83,7 @@ export const BridgingDialogue = (props: BridgingDialogueProps) => {
           return (
             <motion.div
               className="w-full flex justify-between items-center"
-              key={item.title}
+              key={idx}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.3, delay: 0.3 + idx * 0.1 }}

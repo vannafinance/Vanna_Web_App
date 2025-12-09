@@ -52,7 +52,7 @@ export const LeverageAssetsTab = ({
       const newCollateral: Collaterals = {
         amount: 0,
         amountInUsd: 0,
-        asset: DropdownOptions[0].name,
+        asset: DropdownOptions[0],
         balanceType: "pb",
         unifiedBalance: 0,
       };
@@ -134,7 +134,7 @@ export const LeverageAssetsTab = ({
     const newCollateral: Collaterals = {
       amount: 0,
       amountInUsd: 0,
-      asset: DropdownOptions[0].name,
+      asset: DropdownOptions[0],
       balanceType: "pb",
       unifiedBalance: 0,
     };
@@ -290,7 +290,7 @@ export const LeverageAssetsTab = ({
             {collaterals.length > 0 ? (
               collaterals.map((collateral, index) => (
                 <motion.div
-                  key={`collateral-${collateral.asset}-${collateral.balanceType}-${index}`}
+                  key={index}
                   initial={{ opacity: 0, y: 20, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -20, scale: 0.95 }}
@@ -315,7 +315,6 @@ export const LeverageAssetsTab = ({
               ))
             ) : (
               <motion.div
-                key="empty"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
@@ -452,7 +451,7 @@ export const LeverageAssetsTab = ({
           },
         ].map((item, index) => (
           <motion.div
-            key={item.title}
+            key={index}
             className="flex justify-between"
             initial={{ opacity: 0, x: -10 }}
             whileInView={{ opacity: 1, x: 0 }}

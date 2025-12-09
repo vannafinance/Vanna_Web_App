@@ -7,6 +7,7 @@ import {
   iconPaths,
   depositAmountBreakdownData,
   unifiedBalanceBreakdownData,
+  balanceTypeOptions,
 } from "@/lib/constants";
 import Image from "next/image";
 import { AmountBreakdownDialogue } from "../ui/amount-breakdown-dialogue";
@@ -42,28 +43,13 @@ export const Collateral = (props: Collateral) => {
   const isEditing = props.isEditing ?? props.collaterals === null;
   const isStandard = !isEditing;
 
-  // Get initial currency from collateral or default
-  const getInitialCurrency = () => {
-    if (props.collaterals) {
-      const found = DropdownOptions.find(
-        (opt) => opt.name === props.collaterals!.asset
-      );
-      return found || DropdownOptions[0];
-    }
-    return DropdownOptions[0];
-  };
-
   // Form state
-  const [selectedCurrency, setSelectedCurrency] = useState(getInitialCurrency);
-  const [valueInput, setValueInput] = useState<string>(
-    props.collaterals ? props.collaterals.amount.toString() : "0.0"
-  );
-  const [valueInUsd, setValueInUsd] = useState<string>(
-    props.collaterals ? props.collaterals.amountInUsd.toString() : "0.0"
-  );
+  const [selectedCurrency, setSelectedCurrency] = useState<string>(DropdownOptions[0]);
+  const [valueInput, setValueInput] = useState<string>("0.0");
+  const [valueInUsd, setValueInUsd] = useState<string>("0.0");
   const [percentage, setPercentage] = useState(10);
-  const [selectedBalanceType, setSelectedBalanceType] = useState(
-    props.collaterals ? props.collaterals.balanceType.toUpperCase() : "PB"
+  const [selectedBalanceType, setSelectedBalanceType] = useState<string>(
+    balanceTypeOptions[0]
   );
 
   // Dialogue visibility states
@@ -77,16 +63,15 @@ export const Collateral = (props: Collateral) => {
   const showDeleteButton = isStandard && hasCollateral && props.index !== 0;
   const isPBSelected = selectedBalanceType === "PB";
   const isWBSelected = selectedBalanceType === "WB";
+  const isMBSelected = selectedBalanceType === "MB";
+
 
   // Update form when collateral changes in editing mode
   useEffect(() => {
     if (props.collaterals && isEditing) {
       setValueInput(props.collaterals.amount.toString());
       setValueInUsd(props.collaterals.amountInUsd.toString());
-      const found = DropdownOptions.find(
-        (opt) => opt.name === props.collaterals!.asset
-      );
-      if (found) setSelectedCurrency(found);
+      setSelectedCurrency(props.collaterals!.asset);
       setSelectedBalanceType(props.collaterals.balanceType.toUpperCase());
     }
   }, [props.collaterals, isEditing]);
@@ -104,7 +89,7 @@ export const Collateral = (props: Collateral) => {
     if (!props.onSave) return;
 
     const updatedCollateral: Collaterals = {
-      asset: selectedCurrency.name,
+      asset: selectedCurrency,
       amount: parseFloat(valueInput) || 0,
       amountInUsd: parseFloat(valueInUsd) || 0,
       balanceType: selectedBalanceType.toLowerCase(),
@@ -135,7 +120,10 @@ export const Collateral = (props: Collateral) => {
     setSelectedBalanceType("PB");
   };
 
-  
+  // Handler for MB balance type click
+  const handleMBClick = () => {
+    setSelectedBalanceType("MB");
+  };
 
   // Handler for WB balance type click
   const handleWBClick = () => {
@@ -164,7 +152,7 @@ export const Collateral = (props: Collateral) => {
 
   return (
     <motion.div
-      className="relative flex justify-between gap-[20px] bg-white w-full p-[20px] rounded-[16px] border-[1px] border-[#E2E2E2] overflow-hidden"
+      className="relative flex justify-between gap-[20px] bg-white w-full p-[20px] rounded-[16px] border-[1px] border-[#E2E2E2] "
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
@@ -314,58 +302,8 @@ export const Collateral = (props: Collateral) => {
             {/* Balance type selector and unified balance */}
             <div className="flex flex-col justify-end items-end gap-[4px]">
               {/* PB/WB toggle */}
-              <div
-                className="items-center flex rounded-[4px] gap-[4px]"
-                role="group"
-                aria-label="Balance type"
-              >
-                <motion.button
-                  type="button"
-                  onClick={handlePBClick}
-                  className={`text-center w-[28px] ${
-                    isPBSelected
-                      ? "text-white bg-[#703AE6]"
-                      : "text-black bg-[#F7F7F7]"
-                  } cursor-pointer text-[12px] font-medium p-[4px] rounded-[4px]`}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  transition={{ duration: 0.1 }}
-                  aria-label="Platform Balance"
-                  aria-pressed={isPBSelected}
-                >
-                  PB
-                </motion.button>
-                <div>
-                  <svg
-                    width="12"
-                    height="11"
-                    viewBox="0 0 12 11"
-                    fill="none"
-                    aria-hidden="true"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M10.9986 6.75H0.125171C0.0564207 6.75 0.000170742 6.80625 0.000170742 6.875V7.8125C0.000170742 7.88125 0.0564207 7.9375 0.125171 7.9375H9.58142L7.32673 10.7969C7.26267 10.8781 7.32048 11 7.42517 11H8.55798C8.63455 11 8.70642 10.9656 8.75486 10.9047L11.3924 7.55937C11.6502 7.23125 11.4174 6.75 10.9986 6.75ZM11.3752 3.0625H1.91892L4.17361 0.203125C4.23767 0.121875 4.17986 0 4.07517 0H2.94236C2.8658 0 2.79392 0.0343751 2.74548 0.0953126L0.107983 3.44063C-0.149829 3.76875 0.0829833 4.25 0.500171 4.25H11.3752C11.4439 4.25 11.5002 4.19375 11.5002 4.125V3.1875C11.5002 3.11875 11.4439 3.0625 11.3752 3.0625Z"
-                      fill="#111111"
-                    />
-                  </svg>
-                </div>
-                <motion.button
-                  type="button"
-                  onClick={handleWBClick}
-                  className={`text-center w-[28px] ${
-                    isWBSelected
-                      ? "text-white bg-[#703AE6]"
-                      : "text-black bg-[#F7F7F7]"
-                  } cursor-pointer text-[12px] font-medium p-[4px] rounded-[4px]`}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  transition={{ duration: 0.1 }}
-                  aria-label="Wallet Balance"
-                  aria-pressed={isWBSelected}
-                >
-                  WB
-                </motion.button>
+              <div className="py-[4px] pr-[4px] pl-[8px] bg-[#F2EBFE] rounded-[8px] ">
+                <Dropdown items={balanceTypeOptions} selectedOption={selectedBalanceType} setSelectedOption={setSelectedBalanceType}/>
               </div>
 
               {/* Unified Balance link */}
