@@ -1,5 +1,5 @@
 import { Button } from "./button";
-import { Checkbox } from "./checkbox";
+import { Checkbox } from "./Checkbox";
 import { useState } from "react";
 import { motion } from "framer-motion";
 
@@ -21,13 +21,13 @@ interface Dialogue {
 export const Dialogue = (props: Dialogue) => {
   const [isChecked, setIsChecked] = useState(false);
   return (
-    <motion.div 
+    <motion.div
       className="shadow-md flex flex-col gap-[20px] w-full max-h-[90vh] rounded-[20px] py-[36px] px-[20px] bg-[#F7F7F7]"
       initial={{ opacity: 0, scale: 0.95, y: 20 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
     >
-      <motion.div 
+      <motion.div
         className="text-[24px] font-bold text-center mb-[24px] flex-shrink-0"
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -35,9 +35,9 @@ export const Dialogue = (props: Dialogue) => {
       >
         {props.heading}
       </motion.div>
-      
+
       {props.description && (
-        <motion.div 
+        <motion.div
           className="text-[16px] font-medium text-[#333333]"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -46,13 +46,13 @@ export const Dialogue = (props: Dialogue) => {
           {props.description}
         </motion.div>
       )}
-      
+
       <div className="text-[#333333] overflow-y-auto overflow-x-hidden pr-2 max-h-[600px]">
         <ol className="list-decimal list-outside pl-5 space-y-3">
           {props.content.map((item, idx) => {
             return (
-              <motion.li 
-                className="text-[16px] font-medium" 
+              <motion.li
+                className="text-[16px] font-medium"
                 key={`${item.line}-${idx}`}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -62,12 +62,18 @@ export const Dialogue = (props: Dialogue) => {
                 {item.points && item.points.length > 0 && (
                   <ul className="list-[lower-alpha] list-outside pl-4 mt-1 space-y-2">
                     {item.points.map((point, pointIdx) => (
-                      <motion.li 
-                        key={`${item.line}-point-${pointIdx}-${point.substring(0, 20)}`} 
+                      <motion.li
+                        key={`${item.line}-point-${pointIdx}-${point.substring(
+                          0,
+                          20
+                        )}`}
                         className="text-[16px] font-medium"
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.2, delay: 0.25 + idx * 0.05 + pointIdx * 0.03 }}
+                        transition={{
+                          duration: 0.2,
+                          delay: 0.25 + idx * 0.05 + pointIdx * 0.03,
+                        }}
                       >
                         {point}
                       </motion.li>
@@ -79,13 +85,16 @@ export const Dialogue = (props: Dialogue) => {
           })}
         </ol>
       </div>
-      
+
       {props.checkboxContent && (
-        <motion.div 
+        <motion.div
           className="flex-shrink-0 mt-[24px]"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.3 + props.content.length * 0.05 }}
+          transition={{
+            duration: 0.3,
+            delay: 0.3 + props.content.length * 0.05,
+          }}
         >
           <Checkbox
             label={props.checkboxContent}
@@ -99,12 +108,15 @@ export const Dialogue = (props: Dialogue) => {
           />
         </motion.div>
       )}
-      
-      <motion.div 
+
+      <motion.div
         className="flex flex-col gap-[12px] flex-shrink-0 mt-[24px]"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.35 + props.content.length * 0.05 }}
+        transition={{
+          duration: 0.3,
+          delay: 0.35 + props.content.length * 0.05,
+        }}
       >
         <Button
           type="solid"
