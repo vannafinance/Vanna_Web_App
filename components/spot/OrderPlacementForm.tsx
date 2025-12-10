@@ -10,6 +10,11 @@ import ToggleButton from "../ui/toggle";
 import Image from "next/image";
 import TabGroup from "../ui/TabButton";
 import BuySellToggle from "../ui/BuySellToggle";
+import { Button } from "../ui/button";
+
+import { Dropdown } from "../ui/dropdown";
+import { DropdownOptionsType } from "@/lib/types";
+import { Checkbox } from "../ui/Checkbox";
 
 const tabClasses = (active: boolean) =>
   `flex-1 text-center py-2 text-sm font-medium rounded-full border ${
@@ -24,6 +29,12 @@ const tabs = [
   { id: "limit", label: "Limit" },
   { id: "market", label: "Market" },
   { id: "trigger", label: "Trigger" },
+];
+
+const TIME_IN_FORCE_OPTIONS: DropdownOptionsType[] = [
+  { id: "GTC", name: "GTC" },
+  { id: "IOC", name: "IOC" },
+  { id: "FOK", name: "FOK" },
 ];
 
 export default function OrderPlacementForm() {
@@ -44,6 +55,15 @@ export default function OrderPlacementForm() {
     defaultValues: form,
   });
 
+  const side = watch("side");
+  const orderType = watch("orderType");
+  const loopEnabled = watch("loopEnabled");
+  const timeInForce = watch("timeInForce") || "GTC";
+
+  const selectedTimeInForce =
+    TIME_IN_FORCE_OPTIONS.find((o) => o.id === timeInForce) ??
+    TIME_IN_FORCE_OPTIONS[0];
+
   // sync when store changes (e.g. reset from somewhere else)
   useEffect(() => {
     reset(form);
@@ -55,14 +75,10 @@ export default function OrderPlacementForm() {
     console.log("ORDER SUBMIT =>", values);
   };
 
-  const side = watch("side");
-  const orderType = watch("orderType");
-  const loopEnabled = watch("loopEnabled");
-
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="w-full max-w-sm rounded-2xl border border-[#E2E2E2]  bg-[#F7F7F7] p-4 flex flex-col gap-5 text-xs"
+      className="w-[380px] rounded-2xl border border-[#E2E2E2]  bg-[#F7F7F7] p-4 flex flex-col gap-5 text-xs"
     >
       {/* Top Tabs: Limit / Market / Trigger */}
       {/* <div className="flex gap-4 border-b pb-2 mb-4">
@@ -134,7 +150,7 @@ export default function OrderPlacementForm() {
 
       {/* Loop toggle row */}
       <div>
-        <div className="mb-3 flex items-center gap-2 justify-end">
+        <div className="flex items-center gap-2 justify-end">
           <span className="text-xs text-[#111111] font-medium">Loop</span>
 
           <ToggleButton
@@ -150,107 +166,110 @@ export default function OrderPlacementForm() {
         </div>
 
         {/* No of Loops */}
-        <div className="mb-3">
-          <label className="mb-1 block text-[10px] font-medium text-[#111111]">
+        <div className="flex flex-col gap-2">
+          <label className=" text-[10px]  text-[#111111] leading-[15px] font-medium">
             No of Loops
           </label>
           <div className="flex gap-2 ">
-            <input
-              type="number"
-              placeholder="Enter Amount"
-              className="h-9 flex-1 rounded-md border  border-[#E2E2E2] bg-white px-[10px] text-xs font-medium text-[#C6C6C6] outline-none"
-              {...register("noOfLoops", {
-                min: { value: 1, message: "Min 1 loop" },
-              })}
-            />
-            {[5, 10, 15].map((n) => (
-              <button
-                key={n}
-                type="button"
-                onClick={() => setValue("noOfLoops", n)}
-                className="flex h-9 w-10 font-medium items-center justify-center rounded-lg  border-[##E2E2E2] bg-[#FFFFFF] text-xs text-[#111111]"
-              >
-                {n}
-              </button>
-            ))}
-            <button
-              type="button"
-              className="flex h-9 w-10 items-center justify-center rounded-lg  border-[##E2E2E2] bg-[#FFFFFF] text-lg"
-            >
-              ∞
-            </button>
+            <div className="flex h-9 w-[170px] items-center  rounded-lg border border-[#E2E2E2] bg-white p-2">
+              <div className="rounded-md py-1 flex gap-2.5 items-center">
+                <input
+                  type="number"
+                  placeholder="Enter Amount"
+                  className=" w-[134px] h-[18px] text-[12px] leading-[18px] font-medium outline-none
+                   placeholder:text-[#C6C6C6]
+                   [appearance:textfield]
+                   [&::-webkit-inner-spin-button]:appearance-none
+                   [&::-webkit-outer-spin-button]:appearance-none"
+                  {...register("noOfLoops", {
+                    min: { value: 1, message: "Min 1 loop" },
+                  })}
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 items-center justify-between">
+              {[5, 10, 15].map((n) => (
+                <div
+                  key={n}
+                  className="flex gap-2.5 px-[14.25] py-[9px] rounded-lg bg-[#FFFFFF]"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setValue("noOfLoops", n)}
+                    className="text-[12px] text-[#111111] leading-[18px] font-medium"
+                  >
+                    {n}
+                  </button>
+                </div>
+              ))}
+              <div className="flex gap-2.5 px-[9.25] py-[9.5px] rounded-lg bg-[#FFFFFF]">
+                <button
+                  type="button"
+                  className="text-[20px] text-[#111111] leading-[18px] font-medium"
+                >
+                  &infin;
+                </button>
+              </div>
+            </div>
           </div>
-          {errors.noOfLoops && (
-            <p className="mt-1 text-[10px] text-red-500">
-              {errors.noOfLoops.message}
-            </p>
-          )}
         </div>
       </div>
 
       {/* Entry Price + Total Units */}
-      <div className="mb-3 grid grid-cols-2 gap-3">
-        <div>
-          <label className="mb-1 block text-[10px] text-[#111111] font-medium">
+      <div className=" flex gap-3">
+        <div className="flex flex-col w-[168px] gap-1">
+          <label className="text-[10px] text-[#111111] font-medium leading-[15px]">
             Entry Price
           </label>
 
-          <div className="flex h-9 items-center relative rounded-md border border-[#E2E2E2] bg-white px-2.5">
-            <input
-              type="number"
-              placeholder="Enter Amount"
-              className="
-        flex-1 bg-transparent
-        text-[12px] leading-[18px] font-medium text-[#111111]
-        outline-none
-        placeholder:text-[#C6C6C6]
-        [appearance:textfield]
-        [&::-webkit-outer-spin-button]:appearance-none
-        [&::-webkit-inner-spin-button]:appearance-none
-      "
-              {...register("entryPrice", {
-                required: "Required",
-                min: { value: 0, message: "Must be positive" },
-              })}
-            />
-            <span className="ml-2 text-[8px] absolute right-3 top-3 leading-3 font-medium text-black">
-              USDT
-            </span>
+          <div className="flex h-9  items-center  rounded-lg border border-[#E2E2E2] bg-white p-2">
+            <div className="rounded-md py-1 flex gap-2.5 items-center">
+              <input
+                type="number"
+                placeholder="Enter Amount"
+                className=" w-[121px] h-[18] text-[12px] leading-[18px] font-medium outline-none
+                   placeholder:text-[#C6C6C6]
+                   [appearance:textfield]
+                   [&::-webkit-inner-spin-button]:appearance-none
+                   [&::-webkit-outer-spin-button]:appearance-none"
+                {...register("entryPrice", {
+                  required: "Required",
+                  min: { value: 0, message: "Must be positive" },
+                })}
+              />
+              <div className="text-[8px]  leading-3 font-medium text-[#111111]">
+                USDT
+              </div>
+            </div>
           </div>
-          {errors.entryPrice && (
-            <p className="mt-1 text-[10px] text-red-500">
-              {errors.entryPrice.message}
-            </p>
-          )}
         </div>
 
-        <div>
-          <label className="mb-1 block text-[10px] text-[#111111] font-medium">
+        <div className="flex flex-col gap-1">
+          <label className=" text-[10px] text-[#111111] font-medium leading-[15px]">
             Total Units
           </label>
-
-          <div className="flex h-9 items-center relative rounded-md border border-[#E2E2E2] bg-white px-2.5">
-            <input
-              type="number"
-              placeholder="Enter Unit"
-              className="
-        flex-1 bg-transparent
-        text-[12px] leading-[18px] font-medium text-[#111111]
-        outline-none
-        placeholder:text-[#C6C6C6]
-        [appearance:textfield]
-        [&::-webkit-outer-spin-button]:appearance-none
-        [&::-webkit-inner-spin-button]:appearance-none
-      "
-              {...register("entryPrice", {
-                required: "Required",
-                min: { value: 0, message: "Must be positive" },
-              })}
-            />
-            <span className="ml-2 text-[8px] absolute right-3 top-3 leading-3 font-medium text-black">
-              BTC
-            </span>
+          <div className="flex h-9 w-[168px] items-center  rounded-lg border border-[#E2E2E2] bg-white p-2">
+            <div className="rounded-md py-1 flex gap-2.5 items-center">
+              <input
+                type="number"
+                placeholder="Enter Unit"
+                className=" w-[121px] h-[18] text-[12px] leading-[18px] font-medium outline-none
+                   placeholder:text-[#C6C6C6]
+                   [appearance:textfield]
+                   [&::-webkit-inner-spin-button]:appearance-none
+                   [&::-webkit-outer-spin-button]:appearance-none"
+                {...register("totalUnits", {
+                  required: "Required",
+                  min: { value: 0, message: "Must be positive" },
+                })}
+              />
+              <div className="text-[8px]  leading-3 font-medium text-[#111111]">
+                BTC
+              </div>
+            </div>
           </div>
+
           {errors.totalUnits && (
             <p className="mt-1 text-[10px] text-red-500">
               {errors.totalUnits.message}
@@ -260,14 +279,14 @@ export default function OrderPlacementForm() {
       </div>
 
       {/* Total Amount + % buttons */}
-      <div className="mb-3">
+      <div className="flex flex-col gap-2">
         {/* Top row: label + MB text */}
-        <div className="mb-2 flex items-center justify-between">
+        <div className="flex items-center justify-between ">
           <label className="text-[10px] leading-[15px] font-medium text-[#111111]">
             Total Amount
           </label>
 
-          <span className="flex items-center gap-1 text-[10px] leading-[12px] font-medium text-[#919191]">
+          <span className="flex items-center gap-1 text-[10px] leading-[15px] font-medium text-[#919191]">
             <Image
               className="object-cover"
               width={14}
@@ -280,25 +299,27 @@ export default function OrderPlacementForm() {
         </div>
 
         {/* Input + % buttons row */}
-        <div className="mb-3 grid grid-cols-2 gap-3">
+        <div className=" grid grid-cols-2 gap-3">
           {/* Input */}
-          <div className="flex h-9 items-center relative rounded-md border border-[#E2E2E2] bg-white px-2.5">
-            <input
-              type="number"
-              placeholder="Enter Amount"
-              className="flex-1 bg-transparent text-[12px] leading-[18px] font-medium text-[#C6C6C6] outline-none
+          <div className="flex h-9 w-[168px] items-center  rounded-lg border border-[#E2E2E2] bg-white p-2">
+            <div className="rounded-md py-1 flex gap-2.5 items-center">
+              <input
+                type="number"
+                placeholder="Enter Amount"
+                className=" w-[121px] h-[18] text-[12px] leading-[18px] font-medium outline-none
                    placeholder:text-[#C6C6C6]
                    [appearance:textfield]
                    [&::-webkit-inner-spin-button]:appearance-none
                    [&::-webkit-outer-spin-button]:appearance-none"
-              {...register("totalAmount", {
-                required: "Required",
-                min: { value: 0, message: "Must be positive" },
-              })}
-            />
-            <span className="ml-2 text-[8px] absolute right-3 top-3 leading-[12px] font-medium text-[#111111]">
-              USDT
-            </span>
+                {...register("totalAmount", {
+                  required: "Required",
+                  min: { value: 0, message: "Must be positive" },
+                })}
+              />
+              <div className="text-[8px]  leading-3 font-medium text-[#111111]">
+                USDT
+              </div>
+            </div>
           </div>
 
           {/* % buttons group */}
@@ -308,7 +329,7 @@ export default function OrderPlacementForm() {
                 key={p}
                 type="button"
                 className="flex h-full flex-1 items-center justify-center
-                     rounded-[8px] border border-[#E2E2E2] bg-[#FFFFFF]
+                     rounded-lg  bg-[#FFFFFF]
                      text-[10px] leading-[15px] font-medium text-[#111111]"
               >
                 {p}%
@@ -327,64 +348,75 @@ export default function OrderPlacementForm() {
       {/* Checkboxes */}
 
       <div>
-        <label className="flex items-center gap-2 text-xs text-[#111111]">
-          <input
-            type="checkbox"
-            className="h-3 w-3 rounded border-gray-300"
-            {...register("takeProfit")}
-          />
-          <span>Take Profit</span>
-        </label>
+        <Checkbox label="Take Profit" {...register("takeProfit")} />
       </div>
-
       <div>
-        <label className="flex items-center gap-2 text-xs text-[#111111]">
-          <input
-            type="checkbox"
-            className="h-3 w-3 rounded border-gray-300"
-            {...register("stopLoss")}
-          />
-          <span>Stop Loss</span>
-        </label>
+        <Checkbox label="Stop Loss" {...register("stopLoss")} />
       </div>
 
-      {/* Risk / Gain display (dummy values for now) */}
-      <div className="mb-3 flex justify-between text-[11px] text-[#111111]">
-        <div>
-          <div>Risk: 00.00 USDT</div>
-          <div>Gain: 00.00 USDT</div>
+      {/* Risk / Gain display*/}
+      <div className="flex flex-col gap-1 pt-2 text-[11px] text-[#111111]">
+        <div className="flex gap-16">
+          <div className="flex gap-1 w-[138px]">
+            <div className="text-[#111111] text-[10px] font-semibold leading-[15px]">
+              Risk:
+            </div>
+            <div className="text-[#464545] text-[10px] font-medium leading-[15px]">
+              00.00 USDT
+            </div>
+          </div>
+          <div className="flex gap-1 w-[138px]">
+            <div className="text-[#111111] text-[10px] font-semibold leading-[15px]">
+              Risk (in %):
+            </div>
+            <div className="text-[#464545] text-[10px] font-medium leading-[15px]">
+              00.00 USDT
+            </div>
+          </div>
         </div>
-        <div className="text-right">
-          <div>Risk (in %): 00.00</div>
-          <div>Gain (in %): 00.00</div>
+        <div className="flex gap-16">
+          <div className="flex gap-1 w-[138px]">
+            <div className="text-[#111111] text-[10px] font-semibold leading-[15px]">
+              Gain:
+            </div>
+            <div className="text-[#464545] text-[10px] font-medium leading-[15px]">
+              00.00 USDT
+            </div>
+          </div>
+          <div className="flex gap-1 w-[138px]">
+            <div className="text-[#111111] text-[10px] font-semibold leading-[15px]">
+              Gain (in %):
+            </div>
+            <div className="text-[#464545] text-[10px] font-medium leading-[15px]">
+              00.00 USDT
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Time in Force */}
-      <div className="mb-4 flex items-center justify-between text-xs text-[#111111]">
-        <span>Time in Force</span>
-        <div className="relative">
-          <select
-            className="h-8 rounded-lg border border-gray-300 bg-white px-3 pr-6 text-xs outline-none"
-            {...register("timeInForce")}
-          >
-            <option value="GTC">GTC</option>
-            <option value="IOC">IOC</option>
-            <option value="FOK">FOK</option>
-          </select>
-          <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[10px]">
-            ▾
-          </span>
-        </div>
+      <div className="flex items-center gap-2.5  ">
+        <span className="text-[#6F6F6F] text-[12px] font-medium leading-[18px] ">
+          Time in Force
+        </span>
+        <Dropdown
+          items={TIME_IN_FORCE_OPTIONS}
+          selectedOption={selectedTimeInForce}
+          setSelectedOption={(item) => {
+            setValue(
+              "timeInForce",
+              item.id as OrderPlacementFormValues["timeInForce"],
+              {
+                shouldDirty: true,
+                shouldValidate: true,
+              }
+            );
+          }}
+        />
       </div>
 
       {/* Submit */}
-      <button
-        type="submit"
-        className="mt-2 w-full rounded-xl bg-purple-600 py-3 text-sm font-semibold text-white"
-      >
-        Place Order
-      </button>
+      <Button text="Place Order" size="small" type="solid" disabled={false} />
     </form>
   );
 }

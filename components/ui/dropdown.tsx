@@ -9,7 +9,7 @@ interface Dropdown {
   items: {
     id: string;
     name: string;
-    icon: string;
+    icon?: string;
   }[];
   setSelectedOption: React.Dispatch<React.SetStateAction<DropdownOptionsType>>;
   selectedOption: DropdownOptionsType;
