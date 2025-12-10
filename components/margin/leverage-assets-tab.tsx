@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Collateral } from "./collateral-box";
 import { BorrowBox } from "./borrow-box";
 import { Dialogue } from "@/components/ui/dialogue";
-import { useCollateralBorrowStore } from "@/store/collateral-borrow-store";
 
 type Modes = "Deposit" | "Borrow";
 
@@ -21,8 +20,6 @@ export const LeverageAssetsTab = ({
   hasMarginAccount = true,
 }: LeverageAssetsTabProps) => {
   // Get collaterals from global store using selector to prevent unnecessary re-renders
-  const collaterals = useCollateralBorrowStore((state) => state.collaterals);
-  const set = useCollateralBorrowStore((state) => state.set);
 
   // Component state
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -48,37 +45,37 @@ export const LeverageAssetsTab = ({
 
   // Initialize with one empty collateral if none exist
   useEffect(() => {
-    if (collaterals.length === 0) {
+    if (currentCollaterals.length === 0) {
       const newCollateral: Collaterals = {
         amount: 0,
         amountInUsd: 0,
-        asset: DropdownOptions[0].name,
+        asset: DropdownOptions[0],
         balanceType: "pb",
         unifiedBalance: 0,
       };
-      set({ collaterals: [newCollateral] });
+      setCurrentCollaterals([newCollateral]);
       setEditingIndex(0);
     }
-  }, [collaterals.length]);
+  }, [currentCollaterals.length]);
 
   // Limit to 1 collateral in Borrow mode
   useEffect(() => {
-    if (mode === "Borrow" && collaterals.length > 1) {
-      set({ collaterals: [collaterals[0]] });
+    if (mode === "Borrow" && currentCollaterals.length > 1) {
+      setCurrentCollaterals([currentCollaterals[0]]);
       if (editingIndex !== null && editingIndex > 0) {
         setEditingIndex(null);
       }
     }
-  }, [mode, collaterals.length, editingIndex]);
+  }, [mode, currentCollaterals.length, editingIndex]);
 
   // Calculate total deposit value from all collaterals
   const totalDepositValue = useMemo(
     () =>
-      collaterals.reduce(
+      currentCollaterals.reduce(
         (sum, collateral) => sum + (collateral.amountInUsd || 0),
         0
       ),
-    [collaterals]
+    [currentCollaterals]
   );
 
   // Calculate fees: 0.0234% of total deposit
@@ -114,32 +111,32 @@ export const LeverageAssetsTab = ({
     setDepositAmount(totalDepositValue);
 
     // Use currency from first collateral
-    if (collaterals.length > 0 && collaterals[0].asset) {
-      setDepositCurrency(collaterals[0].asset);
+    if (currentCollaterals.length > 0 && currentCollaterals[0].asset) {
+      setDepositCurrency(currentCollaterals[0].asset);
     }
-  }, [totalDepositValue, collaterals]);
+  }, [totalDepositValue, currentCollaterals]);
 
   // Update local state when collaterals or borrowItems change
   useEffect(() => {
-    setCurrentCollaterals(collaterals);
+    setCurrentCollaterals(currentCollaterals);
     setCurrentBorrowItems(borrowItems);
-  }, [collaterals, borrowItems]);
+  }, [currentCollaterals, borrowItems]);
 
   // Add new collateral
   // Prevents adding if already editing or in Borrow mode with 1 collateral
   const handleAddCollateral = () => {
     if (editingIndex !== null) return;
-    if (mode === "Borrow" && collaterals.length >= 1) return;
+    if (mode === "Borrow" && currentCollaterals.length >= 1) return;
 
     const newCollateral: Collaterals = {
       amount: 0,
       amountInUsd: 0,
-      asset: DropdownOptions[0].name,
+      asset: DropdownOptions[0],
       balanceType: "pb",
       unifiedBalance: 0,
     };
-    const newIndex = collaterals.length;
-    set({ collaterals: [...collaterals, newCollateral] });
+    const newIndex = currentCollaterals.length;
+    setCurrentCollaterals([...currentCollaterals, newCollateral]);
     setEditingIndex(newIndex);
   };
 
@@ -155,9 +152,9 @@ export const LeverageAssetsTab = ({
     index: number,
     updatedCollateral: Collaterals
   ) => {
-    const newCollaterals = [...collaterals];
+    const newCollaterals = [...currentCollaterals];
     newCollaterals[index] = updatedCollateral;
-    set({ collaterals: newCollaterals });
+    setCurrentCollaterals(newCollaterals);
     setEditingIndex(null);
   };
 
@@ -167,11 +164,11 @@ export const LeverageAssetsTab = ({
     if (
       editingIndex !== null &&
       editingIndex > 0 &&
-      editingIndex === collaterals.length - 1
+      editingIndex === currentCollaterals.length - 1
     ) {
-      const collateral = collaterals[editingIndex];
+      const collateral = currentCollaterals[editingIndex];
       if (collateral.amount === 0 && collateral.amountInUsd === 0) {
-        set({ collaterals: collaterals.slice(0, -1) });
+        setCurrentCollaterals(currentCollaterals.slice(0, -1));
       }
     }
     setEditingIndex(null);
@@ -183,8 +180,8 @@ export const LeverageAssetsTab = ({
     if (editingIndex !== null) return;
     if (index === 0) return;
 
-    const newCollaterals = collaterals.filter((_, i) => i !== index);
-    set({ collaterals: newCollaterals });
+    const newCollaterals = currentCollaterals.filter((_, i) => i !== index);
+    setCurrentCollaterals(newCollaterals);
   };
 
   // Handler for mode toggle
@@ -215,17 +212,15 @@ export const LeverageAssetsTab = ({
 
   // Handler for empty collateral save
   const handleEmptyCollateralSave = (updatedCollateral: Collaterals) => {
-    set({ collaterals: [updatedCollateral] });
+    setCurrentCollaterals([updatedCollateral]);
     setEditingIndex(null);
   };
 
   // Handle create margin account button click
   // Updates global store and opens first dialogue
   const handleButtonClick = () => {
-    set({
-      collaterals: currentCollaterals,
-      borrowItems: currentBorrowItems,
-    });
+    setCurrentCollaterals(currentCollaterals);
+    setCurrentBorrowItems(currentBorrowItems);
     setIsCreateMarginDialogueOpen(true);
   };
 
@@ -287,10 +282,10 @@ export const LeverageAssetsTab = ({
         <div className="flex flex-col gap-[12px]">
           {/* Render collaterals list */}
           <AnimatePresence mode="popLayout">
-            {collaterals.length > 0 ? (
-              collaterals.map((collateral, index) => (
+            {currentCollaterals.length > 0 ? (
+              currentCollaterals.map((collateral, index) => (
                 <motion.div
-                  key={`collateral-${collateral.asset}-${collateral.balanceType}-${index}`}
+                  key={index}
                   initial={{ opacity: 0, y: 20, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -20, scale: 0.95 }}
@@ -315,7 +310,6 @@ export const LeverageAssetsTab = ({
               ))
             ) : (
               <motion.div
-                key="empty"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
@@ -339,16 +333,16 @@ export const LeverageAssetsTab = ({
         <motion.button
           type="button"
           onClick={handleAddCollateral}
-          disabled={editingIndex !== null || (mode === "Borrow" && collaterals.length >= 1)}
+          disabled={editingIndex !== null || (mode === "Borrow" && currentCollaterals.length >= 1)}
           className={`w-fit hover:cursor-pointer hover:bg-[#F1EBFD] py-[11px] px-[10px] rounded-[8px] flex gap-[4px] text-[14px] font-medium text-[#703AE6] items-center ${
             editingIndex !== null ||
-            (mode === "Borrow" && collaterals.length >= 1)
+            (mode === "Borrow" && currentCollaterals.length >= 1)
               ? "opacity-50 cursor-not-allowed"
               : ""
           }`}
           whileHover={
             editingIndex === null &&
-            !(mode === "Borrow" && collaterals.length >= 1)
+            !(mode === "Borrow" && currentCollaterals.length >= 1)
               ? { x: 5 }
               : {}
           }
@@ -452,7 +446,7 @@ export const LeverageAssetsTab = ({
           },
         ].map((item, index) => (
           <motion.div
-            key={item.title}
+            key={index}
             className="flex justify-between"
             initial={{ opacity: 0, x: -10 }}
             whileInView={{ opacity: 1, x: 0 }}

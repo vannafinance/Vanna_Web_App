@@ -73,7 +73,7 @@ export const Carousel = (props: Carousel) => {
       <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2" role="tablist" aria-label="Carousel navigation">
         {props.items.map((item, index) => (
           <button
-            key={`carousel-${item.title}-${index}`}
+            key={index}
             type="button"
             onClick={() => setCurrentIndex(index)}
             className={`w-2 h-2 rounded-full transition-all ${

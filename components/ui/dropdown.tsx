@@ -1,18 +1,14 @@
 "use client";
 
-import { DropdownOptionsType } from "@/lib/types";
+import { iconPaths } from "@/lib/constants";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { useState } from "react";
 
 interface Dropdown {
-  items: {
-    id: string;
-    name: string;
-    icon?: string;
-  }[];
-  setSelectedOption: React.Dispatch<React.SetStateAction<DropdownOptionsType>>;
-  selectedOption: DropdownOptionsType;
+  items: string[];
+  setSelectedOption: React.Dispatch<React.SetStateAction<string>>;
+  selectedOption: string;
 }
 
 export const Dropdown = (props: Dropdown) => {
@@ -22,23 +18,25 @@ export const Dropdown = (props: Dropdown) => {
     <div
       onMouseEnter={() => setIsHover(true)}
       onMouseLeave={() => setIsHover(false)}
-      className="relative inline-block "
+      className="relative inline-block z-50"
     >
       <button
         type="button"
         className="rounded-[8px] font-medium text-[15.5px] cursor-pointer flex gap-2 justify-center items-center"
-        aria-label={`Selected: ${props.selectedOption.name}. Click to change option`}
+        aria-label={`Selected: ${props.selectedOption}. Click to change option`}
         aria-expanded={isHover}
         aria-haspopup="listbox"
       >
-        <Image
-          src={props.selectedOption.icon}
-          width={20}
-          height={20}
-          alt=""
-          aria-hidden="true"
-        />{" "}
-        {props.selectedOption.name}
+        {iconPaths[props.selectedOption] && (
+          <Image
+            src={iconPaths[props.selectedOption]}
+            width={20}
+            height={20}
+            alt={props.selectedOption}
+            aria-hidden="true"
+          />
+        )}{" "}
+        {props.selectedOption}
         <motion.svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
@@ -64,7 +62,9 @@ export const Dropdown = (props: Dropdown) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="absolute z-50 bg-white  p-2 top-8 -left-4  shadow-lg rounded-[6px]"
+            className={`absolute z-50 bg-white p-2 top-8 -left-4 shadow-lg rounded-[6px] ${
+              props.items.length > 4 ? "max-h-48 overflow-y-auto" : ""
+            }`}
             role="listbox"
             aria-label="Options"
           >
@@ -74,22 +74,24 @@ export const Dropdown = (props: Dropdown) => {
                   type="button"
                   whileTap={{ scale: 0.85 }}
                   className="flex gap-[10px] font-medium rounded-[6px]  text-sm cursor-pointer py-2 px-8  hover:bg-[#F2EBFE] w-full text-left"
-                  key={item.id}
+                  key={item}
                   role="option"
-                  aria-selected={props.selectedOption.id === item.id}
+                  aria-selected={props.selectedOption === item}
                   onClick={() => {
                     props.setSelectedOption(item);
                   }}
-                  aria-label={`Select ${item.name}`}
+                  aria-label={`Select ${item}`}
                 >
-                  <Image
-                    src={item.icon}
-                    width={20}
-                    height={20}
-                    alt=""
-                    aria-hidden="true"
-                  />
-                  {item.name}
+                  {iconPaths[item] && (
+                    <Image
+                      src={iconPaths[item]}
+                      width={20}
+                      height={20}
+                      alt={item}
+                      aria-hidden="true"
+                    />
+                  )}
+                  {item}
                 </motion.button>
               );
             })}

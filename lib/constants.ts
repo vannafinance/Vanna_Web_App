@@ -7,16 +7,17 @@ export const navbarItems = [
 ];
 
 export const DropdownOptions = [
-  {
-    id: "usdt",
-    name: "USDT",
-    icon: "/icons/usdc-icon.svg",
-  },
-  {
-    id: "usdc",
-    name: "USDC",
-    icon: "/icons/usdt-icon.svg",
-  },
+  "USDT",
+  "USDC",
+  "ETH",
+  "SCROLL",
+  "AVALANCHE",
+  "OPTIMISM",
+  "POLYGON",
+  "APE",
+  "KATANA",
+  "ARBITRUM",
+  "BASE",
 ];
 
 export const accountStatsItems = [
@@ -131,6 +132,12 @@ export const iconPaths: Record<string, string> = {
   ARBITRUM: "/icons/arbitrum-icon.svg",
   BASE: "/icons/base-icon.svg",
 };
+
+export const balanceTypeOptions = [
+  "PB",
+  "WB",
+  "MB",
+];
 
 export const position = [
   {

@@ -13,7 +13,6 @@ import BuySellToggle from "../ui/BuySellToggle";
 import { Button } from "../ui/button";
 
 import { Dropdown } from "../ui/dropdown";
-import { DropdownOptionsType } from "@/lib/types";
 import { Checkbox } from "../ui/Checkbox";
 
 const tabClasses = (active: boolean) =>
@@ -31,11 +30,12 @@ const tabs = [
   { id: "trigger", label: "Trigger" },
 ];
 
-const TIME_IN_FORCE_OPTIONS: DropdownOptionsType[] = [
-  { id: "GTC", name: "GTC" },
-  { id: "IOC", name: "IOC" },
-  { id: "FOK", name: "FOK" },
-];
+const TIME_IN_FORCE_OPTIONS = ["GTC", "IOC", "FOK"];
+
+const BUY_SELL_TABS = [
+  { id: "buy", label: "Buy", content: null },
+  { id: "sell", label: "Sell", content: null },
+] as const;
 
 export default function OrderPlacementForm() {
   const form = useOrderPlacementStore((state) => state.form);
@@ -61,7 +61,7 @@ export default function OrderPlacementForm() {
   const timeInForce = watch("timeInForce") || "GTC";
 
   const selectedTimeInForce =
-    TIME_IN_FORCE_OPTIONS.find((o) => o.id === timeInForce) ??
+    TIME_IN_FORCE_OPTIONS.find((o) => o === timeInForce) ??
     TIME_IN_FORCE_OPTIONS[0];
 
   // sync when store changes (e.g. reset from somewhere else)
@@ -133,20 +133,9 @@ export default function OrderPlacementForm() {
         </div>
       </div> */}
 
-      <div className=" overflow-hidden">
-        <TabGroup
-          tabs={tabs}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-        />
-      </div>
+      <TabGroup tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
 
-      <div className="flex items-center ">
-        <BuySellToggle
-          className="bg-[#FFFFFF]"
-          onChange={(type) => setOrdersType(type)}
-        />
-      </div>
+      <BuySellToggle onChange={(type) => setOrdersType(type)} />
 
       {/* Loop toggle row */}
       <div>
@@ -269,12 +258,6 @@ export default function OrderPlacementForm() {
               </div>
             </div>
           </div>
-
-          {errors.totalUnits && (
-            <p className="mt-1 text-[10px] text-red-500">
-              {errors.totalUnits.message}
-            </p>
-          )}
         </div>
       </div>
 
@@ -337,12 +320,6 @@ export default function OrderPlacementForm() {
             ))}
           </div>
         </div>
-
-        {errors.totalAmount && (
-          <p className="mt-1 text-[10px] text-red-500">
-            {errors.totalAmount.message}
-          </p>
-        )}
       </div>
 
       {/* Checkboxes */}
@@ -405,7 +382,7 @@ export default function OrderPlacementForm() {
           setSelectedOption={(item) => {
             setValue(
               "timeInForce",
-              item.id as OrderPlacementFormValues["timeInForce"],
+              item as OrderPlacementFormValues["timeInForce"],
               {
                 shouldDirty: true,
                 shouldValidate: true,

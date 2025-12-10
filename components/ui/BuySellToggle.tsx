@@ -24,27 +24,27 @@ export default function BuySellToggle({
 
   return (
     <div
-      className={`inline-flex w-full rounded-lg border-1 border-[#E2E2E2] p-1 ${className}`}
+      className={`flex gap-4  rounded-xl border border-[#E2E2E2] p-1.5 bg-[#FFFFFF] ${className}`}
     >
       <button
         onClick={() => handleSelect("buy")}
-        className={`flex-1 rounded-md px-6 py-2 text-sm font-medium transition-colors duration-200 ${
+        className={`flex-1  rounded-lg text-[12px] font-semibold transition-colors duration-200 p-0.5 text-black  ${
           selected === "buy"
-            ? "bg-white text-black border-2 border-purple-500"
-            : "bg-transparent text-gray-700 hover:bg-purple-50"
+            ? "bg-linear-to-r from-[#FC5457] to-[#703AE6]  "
+            : "bg-transparent "
         }`}
       >
-        Buy
+        <div className="bg-white rounded-lg p-3">Buy</div>
       </button>
       <button
         onClick={() => handleSelect("sell")}
-        className={`flex-1 rounded-md px-6 py-2 text-sm font-medium transition-colors duration-200 ${
+        className={`flex-1  rounded-lg text-[12px] font-semibold transition-colors duration-200 p-0.5 text-black ${
           selected === "sell"
-            ? "bg-white text-black border-2 border-red-500"
-            : "bg-transparent text-gray-700 hover:bg-red-50"
+            ? "bg-linear-to-r from-[#FC5457] to-[#703AE6] "
+            : "bg-transparent"
         }`}
       >
-        Sell
+        <div className="bg-white rounded-lg p-3">Sell</div>
       </button>
     </div>
   );

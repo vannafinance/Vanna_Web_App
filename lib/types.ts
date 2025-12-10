@@ -1,9 +1,3 @@
-export interface DropdownOptionsType {
-  id: string;
-  name: string;
-  icon?: string;
-}
-
 export interface AssetAmount {
   asset: string;
   amount: string;

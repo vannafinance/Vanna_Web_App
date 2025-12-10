@@ -1,6 +1,6 @@
 import { DropdownOptions, iconPaths } from "@/lib/constants";
 import { Dropdown } from "../ui/dropdown";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { LeverageSlider } from "../ui/leverage-slider";
 import { BorrowInfo } from "@/lib/types";
 import Image from "next/image";
@@ -46,7 +46,7 @@ export const BorrowBox = ({
 
   // Form state
   const [selectedOptions, setSelectedOptions] = useState<
-    Record<number, (typeof DropdownOptions)[0]>
+    Record<number, string>
   >({});
   const [inputValues, setInputValues] = useState<Record<number, number>>({});
 
@@ -81,7 +81,7 @@ export const BorrowBox = ({
 
         newBorrowItems.push({
           assetData: {
-            asset: `0x${selectedOption.name}`,
+            asset: `0x${selectedOption}`,
             amount: inputValue.toString(),
           },
           percentage: Number(percentage.toFixed(2)),
@@ -115,30 +115,33 @@ export const BorrowBox = ({
   const isDepositMode = mode === "Deposit";
 
   // Handler for max leverage click
-  const handleMaxLeverage = () => {
+  const handleMaxLeverage = useCallback(() => {
     setLeverage(maxLeverage);
-  };
+  }, [setLeverage]);
 
-  // Handler for selected option change
-  const handleSetSelectedOption = (idx: number) => {
+  // Handler for selected option change - memoized to prevent re-renders
+  const handleSetSelectedOption = useCallback((idx: number) => {
     return (
       option:
-        | (typeof DropdownOptions)[0]
-        | ((prev: (typeof DropdownOptions)[0]) => (typeof DropdownOptions)[0])
+        | string
+        | ((prev: string) => string)
     ) => {
-      const selected =
-        typeof option === "function"
-          ? option(selectedOptions[idx] || DropdownOptions[0])
-          : option;
-      setSelectedOptions((prev) => ({
-        ...prev,
-        [idx]: selected as (typeof DropdownOptions)[0],
-      }));
+      setSelectedOptions((prev) => {
+        const currentValue = prev[idx];
+        const selected =
+          typeof option === "function"
+            ? option(currentValue || DropdownOptions[0])
+            : option;
+        return {
+          ...prev,
+          [idx]: selected,
+        };
+      });
     };
-  };
+  }, []);
 
-  // Handler for input change
-  const handleInputChange = (idx: number) => {
+  // Handler for input change - memoized to prevent re-renders
+  const handleInputChange = useCallback((idx: number) => {
     return (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = Number(e.target.value) || 0;
       setInputValues((prev) => ({
@@ -146,7 +149,7 @@ export const BorrowBox = ({
         [idx]: value,
       }));
     };
-  };
+  }, []);
 
   return (
     <motion.div
@@ -220,7 +223,7 @@ export const BorrowBox = ({
 
                     return (
                       <motion.div
-                        key={`deposit-borrowed-display-${selectedOption.id}`}
+                        key={idx}
                         className="flex gap-[12px]"
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -229,8 +232,8 @@ export const BorrowBox = ({
                         <div className="flex gap-[4px] justify-start">
                           <div className="flex flex-col justify-top items-top">
                             <Image
-                              src={iconPaths[selectedOption.name]}
-                              alt={selectedOption.name}
+                              src={iconPaths[selectedOption]}
+                              alt={selectedOption}
                               width={16}
                               height={16}
                             />
@@ -239,7 +242,7 @@ export const BorrowBox = ({
                           <div className="text-[12px] font-medium flex flex-col gap-[4px]">
                             <div>
                               {inputValue > 0 ? inputValue : "0"}{" "}
-                              {selectedOption.name}
+                                {selectedOption}
                             </div>
                             <div className="text-[10px] text-[#111111]">
                               {usdValue > 0 ? usdValue.toFixed(2) : "0.00"} USD
@@ -275,7 +278,7 @@ export const BorrowBox = ({
 
                   return (
                     <motion.div
-                      key={`borrowed-display-${idx}-${selectedOption.id}`}
+                      key={idx}
                       className="flex gap-[12px]"
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -284,8 +287,8 @@ export const BorrowBox = ({
                       <div className="flex gap-[4px] justify-start">
                         <div className="flex flex-col justify-top items-top">
                           <Image
-                            src={iconPaths[selectedOption.name]}
-                            alt={selectedOption.name}
+                            src={iconPaths[selectedOption]}
+                            alt={selectedOption}
                             width={16}
                             height={16}
                           />
@@ -294,7 +297,7 @@ export const BorrowBox = ({
                         <div className="text-[12px] font-medium flex flex-col gap-[4px]">
                           <div>
                             {inputValue > 0 ? inputValue : "0"}{" "}
-                            {selectedOption.name}
+                            {selectedOption}
                           </div>
                           <div className="text-[10px] text-[#111111]">
                             {usdValue > 0 ? usdValue.toFixed(2) : "0.00"} USD
@@ -353,7 +356,7 @@ export const BorrowBox = ({
               const selectedOption = selectedOptions[idx] || DropdownOptions[0];
               return (
                 <motion.div
-                  key={`input-${idx}-${selectedOption.id}`}
+                  key={idx}
                   className="flex gap-[8px] items-center"
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -380,7 +383,7 @@ export const BorrowBox = ({
                             htmlFor={`borrow-amount-input-${idx}`}
                             className="sr-only"
                           >
-                            Borrow amount for {selectedOption.name}
+                            Borrow amount for {selectedOption}
                           </label>
                           <input
                             id={`borrow-amount-input-${idx}`}

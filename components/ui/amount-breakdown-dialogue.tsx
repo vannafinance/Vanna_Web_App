@@ -74,7 +74,7 @@ export const AmountBreakdownDialogue = (
         {props.breakdown.map((item, idx) => {
           return (
             <motion.div
-              key={item.name}
+              key={idx}
               className="flex justify-between items-center py-[20px] px-[12px] bg-[#FBFBFB] rounded-[12px]"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}

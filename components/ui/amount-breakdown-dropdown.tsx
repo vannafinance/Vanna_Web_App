@@ -51,12 +51,12 @@ export const AmountBreakdownDropDown = (
           );
 
           return isGrid ? (
-            <div key={item.name} className="flex items-center gap-[4px] ">
+            <div key={idx} className="flex items-center gap-[4px] ">
               {content}
             </div>
           ) : (
             <div
-              key={item.name}
+              key={idx}
               className={` ${
                 props.breakdownData.length - 1 === idx
                   ? "border-b-0"

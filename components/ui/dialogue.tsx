@@ -53,7 +53,7 @@ export const Dialogue = (props: Dialogue) => {
             return (
               <motion.li
                 className="text-[16px] font-medium"
-                key={`${item.line}-${idx}`}
+                key={idx}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.3, delay: 0.2 + idx * 0.05 }}
@@ -63,10 +63,7 @@ export const Dialogue = (props: Dialogue) => {
                   <ul className="list-[lower-alpha] list-outside pl-4 mt-1 space-y-2">
                     {item.points.map((point, pointIdx) => (
                       <motion.li
-                        key={`${item.line}-point-${pointIdx}-${point.substring(
-                          0,
-                          20
-                        )}`}
+                        key={pointIdx}
                         className="text-[16px] font-medium"
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}

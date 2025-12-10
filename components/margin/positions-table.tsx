@@ -121,7 +121,7 @@ export const Positionstable = ({ onRepayClick }: PositionstableProps) => {
                   {item.borrowed.map((borrowedItem, borrowedIdx) => {
                     return (
                       <motion.div
-                        key={`${item.positionId}-borrowed-${borrowedItem.assetData.asset}-${borrowedIdx}`}
+                        key={borrowedIdx}
                         className="flex gap-[8px] items-center"
                         initial={{ opacity: 0, x: -10 }}
                         whileInView={{ opacity: 1, x: 0 }}

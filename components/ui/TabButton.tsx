@@ -12,10 +12,10 @@ const TabButton: React.FC<TabButtonProps> = ({ label, isActive, onClick }) => {
   return (
     <button
       onClick={onClick}
-      className={`flex-1 py-3 px-6 text-base font-semibold transition-all duration-200 ${
+      className={`flex-1 py-3 px-6 text-[14px] leading-5 transition-all duration-200 ${
         isActive
-          ? "text-purple-600 border-b-2 border-purple-600"
-          : "text-gray-400 border-b-2 border-transparent hover:text-gray-600"
+          ? "text-[#703AE6] border-b-2 border-[#703AE6] font-semibold"
+          : "text-[#A7A7A7] border-b-2 border-transparent hover:text-gray-600 font-medium"
       }`}
     >
       {label}
