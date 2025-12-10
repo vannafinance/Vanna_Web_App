@@ -4,11 +4,16 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useMemo } from "react";
 import ToggleButton from "@/components/ui/toggle";
 import { Collaterals, BorrowInfo } from "@/lib/types";
-import { DropdownOptions } from "@/lib/constants";
+import { DropdownOptions, balanceTypeOptions, iconPaths } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Collateral } from "./collateral-box";
 import { BorrowBox } from "./borrow-box";
 import { Dialogue } from "@/components/ui/dialogue";
+import { DetailsPanel } from "../ui/details-panel";
+import { Dropdown } from "../ui/dropdown";
+import { Checkbox } from "../ui/checkbox";
+import Image from "next/image";
+import { useCollateralBorrowStore } from "@/store/collateral-borrow-store";
 
 type Modes = "Deposit" | "Borrow";
 
@@ -30,10 +35,9 @@ export const LeverageAssetsTab = ({
   const [depositCurrency, setDepositCurrency] = useState("USDT");
   const feesCurrency = "USDT";
 
-  // Dialogue visibility states
-  const [isCreateMarginDialogueOpen, setIsCreateMarginDialogueOpen] =
-    useState(false);
-  const [isSecondDialogueOpen, setIsSecondDialogueOpen] = useState(false);
+  // Dialogue state - simplified
+  type DialogueState = "none" | "create-margin" | "sign-agreement";
+  const [activeDialogue, setActiveDialogue] = useState<DialogueState>("none");
 
   // Local state to collect data from child component
   const [currentCollaterals, setCurrentCollaterals] = useState<Collaterals[]>(
@@ -42,6 +46,16 @@ export const LeverageAssetsTab = ({
   const [currentBorrowItems, setCurrentBorrowItems] = useState<BorrowInfo[]>(
     []
   );
+  const [selectedBalanceType, setSelectedBalanceType] = useState<string>(
+    balanceTypeOptions[0]
+  );
+
+  // Get collateral mock data from store
+  const collateralMock = useCollateralBorrowStore((state) => state.collaterals);
+
+  // Single source of truth for MB mode
+  const isMBMode = currentCollaterals.length === 1 && 
+                   currentCollaterals[0]?.balanceType.toLowerCase() === "mb";
 
   // Initialize with one empty collateral if none exist
   useEffect(() => {
@@ -78,33 +92,15 @@ export const LeverageAssetsTab = ({
     [currentCollaterals]
   );
 
-  // Calculate fees: 0.0234% of total deposit
-  const fees = useMemo(
-    () => (totalDepositValue > 0 ? totalDepositValue * 0.000234 : 0),
-    [totalDepositValue]
-  );
+  // Use totalDepositValue for MB display (no need for separate calculation)
+  const mbTotalUsd = isMBMode ? totalDepositValue : 0;
 
-  // Calculate total deposit including fees
-  const totalDeposit = useMemo(
-    () => totalDepositValue + fees,
-    [totalDepositValue, fees]
-  );
-
-  // Derived values calculated using useMemo
-  const platformPoints = useMemo(
-    () => Number((leverage * 0.575).toFixed(1)),
-    [leverage]
-  );
-
-  const updatedCollateral = useMemo(
-    () => Math.round(depositAmount * leverage * 0.6),
-    [depositAmount, leverage]
-  );
-
-  const netHealthFactor = useMemo(
-    () => Number((2.0 - leverage * 0.0875).toFixed(2)),
-    [leverage]
-  );
+  // Simple calculations (no need for useMemo)
+  const fees = totalDepositValue > 0 ? totalDepositValue * 0.000234 : 0;
+  const totalDeposit = totalDepositValue + fees;
+  const platformPoints = Number((leverage * 0.575).toFixed(1));
+  const updatedCollateral = Math.round(depositAmount * leverage * 0.6);
+  const netHealthFactor = Number((2.0 - leverage * 0.0875).toFixed(2));
 
   // Update deposit amount and currency when collaterals change
   useEffect(() => {
@@ -116,11 +112,7 @@ export const LeverageAssetsTab = ({
     }
   }, [totalDepositValue, currentCollaterals]);
 
-  // Update local state when collaterals or borrowItems change
-  useEffect(() => {
-    setCurrentCollaterals(currentCollaterals);
-    setCurrentBorrowItems(borrowItems);
-  }, [currentCollaterals, borrowItems]);
+  // Removed redundant useEffect - state is already managed directly
 
   // Add new collateral
   // Prevents adding if already editing or in Borrow mode with 1 collateral
@@ -152,10 +144,21 @@ export const LeverageAssetsTab = ({
     index: number,
     updatedCollateral: Collaterals
   ) => {
-    const newCollaterals = [...currentCollaterals];
-    newCollaterals[index] = updatedCollateral;
-    setCurrentCollaterals(newCollaterals);
-    setEditingIndex(null);
+    // If MB is selected, clear all other collaterals and keep only this one
+    if (updatedCollateral.balanceType.toLowerCase() === "mb") {
+      setCurrentCollaterals([updatedCollateral]);
+      setEditingIndex(null);
+    } else {
+      // If saving a non-MB collateral, remove all MB collaterals and update this one
+      const newCollaterals = [...currentCollaterals];
+      newCollaterals[index] = updatedCollateral;
+      // Remove all MB collaterals
+      const filteredCollaterals = newCollaterals.filter(
+        (c) => c.balanceType.toLowerCase() !== "mb"
+      );
+      setCurrentCollaterals(filteredCollaterals);
+      setEditingIndex(null);
+    }
   };
 
   // Cancel editing
@@ -189,59 +192,56 @@ export const LeverageAssetsTab = ({
     setMode(prev => prev === "Borrow" ? "Deposit" : "Borrow");
   };
 
-  // Handler for edit collateral
-  const handleEditCollateralClick = (index: number) => {
-    return () => {
-      handleEditCollateral(index);
-    };
-  };
+  // Removed wrapper functions - use inline arrow functions in JSX
 
-  // Handler for save collateral
-  const handleSaveCollateralClick = (index: number) => {
-    return (updatedCollateral: Collaterals) => {
-      handleSaveCollateral(index, updatedCollateral);
+  // Unified balance type change handler
+  const handleBalanceTypeChange = (index: number) => {
+    return (balanceType: string | ((prev: string) => string)) => {
+      const value = typeof balanceType === "string" ? balanceType : balanceType(selectedBalanceType);
+      const normalized = value.toLowerCase();
+      
+      // Get current collateral or create default
+      const currentCollateral = currentCollaterals[index] || {
+        amount: 0,
+        amountInUsd: 0,
+        asset: DropdownOptions[0],
+        balanceType: "pb",
+        unifiedBalance: 0,
+      };
+      
+      const updatedCollateral: Collaterals = {
+        ...currentCollateral,
+        balanceType: normalized,
+      };
+      
+      if (normalized === "mb") {
+        // MB mode: single collateral with MB type
+        setCurrentCollaterals([updatedCollateral]);
+        setEditingIndex(null);
+      } else {
+        // Normal mode: update balance type, remove any MB collaterals
+        const newCollaterals = [...currentCollaterals];
+        newCollaterals[index] = updatedCollateral;
+        const filteredCollaterals = newCollaterals.filter(
+          (c) => c.balanceType.toLowerCase() !== "mb"
+        );
+        setCurrentCollaterals(filteredCollaterals);
+        setEditingIndex(null);
+      }
+      
+      setSelectedBalanceType(value);
     };
-  };
-
-  // Handler for delete collateral
-  const handleDeleteCollateralClick = (index: number) => {
-    return () => {
-      handleDeleteCollateral(index);
-    };
-  };
-
-  // Handler for empty collateral save
-  const handleEmptyCollateralSave = (updatedCollateral: Collaterals) => {
-    setCurrentCollaterals([updatedCollateral]);
-    setEditingIndex(null);
   };
 
   // Handle create margin account button click
-  // Updates global store and opens first dialogue
   const handleButtonClick = () => {
-    setCurrentCollaterals(currentCollaterals);
-    setCurrentBorrowItems(currentBorrowItems);
-    setIsCreateMarginDialogueOpen(true);
-  };
-
-  // Dialogue handlers
-  const handleCloseFirstDialogue = () => {
-    setIsCreateMarginDialogueOpen(false);
-  };
-
-  const handleCloseSecondDialogue = () => {
-    setIsSecondDialogueOpen(false);
-  };
-
-  const handleFirstDialogueButtonClick = () => {
-    setIsCreateMarginDialogueOpen(false);
-    setIsSecondDialogueOpen(true);
+    setActiveDialogue("create-margin");
   };
 
   return (
     <>
     <motion.div
-      className="w-full flex flex-col gap-[36px] pt-8"
+      className="w-full flex flex-col gap-[24px] pt-8"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4, delay: 0.1 }}
@@ -254,12 +254,12 @@ export const LeverageAssetsTab = ({
         viewport={{ once: true }}
         transition={{ duration: 0.3 }}
       >
-        Deposit{" "}
+        Multi Deposit{" "}
         <ToggleButton
           size="small"
           onToggle={handleModeToggle}
         />{" "}
-        Borrow
+        Dual Borrow
       </motion.div>
 
       {/* Deposit section */}
@@ -280,69 +280,127 @@ export const LeverageAssetsTab = ({
           Deposit
         </motion.div>
         <div className="flex flex-col gap-[12px]">
-          {/* Render collaterals list */}
-          <AnimatePresence mode="popLayout">
-            {currentCollaterals.length > 0 ? (
-              currentCollaterals.map((collateral, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                  transition={{
-                    duration: 0.3,
-                    ease: "easeOut",
-                    delay: index * 0.05,
-                  }}
-                  layout
-                >
-                  <Collateral
-                    collaterals={collateral}
-                    isEditing={editingIndex === index}
-                    isAnyOtherEditing={editingIndex !== null && editingIndex !== index}
-                    onEdit={handleEditCollateralClick(index)}
-                    onSave={handleSaveCollateralClick(index)}
-                    onCancel={handleCancelEdit}
-                    onDelete={handleDeleteCollateralClick(index)}
-                    index={index}
+          {/* Render MB UI if MB is selected, otherwise render collaterals */}
+          {isMBMode ? (
+            <motion.div
+              className="flex flex-col gap-[24px] bg-white p-[20px] rounded-[16px] border-[1px] border-[#E2E2E2] "
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="flex justify-between items-center">
+                <div className="text-[20px] font-medium py-[10px]">
+                  {mbTotalUsd} USD
+                </div>
+                <div className="py-[4px] pr-[4px] pl-[8px] bg-[#F2EBFE] rounded-[8px]">
+                  <Dropdown
+                    classname="text-[16px] font-medium gap-[8px]"
+                    items={balanceTypeOptions}
+                    selectedOption={selectedBalanceType}
+                    setSelectedOption={handleBalanceTypeChange(0)}
                   />
-                </motion.div>
-              ))
-            ) : (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-              >
+                </div>
+              </div>
+              <div className="p-[10px] rounded-[12px] bg-[#F4F4F4] grid grid-cols-2 gap-[15px]">
+                {collateralMock.map((item, index) => (
+                  <div key={index} className="flex gap-[10px] items-center">
+                    <div>
+                      <Checkbox />
+                    </div>
+                    <div>
+                      <Image
+                        src={iconPaths[item.asset]}
+                        alt={item.asset}
+                        width={20}
+                        height={20}
+                      />
+                    </div>
+                    <div className="text-[16px] font-semibold">
+                      {item.amount} {item.asset}
+                    </div>
+                    <div className="rounded-[4px] py-[2px] px-[4px] bg-[#FFFFFF] text-[10px] font-medium">
+                      {item.amountInUsd} USD
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          ) : (
+            <AnimatePresence mode="popLayout">
+              {currentCollaterals.length > 0 ? (
+                currentCollaterals.map((collateral, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                    transition={{
+                      duration: 0.3,
+                      ease: "easeOut",
+                      delay: index * 0.05,
+                    }}
+                    layout
+                  >
+                    <Collateral
+                      collaterals={collateral}
+                      isEditing={editingIndex === index}
+                      isAnyOtherEditing={editingIndex !== null && editingIndex !== index}
+                      onEdit={() => handleEditCollateral(index)}
+                      onSave={(data) => handleSaveCollateral(index, data)}
+                      onCancel={handleCancelEdit}
+                      onDelete={() => handleDeleteCollateral(index)}
+                      onBalanceTypeChange={handleBalanceTypeChange(index)}
+                      index={index}
+                    />
+                  </motion.div>
+                ))
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
                 <Collateral
                   collaterals={null}
                   isEditing={true}
                   isAnyOtherEditing={false}
                   onEdit={() => {}}
-                  onSave={handleEmptyCollateralSave}
+                  onSave={(data) => {
+                    setCurrentCollaterals([data]);
+                    setEditingIndex(null);
+                  }}
                   onCancel={handleCancelEdit}
+                  onBalanceTypeChange={handleBalanceTypeChange(0)}
                   index={0}
                 />
-              </motion.div>
-            )}
-          </AnimatePresence>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          )}
         </div>
 
         {/* Add Collateral button */}
         <motion.button
           type="button"
           onClick={handleAddCollateral}
-          disabled={editingIndex !== null || (mode === "Borrow" && currentCollaterals.length >= 1)}
+          disabled={
+            editingIndex !== null ||
+            (mode === "Borrow" && currentCollaterals.length >= 1) ||
+            isMBMode
+          }
           className={`w-fit hover:cursor-pointer hover:bg-[#F1EBFD] py-[11px] px-[10px] rounded-[8px] flex gap-[4px] text-[14px] font-medium text-[#703AE6] items-center ${
             editingIndex !== null ||
-            (mode === "Borrow" && currentCollaterals.length >= 1)
+            (mode === "Borrow" && currentCollaterals.length >= 1) ||
+            isMBMode
               ? "opacity-50 cursor-not-allowed"
               : ""
           }`}
           whileHover={
             editingIndex === null &&
-            !(mode === "Borrow" && currentCollaterals.length >= 1)
+            !(mode === "Borrow" && currentCollaterals.length >= 1) &&
+            !isMBMode
               ? { x: 5 }
               : {}
           }
@@ -398,77 +456,41 @@ export const LeverageAssetsTab = ({
       </motion.div>
 
       {/* Details panel - shows calculations and info */}
-      <motion.div
-        className="px-[16px] w-full h-full flex flex-col gap-[16px]"
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.4, delay: 0.2 }}
-      >
-        {/* Map through details items */}
-        {[
+      <DetailsPanel
+        items={[
           {
             title: "Platform Points",
             value: `${platformPoints}x`,
-            hasLink: false,
           },
           {
             title: "Leverage",
             value: `${leverage}x`,
-            hasLink: false,
           },
           {
             title: "You're depositing",
             value: `${depositAmount} ${depositCurrency}`,
-            hasLink: true,
             linkText: "View Sources",
+
           },
           {
             title: "Fees",
             value: `${fees} ${feesCurrency}`,
-            hasLink: true,
             linkText: "View details",
           },
           {
             title: "Total deposit including fees",
             value: `${totalDeposit} ${depositCurrency}`,
-            hasLink: false,
           },
           {
             title: "Updated Collateral Before Liquidation",
             value: updatedCollateral.toString(),
-            hasLink: false,
           },
           {
             title: "Updated Net Health Factor",
             value: netHealthFactor.toString(),
-            hasLink: false,
           },
-        ].map((item, index) => (
-          <motion.div
-            key={index}
-            className="flex justify-between"
-            initial={{ opacity: 0, x: -10 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.3, delay: 0.35 + index * 0.05 }}
-          >
-            <div className="flex items-center gap-[8px]">
-              <div className="text-[16px] text-[#1F1F1F] font-medium">
-                {item.title}
-              </div>
-              {item.hasLink && (
-                <button className="text-[12px] text-[#703AE6] font-medium hover:underline cursor-pointer">
-                  {item.linkText}
-                </button>
-              )}
-            </div>
-            <div className="text-[16px] text-[#1F1F1F] font-medium">
-              {item.value}
-            </div>
-          </motion.div>
-        ))}
-      </motion.div>
+        ]}
+      />
 
       {/* Create Margin Account button */}
       <motion.div
@@ -489,14 +511,14 @@ export const LeverageAssetsTab = ({
 
     {/* First dialogue: Create Margin Account */}
     <AnimatePresence>
-      {isCreateMarginDialogueOpen && (
+      {activeDialogue === "create-margin" && (
         <motion.div
           className="fixed inset-0 z-50 flex items-center justify-center bg-[#45454566] "
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
-          onClick={handleCloseFirstDialogue}
+          onClick={() => setActiveDialogue("none")}
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -506,7 +528,7 @@ export const LeverageAssetsTab = ({
             onClick={(e) => e.stopPropagation()}
           >
             <Dialogue
-              buttonOnClick={handleFirstDialogueButtonClick}
+              buttonOnClick={() => setActiveDialogue("sign-agreement")}
               buttonText="Create Your Account"
               content={[
                 { line: "Connect your wallet to get started." },
@@ -516,7 +538,7 @@ export const LeverageAssetsTab = ({
                 { line: "Make a deposit to activate borrowing." },
               ]}
               heading="Create Margin Account"
-              onClose={handleCloseFirstDialogue}
+              onClose={() => setActiveDialogue("none")}
             />
           </motion.div>
         </motion.div>
@@ -525,14 +547,14 @@ export const LeverageAssetsTab = ({
 
     {/* Second dialogue: Review and Sign Agreement */}
     <AnimatePresence>
-      {isSecondDialogueOpen && (
+      {activeDialogue === "sign-agreement" && (
         <motion.div
           className="fixed inset-0 z-50 flex items-center justify-center bg-[#45454566] "
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
-          onClick={handleCloseSecondDialogue}
+          onClick={() => setActiveDialogue("none")}
         >
           <motion.div
             className="w-full max-w-[891px]"
@@ -544,7 +566,7 @@ export const LeverageAssetsTab = ({
           >
             <Dialogue
               description="Before you proceed, please review and accept the terms of borrowing on VANNA. This agreement ensures you understand the risks, responsibilities, and conditions associated with using the platform."
-              buttonOnClick={handleCloseSecondDialogue}
+              buttonOnClick={() => setActiveDialogue("none")}
               buttonText="Sign Agreement"
               content={[
                 {
@@ -592,7 +614,7 @@ export const LeverageAssetsTab = ({
               ]}
               heading="Review and Sign Agreement"
               checkboxContent="I have read and agree to the VANNA Borrow Agreement."
-              onClose={handleCloseSecondDialogue}
+              onClose={() => setActiveDialogue("none")}
             />
           </motion.div>
         </motion.div>
@@ -601,3 +623,4 @@ export const LeverageAssetsTab = ({
   </>
   );
 };
+

@@ -3,6 +3,8 @@ import { Dropdown } from "../ui/dropdown";
 import { AnimatePresence, motion } from "framer-motion";
 import { DropdownOptions } from "@/lib/constants";
 import { depositPercentage, percentageColors } from "./collateral-box";
+import { DetailsPanel } from "../ui/details-panel";
+import { Button } from "../ui/button";
 
 export const TransferCollateral = () => {
   const [selectedCurrency, setSelectedCurrency] = useState<string>("USDC");
@@ -25,8 +27,12 @@ export const TransferCollateral = () => {
     setValueInUsd(2000);
   };
 
+  const handleTransferClick = () => {
+    console.log("Transfer clicked");
+  };
+
   return (
-    <div>
+    <div className="flex flex-col justify-between gap-[24px] pt-8">
       <div className="flex flex-col gap-[24px] rounded-[16px] p-[20px] bg-[#FFFFFF] border-[1px] border-[#E2E2E2] ">
         <div className="">
           <motion.div
@@ -43,6 +49,7 @@ export const TransferCollateral = () => {
             {/* Currency dropdown */}
             <div className="p-[10px]">
               <Dropdown
+                classname="text-[16px] font-medium gap-[8px]"
                 selectedOption={selectedCurrency}
                 setSelectedOption={setSelectedCurrency}
                 items={DropdownOptions}
@@ -120,10 +127,38 @@ export const TransferCollateral = () => {
             </div>
             <div className="text-[20px] font-medium ">2000 USD</div>
 
-            <button onClick={handleMaxValueClick} className="cursor-pointer bg-[#FFE6F2] rounded-[4px] py-[4px] px-[8px] text-[12px] font-medium text-[#FF007A] ">
+            <button
+              onClick={handleMaxValueClick}
+              className="cursor-pointer bg-[#FFE6F2] rounded-[4px] py-[4px] px-[8px] text-[12px] font-medium text-[#FF007A] "
+            >
               Max Value
             </button>
           </div>
+        </div>
+      </div>
+      <div>
+        <DetailsPanel
+          items={[{ title: "Transfer Collateral", value: "2000 USD" }]}
+        />
+      </div>
+      <div className="flex flex-col gap-[16px]">
+        <div>
+          <Button
+            text="Transfer"
+            size="large"
+            type="gradient"
+            disabled={Number(valueInput)>0?false:true}
+            onClick={handleTransferClick}
+          />
+        </div>
+        <div>
+          <Button
+            text="Flash Close"
+            size="large"
+            type="ghost"
+            disabled={Number(valueInput)>0?false:true}
+            onClick={handleTransferClick}
+          />
         </div>
       </div>
     </div>

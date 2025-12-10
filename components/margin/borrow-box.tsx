@@ -41,30 +41,13 @@ export const BorrowBox = ({
 
   const config = modeConfig[mode];
 
-  // Local state for borrow items
-  const [borrowItems, setBorrowItems] = useState<BorrowInfo[]>([]);
-
   // Form state
   const [selectedOptions, setSelectedOptions] = useState<
     Record<number, string>
   >({});
   const [inputValues, setInputValues] = useState<Record<number, number>>({});
 
-  // Slice items based on mode limit
-  const displayItems = useMemo(
-    () => borrowItems.slice(0, config.maxItems),
-    [borrowItems, config.maxItems]
-  );
-
-  // Reset form when items array is empty
-  useEffect(() => {
-    if (borrowItems.length === 0) {
-      setInputValues({});
-      setSelectedOptions({});
-    }
-  }, [borrowItems.length]);
-
-  // Create BorrowInfo items from user input
+  // Combined useEffect: Create BorrowInfo items and notify parent
   useEffect(() => {
     const newBorrowItems: BorrowInfo[] = [];
 
@@ -73,11 +56,9 @@ export const BorrowBox = ({
       const inputValue = inputValues[idx] || 0;
 
       if (selectedOption && inputValue > 0) {
-        // Calculate USD value (1:1 conversion)
-        const usdValue = inputValue;
         // Calculate percentage of total deposit
         const percentage =
-          totalDeposit > 0 ? (usdValue / totalDeposit) * 100 : 0;
+          totalDeposit > 0 ? (inputValue / totalDeposit) * 100 : 0;
 
         newBorrowItems.push({
           assetData: {
@@ -85,34 +66,25 @@ export const BorrowBox = ({
             amount: inputValue.toString(),
           },
           percentage: Number(percentage.toFixed(2)),
-          usdValue: usdValue,
+          usdValue: inputValue, // 1:1 conversion
         });
       }
     }
 
-    setBorrowItems(newBorrowItems);
-  }, [selectedOptions, inputValues, config.maxItems, totalDeposit]);
-
-  // Notify parent when borrow items change
-  useEffect(() => {
+    // Directly call parent callback
     if (onBorrowItemsChange) {
-      onBorrowItemsChange(borrowItems);
+      onBorrowItemsChange(newBorrowItems);
     }
-  }, [borrowItems, onBorrowItemsChange]);
+  }, [selectedOptions, inputValues, config.maxItems, totalDeposit, onBorrowItemsChange]);
 
-  // Calculate total borrowed value from input values
-  const totalBorrowedValue = useMemo(() => {
-    if (mode === "Borrow") {
-      return (inputValues[0] || 0) + (inputValues[1] || 0);
-    }
-    // Deposit mode: only first item
-    return inputValues[0] || 0;
-  }, [mode, inputValues]);
+  // Calculate total borrowed value inline (simple calculation)
+  const totalBorrowedValue = mode === "Borrow" 
+    ? (inputValues[0] || 0) + (inputValues[1] || 0)
+    : (inputValues[0] || 0);
 
   // Simplified UI visibility flags
   const showInputBoxes = config.showInputBoxes;
   const showTotal = config.showTotal;
-  const isDepositMode = mode === "Deposit";
 
   // Handler for max leverage click
   const handleMaxLeverage = useCallback(() => {
@@ -161,7 +133,7 @@ export const BorrowBox = ({
       {/* Top section: Asset selector or borrowed items display */}
       <div className="flex justify-between ">
         {/* Deposit mode: Single asset selector */}
-        {isDepositMode && (
+        {mode === "Deposit" && (
           <>
             <motion.div
               className="flex gap-[10px] items-top "
@@ -175,6 +147,7 @@ export const BorrowBox = ({
                   items={DropdownOptions}
                   selectedOption={selectedOptions[0] || DropdownOptions[0]}
                   setSelectedOption={handleSetSelectedOption(0)}
+                  classname="text-[16px] font-medium gap-[8px]"
                 />
               </div>
 
@@ -219,7 +192,6 @@ export const BorrowBox = ({
                     const selectedOption =
                       selectedOptions[0] || DropdownOptions[0];
                     const inputValue = inputValues[0] || 0;
-                    const usdValue = inputValue; // 1:1 conversion
 
                     return (
                       <motion.div
@@ -245,7 +217,7 @@ export const BorrowBox = ({
                                 {selectedOption}
                             </div>
                             <div className="text-[10px] text-[#111111]">
-                              {usdValue > 0 ? usdValue.toFixed(2) : "0.00"} USD
+                              {inputValue > 0 ? inputValue.toFixed(2) : "0.00"} USD
                             </div>
                           </div>
                         </div>
@@ -259,7 +231,7 @@ export const BorrowBox = ({
         )}
 
         {/* Borrow mode: Display borrowed items */}
-        {!isDepositMode && (
+        {mode === "Borrow" && (
           <motion.div
             className="w-full flex justify-between items-center"
             initial={{ opacity: 0, y: 20 }}
@@ -274,7 +246,6 @@ export const BorrowBox = ({
                   const selectedOption =
                     selectedOptions[idx] || DropdownOptions[0];
                   const inputValue = inputValues[idx] || 0;
-                  const usdValue = inputValue; // 1:1 conversion
 
                   return (
                     <motion.div
@@ -300,7 +271,7 @@ export const BorrowBox = ({
                             {selectedOption}
                           </div>
                           <div className="text-[10px] text-[#111111]">
-                            {usdValue > 0 ? usdValue.toFixed(2) : "0.00"} USD
+                            {inputValue > 0 ? inputValue.toFixed(2) : "0.00"} USD
                           </div>
                         </div>
                       </div>
@@ -352,8 +323,18 @@ export const BorrowBox = ({
         >
           {/* Map through max items */}
           {Array.from({ length: config.maxItems }).map((_, idx) => {
-              const item = displayItems[idx];
               const selectedOption = selectedOptions[idx] || DropdownOptions[0];
+              const inputValue = inputValues[idx] || 0;
+              
+              // Calculate item data inline (no need for displayItems)
+              const item: BorrowInfo | null = selectedOption && inputValue > 0 ? {
+                assetData: {
+                  asset: `0x${selectedOption}`,
+                  amount: inputValue.toString(),
+                },
+                percentage: totalDeposit > 0 ? Number(((inputValue / totalDeposit) * 100).toFixed(2)) : 0,
+                usdValue: inputValue,
+              } : null;
               return (
                 <motion.div
                   key={idx}
@@ -375,6 +356,7 @@ export const BorrowBox = ({
                             selectedOptions[idx] || DropdownOptions[0]
                           }
                           setSelectedOption={handleSetSelectedOption(idx)}
+                          classname="text-[16px] font-medium gap-[8px]"
                         />
                       </div>
                       <div className="flex flex-col gap-[4px]">
@@ -398,14 +380,7 @@ export const BorrowBox = ({
                           className="text-[12px] font-medium text-[#76737B]"
                           aria-live="polite"
                         >
-                          {item
-                            ? (
-                                (inputValues[idx] || 0) *
-                                (item.usdValue /
-                                  (parseFloat(item.assetData.amount) || 1))
-                              ).toFixed(2)
-                            : "0.00"}{" "}
-                          USD
+                          {inputValue > 0 ? inputValue.toFixed(2) : "0.00"} USD
                         </div>
                       </div>
                     </div>
@@ -437,10 +412,7 @@ export const BorrowBox = ({
                         </div>
                         <div className="text-[12px] font-medium text-[#76737B]">
                           {item
-                            ? `1${item.assetData.asset.split("0x")[1]} = $${(
-                                item.usdValue /
-                                (parseFloat(item.assetData.amount) || 1)
-                              ).toFixed(2)}`
+                            ? `1${selectedOption} = $1.00` // 1:1 conversion
                             : "0.00 USD"}
                         </div>
                       </div>
