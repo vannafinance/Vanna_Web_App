@@ -14,6 +14,8 @@ import { Button } from "../ui/button";
 
 import { Dropdown } from "../ui/dropdown";
 import { Checkbox } from "../ui/Checkbox";
+import { AnimatedTabs } from "../ui/animated-tabs";
+import { RiskRewardSelector, Ratio } from "./Risk-Reward";
 
 const tabClasses = (active: boolean) =>
   `flex-1 text-center py-2 text-sm font-medium rounded-full border ${
@@ -30,7 +32,7 @@ const tabs = [
   { id: "trigger", label: "Trigger" },
 ];
 
-const TIME_IN_FORCE_OPTIONS = ["GTC", "IOC", "FOK"];
+const TIME_IN_FORCE_OPTIONS = ["GTC", "Post-only", "IOC", "FOK"];
 
 const BUY_SELL_TABS = [
   { id: "buy", label: "Buy", content: null },
@@ -43,6 +45,7 @@ export default function OrderPlacementForm() {
 
   const [activeTab, setActiveTab] = useState("limit");
   const [ordersType, setOrdersType] = useState("buy");
+  const [ratio, setRatio] = useState<Ratio>("1:1");
 
   const {
     register,
@@ -137,10 +140,32 @@ export default function OrderPlacementForm() {
 
       <BuySellToggle onChange={(type) => setOrdersType(type)} />
 
+      {/* <div className="mb-2">
+        <AnimatedTabs
+          tabs={BUY_SELL_TABS}
+          defaultTabId={ordersType}
+          onTabChange={(tabId) => {
+            // update local UI state
+            setOrdersType(tabId);
+            // update react-hook-form value for side
+            setValue("side", tabId as OrderPlacementFormValues["side"], {
+              shouldDirty: true,
+              shouldValidate: true,
+            });
+          }}
+          // optional: style hooks to match your pill/gradient look
+          containerClassName="w-full"
+          tabClassName="px-6 py-2 text-sm"
+          indicatorClassName="bg-gradient-to-r from-pink-400 via-purple-500 to-indigo-500"
+        />
+      </div> */}
+
       {/* Loop toggle row */}
       <div>
         <div className="flex items-center gap-2 justify-end">
-          <span className="text-xs text-[#111111] font-medium">Loop</span>
+          <span className="text-[10px] leading-[15px] text-[#111111] font-medium">
+            Loop
+          </span>
 
           <ToggleButton
             defaultChecked={loopEnabled}
@@ -324,11 +349,165 @@ export default function OrderPlacementForm() {
 
       {/* Checkboxes */}
 
-      <div>
+      <div className="flex justify-between">
         <Checkbox label="Take Profit" {...register("takeProfit")} />
+        <div className="flex items-center gap-2 justify-end">
+          <span className="text-[10px] leading-[15px] text-[#111111] font-medium">
+            Multiple TP
+          </span>
+
+          <ToggleButton
+            defaultChecked={loopEnabled}
+            size="small"
+            onToggle={(checked) => {
+              setValue("loopEnabled", checked, {
+                shouldDirty: true,
+                shouldValidate: true,
+              });
+            }}
+          />
+        </div>
       </div>
-      <div>
-        <Checkbox label="Stop Loss" {...register("stopLoss")} />
+      {/* Take Profit card component*/}
+      <div className="flex justify-between w-full h-auto gap-1 bg-white border rounded-lg border-[#E2E2E2] p-2">
+        <div className="flex-1 flex flex-col gap-2.5 h-auto justify-between items-start self-stretch">
+          <label className="text-[8px] font-medium leading-3 text-[#C6C6C6]">
+            Exit Price (USD)
+          </label>
+          <input
+            type="number"
+            placeholder="00.00"
+            className="w-[59px] h-[18] text-[12px]  font-medium  leading-[18px] text-[#000000] outline-none      [appearance:textfield]
+                   [&::-webkit-inner-spin-button]:appearance-none
+                   [&::-webkit-outer-spin-button]:appearance-none"
+          />
+        </div>
+
+        {/* Profit (%) */}
+        <div className="flex-1 flex flex-col gap-2.5  items-center self-stretch">
+          <label className="text-[8px] font-medium leading-3 text-[#C6C6C6]">
+            Profit (%)
+          </label>
+          <input
+            type="number"
+            placeholder="00.00"
+            className="w-[59px] h-[18] text-[12px] font-medium text-center  flex-1 leading-[18px] text-[#000000] outline-none      [appearance:textfield]
+                   [&::-webkit-inner-spin-button]:appearance-none
+                   [&::-webkit-outer-spin-button]:appearance-none"
+          />
+        </div>
+
+        {/* Profit (USD) */}
+        <div className="flex-1 flex flex-col gap-2.5 items-end self-stretch">
+          <label className="text-[8px] font-medium leading-3 text-[#C6C6C6]">
+            Profit (USD)
+          </label>
+          <input
+            type="number"
+            placeholder="00.00"
+            className="w-[59px] h-[18] text-[12px] font-medium text-right flex-1 leading-[18px] text-[#000000] outline-none      [appearance:textfield]
+                   [&::-webkit-inner-spin-button]:appearance-none
+                   [&::-webkit-outer-spin-button]:appearance-none"
+          />
+        </div>
+      </div>
+
+      {/* Stop loss */}
+      <div className="flex flex-col gap-3">
+        <div>
+          <Checkbox label="Stop Loss" {...register("stopLoss")} />
+        </div>
+
+        {/* input*/}
+        <div className="flex gap-1 w-full justify-around items-center overflow-hidden">
+          <div className="flex flex-1  flex-col justify-start items-start gap-1">
+            <label className="text-[10px] leading-[15px] font-medium flex gap-0.5 items-center">
+              SL Trigger Price
+              <span>
+                <Image
+                  src="/icons/info-black.svg"
+                  alt="info-icon"
+                  width={12}
+                  height={12}
+                  className="object-cover"
+                />
+              </span>
+            </label>
+            <div className="relative flex w-[113px] rounded-md border border-[#E2E2E2] bg-[#FFFFFF] py-2.5 px-1">
+              <input
+                type="number"
+                placeholder="00.00"
+                className="text-[10px] font-medium leading-[15px] text-[#111111]
+                outline-none
+                [appearance:textfield]
+                   [&::-webkit-inner-spin-button]:appearance-none
+                   [&::-webkit-outer-spin-button]:appearance-none"
+              />
+              <span className="absolute right-1 text-[8px] leading-3 font-medium">
+                USDT
+              </span>
+            </div>
+          </div>
+          <div className="flex flex-1 flex-col justify-start items-start gap-1">
+            <label className="text-[10px] leading-[15px] font-medium flex gap-0.5 items-center">
+              SL Limit(optional){" "}
+              <span>
+                <Image
+                  src="/icons/info-black.svg"
+                  alt="info-icon"
+                  width={12}
+                  height={12}
+                  className="object-cover"
+                />
+              </span>
+            </label>
+            <div className="relative flex w-[113px] rounded-md border border-[#E2E2E2] bg-[#FFFFFF] py-2.5 px-1">
+              <input
+                type="number"
+                placeholder="00.00"
+                className="[appearance:textfield] outline-none text-[10px] font-medium leading-[15px] text-[#111111]
+                   [&::-webkit-inner-spin-button]:appearance-none
+                   [&::-webkit-outer-spin-button]:appearance-none"
+              />
+              <span className="absolute right-1 text-[8px] leading-3 font-medium">
+                USDT
+              </span>
+            </div>
+          </div>
+          <div className="flex flex-1 flex-col justify-start items-start gap-1">
+            <label className="text-[10px] leading-[15px] font-medium flex gap-0.5 items-center">
+              Trail Variance
+              <span>
+                <Image
+                  src="/icons/info-black.svg"
+                  alt="info-icon"
+                  width={12}
+                  height={12}
+                  className="object-cover"
+                />
+              </span>
+            </label>
+            <div className="relative flex rounded-md w-[113px] border border-[#E2E2E2] bg-[#FFFFFF] py-2.5 px-1">
+              <input
+                type="number"
+                placeholder="00.00"
+                className="[appearance:textfield] outline-none text-[10px] font-medium leading-[15px] text-[#111111]
+                   [&::-webkit-inner-spin-button]:appearance-none
+                   [&::-webkit-outer-spin-button]:appearance-none"
+              />
+              <span className="absolute right-1 text-[8px] leading-3 font-medium">
+                USDT
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/*Risk Reward */}
+        <RiskRewardSelector
+          value={ratio}
+          onChange={setRatio}
+          label="RR Ratio"
+        />
       </div>
 
       {/* Risk / Gain display*/}

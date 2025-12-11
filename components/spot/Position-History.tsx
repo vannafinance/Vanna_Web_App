@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Button } from "../ui/button";
+import { OpenOrdersTable } from "./OpenOrdersTable";
 
 type TabType =
   | "openOrders"
@@ -48,6 +49,7 @@ const PositionHistory: React.FC = () => {
           <button className="px-4 py-2 bg-[#F1EBFD] text-[#703AE6] font-semibold rounded-lg ">
             Connect your Wallet
           </button>
+          {/* <OpenOrdersTable /> */}
         </div>
       </div>
     </div>

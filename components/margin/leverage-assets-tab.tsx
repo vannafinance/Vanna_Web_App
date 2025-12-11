@@ -15,7 +15,7 @@ import { BorrowBox } from "./borrow-box";
 import { Dialogue } from "@/components/ui/dialogue";
 import { DetailsPanel } from "../ui/details-panel";
 import { Dropdown } from "../ui/dropdown";
-import { Checkbox } from "../ui/checkbox";
+import { Checkbox } from "../ui/Checkbox";
 import Image from "next/image";
 import { useCollateralBorrowStore } from "@/store/collateral-borrow-store";
 import { Radio } from "../ui/radio-button";

@@ -2,7 +2,6 @@
 
 import Orderbook from "@/components/spot/OrderBook";
 import OrderPlacementForm from "@/components/spot/OrderPlacementForm";
-import OrderPlacementTable from "@/components/spot/OrderPlacementTable";
 import PositionHistory from "@/components/spot/Position-History";
 import Toolbar from "@/components/spot/Toolbar";
 
