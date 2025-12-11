@@ -32,8 +32,18 @@ export const TransferCollateral = () => {
   };
 
   return (
-    <div className="flex flex-col justify-between gap-[24px] pt-8">
-      <div className="flex flex-col gap-[24px] rounded-[16px] p-[20px] bg-[#FFFFFF] border-[1px] border-[#E2E2E2] ">
+    <motion.div 
+      className="flex flex-col justify-between gap-[24px] pt-8"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+    >
+      <motion.div 
+        className="flex flex-col gap-[24px] rounded-[16px] p-[20px] bg-[#FFFFFF] border-[1px] border-[#E2E2E2]"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3, delay: 0.1 }}
+      >
         <div className="">
           <motion.div
             key="editing"
@@ -99,8 +109,18 @@ export const TransferCollateral = () => {
             </AnimatePresence>
           </motion.div>
         </div>
-        <div className="flex justify-between gap-[10px] items-center ">
-          <div className="px-[10px] flex flex-col gap-[8px]">
+        <motion.div 
+          className="flex justify-between gap-[10px] items-center"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+        >
+          <motion.div 
+            className="px-[10px] flex flex-col gap-[8px]"
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3, delay: 0.25 }}
+          >
             <div>
               <label htmlFor={`collateral-amount-input`} className="sr-only">
                 Collateral amount
@@ -114,35 +134,60 @@ export const TransferCollateral = () => {
                 value={valueInput}
               />
             </div>
-            <div
+            <motion.div
               className="text-[12px] font-medium text-[#76737B]"
               aria-live="polite"
+              key={valueInUsd}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.2 }}
             >
               {valueInUsd} USD
-            </div>
-          </div>
-          <div className="flex flex-col gap-[8px] items-end">
+            </motion.div>
+          </motion.div>
+          <motion.div 
+            className="flex flex-col gap-[8px] items-end"
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3, delay: 0.25 }}
+          >
             <div className=" text-[10px] font-medium ">
               Transfer To: <span className="font-semibold">PB</span>
             </div>
             <div className="text-[20px] font-medium ">2000 USD</div>
 
-            <button
+            <motion.button
               onClick={handleMaxValueClick}
-              className="cursor-pointer bg-[#FFE6F2] rounded-[4px] py-[4px] px-[8px] text-[12px] font-medium text-[#FF007A] "
+              className="cursor-pointer bg-[#FFE6F2] rounded-[4px] py-[4px] px-[8px] text-[12px] font-medium text-[#FF007A]"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ duration: 0.2 }}
             >
               Max Value
-            </button>
-          </div>
-        </div>
-      </div>
-      <div>
+            </motion.button>
+          </motion.div>
+        </motion.div>
+      </motion.div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.3 }}
+      >
         <DetailsPanel
           items={[{ title: "Transfer Collateral", value: "2000 USD" }]}
         />
-      </div>
-      <div className="flex flex-col gap-[16px]">
-        <div>
+      </motion.div>
+      <motion.div 
+        className="flex flex-col gap-[16px]"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.4 }}
+      >
+        <motion.div
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.3, delay: 0.45 }}
+        >
           <Button
             text="Transfer"
             size="large"
@@ -150,8 +195,12 @@ export const TransferCollateral = () => {
             disabled={Number(valueInput)>0?false:true}
             onClick={handleTransferClick}
           />
-        </div>
-        <div>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.3, delay: 0.5 }}
+        >
           <Button
             text="Flash Close"
             size="large"
@@ -159,8 +208,8 @@ export const TransferCollateral = () => {
             disabled={Number(valueInput)>0?false:true}
             onClick={handleTransferClick}
           />
-        </div>
-      </div>
-    </div>
+        </motion.div>
+      </motion.div>
+    </motion.div>
   );
 };

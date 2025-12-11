@@ -4,7 +4,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useMemo } from "react";
 import ToggleButton from "@/components/ui/toggle";
 import { Collaterals, BorrowInfo } from "@/lib/types";
-import { DropdownOptions, balanceTypeOptions, iconPaths } from "@/lib/constants";
+import {
+  DropdownOptions,
+  balanceTypeOptions,
+  iconPaths,
+} from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Collateral } from "./collateral-box";
 import { BorrowBox } from "./borrow-box";
@@ -14,6 +18,7 @@ import { Dropdown } from "../ui/dropdown";
 import { Checkbox } from "../ui/checkbox";
 import Image from "next/image";
 import { useCollateralBorrowStore } from "@/store/collateral-borrow-store";
+import { Radio } from "../ui/radio-button";
 
 type Modes = "Deposit" | "Borrow";
 
@@ -49,13 +54,18 @@ export const LeverageAssetsTab = ({
   const [selectedBalanceType, setSelectedBalanceType] = useState<string>(
     balanceTypeOptions[0]
   );
+  // Store full collateral objects: array for Deposit (multiple), single for Borrow
+  const [selectedMBCollaterals, setSelectedMBCollaterals] = useState<
+    Collaterals[]
+  >([]);
 
   // Get collateral mock data from store
   const collateralMock = useCollateralBorrowStore((state) => state.collaterals);
 
   // Single source of truth for MB mode
-  const isMBMode = currentCollaterals.length === 1 && 
-                   currentCollaterals[0]?.balanceType.toLowerCase() === "mb";
+  const isMBMode =
+    currentCollaterals.length === 1 &&
+    currentCollaterals[0]?.balanceType.toLowerCase() === "mb";
 
   // Initialize with one empty collateral if none exist
   useEffect(() => {
@@ -189,7 +199,7 @@ export const LeverageAssetsTab = ({
 
   // Handler for mode toggle
   const handleModeToggle = () => {
-    setMode(prev => prev === "Borrow" ? "Deposit" : "Borrow");
+    setMode((prev) => (prev === "Borrow" ? "Deposit" : "Borrow"));
   };
 
   // Removed wrapper functions - use inline arrow functions in JSX
@@ -197,9 +207,12 @@ export const LeverageAssetsTab = ({
   // Unified balance type change handler
   const handleBalanceTypeChange = (index: number) => {
     return (balanceType: string | ((prev: string) => string)) => {
-      const value = typeof balanceType === "string" ? balanceType : balanceType(selectedBalanceType);
+      const value =
+        typeof balanceType === "string"
+          ? balanceType
+          : balanceType(selectedBalanceType);
       const normalized = value.toLowerCase();
-      
+
       // Get current collateral or create default
       const currentCollateral = currentCollaterals[index] || {
         amount: 0,
@@ -208,12 +221,12 @@ export const LeverageAssetsTab = ({
         balanceType: "pb",
         unifiedBalance: 0,
       };
-      
+
       const updatedCollateral: Collaterals = {
         ...currentCollateral,
         balanceType: normalized,
       };
-      
+
       if (normalized === "mb") {
         // MB mode: single collateral with MB type
         setCurrentCollaterals([updatedCollateral]);
@@ -228,8 +241,9 @@ export const LeverageAssetsTab = ({
         setCurrentCollaterals(filteredCollaterals);
         setEditingIndex(null);
       }
-      
+
       setSelectedBalanceType(value);
+      setEditingIndex(index);
     };
   };
 
@@ -240,387 +254,437 @@ export const LeverageAssetsTab = ({
 
   return (
     <>
-    <motion.div
-      className="w-full flex flex-col gap-[24px] pt-8"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.4, delay: 0.1 }}
-    >
-      {/* Mode toggle: Deposit / Borrow */}
       <motion.div
-        className="w-full flex justify-end text-[14px] font-medium gap-2 items-center"
-        initial={{ opacity: 0, x: 20 }}
-        whileInView={{ opacity: 1, x: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.3 }}
+        className="w-full flex flex-col gap-[24px] pt-8"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4, delay: 0.1 }}
       >
-        Multi Deposit{" "}
-        <ToggleButton
-          size="small"
-          onToggle={handleModeToggle}
-        />{" "}
-        Dual Borrow
-      </motion.div>
-
-      {/* Deposit section */}
-      <motion.div
-        className="w-full flex flex-col gap-[8px]"
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
-      >
+        {/* Mode toggle: Deposit / Borrow */}
         <motion.div
-          className="w-full text-[16px] font-medium"
-          initial={{ opacity: 0, x: -10 }}
+          className="w-full flex justify-end text-[14px] font-medium gap-2 items-center"
+          initial={{ opacity: 0, x: 20 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.3 }}
         >
-          Deposit
+          Multi Deposit{" "}
+          <ToggleButton size="small" onToggle={handleModeToggle} /> Dual Borrow
         </motion.div>
-        <div className="flex flex-col gap-[12px]">
-          {/* Render MB UI if MB is selected, otherwise render collaterals */}
-          {isMBMode ? (
-            <motion.div
-              className="flex flex-col gap-[24px] bg-white p-[20px] rounded-[16px] border-[1px] border-[#E2E2E2] "
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              <div className="flex justify-between items-center">
-                <div className="text-[20px] font-medium py-[10px]">
-                  {mbTotalUsd} USD
-                </div>
-                <div className="py-[4px] pr-[4px] pl-[8px] bg-[#F2EBFE] rounded-[8px]">
-                  <Dropdown
-                    classname="text-[16px] font-medium gap-[8px]"
-                    items={balanceTypeOptions}
-                    selectedOption={selectedBalanceType}
-                    setSelectedOption={handleBalanceTypeChange(0)}
-                  />
-                </div>
-              </div>
-              <div className="p-[10px] rounded-[12px] bg-[#F4F4F4] grid grid-cols-2 gap-[15px]">
-                {collateralMock.map((item, index) => (
-                  <div key={index} className="flex gap-[10px] items-center">
-                    <div>
-                      <Checkbox />
-                    </div>
-                    <div>
-                      <Image
-                        src={iconPaths[item.asset]}
-                        alt={item.asset}
-                        width={20}
-                        height={20}
-                      />
-                    </div>
-                    <div className="text-[16px] font-semibold">
-                      {item.amount} {item.asset}
-                    </div>
-                    <div className="rounded-[4px] py-[2px] px-[4px] bg-[#FFFFFF] text-[10px] font-medium">
-                      {item.amountInUsd} USD
-                    </div>
+
+        {/* Deposit section */}
+        <motion.div
+          className="w-full flex flex-col gap-[8px]"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+        >
+          <motion.div
+            className="w-full text-[16px] font-medium"
+            initial={{ opacity: 0, x: -10 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.3 }}
+          >
+            {isMBMode ? "Selected Your Collateral" : "Deposit"}
+          </motion.div>
+          <div className="flex flex-col gap-[12px]">
+            {/* Render MB UI if MB is selected, otherwise render collaterals */}
+            {isMBMode ? (
+              <motion.div
+                className="flex flex-col gap-[24px] bg-white p-[20px] rounded-[16px] border-[1px] border-[#E2E2E2] "
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="flex justify-between items-center">
+                  <div className="text-[20px] font-medium py-[10px]">
+                    {mbTotalUsd} USD
                   </div>
-                ))}
-              </div>
-            </motion.div>
-          ) : (
-            <AnimatePresence mode="popLayout">
-              {currentCollaterals.length > 0 ? (
-                currentCollaterals.map((collateral, index) => (
+                  <div className="py-[4px] pr-[4px] pl-[8px] bg-[#F2EBFE] rounded-[8px]">
+                    <Dropdown
+                      classname="text-[16px] font-medium gap-[8px]"
+                      items={balanceTypeOptions}
+                      selectedOption={selectedBalanceType}
+                      setSelectedOption={handleBalanceTypeChange(0)}
+                    />
+                  </div>
+                </div>
+                <div className="p-[10px] rounded-[12px] bg-[#F4F4F4] grid grid-cols-2 gap-[15px]">
+                  {collateralMock.map((item, index) => {
+                    const isSelected = selectedMBCollaterals.some(
+                      (coll) =>
+                        coll.asset === item.asset && coll.amount === item.amount
+                    );
+
+                    return (
+                      <div key={index} className="flex gap-[10px] items-center">
+                        <div>
+                          {mode === "Deposit" ? (
+                            <Checkbox
+                              checked={isSelected}
+                              onChange={() => {
+                                if (isSelected) {
+                                  // Remove from selection
+                                  setSelectedMBCollaterals((prev) =>
+                                    prev.filter(
+                                      (coll) =>
+                                        !(
+                                          coll.asset === item.asset &&
+                                          coll.amount === item.amount
+                                        )
+                                    )
+                                  );
+                                } else {
+                                  // Add to selection (multiple allowed)
+                                  setSelectedMBCollaterals((prev) => [
+                                    ...prev,
+                                    item,
+                                  ]);
+                                }
+                              }}
+                            />
+                          ) : (
+                            <Radio
+                              name="mb-collateral-radio"
+                              value={`collateral-${index}`}
+                              checked={isSelected}
+                              onChange={() => {
+                                // Only one selection allowed (replace array with single item)
+                                setSelectedMBCollaterals([item]);
+                              }}
+                            />
+                          )}
+                        </div>
+                        <div>
+                          <Image
+                            src={iconPaths[item.asset]}
+                            alt={item.asset}
+                            width={20}
+                            height={20}
+                          />
+                        </div>
+                        <div className="text-[16px] font-semibold">
+                          {item.amount} {item.asset}
+                        </div>
+                        <div className="rounded-[4px] py-[2px] px-[4px] bg-[#FFFFFF] text-[10px] font-medium">
+                          {item.amountInUsd} USD
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            ) : (
+              <AnimatePresence mode="popLayout">
+                {currentCollaterals.length > 0 ? (
+                  currentCollaterals.map((collateral, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                      transition={{
+                        duration: 0.3,
+                        ease: "easeOut",
+                        delay: index * 0.05,
+                      }}
+                      layout
+                    >
+                      <Collateral
+                        collaterals={collateral}
+                        isEditing={editingIndex === index}
+                        isAnyOtherEditing={
+                          editingIndex !== null && editingIndex !== index
+                        }
+                        onEdit={() => handleEditCollateral(index)}
+                        onSave={(data) => handleSaveCollateral(index, data)}
+                        onCancel={handleCancelEdit}
+                        onDelete={() => handleDeleteCollateral(index)}
+                        onBalanceTypeChange={handleBalanceTypeChange(index)}
+                        index={index}
+                      />
+                    </motion.div>
+                  ))
+                ) : (
                   <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                    transition={{
-                      duration: 0.3,
-                      ease: "easeOut",
-                      delay: index * 0.05,
-                    }}
-                    layout
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3 }}
                   >
                     <Collateral
-                      collaterals={collateral}
-                      isEditing={editingIndex === index}
-                      isAnyOtherEditing={editingIndex !== null && editingIndex !== index}
-                      onEdit={() => handleEditCollateral(index)}
-                      onSave={(data) => handleSaveCollateral(index, data)}
+                      collaterals={null}
+                      isEditing={true}
+                      isAnyOtherEditing={false}
+                      onEdit={() => {}}
+                      onSave={(data) => {
+                        setCurrentCollaterals([data]);
+                        setEditingIndex(null);
+                      }}
                       onCancel={handleCancelEdit}
-                      onDelete={() => handleDeleteCollateral(index)}
-                      onBalanceTypeChange={handleBalanceTypeChange(index)}
-                      index={index}
+                      onBalanceTypeChange={handleBalanceTypeChange(0)}
+                      index={0}
                     />
                   </motion.div>
-                ))
-              ) : (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
-                >
-                <Collateral
-                  collaterals={null}
-                  isEditing={true}
-                  isAnyOtherEditing={false}
-                  onEdit={() => {}}
-                  onSave={(data) => {
-                    setCurrentCollaterals([data]);
-                    setEditingIndex(null);
-                  }}
-                  onCancel={handleCancelEdit}
-                  onBalanceTypeChange={handleBalanceTypeChange(0)}
-                  index={0}
-                />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          )}
-        </div>
+                )}
+              </AnimatePresence>
+            )}
+          </div>
 
-        {/* Add Collateral button */}
-        <motion.button
-          type="button"
-          onClick={handleAddCollateral}
-          disabled={
-            editingIndex !== null ||
-            (mode === "Borrow" && currentCollaterals.length >= 1) ||
-            isMBMode
-          }
-          className={`w-fit hover:cursor-pointer hover:bg-[#F1EBFD] py-[11px] px-[10px] rounded-[8px] flex gap-[4px] text-[14px] font-medium text-[#703AE6] items-center ${
-            editingIndex !== null ||
-            (mode === "Borrow" && currentCollaterals.length >= 1) ||
-            isMBMode
-              ? "opacity-50 cursor-not-allowed"
-              : ""
-          }`}
-          whileHover={
-            editingIndex === null &&
-            !(mode === "Borrow" && currentCollaterals.length >= 1) &&
-            !isMBMode
-              ? { x: 5 }
-              : {}
-          }
-          transition={{ duration: 0.2 }}
-          aria-label="Add new collateral"
-        >
-          <svg
-            width="11"
-            height="11"
-            viewBox="0 0 11 11"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden="true"
+          {/* Add Collateral button */}
+          <motion.button
+            type="button"
+            onClick={handleAddCollateral}
+            disabled={
+              editingIndex !== null ||
+              (mode === "Borrow" && currentCollaterals.length >= 1) ||
+              isMBMode
+            }
+            className={`w-fit hover:cursor-pointer hover:bg-[#F1EBFD] py-[11px] px-[10px] rounded-[8px] flex gap-[4px] text-[14px] font-medium text-[#703AE6] items-center ${
+              editingIndex !== null ||
+              (mode === "Borrow" && currentCollaterals.length >= 1) ||
+              isMBMode
+                ? "opacity-50 cursor-not-allowed"
+                : ""
+            }`}
+            whileHover={
+              editingIndex === null &&
+              !(mode === "Borrow" && currentCollaterals.length >= 1) &&
+              !isMBMode
+                ? { x: 5 }
+                : {}
+            }
+            transition={{ duration: 0.2 }}
+            aria-label="Add new collateral"
           >
-            <path
-              d="M5.33332 0.666748V10.0001M0.666656 5.33341H9.99999"
-              stroke="#703AE6"
-              strokeWidth="1.33333"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          Add Collateral
-        </motion.button>
-      </motion.div>
+            <svg
+              width="11"
+              height="11"
+              viewBox="0 0 11 11"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <path
+                d="M5.33332 0.666748V10.0001M0.666656 5.33341H9.99999"
+                stroke="#703AE6"
+                strokeWidth="1.33333"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            Add Collateral
+          </motion.button>
+        </motion.div>
 
-      {/* Borrow section */}
-      <motion.div
-        className="w-full flex flex-col gap-[8px]"
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.4, delay: 0.1, ease: "easeOut" }}
-      >
+        {/* Borrow section */}
         <motion.div
-          className="w-full text-[16px] font-medium"
-          initial={{ opacity: 0, x: -10 }}
-          whileInView={{ opacity: 1, x: 0 }}
+          className="w-full flex flex-col gap-[8px]"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.4, delay: 0.1, ease: "easeOut" }}
         >
-          Borrow
+          <motion.div
+            className="w-full text-[16px] font-medium"
+            initial={{ opacity: 0, x: -10 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.3 }}
+          >
+            Borrow
+          </motion.div>
+          <div>
+            <BorrowBox
+              mode={mode}
+              leverage={leverage}
+              setLeverage={setLeverage}
+              totalDeposit={totalDeposit}
+              onBorrowItemsChange={setBorrowItems}
+            />
+          </div>
         </motion.div>
-        <div>
-          <BorrowBox
-            mode={mode}
-            leverage={leverage}
-            setLeverage={setLeverage}
-            totalDeposit={totalDeposit}
-            onBorrowItemsChange={setBorrowItems}
+
+        {/* Details panel - shows calculations and info */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4, delay: 0.2, ease: "easeOut" }}
+        >
+          <DetailsPanel
+            items={[
+              {
+                title: "Platform Points",
+                value: `${platformPoints}x`,
+              },
+              {
+                title: "Leverage",
+                value: `${leverage}x`,
+              },
+              {
+                title: "You're depositing",
+                value: `${depositAmount} ${depositCurrency}`,
+                linkText: "View Sources",
+              },
+              {
+                title: "Fees",
+                value: `${fees} ${feesCurrency}`,
+                linkText: "View details",
+              },
+              {
+                title: "Total deposit including fees",
+                value: `${totalDeposit} ${depositCurrency}`,
+              },
+              {
+                title: "Updated Collateral Before Liquidation",
+                value: updatedCollateral.toString(),
+              },
+              {
+                title: "Updated Net Health Factor",
+                value: netHealthFactor.toString(),
+              },
+            ]}
           />
-        </div>
+        </motion.div>
+
+        {/* Create Margin Account button */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4, delay: 0.3, ease: "easeOut" }}
+        >
+          <Button
+            disabled={false}
+            size="large"
+            text={
+              hasMarginAccount && !isMBMode
+                ? "Deposit & Borrow"
+                : hasMarginAccount && isMBMode
+                ? "Borrow"
+                : "Create your Margin Account"
+            }
+            type="gradient"
+            onClick={handleButtonClick}
+          />
+        </motion.div>
       </motion.div>
 
-      {/* Details panel - shows calculations and info */}
-      <DetailsPanel
-        items={[
-          {
-            title: "Platform Points",
-            value: `${platformPoints}x`,
-          },
-          {
-            title: "Leverage",
-            value: `${leverage}x`,
-          },
-          {
-            title: "You're depositing",
-            value: `${depositAmount} ${depositCurrency}`,
-            linkText: "View Sources",
-
-          },
-          {
-            title: "Fees",
-            value: `${fees} ${feesCurrency}`,
-            linkText: "View details",
-          },
-          {
-            title: "Total deposit including fees",
-            value: `${totalDeposit} ${depositCurrency}`,
-          },
-          {
-            title: "Updated Collateral Before Liquidation",
-            value: updatedCollateral.toString(),
-          },
-          {
-            title: "Updated Net Health Factor",
-            value: netHealthFactor.toString(),
-          },
-        ]}
-      />
-
-      {/* Create Margin Account button */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.4, delay: 0.3, ease: "easeOut" }}
-      >
-        <Button
-          disabled={false}
-          size="large"
-          text={hasMarginAccount ? "Deposit & Borrow" : "Create your Margin Account"}
-          type="gradient"
-          onClick={handleButtonClick}
-        />
-      </motion.div>
-    </motion.div>
-
-    {/* First dialogue: Create Margin Account */}
-    <AnimatePresence>
-      {activeDialogue === "create-margin" && (
-        <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[#45454566] "
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-          onClick={() => setActiveDialogue("none")}
-        >
+      {/* First dialogue: Create Margin Account */}
+      <AnimatePresence>
+        {activeDialogue === "create-margin" && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[#45454566] "
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={() => setActiveDialogue("none")}
           >
-            <Dialogue
-              buttonOnClick={() => setActiveDialogue("sign-agreement")}
-              buttonText="Create Your Account"
-              content={[
-                { line: "Connect your wallet to get started." },
-                {
-                  line: "Confirm your Margin Account we will generate a unique address for you.",
-                },
-                { line: "Make a deposit to activate borrowing." },
-              ]}
-              heading="Create Margin Account"
-              onClose={() => setActiveDialogue("none")}
-            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ duration: 0.3 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Dialogue
+                buttonOnClick={() => setActiveDialogue("sign-agreement")}
+                buttonText="Create Your Account"
+                content={[
+                  { line: "Connect your wallet to get started." },
+                  {
+                    line: "Confirm your Margin Account we will generate a unique address for you.",
+                  },
+                  { line: "Make a deposit to activate borrowing." },
+                ]}
+                heading="Create Margin Account"
+                onClose={() => setActiveDialogue("none")}
+              />
+            </motion.div>
           </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+        )}
+      </AnimatePresence>
 
-    {/* Second dialogue: Review and Sign Agreement */}
-    <AnimatePresence>
-      {activeDialogue === "sign-agreement" && (
-        <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[#45454566] "
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-          onClick={() => setActiveDialogue("none")}
-        >
+      {/* Second dialogue: Review and Sign Agreement */}
+      <AnimatePresence>
+        {activeDialogue === "sign-agreement" && (
           <motion.div
-            className="w-full max-w-[891px]"
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[#45454566] "
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={() => setActiveDialogue("none")}
           >
-            <Dialogue
-              description="Before you proceed, please review and accept the terms of borrowing on VANNA. This agreement ensures you understand the risks, responsibilities, and conditions associated with using the platform."
-              buttonOnClick={() => setActiveDialogue("none")}
-              buttonText="Sign Agreement"
-              content={[
-                {
-                  line: "Collateral Requirement",
-                  points: [
-                    "All borrowed positions must remain fully collateralized.",
-                    "If collateral value falls below the liquidation threshold, your position may be liquidated.",
-                  ],
-                },
-                {
-                  line: "Borrow Limits & Leverage",
-                  points: [
-                    "You may only borrow assets up to the maximum Loan-to-Value (LTV) allowed.",
-                    "Leverage is enabled only when collateral value supports it.",
-                  ],
-                },
-                {
-                  line: "Interest & Fees",
-                  points: [
-                    "Interest rates are variable and accrue in real time.",
-                    "Additional protocol fees may apply for borrowing or liquidation events.",
-                  ],
-                },
-                {
-                  line: "Liquidation Risk",
-                  points: [
-                    "Market volatility can reduce collateral value.",
-                    "If your position health factor drops below safe limits, collateral may be partially or fully liquidated without prior notice.",
-                  ],
-                },
-                {
-                  line: "User Responsibility",
-                  points: [
-                    "You are responsible for monitoring your positions, balances, and risks.",
-                    "VANNA is a non-custodial protocol; all actions are initiated by your wallet.",
-                  ],
-                },
-                {
-                  line: "No Guarantee of Returns",
-                  points: [
-                    "Using borrowed assets in trading, farming, or external protocols involves risk.",
-                    "VANNA does not guarantee profits or protection against losses.",
-                  ],
-                },
-              ]}
-              heading="Review and Sign Agreement"
-              checkboxContent="I have read and agree to the VANNA Borrow Agreement."
-              onClose={() => setActiveDialogue("none")}
-            />
+            <motion.div
+              className="w-full max-w-[891px]"
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ duration: 0.3 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Dialogue
+                description="Before you proceed, please review and accept the terms of borrowing on VANNA. This agreement ensures you understand the risks, responsibilities, and conditions associated with using the platform."
+                buttonOnClick={() => setActiveDialogue("none")}
+                buttonText="Sign Agreement"
+                content={[
+                  {
+                    line: "Collateral Requirement",
+                    points: [
+                      "All borrowed positions must remain fully collateralized.",
+                      "If collateral value falls below the liquidation threshold, your position may be liquidated.",
+                    ],
+                  },
+                  {
+                    line: "Borrow Limits & Leverage",
+                    points: [
+                      "You may only borrow assets up to the maximum Loan-to-Value (LTV) allowed.",
+                      "Leverage is enabled only when collateral value supports it.",
+                    ],
+                  },
+                  {
+                    line: "Interest & Fees",
+                    points: [
+                      "Interest rates are variable and accrue in real time.",
+                      "Additional protocol fees may apply for borrowing or liquidation events.",
+                    ],
+                  },
+                  {
+                    line: "Liquidation Risk",
+                    points: [
+                      "Market volatility can reduce collateral value.",
+                      "If your position health factor drops below safe limits, collateral may be partially or fully liquidated without prior notice.",
+                    ],
+                  },
+                  {
+                    line: "User Responsibility",
+                    points: [
+                      "You are responsible for monitoring your positions, balances, and risks.",
+                      "VANNA is a non-custodial protocol; all actions are initiated by your wallet.",
+                    ],
+                  },
+                  {
+                    line: "No Guarantee of Returns",
+                    points: [
+                      "Using borrowed assets in trading, farming, or external protocols involves risk.",
+                      "VANNA does not guarantee profits or protection against losses.",
+                    ],
+                  },
+                ]}
+                heading="Review and Sign Agreement"
+                checkboxContent="I have read and agree to the VANNA Borrow Agreement."
+                onClose={() => setActiveDialogue("none")}
+              />
+            </motion.div>
           </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  </>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
-
