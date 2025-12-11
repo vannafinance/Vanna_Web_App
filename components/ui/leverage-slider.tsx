@@ -80,12 +80,12 @@ export const LeverageSlider = ({
 
         {/* Track Background */}
         <motion.div
-          className="relative h-1 bg-gradient-to-r from-purple-100 via-pink-100 to-purple-100 rounded-full cursor-pointer overflow-visible"
+          className="relative h-1 bg-[#F4F4F4] rounded-full cursor-pointer overflow-visible"
           onMouseDown={handleMouseDown}
         >
           {/* Progress Fill */}
           <motion.div
-            className="absolute h-full bg-gradient-to-r from-[#FC5457] to-[#703AE6] rounded-full"
+            className="absolute h-full bg-gradient rounded-full"
             initial={{ width: 0 }}
             animate={{ width: `${percentage}%` }}
             transition={{ duration: isDragging ? 0 : 0.3, ease: "easeOut" }}

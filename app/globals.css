@@ -86,7 +86,7 @@
 @layer utilities {
   
   .bg-gradient {
-    @apply bg-gradient-to-r from-[#FC5457] to-[#703AE6];
+    background-image: linear-gradient(135deg, #FC5457 10%, #703AE6 80%);
   }
 
   /* Spacing scale utilities (px) */

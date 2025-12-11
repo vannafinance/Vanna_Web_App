@@ -31,7 +31,7 @@ export const Button = (props: Button) => {
           : props.type == "gradient"
           ? props.disabled
             ? "bg-[#A7A7A7] text-white"
-            : "bg-gradient-to-r from-[#FC5457] to-[#703AE6] text-white hover:from-[#703AE6] hover:to-[#703AE6] active:from-[#703AE6] active:to-[#703AE6]"
+            : "bg-gradient text-white hover:bg-gradient active:bg-gradient"
           : " disabled:text-[#A7A7A7] text-black hover:text-[#703AE6] focus:text-[#703AE6]"
       }`}
     >
