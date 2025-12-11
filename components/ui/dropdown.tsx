@@ -9,6 +9,7 @@ interface Dropdown {
   items: string[];
   setSelectedOption: React.Dispatch<React.SetStateAction<string>>;
   selectedOption: string;
+  classname:string
 }
 
 export const Dropdown = (props: Dropdown) => {
@@ -22,7 +23,7 @@ export const Dropdown = (props: Dropdown) => {
     >
       <button
         type="button"
-        className="rounded-[8px] font-medium text-[15.5px] cursor-pointer flex gap-2 justify-center items-center"
+        className={`rounded-[8px]  ${props.classname} cursor-pointer flex justify-center items-center `}
         aria-label={`Selected: ${props.selectedOption}. Click to change option`}
         aria-expanded={isHover}
         aria-haspopup="listbox"

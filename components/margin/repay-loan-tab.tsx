@@ -63,7 +63,7 @@ export const RepayLoanTab = () => {
 
   return (
     <motion.div
-      className="w-full flex flex-col gap-[36px] pt-8"
+      className="w-full flex flex-col gap-[24px] pt-8"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4, delay: 0.1 }}
@@ -146,6 +146,7 @@ export const RepayLoanTab = () => {
               className="p-[10px]"
             >
               <Dropdown
+              classname="text-[16px] font-medium gap-[8px]"
                 items={DropdownOptions}
                 selectedOption={selectedRepayCurrency}
                 setSelectedOption={setSelectedRepayCurrency}

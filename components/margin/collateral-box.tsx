@@ -26,6 +26,7 @@ interface Collateral {
   onSave?: (collateral: Collaterals) => void;
   onCancel?: () => void;
   onDelete?: () => void;
+  onBalanceTypeChange?: (balanceType: string) => void;
   index?: number;
 }
 
@@ -115,21 +116,6 @@ export const Collateral = (props: Collateral) => {
     setPercentage(item);
   };
 
-  // Handler for PB balance type click
-  const handlePBClick = () => {
-    setSelectedBalanceType("PB");
-  };
-
-  // Handler for MB balance type click
-  const handleMBClick = () => {
-    setSelectedBalanceType("MB");
-  };
-
-  // Handler for WB balance type click
-  const handleWBClick = () => {
-    setSelectedBalanceType("WB");
-  };
-
   // Handler for view sources click
   const handleViewSourcesClick = () => {
     setIsViewSourcesOpen(true);
@@ -179,6 +165,7 @@ export const Collateral = (props: Collateral) => {
             {/* Currency dropdown */}
             <div className="p-[10px]">
               <Dropdown
+                classname="text-[16px] font-medium gap-[8px]"
                 selectedOption={selectedCurrency}
                 setSelectedOption={setSelectedCurrency}
                 items={DropdownOptions}
@@ -303,7 +290,17 @@ export const Collateral = (props: Collateral) => {
             <div className="flex flex-col justify-end items-end gap-[4px]">
               {/* PB/WB toggle */}
               <div className="py-[4px] pr-[4px] pl-[8px] bg-[#F2EBFE] rounded-[8px] ">
-                <Dropdown items={balanceTypeOptions} selectedOption={selectedBalanceType} setSelectedOption={setSelectedBalanceType}/>
+                <Dropdown 
+                  classname="text-[16px] font-medium gap-[8px]" 
+                  items={balanceTypeOptions} 
+                  selectedOption={selectedBalanceType} 
+                  setSelectedOption={(value) => {
+                    setSelectedBalanceType(value);
+                    if (props.onBalanceTypeChange) {
+                      props.onBalanceTypeChange(value as string);
+                    }
+                  }}
+                />
               </div>
 
               {/* Unified Balance link */}

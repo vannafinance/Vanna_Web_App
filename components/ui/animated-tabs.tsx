@@ -69,7 +69,7 @@ export const AnimatedTabs = ({
       >
         {/* Animated tab indicator background */}
         <motion.div
-          className={`absolute top-[6px] left-[6px] h-[67px] rounded-[16px] bg-gradient-to-r from-[#FC5457] to-[#703AE6] p-[2px] ${indicatorClassName}`}
+          className={`absolute top-[6px] left-[6px] h-[67px] rounded-[16px] bg-gradient p-[2px] ${indicatorClassName}`}
           style={{
             width: indicatorWidth,
           }}
