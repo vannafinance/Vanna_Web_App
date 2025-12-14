@@ -1,45 +1,44 @@
 "use client";
 
+import { OrderSide, OrderType } from "@/lib/types";
 import createNewStore from "@/zustand";
 
-export type OrderType = "limit" | "market" | "trigger";
-export type OrderSide = "buy" | "sell";
-export type TimeInForce = "GTC" | "IOC" | "FOK";
-
-export interface OrderPlacementFormValues {
+// Types
+export interface OrderPlacementStateType {
   orderType: OrderType;
-  side: OrderSide;
-  loopEnabled: boolean;
+  orderSide: OrderSide;
+  loopEnabled?: boolean;
   noOfLoops?: number | "";
   entryPrice?: number | "";
+  marketPrice?: number | "";
+  triggerPrice?: number | "";
   totalUnits?: number | "";
   totalAmount?: number | "";
   takeProfit: boolean;
   stopLoss: boolean;
-  timeInForce: TimeInForce;
 }
 
-interface OrderPlacementState {
-  form: OrderPlacementFormValues;
-}
-
-const initialState: OrderPlacementState = {
-  form: {
-    orderType: "limit",
-    side: "buy",
-    loopEnabled: true,
-    noOfLoops: "",
-    entryPrice: "",
-    totalUnits: "",
-    totalAmount: "",
-    takeProfit: false,
-    stopLoss: false,
-    timeInForce: "GTC",
-  },
+//initial state
+const initialState: OrderPlacementStateType = {
+  orderType: "limit",
+  orderSide: "buy",
+  loopEnabled: true,
+  noOfLoops: "",
+  entryPrice: "",
+  marketPrice: "",
+  triggerPrice: "",
+  totalUnits: "",
+  totalAmount: "",
+  takeProfit: false,
+  stopLoss: false,
 };
 
-export const useOrderPlacementStore = createNewStore(initialState, {
-  name: "order-placement-store",
-  devTools: true,
-  persist: true,
-});
+//Export Store
+export const useOrderPlacementStore = createNewStore<OrderPlacementStateType>(
+  initialState,
+  {
+    name: "order-placement-store",
+    devTools: true,
+    persist: true,
+  }
+);

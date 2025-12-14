@@ -33,3 +33,7 @@ export interface Collaterals {
   balanceType: string;
   unifiedBalance: number;
 }
+
+export type OrderType = "limit" | "market" | "trigger";
+export type OrderSide = "buy" | "sell";
+export type TimeInForce = "GTC" | "Post-Only" | "FOK" | "IOC";

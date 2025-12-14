@@ -8,7 +8,7 @@ import Toolbar from "@/components/spot/Toolbar";
 const spot = () => {
   return (
     <main className="min-h-screen w-full bg-white">
-      <div className="mx-auto max-w-[1440px] p-4">
+      <div className="mx-auto    p-4">
         <div className="grid grid-cols-[minmax(0,3fr)_minmax(0,1.1fr)] gap-4">
           <section className="flex flex-col gap-4">
             <div className="h-[592px] w-[1004px]  bg-white">
