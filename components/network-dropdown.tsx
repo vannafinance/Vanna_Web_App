@@ -38,7 +38,7 @@ export const NetworkDropdown = () => {
       {/* Dropdown trigger button */}
       <button
         type="button"
-        className="bg-[#F5F5F5] rounded-[8px] py-[12px] pr-[12px] pl-[20px] font-semibold text-[14px] cursor-pointer flex gap-2 justify-center items-center"
+        className="bg-[#F5F5F5] rounded-[8px] py-[12px] pr-[12px] pl-[20px] font-semibold text-[14px] cursor-pointer flex gap-2 justify-center items-center "
         aria-label={`Selected network: ${selectedNetwork.name}. Click to change network`}
         aria-expanded={isHover}
         aria-haspopup="listbox"

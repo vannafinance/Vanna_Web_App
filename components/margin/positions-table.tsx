@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { Button } from "../ui/button";
 import { useCollateralBorrowStore } from "@/store/collateral-borrow-store";
+import { AnimatedTabs } from "../ui/animated-tabs";
+import { useState } from "react";
 
 const tableRowHeadings = [
   "Collateral Deposited",
@@ -23,6 +25,9 @@ interface PositionstableProps {
 
 export const Positionstable = ({ onRepayClick }: PositionstableProps) => {
   const positions = useCollateralBorrowStore((state) => state.position);
+  const [activeTab, setActiveTab] = useState<string>("currentPositions");
+
+  
   return (
     <div className="w-full flex flex-col gap-[16px]">
       {/* Table title */}
@@ -36,8 +41,8 @@ export const Positionstable = ({ onRepayClick }: PositionstableProps) => {
         Positions
       </motion.div>
 
-      <div>
-        
+      <div className="w-fit h-fit">
+        <AnimatedTabs type="solid" tabs={[{id:"currentPositions",label:"Current Positions"},{id:"positionsHistory",label:"Positions History"}]} activeTab={activeTab} onTabChange={setActiveTab}/>
       </div>
 
       <div className="rounded-[12px] w-full">

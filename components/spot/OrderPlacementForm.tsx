@@ -13,12 +13,19 @@ import { Checkbox } from "../ui/Checkbox";
 import { Dropdown } from "../ui/dropdown";
 import MultipleTp from "./MultipleTp";
 import { RiskRewardSelector } from "./Risk-Reward";
+import { AnimatedTabs } from "../ui/animated-tabs";
 
 const tabs = [
   { id: "limit", label: "Limit" },
   { id: "market", label: "Market" },
   { id: "trigger", label: "Trigger" },
 ];
+
+const buySellTabs: { id: OrderSide; label: string }[] = [
+  { id: "buy", label: "Buy" },
+  { id: "sell", label: "Sell" },
+];
+
 const MAX_TP_ROWS = 3;
 
 const EMPTY_TP_ROW = {
@@ -164,6 +171,12 @@ export default function OrderPlacementForm() {
         value={orderSide}
         onChange={(val) => setValue("orderSide", val)}
       />
+
+      {/* <AnimatedTabs
+        tabs={tabs}
+        activeTab={orderType}
+        onTabChange={handleOrderTypeChange}
+      /> */}
 
       {/* Loop toggle row */}
       {orderType === "limit" && (

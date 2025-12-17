@@ -20,6 +20,14 @@ interface AnimatedTabsProps {
   indicatorClassName?: string;
 }
 
+const HOVER_GRADIENT = "linear-gradient(135deg, rgba(112, 58, 230, 0.08) 0%, rgba(112, 58, 230, 0.04) 100%)";
+const SPRING_CONFIG = {
+  type: "spring" as const,
+  stiffness: 300,
+  damping: 30,
+  mass: 0.8,
+};
+
 export const AnimatedTabs = ({
   tabs,
   activeTab,
@@ -30,19 +38,38 @@ export const AnimatedTabs = ({
   indicatorClassName = "",
 }: AnimatedTabsProps) => {
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
-
-  // Find current tab index for animation
   const currentIndex = tabs.findIndex((tab) => tab.id === activeTab);
-
-  // Calculate indicator width based on number of tabs
   const indicatorWidth = `calc((100% - 12px) / ${tabs.length})`;
 
-  // Render underline type (limit/market/trigger style)
+  // Helper to get text color
+  const getTextColor = (isActive: boolean, isHovered: boolean) => {
+    if (type === "solid" && isActive) return "#FFFFFF";
+    if (type === "underline") {
+      if (isActive) return "#703AE6";
+      if (isHovered) return "#000000";
+      return "#A7A7A7";
+    }
+    if (isActive || isHovered) return "#000000";
+    return "#64748b";
+  };
+
+  // Helper to get background color
+  const getBackground = (isActive: boolean, isHovered: boolean) => {
+    if (isHovered && !isActive) return HOVER_GRADIENT;
+    if (type === "solid" && isActive) return "#703AE6";
+    return "transparent";
+  };
+
+  // Render underline type
   if (type === "underline") {
     return (
+<<<<<<< HEAD
       <div
         className={`w-full h-fit border-b-[1px] border-[#E2E2E2] ${containerClassName}`}
       >
+=======
+      <div className={`w-full h-fit border-b-[1px] border-[#E2E2E2] ${containerClassName}`}>
+>>>>>>> 34a99f32099b374fb04ec447318836fe9099fcd9
         <div className="w-full flex" onMouseLeave={() => setHoveredTab(null)}>
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
@@ -55,11 +82,15 @@ export const AnimatedTabs = ({
                 onMouseEnter={() => setHoveredTab(tab.id)}
                 className={`w-full py-[8px] text-[14px] font-semibold flex items-center justify-center cursor-pointer relative ${tabClassName}`}
                 animate={{
+<<<<<<< HEAD
                   color: isActive
                     ? "#703AE6"
                     : isHovered
                     ? "#000000"
                     : "#A7A7A7",
+=======
+                  color: getTextColor(isActive, isHovered),
+>>>>>>> 34a99f32099b374fb04ec447318836fe9099fcd9
                   borderBottomWidth: isActive ? "2px" : "0px",
                   borderBottomColor: isActive ? "#703AE6" : "transparent",
                 }}
@@ -75,54 +106,36 @@ export const AnimatedTabs = ({
     );
   }
 
+  // Render gradient/solid types
+  const containerPadding = type === "solid" ? "p-[4px] w-fit h-fit" : "p-[6px]";
+  const tabWidth = type === "solid" ? "w-[160px]" : "";
+  const tabPadding = type === "solid" ? "py-[12px] px-[8px]" : "";
+  const tabHeight = type === "solid" ? "h-fit" : "h-[67px]";
+  const useFlex1 = type !== "solid";
+
   return (
     <div className={containerClassName}>
-      {/* Tab switcher container */}
       <div
-        className="border-[1px] border-[#E2E2E2] w-full bg-white flex gap-[16px] p-[6px] rounded-[12px] h-fit relative overflow-hidden"
+        className={`border-[1px] border-[#E2E2E2] w-full bg-white flex gap-[16px] ${containerPadding} rounded-[12px] h-fit relative overflow-hidden`}
         onMouseLeave={() => setHoveredTab(null)}
       >
-        {/* Animated tab indicator background (only moves on click) */}
-        {type === "gradient" ? (
+        {/* Gradient indicator */}
+        {type === "gradient" && (
           <motion.div
             className={`absolute top-[6px] left-[6px] h-[67px] rounded-[12px] bg-gradient p-[2px] ${indicatorClassName}`}
-            style={{
-              width: indicatorWidth,
-            }}
-            animate={{
-              x: `${currentIndex * 100}%`,
-            }}
-            transition={{
-              type: "spring",
-              stiffness: 300,
-              damping: 30,
-              mass: 0.8,
-            }}
+            style={{ width: indicatorWidth }}
+            animate={{ x: `${currentIndex * 100}%` }}
+            transition={SPRING_CONFIG}
           >
             <div className="bg-white rounded-[12px] h-full w-full" />
           </motion.div>
-        ) : (
-          <motion.div
-            className={`absolute top-[6px] left-[6px] h-[67px] rounded-[12px] bg-[#703AE6] ${indicatorClassName}`}
-            style={{
-              width: indicatorWidth,
-            }}
-            animate={{
-              x: `${currentIndex * 100}%`,
-            }}
-            transition={{
-              type: "spring",
-              stiffness: 300,
-              damping: 30,
-              mass: 0.8,
-            }}
-          />
         )}
 
         {/* Tab buttons */}
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
           const isHovered = hoveredTab === tab.id;
+<<<<<<< HEAD
 
           // Determine text color based on type and state
           const getTextColor = () => {
@@ -134,19 +147,18 @@ export const AnimatedTabs = ({
             }
             return "#64748b"; // Gray for inactive
           };
+=======
+>>>>>>> 34a99f32099b374fb04ec447318836fe9099fcd9
 
           return (
             <motion.div
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
               onMouseEnter={() => setHoveredTab(tab.id)}
-              className={`hover:cursor-pointer text-[16px] font-semibold flex flex-col justify-center text-center h-[67px] rounded-[12px] flex-1 relative z-10 ${tabClassName}`}
+              className={`${tabWidth} ${tabPadding} hover:cursor-pointer text-[16px] font-semibold flex flex-col justify-center text-center ${tabHeight} rounded-[12px] ${useFlex1 ? "flex-1" : ""} relative z-10 ${tabClassName}`}
               animate={{
-                color: getTextColor(),
-                background:
-                  isHovered && !isActive
-                    ? "linear-gradient(135deg, rgba(112, 58, 230, 0.08) 0%, rgba(112, 58, 230, 0.04) 100%)"
-                    : "transparent",
+                color: getTextColor(isActive, isHovered),
+                background: getBackground(isActive, isHovered),
               }}
               whileTap={{ scale: 0.95 }}
               transition={{ duration: 0.2 }}
