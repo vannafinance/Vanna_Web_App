@@ -13,25 +13,24 @@ import { Button } from "@/components/ui/button";
 import { Collateral } from "./collateral-box";
 import { BorrowBox } from "./borrow-box";
 import { Dialogue } from "@/components/ui/dialogue";
-import { DetailsPanel } from "../ui/details-panel";
+import { InfoCard } from "./info-card";
 import { Dropdown } from "../ui/dropdown";
 import { Checkbox } from "../ui/checkbox";
 import Image from "next/image";
 import { useCollateralBorrowStore } from "@/store/collateral-borrow-store";
 import { Radio } from "../ui/radio-button";
+import { useMarginAccountInfoStore } from "@/store/margin-account-info-store";
 
 type Modes = "Deposit" | "Borrow";
 
-interface LeverageAssetsTabProps {
-  hasMarginAccount?: boolean;
-}
 
-export const LeverageAssetsTab = ({
-  hasMarginAccount = true,
-}: LeverageAssetsTabProps) => {
+
+export const LeverageAssetsTab = () => {
   // Get collaterals from global store using selector to prevent unnecessary re-renders
 
   // Component state
+  const hasMarginAccount = useMarginAccountInfoStore((state) => state.hasMarginAccount);
+  const setHasMarginAccount = useMarginAccountInfoStore((state) => state.set);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [mode, setMode] = useState<Modes>("Deposit");
   const [borrowItems, setBorrowItems] = useState<BorrowInfo[]>([]);
@@ -39,6 +38,7 @@ export const LeverageAssetsTab = ({
   const [depositAmount, setDepositAmount] = useState(0);
   const [depositCurrency, setDepositCurrency] = useState("USDT");
   const feesCurrency = "USDT";
+  
 
   // Dialogue state - simplified
   type DialogueState = "none" | "create-margin" | "sign-agreement";
@@ -74,7 +74,7 @@ export const LeverageAssetsTab = ({
         amount: 0,
         amountInUsd: 0,
         asset: DropdownOptions[0],
-        balanceType: "pb",
+        balanceType: "wb",
         unifiedBalance: 0,
       };
       setCurrentCollaterals([newCollateral]);
@@ -134,7 +134,7 @@ export const LeverageAssetsTab = ({
       amount: 0,
       amountInUsd: 0,
       asset: DropdownOptions[0],
-      balanceType: "pb",
+      balanceType: "wb",
       unifiedBalance: 0,
     };
     const newIndex = currentCollaterals.length;
@@ -218,7 +218,7 @@ export const LeverageAssetsTab = ({
         amount: 0,
         amountInUsd: 0,
         asset: DropdownOptions[0],
-        balanceType: "pb",
+        balanceType: "wb",
         unifiedBalance: 0,
       };
 
@@ -255,7 +255,7 @@ export const LeverageAssetsTab = ({
   return (
     <>
       <motion.div
-        className="w-full flex flex-col gap-[24px] pt-8"
+        className="w-full flex flex-col gap-[24px] pt-6"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4, delay: 0.1 }}
@@ -287,7 +287,7 @@ export const LeverageAssetsTab = ({
             viewport={{ once: true }}
             transition={{ duration: 0.3 }}
           >
-            {isMBMode ? "Selected Your Collateral" : "Deposit"}
+            {isMBMode ? "Select Your Collateral" : "Deposit"}
           </motion.div>
           <div className="flex flex-col gap-[12px]">
             {/* Render MB UI if MB is selected, otherwise render collaterals */}
@@ -443,12 +443,12 @@ export const LeverageAssetsTab = ({
               (mode === "Borrow" && currentCollaterals.length >= 1) ||
               isMBMode
             }
-            className={`w-fit hover:cursor-pointer hover:bg-[#F1EBFD] py-[11px] px-[10px] rounded-[8px] flex gap-[4px] text-[14px] font-medium text-[#703AE6] items-center ${
+            className={`w-fit py-[11px] px-[10px] rounded-[8px] flex gap-[4px] text-[14px] font-medium text-[#703AE6] items-center ${
               editingIndex !== null ||
               (mode === "Borrow" && currentCollaterals.length >= 1) ||
               isMBMode
                 ? "opacity-50 cursor-not-allowed"
-                : ""
+                : "hover:cursor-pointer hover:bg-[#F1EBFD]"
             }`}
             whileHover={
               editingIndex === null &&
@@ -515,37 +515,52 @@ export const LeverageAssetsTab = ({
           viewport={{ once: true }}
           transition={{ duration: 0.4, delay: 0.2, ease: "easeOut" }}
         >
-          <DetailsPanel
-            items={[
+          <InfoCard
+            data={{
+              platformPoints: platformPoints,
+              leverage: leverage,
+              depositAmount: depositAmount,
+              fees: fees,
+              totalDeposit: totalDeposit,
+              updatedCollateral: updatedCollateral,
+              netHealthFactor: netHealthFactor,
+            }}
+            showExpandable={true}
+            expandableSections={[
               {
-                title: "Platform Points",
-                value: `${platformPoints}x`,
-              },
-              {
-                title: "Leverage",
-                value: `${leverage}x`,
-              },
-              {
-                title: "You're depositing",
-                value: `${depositAmount} ${depositCurrency}`,
-                linkText: "View Sources",
-              },
-              {
-                title: "Fees",
-                value: `${fees} ${feesCurrency}`,
-                linkText: "View details",
-              },
-              {
-                title: "Total deposit including fees",
-                value: `${totalDeposit} ${depositCurrency}`,
-              },
-              {
-                title: "Updated Collateral Before Liquidation",
-                value: updatedCollateral.toString(),
-              },
-              {
-                title: "Updated Net Health Factor",
-                value: netHealthFactor.toString(),
+                title: "MORE DETAILS",
+                items: [
+                  {
+                    id: "platformPoints",
+                    name: "Platform Points",
+                  },
+                  {
+                    id: "leverage",
+                    name: "Leverage",
+                  },
+                  {
+                    id: "depositAmount",
+                    name: "You're depositing",
+                  },
+                  {
+                    id: "fees",
+                    name: "Fees",
+                  },
+                  {
+                    id: "totalDeposit",
+                    name: "Total deposit including fees",
+                  },
+                  {
+                    id: "updatedCollateral",
+                    name: "Updated Collateral Before Liquidation",
+                  },
+                  {
+                    id: "netHealthFactor",
+                    name: "Updated Net Health Factor",
+                  },
+                ],
+                defaultExpanded: false,
+                delay: 0.1,
               },
             ]}
           />
@@ -631,7 +646,7 @@ export const LeverageAssetsTab = ({
             >
               <Dialogue
                 description="Before you proceed, please review and accept the terms of borrowing on VANNA. This agreement ensures you understand the risks, responsibilities, and conditions associated with using the platform."
-                buttonOnClick={() => setActiveDialogue("none")}
+                buttonOnClick={() => {setActiveDialogue("none"); setHasMarginAccount({hasMarginAccount:true}); } }
                 buttonText="Sign Agreement"
                 content={[
                   {

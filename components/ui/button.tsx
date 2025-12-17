@@ -19,12 +19,12 @@ export const Button = (props: Button) => {
       disabled={props.disabled}
       onClick={props.onClick}
       aria-label={props.ariaLabel || props.text}
-      className={`w-full ${
+      className={`w-full h-fit ${
         props.size == "medium"
           ? "py-[16px] px-[12px] text-[16px] rounded-[12px]"
           : props.size == "large"
           ? "rounded-[16px] text-[20px] py-[20px] px-[16px]"
-          : "text-[12px] py-[12px] px-[8px] rounded-[8px]"
+          : "text-[12px] py-[12px] px-[24px]"
       } disabled:cursor-not-allowed transition  cursor-pointer rounded-[8px] font-semibold ${
         props.type == "solid"
           ? "bg-[#703AE6] disabled:bg-[#A7A7A7]  hover:bg-[#6635D1] active:bg-[#6635D1] text-white"

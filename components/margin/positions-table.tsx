@@ -24,7 +24,7 @@ interface PositionstableProps {
 export const Positionstable = ({ onRepayClick }: PositionstableProps) => {
   const positions = useCollateralBorrowStore((state) => state.position);
   return (
-    <div className="flex flex-col gap-[16px]">
+    <div className="w-full flex flex-col gap-[16px]">
       {/* Table title */}
       <motion.div
         className="text-[24px] font-bold"
@@ -35,6 +35,10 @@ export const Positionstable = ({ onRepayClick }: PositionstableProps) => {
       >
         Positions
       </motion.div>
+
+      <div>
+        
+      </div>
 
       <div className="rounded-[12px] w-full">
         {/* Table headers */}
