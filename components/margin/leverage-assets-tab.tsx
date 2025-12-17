@@ -20,6 +20,7 @@ import Image from "next/image";
 import { useCollateralBorrowStore } from "@/store/collateral-borrow-store";
 import { Radio } from "../ui/radio-button";
 import { useMarginAccountInfoStore } from "@/store/margin-account-info-store";
+import { useUserStore } from "@/store/user";
 
 type Modes = "Deposit" | "Borrow";
 
@@ -38,6 +39,8 @@ export const LeverageAssetsTab = () => {
   const [depositAmount, setDepositAmount] = useState(0);
   const [depositCurrency, setDepositCurrency] = useState("USDT");
   const feesCurrency = "USDT";
+
+  const userAddress = useUserStore((state) => state.address);
   
 
   // Dialogue state - simplified
@@ -528,7 +531,8 @@ export const LeverageAssetsTab = () => {
             showExpandable={true}
             expandableSections={[
               {
-                title: "MORE DETAILS",
+                title: "More Details",
+                
                 items: [
                   {
                     id: "platformPoints",
@@ -577,11 +581,12 @@ export const LeverageAssetsTab = () => {
             disabled={false}
             size="large"
             text={
-              hasMarginAccount && !isMBMode
+              !userAddress ? "Login" :
+              hasMarginAccount  && !isMBMode
                 ? "Deposit & Borrow"
                 : hasMarginAccount && isMBMode
                 ? "Borrow"
-                : "Create your Margin Account"
+                :  "Create your Margin Account"
             }
             type="gradient"
             onClick={handleButtonClick}

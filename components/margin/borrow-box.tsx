@@ -456,16 +456,59 @@ export const BorrowBox = ({
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4, delay: 0.2 }}
       >
-        <div>
-          <input value={leverage}  type="number" min={0} max={maxLeverage} onChange={handleLeverageChange} className=" focus:outline-none bg-white rounded-[8px] border-[1px] border-[#E2E2E2] p-[10px] text-[16px] font-medium" />
+        <div className="flex gap-[2px] items-center bg-white rounded-[8px] border-[1px] border-[#E2E2E2] p-[2px]">
+          {/* + Button */}
+          <motion.button
+            type="button"
+            onClick={() => {
+              if (leverage < maxLeverage) {
+                setLeverage(leverage + 1);
+              }
+            }}
+            disabled={leverage >= maxLeverage}
+            className="w-[20px] h-[40px] flex items-center justify-center rounded-[6px] text-[16px] font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#F7F7F7] transition-colors"
+            whileHover={{ scale: leverage < maxLeverage ? 1.05 : 1 }}
+            whileTap={{ scale: leverage < maxLeverage ? 0.95 : 1 }}
+            aria-label="Increase leverage"
+          >
+            +
+          </motion.button>
+          
+          {/* Input */}
+          <input
+            value={leverage}
+            type="number"
+            min={1}
+            max={maxLeverage}
+            onChange={handleLeverageChange}
+            className="w-[40px] h-[40px] focus:outline-none bg-transparent p-[10px] text-[16px] font-medium text-center border-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          />
+          
+          {/* - Button */}
+          <motion.button
+            type="button"
+            onClick={() => {
+              if (leverage > 0) {
+                setLeverage(leverage - 1);
+              }
+            }}
+            disabled={leverage <= 0}
+            className="w-[20px] h-[40px] flex items-center justify-center rounded-[6px] text-[16px] font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#F7F7F7] transition-colors"
+            whileHover={{ scale: leverage > 0 ? 1.05 : 1 }}
+            whileTap={{ scale: leverage > 0 ? 0.95 : 1 }}
+            aria-label="Decrease leverage"
+          >
+            −
+          </motion.button>
         </div>
-        <div className="w-[527px] px-[5px]">
+        <div className="w-[500px] px-[5px]">
           <LeverageSlider
           value={leverage}
           onChange={setLeverage}
           max={maxLeverage}
-          min={0}
+          min={1}
           step={1}
+          markers={[1,3,5,7,10]}
         />
         </div>
         

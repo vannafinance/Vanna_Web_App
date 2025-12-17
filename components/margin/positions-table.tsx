@@ -4,7 +4,8 @@ import Image from "next/image";
 import { Button } from "../ui/button";
 import { useCollateralBorrowStore } from "@/store/collateral-borrow-store";
 import { AnimatedTabs } from "../ui/animated-tabs";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useMarginAccountInfoStore } from "@/store/margin-account-info-store";
 
 const tableRowHeadings = [
   "Collateral Deposited",
@@ -21,13 +22,24 @@ const coinIcons = {
 
 interface PositionstableProps {
   onRepayClick?: () => void;
+  onOpenPositionClick?: () => void;
 }
 
-export const Positionstable = ({ onRepayClick }: PositionstableProps) => {
+export const Positionstable = ({ onRepayClick, onOpenPositionClick }: PositionstableProps) => {
   const positions = useCollateralBorrowStore((state) => state.position);
   const [activeTab, setActiveTab] = useState<string>("currentPositions");
+  const hasMarginAccount = useMarginAccountInfoStore((state) => state.hasMarginAccount);
 
-  
+  // Filter positions based on active tab
+  const filteredPositions = useMemo(() => {
+    if (activeTab === "currentPositions") {
+      return positions.filter((pos) => pos.isOpen === true);
+    } else {
+      return positions.filter((pos) => pos.isOpen === false);
+    }
+  }, [positions, activeTab]);
+
+
   return (
     <div className="w-full flex flex-col gap-[16px]">
       {/* Table title */}
@@ -45,7 +57,7 @@ export const Positionstable = ({ onRepayClick }: PositionstableProps) => {
         <AnimatedTabs type="solid" tabs={[{id:"currentPositions",label:"Current Positions"},{id:"positionsHistory",label:"Positions History"}]} activeTab={activeTab} onTabChange={setActiveTab}/>
       </div>
 
-      <div className="rounded-[12px] w-full">
+      {hasMarginAccount && filteredPositions.length > 0 ? <div className="rounded-[12px] w-full ">
         {/* Table headers */}
         <ul className="flex ">
           {tableRowHeadings.map((item, idx) => {
@@ -66,7 +78,7 @@ export const Positionstable = ({ onRepayClick }: PositionstableProps) => {
 
         {/* Table rows */}
         <div className="flex flex-col gap-[10px]">
-          {positions.map((item, idx) => {
+          {filteredPositions.map((item, idx) => {
             return (
               <motion.div
                 key={item.positionId}
@@ -264,7 +276,16 @@ export const Positionstable = ({ onRepayClick }: PositionstableProps) => {
             );
           })}
         </div>
-      </div>
+      </div>:<div className="w-full h-[402px] bg-[#F7F7F7] border-[1px] border-[#E2E2E2] rounded-[8px] flex flex-col items-center justify-center">
+        <div className="w-fit h-fit">
+          {activeTab === "currentPositions" ? (
+            <Button size="small" type="ghost" text="Open Position" onClick={onOpenPositionClick} disabled={false}/>
+          ) : (
+            <div className="text-[14px] font-medium text-[#76737B]">No positions history available</div>
+          )}
+        </div>
+        
+        </div>}
     </div>
   );
 };

@@ -75,6 +75,7 @@ export const LeverageCollateral = ({
         tabs={tabs}
         activeTab={activeTab}
         onTabChange={handleTabChange}
+        type="gradient"
       />
       {/* Tab content */}
       <div className="mt-6">{renderContent()}</div>

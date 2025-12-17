@@ -32,7 +32,7 @@ export const Button = (props: Button) => {
           ? props.disabled
             ? "bg-[#A7A7A7] text-white"
             : "bg-gradient text-white hover:bg-gradient active:bg-gradient"
-          : " disabled:text-[#A7A7A7] text-black hover:text-[#703AE6] focus:text-[#703AE6]"
+          : " disabled:text-[#A7A7A7] text-black hover:bg-[#F1EBFD] hover:text-[#703AE6] active:bg-[#F1EBFD] active:text-[#703AE6] focus:text-[#703AE6]"
       }`}
     >
       {props.text}

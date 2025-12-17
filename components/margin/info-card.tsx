@@ -10,6 +10,7 @@ interface InfoItem {
 
 interface ExpandableSection {
   title: string;
+  headingBold?: boolean;
   items?: InfoItem[];
   defaultExpanded?: boolean;
   delay?: number;
@@ -159,7 +160,7 @@ export const InfoCard = ({
               onClick={() => {
                 toggleExpanded(section.title);
               }}
-              className="items-center cursor-pointer flex justify-between text-[16px] font-bold w-full"
+              className={`items-center cursor-pointer flex justify-between text-[16px] ${section.headingBold ? "font-bold" : "font-medium"} w-full`}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               aria-expanded={expandedStates[section.title]}
