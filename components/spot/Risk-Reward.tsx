@@ -1,33 +1,27 @@
 "use client";
 
-import React, { useState } from "react";
+import { RiskRewardRatio } from "@/lib/types";
 
-const RATIOS = ["NA", "1:1", "1:2", "1:3", "2:1", "3:1"] as const;
-export type Ratio = (typeof RATIOS)[number] | string;
+const RATIOS: RiskRewardRatio[] = ["NA", "1:1", "1:2", "1:3", "2:1", "3:1"];
 
 interface RiskRewardSelectorProps {
-  value?: Ratio;
-  onChange?: (value: Ratio) => void;
+  value: RiskRewardRatio;
+  customValue: string | null;
+  onChange: (value: RiskRewardRatio) => void;
+  onCustomChange: (value: string) => void;
   className?: string;
   label?: string;
 }
 
-export const RiskRewardSelector: React.FC<RiskRewardSelectorProps> = ({
+export const RiskRewardSelector = ({
   value,
+  customValue,
   onChange,
+  onCustomChange,
   className = "",
   label = "RR Ratio",
-}) => {
-  const [internal, setInternal] = useState<Ratio>("1:1");
-  const selected = value ?? internal;
-
-  const handleSelect = (ratio: Ratio) => {
-    if (!value) setInternal(ratio);
-    onChange?.(ratio);
-  };
-
-  const isCustom = (v: Ratio) =>
-    typeof v === "string" && !RATIOS.includes(v as any);
+}: RiskRewardSelectorProps) => {
+  const isCustom = value === "CUSTOM";
 
   return (
     <div className={`flex items-center   h-auto ${className}`}>
@@ -36,22 +30,17 @@ export const RiskRewardSelector: React.FC<RiskRewardSelectorProps> = ({
         {label}
       </span>
 
-      {/* NA */}
-      {/* <span className="text-[10px] leading-[15px] font-medium text-[#919191] px-2 py-1">
-        NA
-      </span> */}
-
       {/* Pills */}
       <div className="flex flex-1 items-center justify-between gap-1 ">
         {RATIOS.map((ratio) => (
           <button
             key={ratio}
             type="button"
-            onClick={() => handleSelect(ratio)}
+            onClick={() => onChange(ratio)}
             className={`
                rounded-sm text-[10px] leading-3 px-2 py-1  transition
               ${
-                selected === ratio
+                value === ratio
                   ? "bg-[#FF007A] text-white border-[#FF007A] font-semibold"
                   : ratio === "1:3"
                   ? "bg-[#FFE6F2]  border-[#FFD1E3]"
@@ -76,13 +65,13 @@ export const RiskRewardSelector: React.FC<RiskRewardSelectorProps> = ({
           placeholder="4:1"
           inputMode="numeric"
           className={`
-          w-12 h-9 rounded-md border border-[#E2E2E2] 
-          text-sm px-2 bg-white placeholder:text-[#BFBFBF]
-          focus:outline-none focus:ring-1 focus:ring-[#FFB3D1]
-          
-        `}
-          value={isCustom(selected) ? (selected as string) : ""}
-          onChange={(e) => handleSelect(e.target.value)}
+            w-12 h-9 rounded-md border border-[#E2E2E2] 
+            text-sm px-2 bg-white placeholder:text-[#C6C6C6]
+            focus:outline-none focus:ring-1 focus:ring-[#703AE6]
+          `}
+          value={isCustom ? customValue ?? "" : ""}
+          onFocus={() => onChange("CUSTOM")}
+          onChange={(e) => onCustomChange(e.target.value)}
         />
       </div>
     </div>

@@ -1,6 +1,8 @@
 import React, { useState } from "react";
-import { Button } from "../ui/button";
-import { OpenOrdersTable } from "./OpenOrdersTable";
+import OpenOrdersTable from "./OpenOrdersTable";
+import OrderHistoryTable from "./OrderHistoryTable";
+import TradeHistoryTable from "./TradeHistoryTable";
+import ActivePositionsTable from "./ActivePositionTable";
 
 type TabType =
   | "openOrders"
@@ -8,7 +10,7 @@ type TabType =
   | "tradeHistory"
   | "activePositions";
 
-const PositionHistory: React.FC = () => {
+const PositionTables: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>("openOrders");
 
   const tabs = [
@@ -37,23 +39,24 @@ const PositionHistory: React.FC = () => {
                 {tab.label}
                 {tab.count !== null && `(${tab.count})`}
               </div>
-              {/* {activeTab === tab.id && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-600" />
-              )} */}
             </button>
           ))}
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 flex items-center justify-center bg-gray-50 border border-[#E2E2E2] rounded-lg">
+        {/* <div className="flex-1 flex items-center justify-center bg-gray-50 border border-[#E2E2E2] rounded-lg">
           <button className="px-4 py-2 bg-[#F1EBFD] text-[#703AE6] font-semibold rounded-lg ">
             Connect your Wallet
           </button>
-          {/* <OpenOrdersTable /> */}
-        </div>
+        </div> */}
+
+        {activeTab === "openOrders" && <OpenOrdersTable />}
+        {activeTab === "orderHistory" && <OrderHistoryTable />}
+        {activeTab === "tradeHistory" && <TradeHistoryTable />}
+        {activeTab === "activePositions" && <ActivePositionsTable />}
       </div>
     </div>
   );
 };
 
-export default PositionHistory;
+export default PositionTables;

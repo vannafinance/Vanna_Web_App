@@ -1,67 +1,153 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import {
-  OrderPlacementStateType,
-  useOrderPlacementStore,
-} from "@/store/order-placement-store";
+import { useFieldArray, useForm } from "react-hook-form";
+
 import ToggleButton from "../ui/toggle";
 import OrderTypeTabs from "../ui/OrderTypeTabs";
 import BuySellToggle from "../ui/BuySellToggle";
 import { Button } from "../ui/button";
-import { OrderSide, OrderType } from "@/lib/types";
+import { OrderPlacementFormValues, OrderSide, OrderType } from "@/lib/types";
 import Image from "next/image";
 import { Checkbox } from "../ui/Checkbox";
-import { Ratio, RiskRewardSelector } from "./Risk-Reward";
 import { Dropdown } from "../ui/dropdown";
-import MultipleTPInputs from "./MultipleTPInputs";
+import MultipleTp from "./MultipleTp";
+import { RiskRewardSelector } from "./Risk-Reward";
 
 const tabs = [
   { id: "limit", label: "Limit" },
   { id: "market", label: "Market" },
   { id: "trigger", label: "Trigger" },
 ];
+const MAX_TP_ROWS = 3;
 
-type Modes = "Limit" | "Market";
+const EMPTY_TP_ROW = {
+  exitPricePercent: null,
+  profitPercent: null,
+  profitAmount: null,
+  unitsPercent: null,
+  units: null,
+  marketPrice: false,
+};
 
 export default function OrderPlacementForm() {
-  // const form = useOrderPlacementStore((state) => state.form);
-  // const set = useOrderPlacementStore((state) => state.set);
+  const orderPlacementFormDefaultValues: OrderPlacementFormValues = {
+    orderType: "limit",
+    orderSide: "buy",
 
-  const [orderType, setOrderType] = useState("limit");
-  const [ordersSide, setOrdersSide] = useState<OrderSide>("buy");
-  const [isloopOn, setIsLoopOn] = useState(true);
-  const [mode, setMode] = useState<Modes>("Limit");
-  const [multiTpEnabled, setMultiTpEnabled] = useState(false);
-  const [ratio, setRatio] = useState<Ratio>("1:1");
+    loopEnabled: true,
+    noOfLoops: null, // null = infinity
 
-  const handleModeToggle = () => {
-    setMode((prev) => (prev === "Limit" ? "Market" : "Limit"));
+    triggerPrice: null,
+    triggerMode: "limit",
+
+    entryPrice: null,
+    totalUnits: null,
+    totalAmount: null,
+
+    takeProfitEnabled: false,
+    multipleTpEnabled: false,
+
+    singleTakeProfit: {
+      exitPrice: null,
+      profitPercent: null,
+      profitAmount: null,
+    },
+
+    multipleTakeProfits: [],
+
+    stopLossEnabled: false,
+    stopLoss: {
+      triggerPrice: null,
+      limitPrice: null,
+      trailVariance: null,
+      trailVarianceUnit: "USD",
+      rrRatio: "NA",
+      customRR: null,
+    },
+
+    timeInForce: "GTC",
+
+    riskAmount: 0,
+    riskPercent: 0,
+    gainAmount: 0,
+    gainPercent: 0,
   };
 
   const {
+    control,
     register,
     handleSubmit,
     watch,
     setValue,
     formState: { errors },
     reset,
-  } = useForm<OrderPlacementStateType>({});
+  } = useForm<OrderPlacementFormValues>({
+    defaultValues: orderPlacementFormDefaultValues,
+  });
 
-  const takeProfitEnabled = watch("takeProfit");
-  const stopLossEnabled = watch("stopLoss");
+  const orderType: OrderType = watch("orderType");
+  const orderSide: OrderSide = watch("orderSide");
+  const isLoopOn = watch("loopEnabled");
+  const triggerMode = watch("triggerMode");
+  const takeProfitEnabled = watch("takeProfitEnabled");
+  const multiTpEnabled = watch("multipleTpEnabled");
+  const stopLossEnabled = watch("stopLossEnabled");
+  const rrRatio = watch("stopLoss.rrRatio");
+  const customRR = watch("stopLoss.customRR");
+
+  console.log("takeProfitEnabled", takeProfitEnabled);
+  console.log("multiTpEnabled", multiTpEnabled);
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "multipleTakeProfits",
+  });
+
+  // ✅ MAX 3 ROWS GUARD
+  const handleAddTp = () => {
+    if (fields.length >= MAX_TP_ROWS) return;
+    append(EMPTY_TP_ROW);
+  };
+
+  // as soon as multiTP is enabled, add a row if none exist
+  useEffect(() => {
+    if (multiTpEnabled && fields.length === 0) {
+      append(EMPTY_TP_ROW);
+    }
+
+    if (!multiTpEnabled && fields.length > 0) {
+      remove(); //
+    }
+  }, [multiTpEnabled]);
+
+  const handleOrderTypeChange = (val: string) => {
+    if (val === "limit" || val === "market" || val === "trigger") {
+      setValue("orderType", val);
+    }
+  };
+
+  const handleModeToggle = () => {
+    setValue("triggerMode", triggerMode === "limit" ? "market" : "limit");
+  };
 
   // sync when store changes (e.g. reset from somewhere else)
   // useEffect(() => {
   //   reset(form);
   // }, [form, reset]);
 
-  const onSubmit = (values: OrderPlacementStateType) => {
+  const onSubmit = (values: OrderPlacementFormValues) => {
     // set({ form: values });
 
     console.log("ORDER SUBMIT =>", values);
   };
+
+  useEffect(() => {
+    if (!takeProfitEnabled) {
+      setValue("multipleTpEnabled", false);
+      remove(); // saari multi TP rows clear
+    }
+  }, [remove, setValue, takeProfitEnabled]);
 
   return (
     <form
@@ -71,10 +157,13 @@ export default function OrderPlacementForm() {
       <OrderTypeTabs
         tabs={tabs}
         activeTab={orderType}
-        onTabChange={setOrderType}
+        onTabChange={handleOrderTypeChange}
       />
 
-      <BuySellToggle value={ordersSide} onChange={setOrdersSide} />
+      <BuySellToggle
+        value={orderSide}
+        onChange={(val) => setValue("orderSide", val)}
+      />
 
       {/* Loop toggle row */}
       {orderType === "limit" && (
@@ -85,13 +174,13 @@ export default function OrderPlacementForm() {
             </span>
             <ToggleButton
               size="small"
-              defaultChecked={isloopOn}
-              onToggle={(state) => setIsLoopOn(state)}
+              defaultChecked={isLoopOn}
+              onToggle={(val) => setValue("loopEnabled", val)}
             />
           </div>
 
           {/* No of Loops */}
-          {isloopOn && (
+          {isLoopOn && (
             <div className="flex flex-col gap-2">
               <label className=" text-[10px]  text-[#111111] leading-[15px] font-medium">
                 No of Loops
@@ -101,7 +190,7 @@ export default function OrderPlacementForm() {
                   <div className="rounded-md py-1 flex gap-2.5 items-center">
                     <input
                       type="number"
-                      placeholder="Enter Amount"
+                      placeholder="Enter No of Loops"
                       className=" w-[134px] h-[18px] text-[12px] leading-[18px] font-medium outline-none
                    placeholder:text-[#C6C6C6]
                    [appearance:textfield]
@@ -154,12 +243,12 @@ export default function OrderPlacementForm() {
               <input
                 type="number"
                 placeholder="Trigger Price"
-                className=" w-[121px] h-[18] text-[12px] leading-[18px] font-medium outline-none
+                className=" flex-1 h-[18] text-[12px] leading-[18px] font-medium outline-none
                    placeholder:text-[#C6C6C6]
                    [appearance:textfield]
                    [&::-webkit-inner-spin-button]:appearance-none
                    [&::-webkit-outer-spin-button]:appearance-none"
-                {...register("totalUnits", {
+                {...register("triggerPrice", {
                   required: "Required",
                   min: { value: 0, message: "Must be positive" },
                 })}
@@ -172,8 +261,8 @@ export default function OrderPlacementForm() {
         </div>
       )}
 
-      {/* Entry Price + Total Units */}
       <div className=" flex flex-col gap-3">
+        {/* Limit market toggle */}
         {orderType === "trigger" && (
           <div className="flex items-center gap-1 justify-end">
             <span className="text-[10px] leading-[15px] text-[#111111] font-medium">
@@ -185,38 +274,55 @@ export default function OrderPlacementForm() {
             </span>
           </div>
         )}
-        <div className=" flex gap-3">
-          <div className="flex flex-col w-[168px] gap-1">
-            <label className="text-[10px] text-[#111111] font-medium leading-[15px]">
-              {orderType === "market" ? "Market Price" : "Entry Price"}
-            </label>
 
-            <div
-              className={`flex h-9  items-center  rounded-lg border border-[#E2E2E2] ${
-                orderType === "market" ? "" : "bg-white"
-              } p-2`}
-            >
-              <div className="rounded-md py-1 flex gap-2.5 items-center">
-                <input
-                  type="number"
-                  placeholder="Enter Amount"
-                  disabled={orderType === "market"}
-                  className=" w-[121px] h-[18] text-[12px] leading-[18px] font-medium outline-none
+        <div className=" flex gap-3">
+          {orderType !== "market" && (
+            <div className="flex flex-col w-[168px] gap-1">
+              <label className="text-[10px] text-[#111111] font-medium leading-[15px]">
+                Entry Price
+              </label>
+
+              <div
+                className={`flex h-9  items-center  rounded-lg border border-[#E2E2E2] 
+                  bg-white p-2`}
+              >
+                <div className="rounded-md py-1 flex gap-2.5 items-center">
+                  <input
+                    type="number"
+                    placeholder="Enter Amount"
+                    className=" w-[121px] h-[18] text-[12px] leading-[18px] font-medium outline-none
                    placeholder:text-[#C6C6C6]
                    [appearance:textfield]
                    [&::-webkit-inner-spin-button]:appearance-none
                    [&::-webkit-outer-spin-button]:appearance-none"
-                  {...register("entryPrice", {
-                    required: "Required",
-                    min: { value: 0, message: "Must be positive" },
-                  })}
-                />
-                <div className="text-[8px]  leading-3 font-medium text-[#111111]">
-                  USDT
+                    {...register("entryPrice", {
+                      required: "Required",
+                      min: { value: 0, message: "Must be positive" },
+                    })}
+                  />
+                  <div className="text-[8px]  leading-3 font-medium text-[#111111]">
+                    USDT
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
+
+          {orderType === "market" && (
+            <div className="flex flex-col gap-1">
+              <span className="font-medium text-[10px] leading-[15px] text-[#111111]">
+                Market Price
+              </span>
+              <div className="h-9 rounded-md border border-[#E2E2E2] flex  items-center  justify-center gap-2.5 p-2">
+                <span className="text-[12px] w-[117px] leading-[18px] font-medium">
+                  Market Price
+                </span>
+                <span className="text-[8px] leading-3 font-medium text-[#111111]">
+                  USDT
+                </span>
+              </div>
+            </div>
+          )}
 
           <div className="flex flex-col gap-1">
             <label className=" text-[10px] text-[#111111] font-medium leading-[15px]">
@@ -315,7 +421,7 @@ export default function OrderPlacementForm() {
         }`}
       >
         <div className="flex justify-between">
-          <Checkbox label="Take Profit" {...register("takeProfit")} />
+          <Checkbox label="Take Profit" {...register("takeProfitEnabled")} />
 
           {takeProfitEnabled && (
             <div className="flex items-center gap-2 justify-end">
@@ -324,7 +430,7 @@ export default function OrderPlacementForm() {
               </span>
               <ToggleButton
                 size="small"
-                onToggle={(state) => setMultiTpEnabled(state)}
+                onToggle={(val) => setValue("multipleTpEnabled", val)}
               />
             </div>
           )}
@@ -342,6 +448,7 @@ export default function OrderPlacementForm() {
                 className="w-[59px] h-[18] text-[12px]  font-medium  leading-[18px] text-[#000000] outline-none      [appearance:textfield]
                    [&::-webkit-inner-spin-button]:appearance-none
                    [&::-webkit-outer-spin-button]:appearance-none"
+                {...register("singleTakeProfit.exitPrice", { min: 0 })}
               />
             </div>
 
@@ -355,6 +462,7 @@ export default function OrderPlacementForm() {
                 className="w-[59px] h-[18] text-[12px] font-medium text-center  flex-1 leading-[18px] text-[#000000] outline-none      [appearance:textfield]
                    [&::-webkit-inner-spin-button]:appearance-none
                    [&::-webkit-outer-spin-button]:appearance-none"
+                {...register("singleTakeProfit.profitPercent", { min: 0 })}
               />
             </div>
 
@@ -368,11 +476,20 @@ export default function OrderPlacementForm() {
                 className="w-[59px] h-[18] text-[12px] font-medium text-right flex-1 leading-[18px] text-[#000000] outline-none      [appearance:textfield]
                    [&::-webkit-inner-spin-button]:appearance-none
                    [&::-webkit-outer-spin-button]:appearance-none"
+                {...register("singleTakeProfit.profitAmount", { min: 0 })}
               />
             </div>
           </div>
         )}
-        {takeProfitEnabled && multiTpEnabled && <MultipleTPInputs />}
+        {takeProfitEnabled && multiTpEnabled && (
+          <MultipleTp
+            fields={fields}
+            register={register}
+            onAdd={handleAddTp}
+            onRemove={remove}
+            maxReached={fields.length >= MAX_TP_ROWS}
+          />
+        )}
       </div>
 
       <div
@@ -382,7 +499,7 @@ export default function OrderPlacementForm() {
             : ""
         }`}
       >
-        <Checkbox label="Stop Loss" {...register("stopLoss")} />
+        <Checkbox label="Stop Loss" {...register("stopLossEnabled")} />
 
         {stopLossEnabled && (
           <>
@@ -409,6 +526,7 @@ export default function OrderPlacementForm() {
                       [appearance:textfield]
                          [&::-webkit-inner-spin-button]:appearance-none
                          [&::-webkit-outer-spin-button]:appearance-none"
+                    {...register("stopLoss.triggerPrice", { min: 0 })}
                   />
                   <span className="absolute right-1 text-[8px] leading-3 font-medium">
                     USDT
@@ -435,6 +553,7 @@ export default function OrderPlacementForm() {
                     className="[appearance:textfield] outline-none text-[10px] font-medium leading-[15px] text-[#111111]
                          [&::-webkit-inner-spin-button]:appearance-none
                          [&::-webkit-outer-spin-button]:appearance-none"
+                    {...register("stopLoss.limitPrice", { min: 0 })}
                   />
                   <span className="absolute right-1 text-[8px] leading-3 font-medium">
                     USDT
@@ -461,6 +580,7 @@ export default function OrderPlacementForm() {
                     className="[appearance:textfield] outline-none text-[10px] font-medium leading-[15px] text-[#111111]
                          [&::-webkit-inner-spin-button]:appearance-none
                          [&::-webkit-outer-spin-button]:appearance-none"
+                    {...register("stopLoss.trailVariance", { min: 0 })}
                   />
                   <span className="absolute right-1 text-[8px] leading-3 font-medium">
                     USDT
@@ -471,9 +591,10 @@ export default function OrderPlacementForm() {
 
             {/*Risk Reward */}
             <RiskRewardSelector
-              value={ratio}
-              onChange={setRatio}
-              label="RR Ratio"
+              value={rrRatio}
+              customValue={customRR}
+              onChange={(v) => setValue("stopLoss.rrRatio", v)}
+              onCustomChange={(v) => setValue("stopLoss.customRR", v)}
             />
           </>
         )}
