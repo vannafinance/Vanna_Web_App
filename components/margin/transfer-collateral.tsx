@@ -152,7 +152,7 @@ export const TransferCollateral = () => {
             transition={{ duration: 0.3, delay: 0.25 }}
           >
             <div className=" text-[10px] font-medium ">
-              Transfer To: <span className="font-semibold">PB</span>
+              Transfer To: <span className="font-semibold">WB</span>
             </div>
             <div className="text-[20px] font-medium ">2000 USD</div>
 
@@ -213,3 +213,5 @@ export const TransferCollateral = () => {
     </motion.div>
   );
 };
+
+

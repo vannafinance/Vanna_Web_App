@@ -16,7 +16,7 @@ const initialState: CollateralBorrowStateType = {
       asset: "USDT",
       amount: 1500,
       amountInUsd: 1500,
-      balanceType: "pb",
+      balanceType: "wb",
       unifiedBalance: 1500,
     },
     {

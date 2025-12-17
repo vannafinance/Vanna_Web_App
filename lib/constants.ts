@@ -1,10 +1,18 @@
 export const navbarItems = [
-  { title: "Portfolio", link: "/portfolio" },
-  { title: "Earn", link: "/earn" },
-  { title: "Margin", link: "/margin" },
-  { title: "Trade", link: "/trade" },
-  { title: "Analytics", link: "/analytics" },
+  { title: "Portfolio", link: "/portfolio", group: "primary" },
+  { title: "Earn", link: "/earn", group: "primary" },
+  { title: "Margin", link: "/margin", group: "bordered" },
+  { title: "Trade", link: "/trade" , group: "bordered"  },
+  { title: "Farm", link: "/farm", group: "bordered" },
+  { title: "Analytics", link: "/analytics", group: "secondary" },
 ];
+
+export const tradeItems = [
+  {title: "Spot", link: "/trade/spot" },
+    { title: "Futures", link: "/trade/futures" },
+    { title: "Options", link: "/trade/options" },
+    {title:"Defi Greeks", link: "/trade/defi-greeks" },
+]
 
 export const DropdownOptions = [
   "USDT",
@@ -134,7 +142,6 @@ export const iconPaths: Record<string, string> = {
 };
 
 export const balanceTypeOptions = [
-  "PB",
   "WB",
   "MB",
 ];

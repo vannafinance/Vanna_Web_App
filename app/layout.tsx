@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/navbar";
 import { navbarItems } from "@/lib/constants";
+import { ThemeProvider } from "@/contexts/theme-context";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -27,8 +28,10 @@ export default function RootLayout({
         className={`${plusJakartaSans.variable} antialiased`}
         style={{ fontFamily: 'var(--font-plus-jakarta-sans)' }}
       >
+        <ThemeProvider>
         <Navbar items={navbarItems}/>
         {children}
+        </ThemeProvider>
       </body>
     </html>
   );

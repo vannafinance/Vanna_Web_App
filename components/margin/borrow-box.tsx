@@ -123,6 +123,21 @@ export const BorrowBox = ({
     };
   }, []);
 
+  const handleLeverageChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = e.target.value;
+    // Allow empty string for better UX while typing
+    if (inputValue === "") {
+      setLeverage(0);
+      return;
+    }
+    const value = Number(inputValue);
+    // Validate: must be a number, between 0 and maxLeverage
+    if (!isNaN(value)) {
+      const clampedValue = Math.max(0, Math.min(maxLeverage, value));
+      setLeverage(clampedValue);
+    }
+  }, [setLeverage, maxLeverage]);
+
   return (
     <motion.div
       className="flex flex-col gap-[20px] bg-white rounded-[16px] py-[24px] px-[16px] border-[1px] border-[#E2E2E2]"
@@ -316,7 +331,7 @@ export const BorrowBox = ({
       {/* Input boxes for borrow items */}
       {showInputBoxes && (
         <motion.div
-          className="flex gap-[8px] items-center justify-center"
+          className="flex gap-[8px] items-center justify-center relative z-10"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
@@ -436,17 +451,24 @@ export const BorrowBox = ({
 
       {/* Leverage slider */}
       <motion.div
+        className="relative z-0 flex items-center justify-between"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4, delay: 0.2 }}
       >
-        <LeverageSlider
+        <div>
+          <input value={leverage}  type="number" min={0} max={maxLeverage} onChange={handleLeverageChange} className=" focus:outline-none bg-white rounded-[8px] border-[1px] border-[#E2E2E2] p-[10px] text-[16px] font-medium" />
+        </div>
+        <div className="w-[527px] px-[5px]">
+          <LeverageSlider
           value={leverage}
           onChange={setLeverage}
           max={maxLeverage}
           min={0}
           step={1}
         />
+        </div>
+        
       </motion.div>
     </motion.div>
   );

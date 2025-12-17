@@ -62,9 +62,7 @@ export const Collateral = (props: Collateral) => {
   const hasCollateral = collateral !== null;
   const showStandardRight = isStandard && hasCollateral;
   const showDeleteButton = isStandard && hasCollateral && props.index !== 0;
-  const isPBSelected = selectedBalanceType === "PB";
   const isWBSelected = selectedBalanceType === "WB";
-  const isMBSelected = selectedBalanceType === "MB";
 
 
   // Update form when collateral changes in editing mode

@@ -19,7 +19,7 @@ export const Dropdown = (props: Dropdown) => {
     <div
       onMouseEnter={() => setIsHover(true)}
       onMouseLeave={() => setIsHover(false)}
-      className="relative inline-block z-50"
+      className="relative inline-block z-[100]"
     >
       <button
         type="button"
@@ -63,7 +63,7 @@ export const Dropdown = (props: Dropdown) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className={`absolute z-50 bg-white p-2 top-8 -left-4 shadow-lg rounded-[6px] ${
+            className={`absolute z-[100] bg-white p-2 top-8 -left-4 shadow-lg rounded-[6px] ${
               props.items.length > 4 ? "max-h-48 overflow-y-auto" : ""
             }`}
             role="listbox"

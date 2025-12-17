@@ -16,36 +16,52 @@ export const LeverageCollateral = ({
   switchToRepayTab,
   onTabSwitched,
 }: LeverageCollateralProps = {}) => {
-  const [externalTabId, setExternalTabId] = useState<string | undefined>();
+  const [activeTab, setActiveTab] = useState<string>("leverage-assets");
 
   // Handle external repay click trigger - change tab when repay is clicked
   useEffect(() => {
     if (switchToRepayTab) {
-      setExternalTabId("repay-loan");
+      setActiveTab("repay-loan");
       if (onTabSwitched) {
         onTabSwitched();
       }
     }
   }, [switchToRepayTab, onTabSwitched]);
 
+  // Handle tab change
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+  };
+
   // Define tabs configuration
   const tabs: TabItem[] = [
     {
       id: "leverage-assets",
       label: "Leverage your Assets",
-      content: <LeverageAssetsTab hasMarginAccount={true} />,
     },
     {
       id: "repay-loan",
       label: "Repay Loan",
-      content: <RepayLoanTab />,
     },
     {
       id: "transfer-collateral",
       label: "Transfer Collateral",
-      content: <TransferCollateral />,
     },
   ];
+
+  // Render content based on active tab
+  const renderContent = () => {
+    switch (activeTab) {
+      case "leverage-assets":
+        return <LeverageAssetsTab />;
+      case "repay-loan":
+        return <RepayLoanTab />;
+      case "transfer-collateral":
+        return <TransferCollateral />;
+      default:
+        return <LeverageAssetsTab />;
+    }
+  };
 
   return (
     <motion.div
@@ -57,15 +73,11 @@ export const LeverageCollateral = ({
     >
       <AnimatedTabs
         tabs={tabs}
-        defaultTabId="leverage-assets"
-        externalTabId={externalTabId}
-        onTabChange={(tabId) => {
-          // Reset external tab control after switching
-          if (externalTabId && tabId === externalTabId) {
-            setExternalTabId(undefined);
-          }
-        }}
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
       />
+      {/* Tab content */}
+      <div className="mt-6">{renderContent()}</div>
     </motion.div>
   );
 };

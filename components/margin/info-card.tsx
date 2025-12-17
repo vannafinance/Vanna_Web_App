@@ -1,9 +1,6 @@
 "use client";
 
-import { iconPaths } from "@/lib/constants";
-import { useCollateralBorrowStore } from "@/store/collateral-borrow-store";
 import { motion, AnimatePresence } from "framer-motion";
-import Image from "next/image";
 import { useState } from "react";
 
 interface InfoItem {
@@ -13,7 +10,7 @@ interface InfoItem {
 
 interface ExpandableSection {
   title: string;
-  items: InfoItem[];
+  items?: InfoItem[];
   defaultExpanded?: boolean;
   delay?: number;
 }
@@ -22,7 +19,7 @@ interface InfoProps {
   data: {
     [key: string]: number | null | undefined;
   };
-  items: InfoItem[];
+  items?: InfoItem[];
   expandableSections?: ExpandableSection[];
   showExpandable?: boolean;
 }
@@ -34,114 +31,112 @@ export const InfoCard = ({
   showExpandable = false,
 }: InfoProps) => {
   // Track expanded state for each section
-  const [expandedStates, setExpandedStates] = useState<{
-    [key: string]: boolean;
-  }>(
-    expandableSections.reduce((acc, section, idx) => {
-      acc[section.title] = section.defaultExpanded || false;
-      return acc;
-    }, {} as { [key: string]: boolean })
+  const [expandedStates, setExpandedStates] = useState<Record<string, boolean>>(
+    expandableSections.reduce(
+      (acc, section) => ({
+        ...acc,
+        [section.title]: section.defaultExpanded ?? false,
+      }),
+      {}
+    )
   );
 
-  const borrowedItems = useCollateralBorrowStore((state) => state.borrowItems);
-  const collateralItems = useCollateralBorrowStore(
-    (state) => state.collaterals
-  );
-  // Toggle section expand/collapse
   const toggleExpanded = (title: string) => {
-    setExpandedStates((prev) => ({
-      ...prev,
-      [title]: !prev[title],
-    }));
+    setExpandedStates((prev) => ({ ...prev, [title]: !prev[title] }));
   };
+
+  // Render a single info item
+  const renderItem = (item: InfoItem, idx: number, useAnimate = false) => (
+    <motion.div
+      key={item.id}
+      className="flex justify-between"
+      initial={{ opacity: 0, x: -10 }}
+      {...(useAnimate
+        ? {
+            animate: { opacity: 1, x: 0 },
+            transition: { duration: 0.3, delay: idx * 0.05 },
+          }
+        : {
+            whileInView: { opacity: 1, x: 0 },
+            viewport: { once: true },
+            transition: { duration: 0.3, delay: idx * 0.05 },
+          })}
+    >
+      <div className="text-[14px] font-medium">{item.name}</div>
+      <div className="text-[14px] font-medium">
+        {formatValue(item.id, data[item.id])}
+      </div>
+    </motion.div>
+  );
 
   // Format value with appropriate unit based on field ID
   const formatValue = (
     id: string,
     value: number | null | undefined
   ): string => {
-    // Default to 0 if null/undefined
-    const numValue = value === null || value === undefined ? 0 : value;
+    const numValue = value ?? 0;
 
-    // Format number with commas
-    const formatNumber = (num: number, decimals: number = 2): string => {
-      return num.toLocaleString("en-US", {
+    // Helper: Format number with decimals
+    const formatNumber = (num: number, decimals = 2) =>
+      num.toLocaleString("en-US", {
         minimumFractionDigits: decimals,
         maximumFractionDigits: decimals,
       });
-    };
 
-    // Format large numbers (K for thousands, M for millions)
-    const formatLargeNumber = (num: number): string => {
-      if (num >= 1000000) {
-        return `${(num / 1000000).toFixed(2)}M`;
-      } else if (num >= 1000) {
-        return `${(num / 1000).toFixed(2)}K`;
-      }
+    // Helper: Format large numbers (K/M)
+    const formatLarge = (num: number) => {
+      if (num >= 1000000) return `${(num / 1000000).toFixed(2)}M`;
+      if (num >= 1000) return `${(num / 1000).toFixed(2)}K`;
       return formatNumber(num);
     };
 
-    // Format based on field type
-    switch (id) {
-      case "totalBorrowedValue":
-      case "totalCollateralValue":
-        return `${formatLargeNumber(numValue)} USD`;
+    // Format config: [decimals, suffix, useLargeFormat]
+    const formatConfig: Record<string, [number, string, boolean]> = {
+      totalBorrowedValue: [2, " USD", true],
+      totalCollateralValue: [2, " USD", true],
+      totalValue: [0, " WBTC", false],
+      avgHealthFactor: [1, "", false],
+      timeToLiquidation: [0, "m", false],
+      borrowRate: [2, "%", false],
+      liquidationPremium: [2, "%", false],
+      liquidationFee: [2, "%", false],
+      debtLimit: [2, " USDC", true],
+      minDebt: [2, " USDC", true],
+      maxDebt: [2, " USDC", true],
+      platformPoints: [1, "x", false],
+      leverage: [1, "x", false],
+      depositAmount: [2, "", false],
+      fees: [2, "", false],
+      totalDeposit: [2, "", false],
+      updatedCollateral: [2, "", false],
+      netHealthFactor: [2, "", false],
+    };
 
-      case "totalValue":
-        return `${formatNumber(numValue, 0)} WBTC`;
+    const config = formatConfig[id];
+    if (!config) return formatNumber(numValue);
 
-      case "avgHealthFactor":
-        return formatNumber(numValue, 1);
+    const [decimals, suffix, useLarge] = config;
+    const formatted = useLarge
+      ? formatLarge(numValue)
+      : formatNumber(numValue, decimals);
 
-      case "timeToLiquidation":
-        return `${numValue}m`;
-
-      case "borrowRate":
-      case "liquidationPremium":
-      case "liquidationFee":
-        return `${formatNumber(numValue, 2)}%`;
-
-      case "debtLimit":
-      case "minDebt":
-      case "maxDebt":
-        return `${formatLargeNumber(numValue)} USDC`;
-
-      default:
-        return formatNumber(numValue);
-    }
+    return `${formatted}${suffix}`;
   };
 
   return (
     <>
       {/* Main info items */}
-      <motion.div
-        className="bg-[#F7F7F7] flex flex-col gap-[24px] w-full h-full p-[24px] border-[1px] border-[#E2E2E2] rounded-[16px]"
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
-      >
-        {/* Map through main items */}
-        {items.map((item, idx) => {
-          return (
-            <motion.div
-              key={item.id}
-              className="flex justify-between"
-              initial={{ opacity: 0, x: -10 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.3, delay: idx * 0.05 }}
-            >
-              <div className="text-[14px] font-medium">{item.name}</div>
-              <div className="flex items-center gap-1">
-                <div className="text-[14px] font-medium">
-                  {formatValue(item.id, data[item.id])}
-                </div>
-              </div>
-            </motion.div>
-          );
-        })}
-      </motion.div>
+      {items && items.length > 0 && (
+        <motion.div
+          className="bg-[#F7F7F7] flex flex-col gap-[24px] w-full h-full p-[24px] border-[1px] border-[#E2E2E2] rounded-[16px]"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+        >
+          {items.map((item, idx) => renderItem(item, idx))}
+        </motion.div>
+      )}
 
       {/* Expandable sections */}
       {showExpandable &&
@@ -205,25 +200,7 @@ export const InfoCard = ({
                   role="region"
                   aria-labelledby={`section-header-${section.title}`}
                 >
-                  {/* Map through section items */}
-                  {section.items.map((item, idx) => {
-                    return (
-                      <motion.div
-                        key={item.id}
-                        className="flex justify-between"
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.3, delay: idx * 0.05 }}
-                      >
-                        <div className="text-[14px] font-medium">
-                          {item.name}
-                        </div>
-                        <div className="text-[14px] font-medium">
-                          {formatValue(item.id, data[item.id])}
-                        </div>
-                      </motion.div>
-                    );
-                  })}
+                  {section.items?.map((item, idx) => renderItem(item, idx, true))}
                 </motion.div>
               )}
             </AnimatePresence>

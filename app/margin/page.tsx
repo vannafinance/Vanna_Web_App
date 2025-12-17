@@ -18,6 +18,7 @@ import { Positionstable } from "@/components/margin/positions-table";
 import { Position } from "@/lib/types";
 import { useMarginAccountInfoStore } from "@/store/margin-account-info-store";
 import { useCollateralBorrowStore } from "@/store/collateral-borrow-store";
+import { useUserStore } from "@/store/user";
 
 const Margin = () => {
   
@@ -39,6 +40,8 @@ const Margin = () => {
       }, 100);
     }
   }, [switchToRepayTab]);
+
+  const userAddress = useUserStore((state) => state.address);
 
   // Account statistics state
   const [accountStats, setAccountStats] = useState({
@@ -73,6 +76,7 @@ const Margin = () => {
   const debtLimit = useMarginAccountInfoStore((state) => state.debtLimit);
   const minDebt = useMarginAccountInfoStore((state) => state.minDebt);
   const maxDebt = useMarginAccountInfoStore((state) => state.maxDebt);
+  const hasMarginAccount = useMarginAccountInfoStore((state) => state.hasMarginAccount);
 
   // Format data for InfoCard component
   const marginAccountInfo = {
@@ -90,10 +94,10 @@ const Margin = () => {
   };
 
   return (
-    <div className=" w-full">
+    <main className="w-full">
       {/* Carousel section - displays promotional items */}
-      <motion.div
-        className="w-full pb-[30px] px-[80px] pt-[80px]"
+      <motion.section
+        className="w-full h-fit  pb-[48px] px-[80px] pt-[80px] "
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{
@@ -103,23 +107,23 @@ const Margin = () => {
         }}
       >
         <Carousel items={carouselItems} autoplayInterval={5000} />
-      </motion.div>
+      </motion.section>
 
-      {/* Account stats section - shows key metrics */}
-      <motion.div
-        className="pb-[30px] px-[80px] pt-[50px] w-full"
+      {userAddress &&  
+      <motion.section
+        className="px-[80px]  w-full h-[405px]"
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-100px" }}
         transition={{ duration: 0.5, ease: "easeOut" }}
       >
-        <div className="border-[1px] border-[#E2E2E2] bg-[#F7F7F7] rounded-[24px] ">
-          <div className="grid grid-cols-3 gap-[20px] p-[20px]">
+        <div className="h-full w-full border-[1px] flex flex-col justify-center   border-[#E2E2E2] bg-[#F7F7F7] rounded-[24px] ">
+          <div className="grid grid-cols-3 grid-rows-2 gap-x-[20px] gap-y-[0] ">
             {/* Map through account stats items */}
             {accountStatsItems.map((item, idx) => {
               return (
-                <motion.div
-                  className=" rounded-[10px] col-span-1"
+                <motion.article
+                  className="bg-black flex flex-col justify-center  w-full h-full rounded-[24px]  col-span-1 row-span-1 "
                   key={idx}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -130,9 +134,10 @@ const Margin = () => {
                     ease: "easeOut",
                   }}
                 >
-                  <div className="p-[20px] min-h-[146px] flex items-start gap-[16px]">
-                    <motion.div
-                      className=" w-[52px] h-[52px] flex flex-col justify-center items-center p-[2.89px] bg-white rounded-[69.33px] flex-shrink-0"
+                  <div className="bg-red-500 p-[20px] h-fit rounded-[10px] w-full flex flex-col justify-center items-center gap-[40px]">
+                    <div className="w-full h-fit flex items-start gap-[16px] ">
+                      <motion.div
+                      className="bg-blue-500 w-[52px] h-[52px] flex flex-col justify-center items-center p-[2.89px] bg-white rounded-[69.33px] flex-shrink-0"
                       initial={{ scale: 0 }}
                       whileInView={{ scale: 1 }}
                       viewport={{ once: true }}
@@ -150,8 +155,8 @@ const Margin = () => {
                         src={item.icon}
                       />
                     </motion.div>
-                    <div className=" flex flex-col gap-[32px] flex-1">
-                      <div className="flex flex-col justify-center  w-[284px] h-[50px] text-[20px]  font-semibold">
+                    <div className="bg-yellow-500 flex flex-col gap-[32px] w-full ">
+                      <div className="flex flex-col justify-center bg-green-500 w-[289.33px]  text-[20px]  font-semibold">
                         {item.name}
                       </div>
                       <motion.div
@@ -162,41 +167,46 @@ const Margin = () => {
                         transition={{ duration: 0.4, delay: idx * 0.1 + 0.3 }}
                       >
                         {item.id === "netHealthFactor" ? "" : "$"}
-                        {accountStats[item.id as keyof typeof accountStats] ||
-                          "0"}
+                        {hasMarginAccount ? accountStats[item.id as keyof typeof accountStats] ||
+                          "0" : "0"}
                       </motion.div>
                     </div>
+                    </div>
+                    
                   </div>
-                </motion.div>
+                </motion.article>
               );
             })}
           </div>
         </div>
-      </motion.div>
+      </motion.section>}
 
       {/* Main leverage section */}
-      <motion.div
-        className="w-full pb-[30px] px-[80px] pt-[50px] flex flex-col gap-[48px]"
+      <section className=" w-full p-[80px]  flex flex-col gap-[48px]">
+
+      
+      <motion.section
+        className="w-full h-fit  flex flex-col gap-[48px]"
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-100px" }}
         transition={{ duration: 0.5, ease: "easeOut" }}
       >
         {/* Section header with network dropdown */}
-        <motion.div
+        <motion.header
           className="w-full flex gap-[20px] items-center"
           initial={{ opacity: 0, x: -20 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.4, ease: "easeOut" }}
         >
-          <div className="text-[34px] font-semibold">
+          <h1 className="text-[34px] font-semibold">
             Leverage your Collateral
-          </div>
+          </h1>
           <div className="flex-shrink-0">
             <NetworkDropdown />
           </div>
-        </motion.div>
+        </motion.header>
 
         {/* Two column layout: Leverage form and Info card */}
         <div className="flex gap-[36px]" ref={leverageCollateralRef}>
@@ -207,7 +217,7 @@ const Margin = () => {
           />
 
           {/* Right: Margin account info card */}
-          <motion.div
+          <motion.aside
             className="flex flex-col gap-[20px] w-full h-full"
             initial={{ opacity: 0, x: 20 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -215,7 +225,7 @@ const Margin = () => {
             transition={{ duration: 0.4, ease: "easeOut" }}
           >
             {/* Info card header */}
-            <motion.div
+            <motion.header
               className="flex gap-[10px]"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -238,14 +248,14 @@ const Margin = () => {
                 />
               </motion.div>
               <div>
-                <div className="w-full text-[24px] font-bold ">
+                <h2 className="w-full text-[24px] font-bold ">
                   Margin Account Info
-                </div>
-                <div className="w-full text-[16px] font-medium text-[#A3A3A3]">
+                </h2>
+                <p className="w-full text-[16px] font-medium text-[#A3A3A3]">
                   Stay updated details and status.
-                </div>
+                </p>
               </div>
-            </motion.div>
+            </motion.header>
 
             {/* Info card with expandable sections */}
             <InfoCard
@@ -267,13 +277,14 @@ const Margin = () => {
                 },
               ]}
             />
-          </motion.div>
+          </motion.aside>
         </div>
-      </motion.div>
+      </motion.section>
+      
 
       {/* Positions table section */}
-        <motion.div
-          className="pb-[30px] px-[80px] pt-[50px]"
+        <motion.section
+          className="w-full h-fit " 
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
@@ -282,8 +293,9 @@ const Margin = () => {
           <Positionstable
             onRepayClick={() => setSwitchToRepayTab(true)}
           />
-        </motion.div>
-    </div>
+        </motion.section>
+        </section>
+    </main>
   );
 };
 

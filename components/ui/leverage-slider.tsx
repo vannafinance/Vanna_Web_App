@@ -18,12 +18,15 @@ export const LeverageSlider = ({
   step = 0.1,
   value,
   onChange,
-  markers = [0, 2, 4, 6, 8, 10],
+  markers = [0,  2, 4, 6, 8, 10],
 }: LeverageSliderProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const sliderRef = useRef<HTMLDivElement>(null);
 
   const percentage = ((value - min) / (max - min)) * 100;
+
+  // Generate all dividers from min to max (all integers)
+  const allDividers = Array.from({ length: max - min + 1 }, (_, i) => min + i);
 
   const handleMove = (clientX: number) => {
     if (!sliderRef.current) return;
@@ -74,7 +77,7 @@ export const LeverageSlider = ({
       transition={{ duration: 0.5, ease: "easeOut" }}
     >
       {/* Slider Track Container */}
-      <div className="relative pt-2" ref={sliderRef}>
+      <div className="relative pt-2 z-0" ref={sliderRef}>
         {/* Tooltip */}
         
 
@@ -96,23 +99,32 @@ export const LeverageSlider = ({
             }}
           />
 
-          {/* Markers on track */}
-          {markers.map((marker, index) => {
-            const markerPercentage = ((marker - min) / (max - min)) * 100;
-            const isPassed = percentage >= markerPercentage;
+          {/* Dividers on track - all integers from min to max */}
+          {allDividers.map((divider, index) => {
+            const dividerPercentage = ((divider - min) / (max - min)) * 100;
+            const isPassed = percentage >= dividerPercentage;
             return (
               <motion.div
-                key={marker}
-                className="absolute top-1/2 transform -translate-y-1/2 -translate-x-1/2 w-0.5 h-3 rounded-full"
+                key={divider}
+                className="absolute top-1/2 transform -translate-y-1/2 -translate-x-1/2 rounded-full"
                 style={{
-                  left: `${markerPercentage}%`,
+                  left: `${dividerPercentage}%`,
+                  width: isPassed ? "3px" : "2px",
+                  height: isPassed ? "12px" : "8px",
                   backgroundColor: isPassed
-                    ? "rgba(255, 255, 255, 0.9)"
-                    : "rgba(255, 255, 255, 0.4)",
+                    ? "rgba(255, 255, 255, 0.95)"
+                    : "rgba(196, 181, 253, 0.4)",
+                  border: isPassed
+                    ? "none"
+                    : "1px solid rgba(196, 181, 253, 0.6)",
+                  boxShadow: isPassed
+                    ? "0 0 4px rgba(255, 255, 255, 0.5)"
+                    : "0 1px 2px rgba(0, 0, 0, 0.1)",
+                  transition: "all 0.2s ease",
                 }}
                 initial={{ opacity: 0, scale: 0 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.05, duration: 0.3 }}
+                transition={{ delay: index * 0.02, duration: 0.3 }}
               />
             );
           })}
@@ -174,11 +186,20 @@ export const LeverageSlider = ({
           {markers.map((marker, index) => {
             const markerPercentage = ((marker - min) / (max - min)) * 100;
             const isActive = Math.abs(value - marker) < 0.5;
+            const isFirst = index === 0;
+            const isLast = index === markers.length - 1;
+            
             return (
               <motion.div
                 key={marker}
-                className="absolute transform -translate-x-1/2 text-xs font-medium"
-                style={{ left: `${markerPercentage}%` }}
+                className={`absolute text-xs font-medium ${
+                  isFirst ? "left-0" : isLast ? "right-0" : "transform -translate-x-1/2"
+                }`}
+                style={
+                  isFirst || isLast
+                    ? {}
+                    : { left: `${markerPercentage}%` }
+                }
                 initial={{ opacity: 0, y: 10 }}
                 animate={{
                   opacity: 1,
