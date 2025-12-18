@@ -2,6 +2,8 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
+import { FIELD_FORMAT_MAP, LARGE_FORMAT_FIELDS } from "@/lib/constants/margin";
+import { formatValue, FormatType } from "@/lib/utils/format-value";
 
 interface InfoItem {
   id: string;
@@ -24,6 +26,27 @@ interface InfoProps {
   expandableSections?: ExpandableSection[];
   showExpandable?: boolean;
 }
+
+// Format value using the format helper - defined outside component
+const formatFieldValue = (
+  id: string,
+  value: number | null | undefined
+): string => {
+  const formatType = FIELD_FORMAT_MAP[id] as FormatType | undefined;
+  
+  if (!formatType) {
+    // Fallback to default number formatting
+    return formatValue(value, { type: "number" });
+  }
+
+  // Determine if large format should be used
+  const useLargeFormat = LARGE_FORMAT_FIELDS.includes(id as any);
+
+  return formatValue(value, {
+    type: formatType,
+    useLargeFormat,
+  });
+};
 
 export const InfoCard = ({
   data,
@@ -65,64 +88,10 @@ export const InfoCard = ({
     >
       <div className="text-[14px] font-medium">{item.name}</div>
       <div className="text-[14px] font-medium">
-        {formatValue(item.id, data[item.id])}
+        {formatFieldValue(item.id, data[item.id])}
       </div>
     </motion.div>
   );
-
-  // Format value with appropriate unit based on field ID
-  const formatValue = (
-    id: string,
-    value: number | null | undefined
-  ): string => {
-    const numValue = value ?? 0;
-
-    // Helper: Format number with decimals
-    const formatNumber = (num: number, decimals = 2) =>
-      num.toLocaleString("en-US", {
-        minimumFractionDigits: decimals,
-        maximumFractionDigits: decimals,
-      });
-
-    // Helper: Format large numbers (K/M)
-    const formatLarge = (num: number) => {
-      if (num >= 1000000) return `${(num / 1000000).toFixed(2)}M`;
-      if (num >= 1000) return `${(num / 1000).toFixed(2)}K`;
-      return formatNumber(num);
-    };
-
-    // Format config: [decimals, suffix, useLargeFormat]
-    const formatConfig: Record<string, [number, string, boolean]> = {
-      totalBorrowedValue: [2, " USD", true],
-      totalCollateralValue: [2, " USD", true],
-      totalValue: [0, " WBTC", false],
-      avgHealthFactor: [1, "", false],
-      timeToLiquidation: [0, "m", false],
-      borrowRate: [2, "%", false],
-      liquidationPremium: [2, "%", false],
-      liquidationFee: [2, "%", false],
-      debtLimit: [2, " USDC", true],
-      minDebt: [2, " USDC", true],
-      maxDebt: [2, " USDC", true],
-      platformPoints: [1, "x", false],
-      leverage: [1, "x", false],
-      depositAmount: [2, "", false],
-      fees: [2, "", false],
-      totalDeposit: [2, "", false],
-      updatedCollateral: [2, "", false],
-      netHealthFactor: [2, "", false],
-    };
-
-    const config = formatConfig[id];
-    if (!config) return formatNumber(numValue);
-
-    const [decimals, suffix, useLarge] = config;
-    const formatted = useLarge
-      ? formatLarge(numValue)
-      : formatNumber(numValue, decimals);
-
-    return `${formatted}${suffix}`;
-  };
 
   return (
     <>

@@ -6,9 +6,9 @@ import ToggleButton from "@/components/ui/toggle";
 import { Collaterals, BorrowInfo } from "@/lib/types";
 import {
   DropdownOptions,
-  balanceTypeOptions,
   iconPaths,
 } from "@/lib/constants";
+import { BALANCE_TYPE_OPTIONS } from "@/lib/constants/margin";
 import { Button } from "@/components/ui/button";
 import { Collateral } from "./collateral-box";
 import { BorrowBox } from "./borrow-box";
@@ -55,7 +55,7 @@ export const LeverageAssetsTab = () => {
     []
   );
   const [selectedBalanceType, setSelectedBalanceType] = useState<string>(
-    balanceTypeOptions[0]
+    BALANCE_TYPE_OPTIONS[0]
   );
   // Store full collateral objects: array for Deposit (multiple), single for Borrow
   const [selectedMBCollaterals, setSelectedMBCollaterals] = useState<
@@ -309,9 +309,10 @@ export const LeverageAssetsTab = () => {
                   <div className="py-[4px] pr-[4px] pl-[8px] bg-[#F2EBFE] rounded-[8px]">
                     <Dropdown
                       classname="text-[16px] font-medium gap-[8px]"
-                      items={balanceTypeOptions}
+                      items={[...BALANCE_TYPE_OPTIONS]}
                       selectedOption={selectedBalanceType}
                       setSelectedOption={handleBalanceTypeChange(0)}
+                      dropdownClassname="text-[14px] gap-[10px] "
                     />
                   </div>
                 </div>

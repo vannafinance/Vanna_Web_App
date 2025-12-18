@@ -6,19 +6,7 @@ import { useCollateralBorrowStore } from "@/store/collateral-borrow-store";
 import { AnimatedTabs } from "../ui/animated-tabs";
 import { useState, useMemo } from "react";
 import { useMarginAccountInfoStore } from "@/store/margin-account-info-store";
-
-const tableRowHeadings = [
-  "Collateral Deposited",
-  "Borrowed Assets",
-  "Leverage Taken",
-  "Interest accrued till date",
-  "Action",
-];
-const coinIcons = {
-  "0xETH": "/icons/eth-icon.png",
-  "0xUSDC": "/icons/usdc-icon.svg",
-  "0xUSDT": "/icons/usdt-icon.svg",
-};
+import { TABLE_ROW_HEADINGS, COIN_ICONS } from "@/lib/constants/margin";
 
 interface PositionstableProps {
   onRepayClick?: () => void;
@@ -60,7 +48,7 @@ export const Positionstable = ({ onRepayClick, onOpenPositionClick }: Positionst
       {hasMarginAccount && filteredPositions.length > 0 ? <div className="rounded-[12px] w-full ">
         {/* Table headers */}
         <ul className="flex ">
-          {tableRowHeadings.map((item, idx) => {
+          {TABLE_ROW_HEADINGS.map((item, idx) => {
             return (
               <motion.li
                 className="  w-full pt-[11.25px] px-[12px] pb-[12px] text-[#464545] font-medium text-[14px]"
@@ -108,8 +96,8 @@ export const Positionstable = ({ onRepayClick, onOpenPositionClick }: Positionst
                   >
                     <Image
                       src={
-                        coinIcons[
-                          item.collateral.asset as keyof typeof coinIcons
+                        COIN_ICONS[
+                          item.collateral.asset as keyof typeof COIN_ICONS
                         ]
                       }
                       alt={item.collateral.asset}
@@ -165,9 +153,9 @@ export const Positionstable = ({ onRepayClick, onOpenPositionClick }: Positionst
                         >
                           <Image
                             src={
-                              coinIcons[
+                              COIN_ICONS[
                                 borrowedItem.assetData
-                                  .asset as keyof typeof coinIcons
+                                  .asset as keyof typeof COIN_ICONS
                               ]
                             }
                             alt={borrowedItem.assetData.asset}

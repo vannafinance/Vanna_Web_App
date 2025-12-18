@@ -3,12 +3,11 @@
 import { Carousel } from "@/components/ui/carousel";
 import { NetworkDropdown } from "@/components/network-dropdown";
 import {
-  accountStatsItems,
-  carouselItems,
-  marginAccountInfoItems,
-  marginAccountMoreDetailsItems,
-  position,
-} from "@/lib/constants";
+  ACCOUNT_STATS_ITEMS,
+  CAROUSEL_ITEMS,
+  MARGIN_ACCOUNT_INFO_ITEMS,
+  MARGIN_ACCOUNT_MORE_DETAILS_ITEMS,
+} from "@/lib/constants/margin";
 import { motion } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
@@ -19,6 +18,7 @@ import { Position } from "@/lib/types";
 import { useMarginAccountInfoStore } from "@/store/margin-account-info-store";
 import { useCollateralBorrowStore } from "@/store/collateral-borrow-store";
 import { useUserStore } from "@/store/user";
+import { formatValue } from "@/lib/utils/format-value";
 
 const Margin = () => {
   // State to trigger tab switch to Repay Loan
@@ -86,6 +86,17 @@ const Margin = () => {
     (state) => state.hasMarginAccount
   );
 
+  // Format account stats value - defined outside rendering
+  const formatAccountStatValue = (itemId: string, value: number) => {
+    if (itemId === "netHealthFactor") {
+      return formatValue(value, { type: "health-factor" });
+    }
+    return formatValue(value, { 
+      type: "number",
+      useLargeFormat: true,
+    });
+  };
+
   // Format data for InfoCard component
   const marginAccountInfo = {
     totalBorrowedValue,
@@ -114,7 +125,7 @@ const Margin = () => {
           delay: 0.2,
         }}
       >
-        <Carousel items={carouselItems} autoplayInterval={5000} />
+        <Carousel items={[...CAROUSEL_ITEMS]} autoplayInterval={5000} />
       </motion.section>
 
       {userAddress && (
@@ -127,7 +138,7 @@ const Margin = () => {
         >
             <div className=" border-[1px]   border-[#E2E2E2] bg-[#F7F7F7] rounded-[24px] w-full h-full grid grid-cols-3 grid-rows-2 gap-x-[20px] gap-y-[0] place-items-center ">
               {/* Map through account stats items */}
-              {accountStatsItems.map((item, idx) => {
+              {ACCOUNT_STATS_ITEMS.map((item, idx) => {
                 return (
                   <motion.article
                     className="px-[20px]  flex flex-col justify-center   w-[397.33px] h-[168.5px] rounded-[10px]  col-span-1 row-span-1 "
@@ -172,12 +183,17 @@ const Margin = () => {
                           viewport={{ once: true }}
                           transition={{ duration: 0.4, delay: idx * 0.1 + 0.3 }}
                         >
-                          {item.id === "netHealthFactor" ? "" : "$"}
-                          {hasMarginAccount
-                            ? accountStats[
-                                item.id as keyof typeof accountStats
-                              ] || "0"
-                            : "0"}
+                          {(() => {
+                            const value = hasMarginAccount
+                              ? accountStats[item.id as keyof typeof accountStats] || 0
+                              : 0;
+                            
+                            if (!hasMarginAccount || value === 0) {
+                              return "-";
+                            }
+                            
+                            return formatAccountStatValue(item.id, value);
+                          })()}
                         </motion.div>
                       </div>
                     </div>
@@ -265,20 +281,20 @@ const Margin = () => {
               {/* Info card with expandable sections */}
               <InfoCard
                 data={marginAccountInfo}
-                items={marginAccountInfoItems}
+                items={[...MARGIN_ACCOUNT_INFO_ITEMS]}
                 showExpandable={true}
                 expandableSections={[
                   {
                     title: "MORE DETAILS",
                     headingBold: true,
-                    items: marginAccountMoreDetailsItems,
+                    items: [...MARGIN_ACCOUNT_MORE_DETAILS_ITEMS],
                     defaultExpanded: true,
                     delay: 0.1,
                   },
                   {
                     title: "ORACLES AND LTS",
                     headingBold: true,
-                    items: marginAccountMoreDetailsItems,
+                    items: [...MARGIN_ACCOUNT_MORE_DETAILS_ITEMS],
                     defaultExpanded: false,
                     delay: 0.2,
                   },

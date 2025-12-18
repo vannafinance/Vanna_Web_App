@@ -1,6 +1,6 @@
 import createNewStore from "@/zustand/index";
 import { BorrowInfo, Collaterals, Position } from "@/lib/types";
-import { position } from "@/lib/constants";
+import { POSITION } from "@/lib/constants/margin";
 
 // Types
 export interface CollateralBorrowStateType {
@@ -46,7 +46,7 @@ const initialState: CollateralBorrowStateType = {
       usdValue: 403.67,
     },
   ] ,
-  position: position,
+  position: JSON.parse(JSON.stringify(POSITION)) as Position[],
 };
 
 // Export Store

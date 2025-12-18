@@ -18,8 +18,8 @@ export interface MarginAccountInfoStateType {
 
 // Initial State (using same constant values)
 const initialState: MarginAccountInfoStateType = {
-  totalBorrowedValue: 0,
-  totalCollateralValue: 0,
+  totalBorrowedValue: 90,
+  totalCollateralValue:1000,
   totalValue: 0,
   avgHealthFactor: 0,
   timeToLiquidation: 0,

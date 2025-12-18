@@ -3,27 +3,66 @@
 import { iconPaths } from "@/lib/constants";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 interface Dropdown {
   items:string[];
   setSelectedOption: React.Dispatch<React.SetStateAction<string>>;
   selectedOption: string;
   classname:string
+  dropdownClassname:string
 }
 
 export const Dropdown = (props: Dropdown) => {
   const [isHover, setIsHover] = useState(false);
+  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleMouseEnter = () => {
+    // Clear any pending close timeout
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+    setIsHover(true);
+  };
+
+  const handleMouseLeave = () => {
+    // Delay closing to allow mouse to move to dropdown
+    closeTimeoutRef.current = setTimeout(() => {
+      setIsHover(false);
+    }, 150);
+  };
+
+  const handleDropdownMouseEnter = () => {
+    // Clear timeout when mouse enters dropdown
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+  };
+
+  const handleDropdownMouseLeave = () => {
+    setIsHover(false);
+  };
 
   return (
     <div
-      onMouseEnter={() => setIsHover(true)}
-      onMouseLeave={() => setIsHover(false)}
-      className="relative inline-block z-[100]"
+      className="relative inline-block z-[100] w-full"
     >
       <button
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
         type="button"
-        className={`rounded-[8px]  ${props.classname} cursor-pointer flex justify-center items-center `}
+        className={`w-fit rounded-[8px]  ${props.classname} cursor-pointer flex justify-center items-center `}
         aria-label={`Selected: ${props.selectedOption}. Click to change option`}
         aria-expanded={isHover}
         aria-haspopup="listbox"
@@ -61,6 +100,8 @@ export const Dropdown = (props: Dropdown) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
+            onMouseEnter={handleDropdownMouseEnter}
+            onMouseLeave={handleDropdownMouseLeave}
             className={`absolute z-[100] bg-white p-2 top-8 -left-4 shadow-lg rounded-[6px] ${
               props.items.length > 4 ? "max-h-48 overflow-y-auto" : ""
             }`}
@@ -72,7 +113,7 @@ export const Dropdown = (props: Dropdown) => {
                 <motion.button
                   type="button"
                   whileTap={{ scale: 0.85 }}
-                  className="flex gap-[10px] font-medium rounded-[6px]  text-sm cursor-pointer py-2 px-8  hover:bg-[#F2EBFE] w-full text-left"
+                  className={` ${props.dropdownClassname} hover:text-[#7C35F8] flex  font-medium rounded-[6px]  cursor-pointer py-2 px-8  hover:bg-[#F2EBFE] w-full text-left`}
                   key={item}
                   role="option"
                   aria-selected={props.selectedOption === item}

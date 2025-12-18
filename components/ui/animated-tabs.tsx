@@ -92,6 +92,8 @@ export const AnimatedTabs = ({
     );
   }
 
+  
+
   // Render gradient/solid types
   const containerPadding = type === "solid" ? "p-[4px] w-fit h-fit" : "p-[6px]";
   const tabWidth = type === "solid" ? "w-[160px]" : "";
