@@ -38,7 +38,7 @@ export const RiskRewardSelector = ({
             type="button"
             onClick={() => onChange(ratio)}
             className={`
-               rounded-sm text-[10px] leading-3 px-2 py-1  transition
+               cursor-pointer rounded-sm text-[10px] leading-3 px-2 py-1  transition
               ${
                 value === ratio
                   ? "bg-[#FF007A] text-white border-[#FF007A] font-semibold"

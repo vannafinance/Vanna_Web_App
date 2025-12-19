@@ -23,7 +23,7 @@ export default function BuySellToggle({
       <button
         type="button"
         onClick={() => onChange("buy")}
-        className={`flex-1 rounded-lg p-0.5 text-[12px] font-semibold transition-colors ${
+        className={`cursor-pointer flex-1 rounded-lg p-0.5 text-[12px] font-semibold transition-colors ${
           value === "buy"
             ? "bg-linear-to-r from-[#FC5457] to-[#703AE6]"
             : "bg-transparent"
@@ -36,7 +36,7 @@ export default function BuySellToggle({
       <button
         type="button"
         onClick={() => onChange("sell")}
-        className={`flex-1 rounded-lg p-0.5 text-[12px] font-semibold transition-colors ${
+        className={`cursor-pointer flex-1 rounded-lg p-0.5 text-[12px] font-semibold transition-colors ${
           value === "sell"
             ? "bg-linear-to-r from-[#FC5457] to-[#703AE6]"
             : "bg-transparent"

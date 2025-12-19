@@ -48,6 +48,7 @@ const ToggleButton = ({
 
   return (
     <button
+      type="button"
       onClick={handleToggle}
       disabled={disabled}
       role="switch"
@@ -60,7 +61,7 @@ const ToggleButton = ({
           disabled
             ? "bg-[#D5D5D5] opacity-40 cursor-not-allowed"
             : isChecked
-            ? "bg-[#703AE6]"
+            ? "bg-[#703AE6] cursor-pointer"
             : "bg-[#D5D5D5] hover:bg-[#BFBFBF] cursor-pointer"
         }
         focus:outline-none focus:ring-2 focus:ring-[#F845FC] focus:ring-offset-2

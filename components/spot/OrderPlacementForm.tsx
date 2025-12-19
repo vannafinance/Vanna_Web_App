@@ -7,19 +7,30 @@ import ToggleButton from "../ui/toggle";
 import OrderTypeTabs from "../ui/OrderTypeTabs";
 import BuySellToggle from "../ui/BuySellToggle";
 import { Button } from "../ui/button";
-import { OrderPlacementFormValues, OrderSide, OrderType } from "@/lib/types";
+import {
+  OrderPlacementFormValues,
+  OrderSide,
+  OrderType,
+  TimeInForce,
+} from "@/lib/types";
 import Image from "next/image";
 import { Checkbox } from "../ui/Checkbox";
 import { Dropdown } from "../ui/dropdown";
 import MultipleTp from "./MultipleTp";
 import { RiskRewardSelector } from "./Risk-Reward";
 import { AnimatedTabs } from "../ui/animated-tabs";
+import { resetOrderForm } from "@/lib/resetOrderForm";
+import { useUserStore } from "@/store/user";
+import { useSpotTradeStore } from "@/store/spot-trade-store";
+import { mapOrderToActivePosition, mapOrderToOpenOrder } from "@/lib/helper";
 
 const tabs = [
   { id: "limit", label: "Limit" },
   { id: "market", label: "Market" },
   { id: "trigger", label: "Trigger" },
 ];
+
+const TIME_IN_FORCE_OPTIONS: TimeInForce[] = ["GTC", "Post-Only", "FOK", "IOC"];
 
 const buySellTabs: { id: OrderSide; label: string }[] = [
   { id: "buy", label: "Buy" },
@@ -80,6 +91,10 @@ export default function OrderPlacementForm() {
     gainAmount: 0,
     gainPercent: 0,
   };
+  const userAddress = useUserStore((state) => state.address);
+
+  const setSpotTrade = useSpotTradeStore((s) => s.set);
+  const getSpotTrade = useSpotTradeStore((s) => s.get);
 
   const {
     control,
@@ -102,9 +117,7 @@ export default function OrderPlacementForm() {
   const stopLossEnabled = watch("stopLossEnabled");
   const rrRatio = watch("stopLoss.rrRatio");
   const customRR = watch("stopLoss.customRR");
-
-  console.log("takeProfitEnabled", takeProfitEnabled);
-  console.log("multiTpEnabled", multiTpEnabled);
+  const timeInForce = watch("timeInForce");
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -134,6 +147,10 @@ export default function OrderPlacementForm() {
     }
   };
 
+  const handleTabChange = (tabId: string) => {
+    setValue("orderSide", tabId as OrderSide);
+  };
+
   const handleModeToggle = () => {
     setValue("triggerMode", triggerMode === "limit" ? "market" : "limit");
   };
@@ -144,9 +161,21 @@ export default function OrderPlacementForm() {
   // }, [form, reset]);
 
   const onSubmit = (values: OrderPlacementFormValues) => {
-    // set({ form: values });
+    if (values.orderType === "market") {
+      const currentPrice = 66500;
+      const position = mapOrderToActivePosition(values, currentPrice);
+      const prevPositions = getSpotTrade((s) => s.activePositions);
+      setSpotTrade({ activePositions: [position, ...prevPositions] });
+    }
+    if (values.orderType === "limit") {
+      const openOrders = mapOrderToOpenOrder(values);
+      const prevOpenOrders = getSpotTrade((s) => s.openOrders);
+      setSpotTrade({ openOrders: [openOrders, ...prevOpenOrders] });
+    }
 
     console.log("ORDER SUBMIT =>", values);
+
+    resetOrderForm(setValue, () => remove());
   };
 
   useEffect(() => {
@@ -161,10 +190,17 @@ export default function OrderPlacementForm() {
       onSubmit={handleSubmit(onSubmit)}
       className="w-[380px] rounded-2xl border border-[#E2E2E2]  bg-[#F7F7F7] p-4 flex flex-col gap-5 text-xs"
     >
-      <OrderTypeTabs
+      {/* <OrderTypeTabs
         tabs={tabs}
         activeTab={orderType}
         onTabChange={handleOrderTypeChange}
+      /> */}
+
+      <AnimatedTabs
+        tabs={tabs}
+        activeTab={orderType}
+        onTabChange={handleOrderTypeChange}
+        type="underline"
       />
 
       <BuySellToggle
@@ -173,9 +209,9 @@ export default function OrderPlacementForm() {
       />
 
       {/* <AnimatedTabs
-        tabs={tabs}
-        activeTab={orderType}
-        onTabChange={handleOrderTypeChange}
+        tabs={buySellTabs}
+        activeTab={orderSide}
+        onTabChange={handleTabChange}
       /> */}
 
       {/* Loop toggle row */}
@@ -202,7 +238,6 @@ export default function OrderPlacementForm() {
                 <div className="flex h-9 w-[170px] items-center  rounded-lg border border-[#E2E2E2] bg-white p-2">
                   <div className="rounded-md py-1 flex gap-2.5 items-center">
                     <input
-                      type="number"
                       placeholder="Enter No of Loops"
                       className=" w-[134px] h-[18px] text-[12px] leading-[18px] font-medium outline-none
                    placeholder:text-[#C6C6C6]
@@ -218,27 +253,22 @@ export default function OrderPlacementForm() {
 
                 <div className="flex gap-2 items-center justify-between">
                   {[5, 10, 15].map((n) => (
-                    <div
-                      key={n}
-                      className="flex gap-2.5 px-[14.25] py-[9px] rounded-lg bg-[#FFFFFF]"
-                    >
-                      <button
-                        type="button"
-                        onClick={() => setValue("noOfLoops", n)}
-                        className="text-[12px] text-[#111111] leading-[18px] font-medium"
-                      >
-                        {n}
-                      </button>
-                    </div>
-                  ))}
-                  <div className="flex gap-2.5 px-[9.25] py-[9.5px] rounded-lg bg-[#FFFFFF]">
                     <button
+                      key={n}
                       type="button"
-                      className="text-[20px] text-[#111111] leading-[18px] font-medium"
+                      onClick={() => setValue("noOfLoops", n)}
+                      className="cursor-pointer p-2.5 rounded-lg w-[36.5px] h-[36px] text-[12px] bg-[#FFFFFF] text-[#111111] leading-[18px] font-medium"
                     >
-                      &infin;
+                      {n}
                     </button>
-                  </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setValue("noOfLoops", "Infinite")}
+                    className="cursor-pointer p-2.5 rounded-lg w-[36.5px] h-[36px] text-[12px] bg-[#FFFFFF] text-[#111111] text-[20px] leading-[18px] font-medium"
+                  >
+                    &infin;
+                  </button>
                 </div>
               </div>
             </div>
@@ -302,7 +332,7 @@ export default function OrderPlacementForm() {
                 <div className="rounded-md py-1 flex gap-2.5 items-center">
                   <input
                     type="number"
-                    placeholder="Enter Amount"
+                    placeholder="Enter Price"
                     className=" w-[121px] h-[18] text-[12px] leading-[18px] font-medium outline-none
                    placeholder:text-[#C6C6C6]
                    [appearance:textfield]
@@ -328,7 +358,7 @@ export default function OrderPlacementForm() {
               </span>
               <div className="h-9 rounded-md border border-[#E2E2E2] flex  items-center  justify-center gap-2.5 p-2">
                 <span className="text-[12px] w-[117px] leading-[18px] font-medium">
-                  Market Price
+                  66500
                 </span>
                 <span className="text-[8px] leading-3 font-medium text-[#111111]">
                   USDT
@@ -415,7 +445,7 @@ export default function OrderPlacementForm() {
               <button
                 key={p}
                 type="button"
-                className="flex h-full flex-1 items-center justify-center
+                className="cursor-pointer flex h-full flex-1 items-center justify-center
                            rounded-lg  bg-[#FFFFFF]
                            text-[10px] leading-[15px] font-medium text-[#111111]"
               >
@@ -653,9 +683,33 @@ export default function OrderPlacementForm() {
       </div>
 
       {/* Time in Force Dropdown */}
+      {orderType === "limit" && (
+        <div className="flex items-center gap-2.5  ">
+          <span className="text-[#6F6F6F] text-[12px] font-medium leading-[18px] ">
+            Time in Force
+          </span>
+          <Dropdown
+            items={TIME_IN_FORCE_OPTIONS}
+            selectedOption={timeInForce}
+            setSelectedOption={(val) =>
+              setValue("timeInForce", val as TimeInForce)
+            }
+            classname="gap-0.5"
+          />
+        </div>
+      )}
 
       {/* Submit */}
-      <Button text="Place Order" size="small" type="solid" disabled={false} />
+      {userAddress ? (
+        <Button text="Place Order" size="small" type="solid" disabled={false} />
+      ) : (
+        <Button
+          text="Connect Wallet to Trade"
+          size="small"
+          type="solid"
+          disabled={true}
+        />
+      )}
     </form>
   );
 }

@@ -1,36 +1,8 @@
+import { OrderHistoryType } from "@/lib/types";
 import { Column, Table } from "../ui/Table";
 import cn from "classnames";
 
-export type OrderHistoryRow = {
-  id: string;
-  dateTime: string;
-  pair: string;
-  type: "Limit" | "Market" | "Conditional";
-  side: "Buy" | "Sell";
-  orderQty: string;
-  executedQty: string;
-  price: number;
-  avgFillPrice: number;
-  takeProfit?: {
-    label: string;
-    value: number;
-  }[];
-  averageTPPrice: string;
-  slTriggerPrice?: number;
-  slLimit?: number;
-  trailPctOrUsd?: string;
-  loop?: string;
-  gainPct?: string;
-  gainUsd?: string;
-  totalGainUsd?: number;
-  total: string;
-  triggerCondition?: string;
-  reduceOnly?: boolean;
-  status: "Filled" | "Partially Filled" | "Cancelled";
-  orderId?: string;
-};
-
-export const orderHistoryColumns: Column<OrderHistoryRow>[] = [
+export const orderHistoryColumns: Column<OrderHistoryType>[] = [
   {
     id: "dateTime",
     header: "Date/Time",
@@ -178,7 +150,7 @@ export const orderHistoryColumns: Column<OrderHistoryRow>[] = [
   },
 ];
 
-export const orderHistoryData: OrderHistoryRow[] = [
+export const orderHistoryData: OrderHistoryType[] = [
   {
     id: "hist-1",
     dateTime: "2025-10-23 14:25:46",

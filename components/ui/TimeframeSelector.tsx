@@ -29,8 +29,8 @@ export default function TimeframeSelector() {
       <button>
         <Image
           className="object-cover"
-          width={100}
-          height={100}
+          width={16}
+          height={18}
           alt="icons"
           src="/icons/dropdownArrow.svg"
         />

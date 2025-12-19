@@ -1,18 +1,7 @@
+import { TradeHistoryType } from "@/lib/types";
 import { Column, Table } from "../ui/Table";
 
-export type TradeHistoryRow = {
-  id: string;
-  dateTime: string;
-  pair: string;
-  side: "Buy" | "Sell";
-  executedQty: string;
-  avgFilledPrice: string;
-  fee: string;
-  role: "Maker" | "Taker";
-  total: "Filled" | "Partially Filled";
-};
-
-export const tradeHistoryColumns: Column<TradeHistoryRow>[] = [
+export const tradeHistoryColumns: Column<TradeHistoryType>[] = [
   {
     id: "dateTime",
     header: "Date/Time",
@@ -70,7 +59,7 @@ export const tradeHistoryColumns: Column<TradeHistoryRow>[] = [
   },
 ];
 
-export const tradeHistoryData: TradeHistoryRow[] = [
+export const tradeHistoryData: TradeHistoryType[] = [
   {
     id: "trade-1",
     dateTime: "2025-10-23 14:25:46",

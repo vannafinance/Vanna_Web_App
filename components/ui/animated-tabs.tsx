@@ -20,7 +20,8 @@ interface AnimatedTabsProps {
   indicatorClassName?: string;
 }
 
-const HOVER_GRADIENT = "linear-gradient(135deg, rgba(112, 58, 230, 0.08) 0%, rgba(112, 58, 230, 0.04) 100%)";
+const HOVER_GRADIENT =
+  "linear-gradient(135deg, rgba(112, 58, 230, 0.08) 0%, rgba(112, 58, 230, 0.04) 100%)";
 const SPRING_CONFIG = {
   type: "spring" as const,
   stiffness: 300,
@@ -63,13 +64,9 @@ export const AnimatedTabs = ({
   // Render underline type
   if (type === "underline") {
     return (
-<<<<<<< HEAD
       <div
         className={`w-full h-fit border-b-[1px] border-[#E2E2E2] ${containerClassName}`}
       >
-=======
-      <div className={`w-full h-fit border-b-[1px] border-[#E2E2E2] ${containerClassName}`}>
->>>>>>> 34a99f32099b374fb04ec447318836fe9099fcd9
         <div className="w-full flex" onMouseLeave={() => setHoveredTab(null)}>
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
@@ -82,15 +79,7 @@ export const AnimatedTabs = ({
                 onMouseEnter={() => setHoveredTab(tab.id)}
                 className={`w-full py-[8px] text-[14px] font-semibold flex items-center justify-center cursor-pointer relative ${tabClassName}`}
                 animate={{
-<<<<<<< HEAD
-                  color: isActive
-                    ? "#703AE6"
-                    : isHovered
-                    ? "#000000"
-                    : "#A7A7A7",
-=======
                   color: getTextColor(isActive, isHovered),
->>>>>>> 34a99f32099b374fb04ec447318836fe9099fcd9
                   borderBottomWidth: isActive ? "2px" : "0px",
                   borderBottomColor: isActive ? "#703AE6" : "transparent",
                 }}
@@ -135,27 +124,15 @@ export const AnimatedTabs = ({
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
           const isHovered = hoveredTab === tab.id;
-<<<<<<< HEAD
-
-          // Determine text color based on type and state
-          const getTextColor = () => {
-            if (type === "solid" && isActive) {
-              return "#FFFFFF"; // White for active tab in solid type
-            }
-            if (isActive || isHovered) {
-              return "#000000"; // Black for active/hovered in gradient type
-            }
-            return "#64748b"; // Gray for inactive
-          };
-=======
->>>>>>> 34a99f32099b374fb04ec447318836fe9099fcd9
 
           return (
             <motion.div
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
               onMouseEnter={() => setHoveredTab(tab.id)}
-              className={`${tabWidth} ${tabPadding} hover:cursor-pointer text-[16px] font-semibold flex flex-col justify-center text-center ${tabHeight} rounded-[12px] ${useFlex1 ? "flex-1" : ""} relative z-10 ${tabClassName}`}
+              className={`${tabWidth} ${tabPadding} hover:cursor-pointer text-[16px] font-semibold flex flex-col justify-center text-center ${tabHeight} rounded-[12px] ${
+                useFlex1 ? "flex-1" : ""
+              } relative z-10 ${tabClassName}`}
               animate={{
                 color: getTextColor(isActive, isHovered),
                 background: getBackground(isActive, isHovered),

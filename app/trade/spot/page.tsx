@@ -11,7 +11,7 @@ const spot = () => {
       <div className="px-5 grid grid-cols-[minmax(0,3fr)_minmax(0,1.1fr)] gap-4 ">
         <section className="flex flex-col gap-4">
           <div className=" w-full flex gap-4 bg-white">
-            <div className="w-[669px] flex flex-col gap-3">
+            <div className="w-[750px] flex flex-col gap-3">
               <div className="flex gap-1 rounded-md">
                 <button className="bg-[#F1EBFD] text-[#703AE6]  font-semibold py-3 px-4 rounded-lg">
                   Chart

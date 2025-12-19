@@ -31,7 +31,7 @@ export function Table<T>({
   data,
   getRowKey,
   className,
-  emptyText = "No data",
+  emptyText = "",
 }: TableProps<T>) {
   return (
     <div

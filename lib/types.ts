@@ -47,6 +47,89 @@ export type RiskRewardRatio =
   | "3:1"
   | "CUSTOM";
 
+export type ActivePositionType = {
+  id: string;
+  dateTime: string;
+  pair: string;
+  type: "Limit" | "Market";
+  side: "Buy" | "Sell";
+  qty: string;
+  estFilledPrice: string;
+  takeProfit?: {
+    label: string;
+    value: number;
+  }[];
+  slTriggerPrice?: number;
+  slLimit?: number;
+  stopLimit?: number;
+  trailPctOrUsd?: string;
+  loop?: string;
+  currentPnlUsd?: string;
+  currentPnlPct?: string;
+  status: "Active" | "Closed";
+};
+
+export type OpenOrderType = {
+  id: string;
+  dateTime: string;
+  pair: string;
+  type: "Limit" | "Market" | "Trigger";
+  side: "Buy" | "Sell";
+  qty: string;
+  price: number;
+  takeProfit: {
+    label: string;
+    value: number;
+  }[];
+  slTriggerPrice: number;
+  slLimit: number;
+  trail: number;
+  loop: string;
+  triggerCondition: string;
+  total: string;
+};
+
+export type OrderHistoryType = {
+  id: string;
+  dateTime: string;
+  pair: string;
+  type: "Limit" | "Market" | "Conditional";
+  side: "Buy" | "Sell";
+  orderQty: string;
+  executedQty: string;
+  price: number;
+  avgFillPrice: number;
+  takeProfit?: {
+    label: string;
+    value: number;
+  }[];
+  averageTPPrice: string;
+  slTriggerPrice?: number;
+  slLimit?: number;
+  trailPctOrUsd?: string;
+  loop?: string;
+  gainPct?: string;
+  gainUsd?: string;
+  totalGainUsd?: number;
+  total: string;
+  triggerCondition?: string;
+  reduceOnly?: boolean;
+  status: "Filled" | "Partially Filled" | "Cancelled";
+  orderId?: string;
+};
+
+export type TradeHistoryType = {
+  id: string;
+  dateTime: string;
+  pair: string;
+  side: "Buy" | "Sell";
+  executedQty: string;
+  avgFilledPrice: string;
+  fee: string;
+  role: "Maker" | "Taker";
+  total: "Filled" | "Partially Filled";
+};
+
 export interface SingleTakeProfit {
   exitPrice: number | null;
   profitPercent: number | null;
@@ -77,33 +160,33 @@ export interface OrderPlacementFormValues {
   orderSide: OrderSide; // buy | sell
 
   // loop
-  loopEnabled: boolean;
-  noOfLoops: number | null; // null = ∞
+  loopEnabled?: boolean;
+  noOfLoops?: number | string | null; // null = ∞
 
   // prices & size
-  triggerPrice: number | null;
-  triggerMode: TriggerMode; // limit | market
+  triggerPrice?: number | null;
+  triggerMode?: TriggerMode; // limit | market
 
   entryPrice: number | null; // disabled in market
   totalUnits: number | null;
   totalAmount: number | null;
 
   // take profit
-  takeProfitEnabled: boolean;
-  multipleTpEnabled: boolean;
-  singleTakeProfit: SingleTakeProfit;
-  multipleTakeProfits: MultipleTakeProfitRow[];
+  takeProfitEnabled?: boolean;
+  multipleTpEnabled?: boolean;
+  singleTakeProfit?: SingleTakeProfit;
+  multipleTakeProfits?: MultipleTakeProfitRow[];
 
   // stop loss
-  stopLossEnabled: boolean;
-  stopLoss: StopLossConfig;
+  stopLossEnabled?: boolean;
+  stopLoss?: StopLossConfig;
 
   // derived / selection
-  timeInForce: TimeInForce;
+  timeInForce?: TimeInForce;
 
   // calculated (read-only but useful in submit)
-  riskAmount: number;
-  riskPercent: number;
-  gainAmount: number;
-  gainPercent: number;
+  riskAmount?: number;
+  riskPercent?: number;
+  gainAmount?: number;
+  gainPercent?: number;
 }
