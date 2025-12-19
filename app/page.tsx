@@ -1,16 +1,12 @@
-"use client"
+"use client";
 
-
-import { Button } from "@/components/button";
-import { Navbar } from "@/components/navbar";
-import Image from "next/image";
+import { DEPOSIT_AMOUNT_BREAKDOWN_DROPDOWN_DATA } from "@/lib/constants/margin";
+import { AmountBreakdownDropDown } from "@/components/ui/amount-breakdown-dropdown";
+import { Dropdown } from "@/components/ui/dropdown";
 import { useState } from "react";
 
 export default function Home() {
-
-  const [ischecked,setIscheckd]=useState(false)
-
-
+  const [selectedOrderType, setSelectedOrderType] = useState<string>("GTC");
   return (
     <>
     

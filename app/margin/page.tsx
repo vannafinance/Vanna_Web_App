@@ -1,24 +1,122 @@
 "use client";
 
-import { Carousel } from "@/components/carousel";
+import { Carousel } from "@/components/ui/carousel";
 import { NetworkDropdown } from "@/components/network-dropdown";
-import { Navbar } from "@/components/navbar";
-import { carouselItems } from "@/lib/constants";
+import {
+  ACCOUNT_STATS_ITEMS,
+  CAROUSEL_ITEMS,
+  MARGIN_ACCOUNT_INFO_ITEMS,
+  MARGIN_ACCOUNT_MORE_DETAILS_ITEMS,
+} from "@/lib/constants/margin";
 import { motion } from "framer-motion";
-import { useState } from "react";
-
-type Tabs = "Leverage your Assets" | "Repay Loan"
+import { useState, useRef, useEffect } from "react";
+import Image from "next/image";
+import { InfoCard } from "@/components/margin/info-card";
+import { LeverageCollateral } from "@/components/margin/leverage-collateral";
+import { Positionstable } from "@/components/margin/positions-table";
+import { Position } from "@/lib/types";
+import { useMarginAccountInfoStore } from "@/store/margin-account-info-store";
+import { useCollateralBorrowStore } from "@/store/collateral-borrow-store";
+import { useUserStore } from "@/store/user";
+import { formatValue } from "@/lib/utils/format-value";
 
 const Margin = () => {
-  const [activeTab,setActiveTab] = useState<Tabs>("Leverage your Assets")
-  const [hoveredTab, setHoveredTab] = useState<Tabs | null>(null)
-  
-  const displayTab = hoveredTab || activeTab
-  
+  // State to trigger tab switch to Repay Loan
+  const [switchToRepayTab, setSwitchToRepayTab] = useState(false);
+
+  // Ref for scrolling to LeverageCollateral component
+  const leverageCollateralRef = useRef<HTMLDivElement>(null);
+
+  // Common function to scroll to leverage section
+  const scrollToLeverageSection = () => {
+    if (leverageCollateralRef.current) {
+      leverageCollateralRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  };
+
+  // Scroll to LeverageCollateral when repay is clicked
+  useEffect(() => {
+    if (switchToRepayTab) {
+      // Small delay to ensure tab switch happens first
+      setTimeout(() => {
+        scrollToLeverageSection();
+      }, 100);
+    }
+  }, [switchToRepayTab]);
+
+  const userAddress = useUserStore((state) => state.address);
+
+  // Account statistics state
+  const [accountStats, setAccountStats] = useState({
+    netHealthFactor: 567777,
+    collateralLeftBeforeLiquidation: 173663,
+    netAvailableCollateral: 1000,
+    netAmountBorrowed: 770,
+    netProfitAndLoss: 0,
+  });
+
+  // Get margin account info from global store using selector to prevent unnecessary re-renders
+  const totalBorrowedValue = useMarginAccountInfoStore(
+    (state) => state.totalBorrowedValue
+  );
+  const totalCollateralValue = useMarginAccountInfoStore(
+    (state) => state.totalCollateralValue
+  );
+  const totalValue = useMarginAccountInfoStore((state) => state.totalValue);
+  const avgHealthFactor = useMarginAccountInfoStore(
+    (state) => state.avgHealthFactor
+  );
+  const timeToLiquidation = useMarginAccountInfoStore(
+    (state) => state.timeToLiquidation
+  );
+  const borrowRate = useMarginAccountInfoStore((state) => state.borrowRate);
+  const liquidationPremium = useMarginAccountInfoStore(
+    (state) => state.liquidationPremium
+  );
+  const liquidationFee = useMarginAccountInfoStore(
+    (state) => state.liquidationFee
+  );
+  const debtLimit = useMarginAccountInfoStore((state) => state.debtLimit);
+  const minDebt = useMarginAccountInfoStore((state) => state.minDebt);
+  const maxDebt = useMarginAccountInfoStore((state) => state.maxDebt);
+  const hasMarginAccount = useMarginAccountInfoStore(
+    (state) => state.hasMarginAccount
+  );
+
+  // Format account stats value - defined outside rendering
+  const formatAccountStatValue = (itemId: string, value: number) => {
+    if (itemId === "netHealthFactor") {
+      return formatValue(value, { type: "health-factor" });
+    }
+    return formatValue(value, { 
+      type: "number",
+      useLargeFormat: true,
+    });
+  };
+
+  // Format data for InfoCard component
+  const marginAccountInfo = {
+    totalBorrowedValue,
+    totalCollateralValue,
+    totalValue,
+    avgHealthFactor,
+    timeToLiquidation,
+    borrowRate,
+    liquidationPremium,
+    liquidationFee,
+    debtLimit,
+    minDebt,
+    maxDebt,
+  };
+
   return (
-    <div>
-      <motion.div
-        className="pb-[48px] px-[80px] pt-[80px]"
+    <main className="w-full">
+      {/* Carousel section - displays promotional items */}
+      <motion.section
+        className="w-full h-fit  pb-[48px] px-[80px] pt-[80px] "
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{
@@ -27,63 +125,202 @@ const Margin = () => {
           delay: 0.2,
         }}
       >
-        <Carousel items={carouselItems} autoplayInterval={5000} />
-      </motion.div>
-      <div className="p-[80px]">
-        <div className="flex gap-[20px]">
-          <div className="text-[34px] font-semibold">
-            Leverage Your Collateral
-          </div>
-          <div>
-            <NetworkDropdown />
-          </div>
-        </div>
-        <div className="rounded-[26px] bg-[#E2E2E2] py-[36px] px-[16px] w-[691px] h-[893px]">
-            <div className="bg-white flex p-[6px] rounded-[16px] h-[79px] relative overflow-hidden">
-              <motion.div
-                className="absolute top-[6px] left-[6px] h-[67px] rounded-[16px] bg-gradient-to-r from-[#FC5457] to-[#703AE6] p-[2px]"
-                style={{ width: "calc(50% - 6px)" }}
-                initial={false}
-                animate={{
-                  x: displayTab === "Leverage your Assets" ? 0 : "100%"
-                }}
-                transition={{
-                  type: "spring",
-                  stiffness: 400,
-                  damping: 35
-                }}
-              >
-                <div className="bg-white rounded-[14px] h-full w-full" />
-              </motion.div>
-              
-              <motion.div 
-                onClick={()=>{setActiveTab("Leverage your Assets")}}
-                onMouseEnter={()=>{setHoveredTab("Leverage your Assets")}}
-                onMouseLeave={()=>{setHoveredTab(null)}}
-                className="hover:cursor-pointer text-[20px] font-medium flex flex-col justify-center text-center h-[67px] rounded-[16px] flex-1 relative z-10"
-                whileTap={{ scale: 0.95 }}
-                transition={{ duration: 0.1 }}
-              >
-                Leverage your Assets
-              </motion.div>
-              
-              <motion.div 
-                onClick={()=>{setActiveTab("Repay Loan")}}
-                onMouseEnter={()=>{setHoveredTab("Repay Loan")}}
-                onMouseLeave={()=>{setHoveredTab(null)}}
-                className="hover:cursor-pointer text-[20px] font-medium flex flex-col justify-center text-center h-[67px] rounded-[16px] flex-1 relative z-10"
-                whileTap={{ scale: 0.95 }}
-                transition={{ duration: 0.1 }}
-              >
-                Repay Loan
-              </motion.div>
+        <Carousel items={[...CAROUSEL_ITEMS]} autoplayInterval={5000} />
+      </motion.section>
+
+      {userAddress && (
+        <motion.section
+          className="px-[80px]  w-full h-[405px]"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+        >
+            <div className=" border-[1px]   border-[#E2E2E2] bg-[#F7F7F7] rounded-[24px] w-full h-full grid grid-cols-3 grid-rows-2 gap-x-[20px] gap-y-[0] place-items-center ">
+              {/* Map through account stats items */}
+              {ACCOUNT_STATS_ITEMS.map((item, idx) => {
+                return (
+                  <motion.article
+                    className="px-[20px]  flex flex-col justify-center   w-[397.33px] h-[168.5px] rounded-[10px]  col-span-1 row-span-1 "
+                    key={idx}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-50px" }}
+                    transition={{
+                      duration: 0.4,
+                      delay: idx * 0.1,
+                      ease: "easeOut",
+                    }}
+                  >
+                    <div className="w-full h-fit flex items-start gap-[16px] ">
+                      <motion.div
+                        className=" w-[52px] h-[52px] flex flex-col justify-center items-center p-[2.89px] bg-white rounded-[69.33px] flex-shrink-0"
+                        initial={{ scale: 0 }}
+                        whileInView={{ scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{
+                          duration: 0.3,
+                          delay: idx * 0.1 + 0.2,
+                          type: "spring",
+                          stiffness: 200,
+                        }}
+                      >
+                        <Image
+                          width={23.11}
+                          height={23.11}
+                          alt={item.id}
+                          src={item.icon}
+                        />
+                      </motion.div>
+                      <div className=" flex flex-col gap-[32px] w-full ">
+                        <div className="flex flex-col justify-center  w-[289.33px]  text-[20px]  font-semibold">
+                          {item.name}
+                        </div>
+                        <motion.div
+                          className="text-[32px] font-bold text-neutral-600"
+                          initial={{ opacity: 0 }}
+                          whileInView={{ opacity: 1 }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 0.4, delay: idx * 0.1 + 0.3 }}
+                        >
+                          {(() => {
+                            const value = hasMarginAccount
+                              ? accountStats[item.id as keyof typeof accountStats] || 0
+                              : 0;
+                            
+                            if (!hasMarginAccount || value === 0) {
+                              return "-";
+                            }
+                            
+                            return formatAccountStatValue(item.id, value);
+                          })()}
+                        </motion.div>
+                      </div>
+                    </div>
+                  </motion.article>
+                );
+              })}
             </div>
-            <div>
-              Deposit
+        </motion.section>
+      )}
+
+      {/* Main leverage section */}
+      <section className=" w-full p-[80px]  flex flex-col gap-[48px]">
+        <motion.section
+          className="w-full h-fit  flex flex-col gap-[48px]"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+        >
+          {/* Section header with network dropdown */}
+          <motion.header
+            className="w-full flex gap-[20px] items-center"
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+          >
+            <h1 className="text-[34px] font-semibold">
+              Leverage your Collateral
+            </h1>
+            <div className="flex-shrink-0">
+              <NetworkDropdown />
             </div>
-        </div>
-      </div>
-    </div>
+          </motion.header>
+
+          {/* Two column layout: Leverage form and Info card */}
+          <div className="flex gap-[36px] relative" ref={leverageCollateralRef}>
+            {/* Left: Leverage collateral form */}
+            <LeverageCollateral
+              switchToRepayTab={switchToRepayTab}
+              onTabSwitched={() => setSwitchToRepayTab(false)}
+            />
+
+            {/* Right: Margin account info card - sticky */}
+            <motion.aside
+              className="flex flex-col gap-[20px] w-full h-fit sticky top-[80px] self-start"
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+            >
+              {/* Info card header */}
+              <motion.header
+                className="flex gap-[10px]"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+              >
+                {/* Vanna logo icon */}
+                <motion.div
+                  className="border-[1px] border-[#E2E2E2] flex flex-col justify-center items-center p-2 rounded-[11px] w-[62px] h-[62px]"
+                  initial={{ scale: 0, rotate: -180 }}
+                  whileInView={{ scale: 1, rotate: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, type: "spring", stiffness: 200 }}
+                >
+                  <Image
+                    alt={"vanna"}
+                    src={"/logos/vanna-icon.png"}
+                    width={34.82}
+                    height={31.28}
+                  />
+                </motion.div>
+                <div>
+                  <h2 className="w-full text-[24px] font-bold ">
+                    Margin Account Info
+                  </h2>
+                  <p className="w-full text-[16px] font-medium text-[#A3A3A3]">
+                    Stay updated details and status.
+                  </p>
+                </div>
+              </motion.header>
+
+              {/* Info card with expandable sections */}
+              <InfoCard
+                data={marginAccountInfo}
+                items={[...MARGIN_ACCOUNT_INFO_ITEMS]}
+                showExpandable={true}
+                expandableSections={[
+                  {
+                    title: "MORE DETAILS",
+                    headingBold: true,
+                    items: [...MARGIN_ACCOUNT_MORE_DETAILS_ITEMS],
+                    defaultExpanded: true,
+                    delay: 0.1,
+                  },
+                  {
+                    title: "ORACLES AND LTS",
+                    headingBold: true,
+                    items: [...MARGIN_ACCOUNT_MORE_DETAILS_ITEMS],
+                    defaultExpanded: false,
+                    delay: 0.2,
+                  },
+                ]}
+              />
+            </motion.aside>
+          </div>
+        </motion.section>
+
+        {/* Positions table section */}
+        {userAddress && (
+          <motion.section
+            className="w-full h-fit "
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+          >
+            <Positionstable
+              onRepayClick={() => setSwitchToRepayTab(true)}
+              onOpenPositionClick={scrollToLeverageSection}
+            />
+          </motion.section>
+        )}
+      </section>
+    </main>
   );
 };
 
