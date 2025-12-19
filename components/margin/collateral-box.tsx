@@ -5,12 +5,16 @@ import { Dropdown } from "../ui/dropdown";
 import {
   DropdownOptions,
   iconPaths,
-  depositAmountBreakdownData,
-  unifiedBalanceBreakdownData,
-  balanceTypeOptions,
 } from "@/lib/constants";
 import Image from "next/image";
 import { AmountBreakdownDialogue } from "../ui/amount-breakdown-dialogue";
+import {
+  DEPOSIT_PERCENTAGES,
+  PERCENTAGE_COLORS,
+  DEPOSIT_AMOUNT_BREAKDOWN_DATA,
+  UNIFIED_BALANCE_BREAKDOWN_DATA,
+  BALANCE_TYPE_OPTIONS,
+} from "@/lib/constants/margin";
 
 interface Collateral {
   collaterals: {
@@ -30,15 +34,6 @@ interface Collateral {
   index?: number;
 }
 
-export const depositPercentage = [10, 25, 50, 100];
-
-export const percentageColors: Record<number, string> = {
-  10: "bg-[#703AE6]",
-  25: "bg-[#FC5457]",
-  50: "bg-[#E63ABB]",
-  100: "bg-[#FF007A]",
-};
-
 export const Collateral = (props: Collateral) => {
   // Determine editing mode
   const isEditing = props.isEditing ?? props.collaterals === null;
@@ -50,7 +45,7 @@ export const Collateral = (props: Collateral) => {
   const [valueInUsd, setValueInUsd] = useState<string>("0.0");
   const [percentage, setPercentage] = useState(10);
   const [selectedBalanceType, setSelectedBalanceType] = useState<string>(
-    balanceTypeOptions[0]
+    BALANCE_TYPE_OPTIONS[0]
   );
 
   // Dialogue visibility states
@@ -163,6 +158,7 @@ export const Collateral = (props: Collateral) => {
             {/* Currency dropdown */}
             <div className="p-[10px]">
               <Dropdown
+                dropdownClassname="text-[14px] gap-[10px] "
                 classname="text-[16px] font-medium gap-[8px]"
                 selectedOption={selectedCurrency}
                 setSelectedOption={setSelectedCurrency}
@@ -261,7 +257,7 @@ export const Collateral = (props: Collateral) => {
               role="group"
               aria-label="Deposit percentage"
             >
-              {depositPercentage.map((item) => {
+              {DEPOSIT_PERCENTAGES.map((item) => {
                 return (
                   <motion.button
                     type="button"
@@ -269,7 +265,7 @@ export const Collateral = (props: Collateral) => {
                     onClick={() => handlePercentageClick(item)}
                     className={`h-[44px] w-[95px] text-center text-[14px] text-medium cursor-pointer ${
                       percentage === item
-                        ? `${percentageColors[item]} text-white`
+                        ? `${PERCENTAGE_COLORS[item]} text-white`
                         : "bg-[#F4F4F4]"
                     } p-[10px] rounded-[12px]`}
                     whileHover={{ scale: 1.05 }}
@@ -289,8 +285,9 @@ export const Collateral = (props: Collateral) => {
               {/* PB/WB toggle */}
               <div className="py-[4px] pr-[4px] pl-[8px] bg-[#F2EBFE] rounded-[8px] ">
                 <Dropdown 
+                  dropdownClassname="text-[14px] gap-[10px] "
                   classname="text-[16px] font-medium gap-[8px]" 
-                  items={balanceTypeOptions} 
+                  items={[...BALANCE_TYPE_OPTIONS]} 
                   selectedOption={selectedBalanceType} 
                   setSelectedOption={(value) => {
                     setSelectedBalanceType(value);
@@ -525,10 +522,10 @@ export const Collateral = (props: Collateral) => {
               onClick={(e) => e.stopPropagation()}
             >
               <AmountBreakdownDialogue
-                heading={depositAmountBreakdownData.heading}
-                asset={depositAmountBreakdownData.asset}
-                totalDeposit={depositAmountBreakdownData.totalDeposit}
-                breakdown={depositAmountBreakdownData.breakdown}
+                heading={DEPOSIT_AMOUNT_BREAKDOWN_DATA.heading}
+                asset={DEPOSIT_AMOUNT_BREAKDOWN_DATA.asset}
+                totalDeposit={DEPOSIT_AMOUNT_BREAKDOWN_DATA.totalDeposit}
+                breakdown={[...DEPOSIT_AMOUNT_BREAKDOWN_DATA.breakdown]}
                 onClose={handleCloseViewSources}
               />
             </motion.div>
@@ -555,10 +552,10 @@ export const Collateral = (props: Collateral) => {
               onClick={(e) => e.stopPropagation()}
             >
               <AmountBreakdownDialogue
-                heading={unifiedBalanceBreakdownData.heading}
-                asset={unifiedBalanceBreakdownData.asset}
-                totalDeposit={unifiedBalanceBreakdownData.totalDeposit}
-                breakdown={unifiedBalanceBreakdownData.breakdown}
+                heading={UNIFIED_BALANCE_BREAKDOWN_DATA.heading}
+                asset={UNIFIED_BALANCE_BREAKDOWN_DATA.asset}
+                totalDeposit={UNIFIED_BALANCE_BREAKDOWN_DATA.totalDeposit}
+                breakdown={[...UNIFIED_BALANCE_BREAKDOWN_DATA.breakdown]}
                 onClose={handleCloseUnifiedBalance}
               />
             </motion.div>

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Dropdown } from "../ui/dropdown";
 import { AnimatePresence, motion } from "framer-motion";
 import { DropdownOptions } from "@/lib/constants";
-import { depositPercentage, percentageColors } from "./collateral-box";
+import { DEPOSIT_PERCENTAGES, PERCENTAGE_COLORS } from "@/lib/constants/margin";
 import { DetailsPanel } from "../ui/details-panel";
 import { Button } from "../ui/button";
 
@@ -63,6 +63,7 @@ export const TransferCollateral = () => {
                 selectedOption={selectedCurrency}
                 setSelectedOption={setSelectedCurrency}
                 items={DropdownOptions}
+                dropdownClassname="text-[14px] font-medium gap-[8px]"
               />
             </div>
             <AnimatePresence mode="wait">
@@ -83,7 +84,7 @@ export const TransferCollateral = () => {
                   role="group"
                   aria-label="Deposit percentage"
                 >
-                  {depositPercentage.map((item) => {
+                  {DEPOSIT_PERCENTAGES.map((item) => {
                     return (
                       <motion.button
                         type="button"
@@ -91,7 +92,7 @@ export const TransferCollateral = () => {
                         onClick={() => handlePercentageClick(item)}
                         className={`h-[44px] w-[95px] text-center text-[14px] text-medium cursor-pointer ${
                           percentage === item
-                            ? `${percentageColors[item]} text-white`
+                            ? `${PERCENTAGE_COLORS[item]} text-white`
                             : "bg-[#F4F4F4]"
                         } p-[10px] rounded-[12px]`}
                         whileHover={{ scale: 1.05 }}

@@ -117,6 +117,8 @@ export default function Orderbook() {
         </button>
       </div>
 
+      <div></div>
+
       {/* Parent div : buy/sell orders */}
       <div className="flex flex-col pb-4 gap-3 self-stretch bg-[#F7F7F7]">
         {/* Top Bar */}

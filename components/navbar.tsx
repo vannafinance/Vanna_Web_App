@@ -352,9 +352,8 @@ export const Navbar = (props: Navbar) => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
         >
-
-          {userAddress &&  (
-              <Button
+          {userAddress && (
+            <Button
               size="small"
               type="gradient"
               disabled={false}
@@ -364,8 +363,7 @@ export const Navbar = (props: Navbar) => {
               text="DEPOSIT"
               ariaLabel="Deposit to your account"
             ></Button>
-            )
-          }
+          )}
           {/* Theme toggle button */}
           <button
             type="button"
@@ -424,22 +422,30 @@ export const Navbar = (props: Navbar) => {
               )}
             </motion.div>
           </button>
-{/* Login button */}
-         { !userAddress ? 
-          <Button
-            size="small"
-            type="gradient"
-            disabled={false}
-            onClick={() => {
-              setUserAddress({ address: "0x1234567890123456789012345678901234567890" });
-            }}
-            text="Login"
-            ariaLabel="Login to your account"
-          ></Button>:<div onClick={() => {
-            setUserAddress({ address: null });
-          }} className="py-[12px] px-[24px] text-[16px] font-semibold bg-[#F4F4F4] rounded-[8px] h-full w-fit">
-            {userAddress.slice(0, 6) + "..." + userAddress.slice(-4)}
-            </div>}
+          {/* Login button */}
+          {!userAddress ? (
+            <Button
+              size="small"
+              type="gradient"
+              disabled={false}
+              onClick={() => {
+                setUserAddress({
+                  address: "0x1234567890123456789012345678901234567890",
+                });
+              }}
+              text="Login"
+              ariaLabel="Login to your account"
+            ></Button>
+          ) : (
+            <div
+              onClick={() => {
+                setUserAddress({ address: null });
+              }}
+              className="cursor-pointer py-[12px] px-[24px] text-[16px] font-semibold bg-[#F4F4F4] rounded-[8px] h-full w-fit"
+            >
+              {userAddress.slice(0, 6) + "..." + userAddress.slice(-4)}
+            </div>
+          )}
         </motion.div>
       </motion.div>
       <AnimatePresence>

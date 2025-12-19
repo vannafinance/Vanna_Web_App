@@ -684,10 +684,10 @@ export default function OrderPlacementForm() {
 
       {/* Time in Force Dropdown */}
       {orderType === "limit" && (
-        <div className="flex items-center gap-2.5  ">
-          <span className="text-[#6F6F6F] text-[12px] font-medium leading-[18px] ">
+        <div className="flex items-center gap-2 ">
+          <div className="text-[#6F6F6F] text-[12px]  font-medium leading-[18px] whitespace-nowrap ">
             Time in Force
-          </span>
+          </div>
           <Dropdown
             items={TIME_IN_FORCE_OPTIONS}
             selectedOption={timeInForce}
@@ -695,6 +695,7 @@ export default function OrderPlacementForm() {
               setValue("timeInForce", val as TimeInForce)
             }
             classname="gap-0.5"
+            dropdownClassname="text-[12px] font-semibold"
           />
         </div>
       )}

@@ -6,6 +6,7 @@ import { LeverageAssetsTab } from "./leverage-assets-tab";
 import { RepayLoanTab } from "./repay-loan-tab";
 import { TransferCollateral } from "./transfer-collateral";
 import { AnimatedTabs, TabItem } from "../ui/animated-tabs";
+import { LEVERAGE_TABS } from "@/lib/constants/margin";
 
 interface LeverageCollateralProps {
   switchToRepayTab?: boolean;
@@ -33,21 +34,8 @@ export const LeverageCollateral = ({
     setActiveTab(tabId);
   };
 
-  // Define tabs configuration
-  const tabs: TabItem[] = [
-    {
-      id: "leverage-assets",
-      label: "Leverage your Assets",
-    },
-    {
-      id: "repay-loan",
-      label: "Repay Loan",
-    },
-    {
-      id: "transfer-collateral",
-      label: "Transfer Collateral",
-    },
-  ];
+  // Use tabs from constants
+  const tabs: TabItem[] = [...LEVERAGE_TABS] as TabItem[];
 
   // Render content based on active tab
   const renderContent = () => {
@@ -75,6 +63,7 @@ export const LeverageCollateral = ({
         tabs={tabs}
         activeTab={activeTab}
         onTabChange={handleTabChange}
+        type="gradient"
       />
       {/* Tab content */}
       <div className="mt-6">{renderContent()}</div>

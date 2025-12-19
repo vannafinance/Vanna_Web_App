@@ -5,7 +5,7 @@ import { useState } from "react";
 import { DropdownOptionsType } from "@/lib/types";
 import { DropdownOptions } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
-import { depositPercentage, percentageColors } from "./collateral-box";
+import { DEPOSIT_PERCENTAGES, PERCENTAGE_COLORS } from "@/lib/constants/margin";
 import { Dropdown } from "../ui/dropdown";
 import { Popup } from "@/components/ui/popup";
 
@@ -150,6 +150,7 @@ export const RepayLoanTab = () => {
                 items={DropdownOptions}
                 selectedOption={selectedRepayCurrency}
                 setSelectedOption={setSelectedRepayCurrency}
+                dropdownClassname="text-[14px] font-medium gap-[8px]"
               />
             </motion.div>
 
@@ -160,7 +161,7 @@ export const RepayLoanTab = () => {
               transition={{ duration: 0.3, delay: 0.4, ease: "easeOut" }}
             >
               <div className="flex gap-[8px]" role="group" aria-label="Repay percentage">
-                {depositPercentage.map((item: number, idx: number) => {
+                {DEPOSIT_PERCENTAGES.map((item: number, idx: number) => {
                   return (
                     <motion.button
                       type="button"
@@ -168,7 +169,7 @@ export const RepayLoanTab = () => {
                       onClick={() => handlePercentageClick(item)}
                       className={`h-[44px] w-[95px] text-center text-[14px] text-medium cursor-pointer ${
                         selectedRepayPercentage === item
-                          ? `${percentageColors[item]} text-white`
+                          ? `${PERCENTAGE_COLORS[item]} text-white`
                           : "bg-[#F4F4F4]"
                       } p-[10px] rounded-[12px]`}
                       whileHover={{ scale: 1.05 }}

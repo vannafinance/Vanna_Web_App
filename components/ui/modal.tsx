@@ -29,7 +29,7 @@ export const Modal = ({ open, onClose, children }: ModalProps) => {
   if (!open) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-1000 flex items-center justify-center">
       {/* Overlay */}
       <div
         className="absolute inset-0 bg-black/30  backdrop-blur-[15px]"
@@ -37,7 +37,7 @@ export const Modal = ({ open, onClose, children }: ModalProps) => {
       />
 
       {/* Content */}
-      <div className="relative z-10">{children}</div>
+      <div className="relative z-1001">{children}</div>
     </div>,
     document.body
   );

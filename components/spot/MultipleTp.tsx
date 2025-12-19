@@ -29,7 +29,7 @@ export default function MultipleTp({
   return (
     <div className="flex flex-col rounded-sm gap-3">
       {/* Header */}
-      <div className="flex w-full gap-2.5">
+      <div className="flex  gap-2.5 w-full ">
         <div className="flex gap-1 px-1">
           <div className={headerCell}>Exit Price (USD)</div>
           <div className={headerCell}>Profit (%)</div>
