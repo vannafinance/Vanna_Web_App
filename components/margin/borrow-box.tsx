@@ -137,14 +137,14 @@ export const BorrowBox = ({
   }, [setLeverage, MAX_LEVERAGE]);
 
   return (
-    <motion.div
+    <motion.section
       className="flex flex-col gap-[20px] bg-white rounded-[16px] py-[24px] px-[16px] border-[1px] border-[#E2E2E2]"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
     >
       {/* Top section: Asset selector or borrowed items display */}
-      <div className="flex justify-between ">
+      <header className="flex justify-between ">
         {/* Deposit mode: Single asset selector */}
         {mode === "Deposit" && (
           <>
@@ -326,11 +326,11 @@ export const BorrowBox = ({
             )}
           </motion.div>
         )}
-      </div>
+      </header>
 
       {/* Input boxes for borrow items */}
       {showInputBoxes && (
-        <motion.div
+        <motion.section
           className="flex gap-[8px] items-center justify-center relative z-10"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -402,7 +402,7 @@ export const BorrowBox = ({
                     </div>
                     <div className="w-full flex flex-col justify-end items-end gap-[20px] ">
                       <div>
-                        <Dropdown dropdownClassname="text-[14px] gap-[10px] " items={["Amount in %","Amount in USD"]}  selectedOption={selectedAmountType} setSelectedOption={setSelectedAmountType} classname="text-[16px] font-medium gap-[8px]" />
+                        <Dropdown dropdownClassname="text-[14px] gap-[10px] " items={["Amount in %","Amount in $"]}  selectedOption={selectedAmountType} setSelectedOption={setSelectedAmountType} classname="text-[16px] font-medium gap-[8px]" />
                       </div>
                       <div className="px-[10px] flex flex-col justify-end items-end gap-[4px]">
                         <input type="text" placeholder="0.0" onChange={handlePercentageInputChange(idx)} className="focus:outline-none text-[20px] font-semibold w-full text-right" value={percentageInputValues[idx] || 0} />
@@ -427,32 +427,32 @@ export const BorrowBox = ({
                 </motion.div>
               );
             })}
-        </motion.div>
+        </motion.section>
       )}
 
       {/* Leverage slider */}
-      <motion.div
+      <motion.section
         className="relative z-0 flex items-center justify-between"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4, delay: 0.2 }}
       >
         <div className="flex gap-[2px] items-center bg-white rounded-[8px] border-[1px] border-[#E2E2E2] p-[2px]">
-          {/* + Button */}
+          {/* - Button */}
           <motion.button
             type="button"
             onClick={() => {
-              if (leverage < MAX_LEVERAGE) {
-                setLeverage(leverage + 1);
+              if (leverage > 1) {
+                setLeverage(leverage - 1);
               }
             }}
-            disabled={leverage >= MAX_LEVERAGE}
+            disabled={leverage === 1}
             className="w-[20px] h-[40px] flex items-center justify-center rounded-[6px] text-[16px] font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#F7F7F7] transition-colors"
-            whileHover={{ scale: leverage < MAX_LEVERAGE ? 1.05 : 1 }}
-            whileTap={{ scale: leverage < MAX_LEVERAGE ? 0.95 : 1 }}
+            whileHover={{ scale: leverage === 1 ? 1.05 : 1 }}
+            whileTap={{ scale: leverage === 1 ? 0.95 : 1 }}
             aria-label="Increase leverage"
           >
-            +
+            -
           </motion.button>
           
           {/* Input */}
@@ -465,21 +465,21 @@ export const BorrowBox = ({
             className="w-[40px] h-[40px] focus:outline-none bg-transparent p-[10px] text-[16px] font-medium text-center border-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           />
           
-          {/* - Button */}
+          {/* + Button */}
           <motion.button
             type="button"
             onClick={() => {
-              if (leverage > 0) {
-                setLeverage(leverage - 1);
+              if (leverage < MAX_LEVERAGE) {
+                setLeverage(leverage + 1);
               }
             }}
-            disabled={leverage <= 0}
+            disabled={leverage >= MAX_LEVERAGE}
             className="w-[20px] h-[40px] flex items-center justify-center rounded-[6px] text-[16px] font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#F7F7F7] transition-colors"
-            whileHover={{ scale: leverage > 0 ? 1.05 : 1 }}
-            whileTap={{ scale: leverage > 0 ? 0.95 : 1 }}
+            whileHover={{ scale: leverage >= MAX_LEVERAGE ? 1.05 : 1 }}
+            whileTap={{ scale: leverage >= MAX_LEVERAGE ? 0.95 : 1 }}
             aria-label="Decrease leverage"
           >
-            −
+            +
           </motion.button>
         </div>
         <div className="w-[500px] px-[5px]">
@@ -493,7 +493,7 @@ export const BorrowBox = ({
         />
         </div>
         
-      </motion.div>
-    </motion.div>
+      </motion.section>
+    </motion.section>
   );
 };

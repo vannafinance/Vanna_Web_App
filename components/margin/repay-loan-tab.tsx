@@ -62,20 +62,20 @@ export const RepayLoanTab = () => {
   const isInputEmpty = repayAmount === 0 || repayAmount === null || repayAmount === undefined;
 
   return (
-    <motion.div
+    <motion.section
       className="w-full flex flex-col gap-[24px] pt-8"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4, delay: 0.1 }}
     >
-      <motion.div
+      <motion.section
         className="flex flex-col gap-[43px] h-full"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3, delay: 0.2 }}
       >
         {/* Repay stats cards */}
-        <motion.div
+        <motion.section
           className="flex justify-between gap-[12px]"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -84,7 +84,7 @@ export const RepayLoanTab = () => {
           {/* Map through repay stats */}
           {Object.entries(repayStats).map(([key, value], index) => {
             return (
-              <motion.div
+              <motion.article
                 key={key}
                 className="w-full flex flex-col justify-between h-[120px] rounded-[8px] border-[1px] border-[#E2E2E2] p-[16px] bg-white"
                 initial={{ opacity: 0, y: 20 }}
@@ -119,20 +119,20 @@ export const RepayLoanTab = () => {
                 >
                   {value}
                 </motion.div>
-              </motion.div>
+              </motion.article>
             );
           })}
-        </motion.div>
+        </motion.section>
 
         {/* Repay form */}
-        <motion.div
+        <motion.article
           className="bg-white w-full border-[1px] border-[#E2E2E2] rounded-[16px] p-[20px]"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.3 }}
         >
           {/* Currency dropdown and percentage buttons */}
-          <motion.div
+          <motion.header
             className="flex justify-between items-center"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -184,10 +184,10 @@ export const RepayLoanTab = () => {
                 })}
               </div>
             </motion.div>
-          </motion.div>
+          </motion.header>
 
           {/* Amount input section */}
-          <motion.div
+          <motion.section
             className="px-[10px] flex flex-col gap-[8px]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -222,11 +222,11 @@ export const RepayLoanTab = () => {
             >
               {repayAmountInUsd} USD
             </motion.div>
-          </motion.div>
-        </motion.div>
+          </motion.section>
+        </motion.article>
 
         {/* Action buttons */}
-        <motion.div
+        <motion.section
           className="flex flex-col gap-[16px]"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -275,8 +275,8 @@ export const RepayLoanTab = () => {
               disabled={isInputEmpty}
             />
           </motion.div>
-        </motion.div>
-      </motion.div>
+        </motion.section>
+      </motion.section>
 
       {/* Pay Now popup */}
       <AnimatePresence>
@@ -340,6 +340,6 @@ export const RepayLoanTab = () => {
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </motion.section>
   );
 };

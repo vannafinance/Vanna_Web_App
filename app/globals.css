@@ -168,6 +168,47 @@
   .text-btn-md { font-size: 16px; line-height:normal; }
   .text-btn-lg { font-size: 20px; line-height:normal; }
 
+  /* Thin scrollbar styles */
+  .thin-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .thin-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .thin-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #E2E2E2;
+    border-radius: 3px;
+  }
+  
+  .thin-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: #D0D0D0;
+  }
+
+  /* Global thin scrollbar for all scrollable elements */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #E2E2E2 transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  *::-webkit-scrollbar-thumb {
+    background-color: #E2E2E2;
+    border-radius: 3px;
+  }
+  
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: #D0D0D0;
+  }
   
 }
 

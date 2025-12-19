@@ -102,7 +102,7 @@ export const Dropdown = (props: Dropdown) => {
             transition={{ duration: 0.2, ease: "easeOut" }}
             onMouseEnter={handleDropdownMouseEnter}
             onMouseLeave={handleDropdownMouseLeave}
-            className={`absolute z-[100] bg-white p-2 top-8 -left-4 shadow-lg rounded-[6px] ${
+            className={`absolute z-[100] bg-white p-2 top-8 -left-4 shadow-lg rounded-[6px] thin-scrollbar ${
               props.items.length > 4 ? "max-h-48 overflow-y-auto" : ""
             }`}
             role="listbox"

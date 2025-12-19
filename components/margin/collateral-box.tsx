@@ -1,5 +1,5 @@
 import { Collaterals } from "@/lib/types";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Dropdown } from "../ui/dropdown";
 import {
@@ -17,35 +17,36 @@ import {
 } from "@/lib/constants/margin";
 
 interface Collateral {
-  collaterals: {
-    asset: string;
-    amount: number;
-    amountInUsd: number;
-    balanceType: string;
-    unifiedBalance: number;
-  } | null;
+  id?: string; // Add id prop
+  collaterals: Collaterals | null;
   isEditing?: boolean;
   isAnyOtherEditing?: boolean;
-  onEdit?: () => void;
-  onSave?: (collateral: Collaterals) => void;
+  onEdit?: (id: string) => void;
+  onSave?: (id: string, collateral: Collaterals) => void;
   onCancel?: () => void;
-  onDelete?: () => void;
-  onBalanceTypeChange?: (balanceType: string) => void;
+  onDelete?: (id: string) => void;
+  onBalanceTypeChange?: (id: string, balanceType: string) => void;
   index?: number;
 }
 
-export const Collateral = (props: Collateral) => {
+const CollateralComponent = (props: Collateral) => {
   // Determine editing mode
   const isEditing = props.isEditing ?? props.collaterals === null;
   const isStandard = !isEditing;
 
-  // Form state
-  const [selectedCurrency, setSelectedCurrency] = useState<string>(DropdownOptions[0]);
-  const [valueInput, setValueInput] = useState<string>("0.0");
-  const [valueInUsd, setValueInUsd] = useState<string>("0.0");
+  // Form state - initialize from props
+  const [selectedCurrency, setSelectedCurrency] = useState<string>(
+    props.collaterals?.asset || DropdownOptions[0]
+  );
+  const [valueInput, setValueInput] = useState<string>(
+    props.collaterals?.amount.toString() || "0.0"
+  );
+  const [valueInUsd, setValueInUsd] = useState<string>(
+    props.collaterals?.amountInUsd.toString() || "0.0"
+  );
   const [percentage, setPercentage] = useState(10);
   const [selectedBalanceType, setSelectedBalanceType] = useState<string>(
-    BALANCE_TYPE_OPTIONS[0]
+    props.collaterals?.balanceType.toUpperCase() || BALANCE_TYPE_OPTIONS[0]
   );
 
   // Dialogue visibility states
@@ -59,16 +60,27 @@ export const Collateral = (props: Collateral) => {
   const showDeleteButton = isStandard && hasCollateral && props.index !== 0;
   const isWBSelected = selectedBalanceType === "WB";
 
-
-  // Update form when collateral changes in editing mode
+  // Only sync when switching between edit/view modes or when collateral changes
   useEffect(() => {
-    if (props.collaterals && isEditing) {
-      setValueInput(props.collaterals.amount.toString());
-      setValueInUsd(props.collaterals.amountInUsd.toString());
-      setSelectedCurrency(props.collaterals!.asset);
-      setSelectedBalanceType(props.collaterals.balanceType.toUpperCase());
+    if (isEditing && props.collaterals) {
+      const newAmount = props.collaterals.amount.toString();
+      const newAmountInUsd = props.collaterals.amountInUsd.toString();
+      const newCurrency = props.collaterals.asset;
+      const newBalanceType = props.collaterals.balanceType.toUpperCase();
+      
+      // Only update if values are different to avoid unnecessary re-renders
+      if (valueInput !== newAmount) {
+        setValueInput(newAmount);
+        setValueInUsd(newAmountInUsd);
+      }
+      if (selectedCurrency !== newCurrency) {
+        setSelectedCurrency(newCurrency);
+      }
+      if (selectedBalanceType !== newBalanceType) {
+        setSelectedBalanceType(newBalanceType);
+      }
     }
-  }, [props.collaterals, isEditing]);
+  }, [isEditing, props.collaterals?.id, props.collaterals?.amount, props.collaterals?.amountInUsd, props.collaterals?.asset, props.collaterals?.balanceType]); // Only depend on isEditing and collateral id
 
   // Calculate USD value from input (1:1 conversion)
   useEffect(() => {
@@ -78,59 +90,55 @@ export const Collateral = (props: Collateral) => {
     }
   }, [valueInput, isEditing]);
 
-  // Save edited collateral
+
+  // Simple handlers - no memoization needed
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setValueInput(e.target.value);
+  };
+
+  const handlePercentageClick = (item: number) => {
+    setPercentage(item);
+  };
+
+  const handleViewSourcesClick = () => {
+    setIsViewSourcesOpen(true);
+  };
+
+  const handleUnifiedBalanceClick = () => {
+    setIsUnifiedBalanceOpen(true);
+  };
+
+  const handleCloseViewSources = () => {
+    setIsViewSourcesOpen(false);
+  };
+
+  const handleCloseUnifiedBalance = () => {
+    setIsUnifiedBalanceOpen(false);
+  };
+
+  // Don't memoize - depends on current state values
   const handleSave = () => {
-    if (!props.onSave) return;
+    if (!props.onSave || !props.id) return;
 
     const updatedCollateral: Collaterals = {
+      id: props.id,
       asset: selectedCurrency,
       amount: parseFloat(valueInput) || 0,
       amountInUsd: parseFloat(valueInUsd) || 0,
       balanceType: selectedBalanceType.toLowerCase(),
       unifiedBalance: props.collaterals?.unifiedBalance || 0,
     };
-    props.onSave(updatedCollateral);
+    props.onSave(props.id, updatedCollateral);
   };
 
-  // Cancel editing
   const handleCancel = () => {
     if (props.onCancel) {
       props.onCancel();
     }
   };
 
-  // Handler for input change
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setValueInput(e.target.value);
-  };
-
-  // Handler for percentage click
-  const handlePercentageClick = (item: number) => {
-    setPercentage(item);
-  };
-
-  // Handler for view sources click
-  const handleViewSourcesClick = () => {
-    setIsViewSourcesOpen(true);
-  };
-
-  // Handler for unified balance click
-  const handleUnifiedBalanceClick = () => {
-    setIsUnifiedBalanceOpen(true);
-  };
-
-  // Handler for closing view sources dialogue
-  const handleCloseViewSources = () => {
-    setIsViewSourcesOpen(false);
-  };
-
-  // Handler for closing unified balance dialogue
-  const handleCloseUnifiedBalance = () => {
-    setIsUnifiedBalanceOpen(false);
-  };
-
   return (
-    <motion.div
+    <motion.article
       className="relative flex justify-between gap-[20px] bg-white w-full p-[20px] rounded-[16px] border-[1px] border-[#E2E2E2] "
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -144,7 +152,7 @@ export const Collateral = (props: Collateral) => {
       {/* Left section: Asset selector and amount input */}
       <AnimatePresence mode="wait">
         {isEditing ? (
-          <motion.div
+          <motion.section
             key="editing"
             className="h-[162px] flex flex-col justify-between"
             initial={{ opacity: 0, y: 10 }}
@@ -206,9 +214,9 @@ export const Collateral = (props: Collateral) => {
                 </motion.button>
               )}
             </div>
-          </motion.div>
+          </motion.section>
         ) : (
-          <motion.div
+          <motion.section
             key="standard"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -233,14 +241,14 @@ export const Collateral = (props: Collateral) => {
                 </>
               )}
             </div>
-          </motion.div>
+          </motion.section>
         )}
       </AnimatePresence>
 
       {/* Middle section: Percentage buttons and balance type */}
       <AnimatePresence mode="wait">
         {isEditing ? (
-          <motion.div
+          <motion.section
             key="editing-middle"
             className="flex flex-col justify-between"
             initial={{ opacity: 0, y: 10 }}
@@ -291,8 +299,8 @@ export const Collateral = (props: Collateral) => {
                   selectedOption={selectedBalanceType} 
                   setSelectedOption={(value) => {
                     setSelectedBalanceType(value);
-                    if (props.onBalanceTypeChange) {
-                      props.onBalanceTypeChange(value as string);
+                    if (props.onBalanceTypeChange && props.id) {
+                      props.onBalanceTypeChange(props.id, value as string);
                     }
                   }}
                 />
@@ -314,9 +322,9 @@ export const Collateral = (props: Collateral) => {
                 </motion.button>
               )}
             </div>
-          </motion.div>
+          </motion.section>
         ) : (
-          <motion.div
+          <motion.section
             key="standard-middle"
             className="px-[10px] flex flex-col gap-[4px]"
             initial={{ opacity: 0, y: 10 }}
@@ -355,14 +363,14 @@ export const Collateral = (props: Collateral) => {
                 )}
               </>
             )}
-          </motion.div>
+          </motion.section>
         )}
       </AnimatePresence>
 
       {/* Right section: Edit button and balance type badge */}
       <AnimatePresence>
         {showStandardRight && (
-          <motion.div
+          <motion.aside
             key="standard-right"
             className="flex gap-[20px]"
             initial={{ opacity: 0, y: 10 }}
@@ -401,7 +409,7 @@ export const Collateral = (props: Collateral) => {
             <div className="min-w-[32px] flex-shrink-0">
               <motion.button
                 type="button"
-                onClick={props.onEdit}
+                onClick={() => props.onEdit?.(props.id!)}
                 disabled={props.isAnyOtherEditing}
                 className={`p-[8.73px] rounded-[8px] bg-[#F4F4F4] h-fit min-w-[32px] flex-shrink-0 ${
                   props.isAnyOtherEditing
@@ -432,14 +440,14 @@ export const Collateral = (props: Collateral) => {
                 </svg>
               </motion.button>
             </div>
-          </motion.div>
+          </motion.aside>
         )}
       </AnimatePresence>
 
       {/* Right section: Save and Cancel buttons (editing mode) */}
       <AnimatePresence>
         {isEditing && (
-          <motion.div
+          <motion.aside
             key="editing-right"
             className="flex flex-col gap-[12px] min-w-[32px] flex-shrink-0"
             initial={{ opacity: 0, y: 10 }}
@@ -499,7 +507,7 @@ export const Collateral = (props: Collateral) => {
                 />
               </svg>
             </motion.button>
-          </motion.div>
+          </motion.aside>
         )}
       </AnimatePresence>
 
@@ -567,7 +575,7 @@ export const Collateral = (props: Collateral) => {
       {showDeleteButton && (
         <motion.button
           type="button"
-          onClick={props.onDelete}
+          onClick={() => props.onDelete?.(props.id!)}
           className="cursor-pointer flex flex-col justify-center items-center w-[32px] h-[32px] bg-[#E2E2E2] rounded-full absolute -right-3 -top-2"
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -591,6 +599,39 @@ export const Collateral = (props: Collateral) => {
           </svg>
         </motion.button>
       )}
-    </motion.div>
+    </motion.article>
   );
 };
+
+// Memoized component with custom comparison
+export const Collateral = memo(CollateralComponent, (prevProps, nextProps) => {
+  // Deep comparison for collateral object
+  const prevCollateral = prevProps.collaterals;
+  const nextCollateral = nextProps.collaterals;
+  
+  if (prevCollateral === nextCollateral) {
+    // Same reference or both null
+    return (
+      prevProps.isEditing === nextProps.isEditing &&
+      prevProps.isAnyOtherEditing === nextProps.isAnyOtherEditing &&
+      prevProps.index === nextProps.index
+    );
+  }
+  
+  if (!prevCollateral || !nextCollateral) {
+    return false; // One is null, other is not
+  }
+  
+  // Compare all fields
+  return (
+    prevCollateral.id === nextCollateral.id &&
+    prevCollateral.asset === nextCollateral.asset &&
+    prevCollateral.amount === nextCollateral.amount &&
+    prevCollateral.amountInUsd === nextCollateral.amountInUsd &&
+    prevCollateral.balanceType === nextCollateral.balanceType &&
+    prevCollateral.unifiedBalance === nextCollateral.unifiedBalance &&
+    prevProps.isEditing === nextProps.isEditing &&
+    prevProps.isAnyOtherEditing === nextProps.isAnyOtherEditing &&
+    prevProps.index === nextProps.index
+  );
+});

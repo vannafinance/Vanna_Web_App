@@ -53,6 +53,9 @@ const initialState: CollateralBorrowStateType = {
 export const useCollateralBorrowStore = createNewStore(initialState, {
   name: "collateral-borrow-store",
   devTools: true,
-  persist: true,
+  persist: {
+    name: "collateral-borrow-store",
+    version: 2, // Increment version to clear old persisted data and load new POSITION data
+  },
 });
 

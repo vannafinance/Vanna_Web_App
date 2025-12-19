@@ -97,7 +97,7 @@ export const InfoCard = ({
     <>
       {/* Main info items */}
       {items && items.length > 0 && (
-        <motion.div
+        <motion.article
           className="bg-[#F7F7F7] flex flex-col gap-[24px] w-full h-full p-[24px] border-[1px] border-[#E2E2E2] rounded-[16px]"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -105,13 +105,13 @@ export const InfoCard = ({
           transition={{ duration: 0.4, ease: "easeOut" }}
         >
           {items.map((item, idx) => renderItem(item, idx))}
-        </motion.div>
+        </motion.article>
       )}
 
       {/* Expandable sections */}
       {showExpandable &&
         expandableSections.map((section, sectionIdx) => (
-          <motion.div
+          <motion.article
             key={section.title}
             className="bg-[#F7F7F7] flex flex-col gap-[24px] w-full h-full p-[24px] border-[1px] border-[#E2E2E2] rounded-[16px]"
             initial={{ opacity: 0, y: 20 }}
@@ -160,7 +160,7 @@ export const InfoCard = ({
             {/* Expandable content */}
             <AnimatePresence>
               {expandedStates[section.title] && (
-                <motion.div
+                <motion.section
                   id={`section-${section.title}`}
                   className="flex flex-col gap-[24px]"
                   initial={{ opacity: 0, height: 0 }}
@@ -171,10 +171,10 @@ export const InfoCard = ({
                   aria-labelledby={`section-header-${section.title}`}
                 >
                   {section.items?.map((item, idx) => renderItem(item, idx, true))}
-                </motion.div>
+                </motion.section>
               )}
             </AnimatePresence>
-          </motion.div>
+          </motion.article>
         ))}
     </>
   );

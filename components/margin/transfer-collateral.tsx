@@ -32,20 +32,20 @@ export const TransferCollateral = () => {
   };
 
   return (
-    <motion.div 
+    <motion.section 
       className="flex flex-col justify-between gap-[24px] pt-8"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
     >
-      <motion.div 
+      <motion.article 
         className="flex flex-col gap-[24px] rounded-[16px] p-[20px] bg-[#FFFFFF] border-[1px] border-[#E2E2E2]"
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3, delay: 0.1 }}
       >
-        <div className="">
-          <motion.div
+        <section>
+          <motion.header
             key="editing"
             className="flex justify-between "
             initial={{ opacity: 0, y: 10 }}
@@ -108,9 +108,9 @@ export const TransferCollateral = () => {
                 </div>
               </motion.div>
             </AnimatePresence>
-          </motion.div>
-        </div>
-        <motion.div 
+          </motion.header>
+        </section>
+        <motion.section 
           className="flex justify-between gap-[10px] items-center"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -146,7 +146,7 @@ export const TransferCollateral = () => {
               {valueInUsd} USD
             </motion.div>
           </motion.div>
-          <motion.div 
+          <motion.aside 
             className="flex flex-col gap-[8px] items-end"
             initial={{ opacity: 0, x: 10 }}
             animate={{ opacity: 1, x: 0 }}
@@ -166,10 +166,10 @@ export const TransferCollateral = () => {
             >
               Max Value
             </motion.button>
-          </motion.div>
-        </motion.div>
-      </motion.div>
-      <motion.div
+          </motion.aside>
+        </motion.section>
+      </motion.article>
+      <motion.aside
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.3 }}
@@ -177,8 +177,8 @@ export const TransferCollateral = () => {
         <DetailsPanel
           items={[{ title: "Transfer Collateral", value: "2000 USD" }]}
         />
-      </motion.div>
-      <motion.div 
+      </motion.aside>
+      <motion.section 
         className="flex flex-col gap-[16px]"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -210,8 +210,8 @@ export const TransferCollateral = () => {
             onClick={handleTransferClick}
           />
         </motion.div>
-      </motion.div>
-    </motion.div>
+      </motion.section>
+    </motion.section>
   );
 };
 

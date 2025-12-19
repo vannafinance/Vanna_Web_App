@@ -4,7 +4,7 @@ import Image from "next/image";
 import { Button } from "../ui/button";
 import { useCollateralBorrowStore } from "@/store/collateral-borrow-store";
 import { AnimatedTabs } from "../ui/animated-tabs";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useMarginAccountInfoStore } from "@/store/margin-account-info-store";
 import { TABLE_ROW_HEADINGS, COIN_ICONS } from "@/lib/constants/margin";
 
@@ -13,10 +13,14 @@ interface PositionstableProps {
   onOpenPositionClick?: () => void;
 }
 
+const ITEMS_PER_PAGE = 3;
+
 export const Positionstable = ({ onRepayClick, onOpenPositionClick }: PositionstableProps) => {
   const positions = useCollateralBorrowStore((state) => state.position);
   const [activeTab, setActiveTab] = useState<string>("currentPositions");
+  const [currentPage, setCurrentPage] = useState<number>(1);
   const hasMarginAccount = useMarginAccountInfoStore((state) => state.hasMarginAccount);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Filter positions based on active tab
   const filteredPositions = useMemo(() => {
@@ -27,11 +31,43 @@ export const Positionstable = ({ onRepayClick, onOpenPositionClick }: Positionst
     }
   }, [positions, activeTab]);
 
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredPositions.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedPositions = filteredPositions.slice(startIndex, endIndex);
+
+  // Reset to page 1 when tab changes
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    setCurrentPage(1);
+  };
+
+  // Scroll to top when page changes
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [currentPage, activeTab]);
+
+  // Pagination handlers
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
 
   return (
-    <div className="w-full flex flex-col gap-[16px]">
+    <section className="w-full flex flex-col gap-[16px]">
       {/* Table title */}
-      <motion.div
+      <motion.h2
         className="text-[24px] font-bold"
         initial={{ opacity: 0, y: -20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -39,15 +75,15 @@ export const Positionstable = ({ onRepayClick, onOpenPositionClick }: Positionst
         transition={{ duration: 0.4, ease: "easeOut" }}
       >
         Positions
-      </motion.div>
+      </motion.h2>
 
-      <div className="w-fit h-fit">
-        <AnimatedTabs type="solid" tabs={[{id:"currentPositions",label:"Current Positions"},{id:"positionsHistory",label:"Positions History"}]} activeTab={activeTab} onTabChange={setActiveTab}/>
-      </div>
+      <nav className="w-fit h-fit">
+        <AnimatedTabs type="solid" tabs={[{id:"currentPositions",label:"Current Positions"},{id:"positionsHistory",label:"Positions History"}]} activeTab={activeTab} onTabChange={handleTabChange}/>
+      </nav>
 
-      {hasMarginAccount && filteredPositions.length > 0 ? <div className="rounded-[12px] w-full ">
+      {hasMarginAccount && filteredPositions.length > 0 ? <section className="rounded-[12px] w-full ">
         {/* Table headers */}
-        <ul className="flex ">
+        <ul className="flex " role="row">
           {TABLE_ROW_HEADINGS.map((item, idx) => {
             return (
               <motion.li
@@ -65,10 +101,13 @@ export const Positionstable = ({ onRepayClick, onOpenPositionClick }: Positionst
         </ul>
 
         {/* Table rows */}
-        <div className="flex flex-col gap-[10px]">
-          {filteredPositions.map((item, idx) => {
+        <section 
+          ref={scrollContainerRef}
+          className="flex flex-col gap-[10px] max-h-[400px] overflow-y-auto pr-[4px] thin-scrollbar"
+        >
+          {paginatedPositions.map((item, idx) => {
             return (
-              <motion.div
+              <motion.article
                 key={item.positionId}
                 className="flex  border-[1px] border-[#E2E2E2] bg-[#F7F7F7] rounded-[12px] w-full"
                 initial={{ opacity: 0, y: 20 }}
@@ -260,20 +299,94 @@ export const Positionstable = ({ onRepayClick, onOpenPositionClick }: Positionst
                     />
                   </div>
                 </motion.div>
-              </motion.div>
+              </motion.article>
             );
           })}
-        </div>
-      </div>:<div className="w-full h-[402px] bg-[#F7F7F7] border-[1px] border-[#E2E2E2] rounded-[8px] flex flex-col items-center justify-center">
+        </section>
+
+        {/* Pagination controls */}
+        {totalPages > 1 && (
+          <motion.div
+            className="flex items-center justify-center gap-[16px] py-[16px]"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <motion.button
+              type="button"
+              onClick={handlePreviousPage}
+              disabled={currentPage === 1}
+              className={`flex items-center justify-center w-[32px] h-[32px] rounded-[8px] text-[14px] font-medium transition-colors ${
+                currentPage === 1
+                  ? "bg-[#F4F4F4] text-[#A3A3A3] cursor-not-allowed"
+                  : "bg-white border-[1px] border-[#E2E2E2] text-[#111111] cursor-pointer hover:bg-[#F7F7F7]"
+              }`}
+              whileHover={currentPage === 1 ? {} : { scale: 1.05 }}
+              whileTap={currentPage === 1 ? {} : { scale: 0.95 }}
+              aria-label="Previous page"
+            >
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 12 12"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M7.5 9L4.5 6L7.5 3"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </motion.button>
+
+            <div className="text-[14px] font-medium text-[#111111]">
+              {currentPage} of {totalPages}
+            </div>
+
+            <motion.button
+              type="button"
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages}
+              className={`flex items-center justify-center w-[32px] h-[32px] rounded-[8px] text-[14px] font-medium transition-colors ${
+                currentPage === totalPages
+                  ? "bg-[#F4F4F4] text-[#A3A3A3] cursor-not-allowed"
+                  : "bg-white border-[1px] border-[#E2E2E2] text-[#111111] cursor-pointer hover:bg-[#F7F7F7]"
+              }`}
+              whileHover={currentPage === totalPages ? {} : { scale: 1.05 }}
+              whileTap={currentPage === totalPages ? {} : { scale: 0.95 }}
+              aria-label="Next page"
+            >
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 12 12"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M4.5 9L7.5 6L4.5 3"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </motion.button>
+          </motion.div>
+        )}
+      </section>:<section className="w-full h-[402px] bg-[#F7F7F7] border-[1px] border-[#E2E2E2] rounded-[8px] flex flex-col items-center justify-center">
         <div className="w-fit h-fit">
           {activeTab === "currentPositions" ? (
             <Button size="small" type="ghost" text="Open Position" onClick={onOpenPositionClick} disabled={false}/>
           ) : (
-            <div className="text-[14px] font-medium text-[#76737B]">No positions history available</div>
+            <p className="text-[14px] font-medium text-[#76737B]">No positions history available</p>
           )}
         </div>
         
-        </div>}
-    </div>
+        </section>}
+    </section>
   );
 };
