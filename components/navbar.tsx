@@ -8,6 +8,9 @@ import { useState, useRef, useEffect } from "react";
 import { tradeItems } from "@/lib/constants";
 import { useTheme } from "@/contexts/theme-context";
 import { useUserStore } from "@/store/user";
+import { Modal } from "./ui/modal";
+import { WalletOptions } from "./ui/wallet-options";
+import { useAccount, useClient, useDisconnect, useEnsAvatar, useEnsName } from "wagmi";
 
 interface Navbar {
   items: {
@@ -24,6 +27,33 @@ export const Navbar = (props: Navbar) => {
   const { isDark, toggleTheme } = useTheme();
   const setUserAddress = useUserStore((state) => state.set);
   const userAddress = useUserStore((state) => state.address);
+  const [open, setOpen] = useState(false)
+
+  const { address, isConnected } = useAccount();
+  const { disconnect } = useDisconnect();
+
+  const { data: ensName } = useEnsName({
+    address,
+    query: { enabled: !!address }
+  })
+
+
+  const { data: ensAvatar } = useEnsAvatar({
+    name: ensName,
+    query: { enabled: !!ensName },
+  });
+
+
+  useEffect(() => {
+    if (isConnected && address) {
+      setUserAddress({ address });
+    } else {
+      setUserAddress(null);
+    }
+  }, [isConnected, address, setUserAddress]);
+
+
+
 
   const groupedItems = {
     primary: props.items.filter((item) => item.group === "primary"),
@@ -165,9 +195,8 @@ export const Navbar = (props: Navbar) => {
                 onKeyDown={handleNavKeyDown(item)}
                 role="button"
                 tabIndex={0}
-                className={`rounded-[8px] py-[8px] px-[16px] text-[14px] font-medium group flex gap-[4px]  items-center hover:text-[#FF007A] cursor-pointer transition-colors ${
-                  isActive ? "bg-[#FFE6F2] text-[#FF007A]" : ""
-                }`}
+                className={`rounded-[8px] py-[8px] px-[16px] text-[14px] font-medium group flex gap-[4px]  items-center hover:text-[#FF007A] cursor-pointer transition-colors ${isActive ? "bg-[#FFE6F2] text-[#FF007A]" : ""
+                  }`}
                 aria-label={`Navigate to ${item.title}`}
                 aria-current={isActive ? "page" : undefined}
                 initial={{ opacity: 0, y: -20 }}
@@ -193,7 +222,7 @@ export const Navbar = (props: Navbar) => {
               const isActive =
                 item.title === "Trade"
                   ? pathname === item.link ||
-                    tradeItems.some((tradeItem) => pathname === tradeItem.link)
+                  tradeItems.some((tradeItem) => pathname === tradeItem.link)
                   : pathname === item.link;
               return (
                 <motion.div
@@ -206,9 +235,8 @@ export const Navbar = (props: Navbar) => {
                   onKeyDown={handleNavKeyDown(item)}
                   role="button"
                   tabIndex={0}
-                  className={`rounded-[8px] py-[8px] px-[16px] text-[14px] font-medium group flex gap-[4px]  items-center hover:text-[#FF007A] cursor-pointer transition-colors ${
-                    isActive ? "bg-[#FFE6F2] text-[#FF007A]" : ""
-                  }`}
+                  className={`rounded-[8px] py-[8px] px-[16px] text-[14px] font-medium group flex gap-[4px]  items-center hover:text-[#FF007A] cursor-pointer transition-colors ${isActive ? "bg-[#FFE6F2] text-[#FF007A]" : ""
+                    }`}
                   aria-haspopup={item.title === "Trade" ? "menu" : undefined}
                   aria-expanded={
                     item.title === "Trade" ? isDropdownOpen : undefined
@@ -245,11 +273,10 @@ export const Navbar = (props: Navbar) => {
                         <path
                           opacity="0.3"
                           d="M7.33332 4L3.99999 0.666672L0.666656 4"
-                          className={`transition-colors ${
-                            isActive
-                              ? "stroke-[#FF007A]"
-                              : "stroke-black group-hover:stroke-[#FF007A]"
-                          }`}
+                          className={`transition-colors ${isActive
+                            ? "stroke-[#FF007A]"
+                            : "stroke-black group-hover:stroke-[#FF007A]"
+                            }`}
                           strokeWidth="1.33333"
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -257,22 +284,20 @@ export const Navbar = (props: Navbar) => {
                         <path
                           opacity="0.6"
                           d="M7.33332 8L3.99999 4.66667L0.666656 8"
-                          className={`transition-colors ${
-                            isActive
-                              ? "stroke-[#FF007A]"
-                              : "stroke-black group-hover:stroke-[#FF007A]"
-                          }`}
+                          className={`transition-colors ${isActive
+                            ? "stroke-[#FF007A]"
+                            : "stroke-black group-hover:stroke-[#FF007A]"
+                            }`}
                           strokeWidth="1.33333"
                           strokeLinecap="round"
                           strokeLinejoin="round"
                         />
                         <path
                           d="M7.33332 12L3.99999 8.66667L0.666656 12"
-                          className={`transition-colors ${
-                            isActive
-                              ? "stroke-[#FF007A]"
-                              : "stroke-black group-hover:stroke-[#FF007A]"
-                          }`}
+                          className={`transition-colors ${isActive
+                            ? "stroke-[#FF007A]"
+                            : "stroke-black group-hover:stroke-[#FF007A]"
+                            }`}
                           strokeWidth="1.33333"
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -293,9 +318,9 @@ export const Navbar = (props: Navbar) => {
                         <path
                           d="M17 9L9 1L0.999999 9"
                           stroke="#19191A"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
                           className={
                             isActive
                               ? "stroke-[#FF007A]"
@@ -321,9 +346,8 @@ export const Navbar = (props: Navbar) => {
                 onKeyDown={handleNavKeyDown(item)}
                 role="button"
                 tabIndex={0}
-                className={`rounded-[8px] py-[8px] px-[16px] text-[14px] font-medium group flex gap-[4px]  items-center hover:text-[#FF007A] cursor-pointer transition-colors ${
-                  isActive ? "bg-[#FFE6F2] text-[#FF007A]" : ""
-                }`}
+                className={`rounded-[8px] py-[8px] px-[16px] text-[14px] font-medium group flex gap-[4px]  items-center hover:text-[#FF007A] cursor-pointer transition-colors ${isActive ? "bg-[#FFE6F2] text-[#FF007A]" : ""
+                  }`}
                 aria-label={`Navigate to ${item.title}`}
                 aria-current={isActive ? "page" : undefined}
                 initial={{ opacity: 0, y: -20 }}
@@ -423,27 +447,39 @@ export const Navbar = (props: Navbar) => {
             </motion.div>
           </button>
           {/* Login button */}
-          {!userAddress ? (
-            <Button
-              size="small"
-              type="gradient"
-              disabled={false}
-              onClick={() => {
-                setUserAddress({
-                  address: "0x1234567890123456789012345678901234567890",
-                });
-              }}
-              text="Login"
-              ariaLabel="Login to your account"
-            ></Button>
+          {!isConnected ? (
+            <>
+              <Button
+                size="small"
+                type="gradient"
+                disabled={false}
+                onClick={() => {
+                  setOpen(true)
+
+                }}
+                text="Login"
+                ariaLabel="Login to your account"
+              ></Button>
+
+              <Modal open={open} onClose={() => setOpen(false)}>
+                <WalletOptions open={open} onClose={() => setOpen(false)} />
+              </Modal>
+            </>
+
+
+
           ) : (
             <div
-              onClick={() => {
-                setUserAddress({ address: null });
-              }}
+              onClick={() =>{
+                 disconnect()
+                 setUserAddress({address:null})
+              }
+              
+
+              }
               className="cursor-pointer py-[12px] px-[24px] text-[16px] font-semibold bg-[#F4F4F4] rounded-[8px] h-full w-fit"
             >
-              {userAddress.slice(0, 6) + "..." + userAddress.slice(-4)}
+              {address!.slice(0, 6) + "..." + address!.slice(-4)}
             </div>
           )}
         </motion.div>
@@ -474,9 +510,8 @@ export const Navbar = (props: Navbar) => {
                     handleNavItemClickWithLink(item);
                   }}
                   onKeyDown={handleNavKeyDown(item)}
-                  className={`${
-                    isActive ? "bg-[#FFE6F2] text-[#FF007A]" : ""
-                  } cursor-pointer hover:text-[#FF007A] py-[8px] px-[16px] text-[14px] font-medium rounded-[8px] `}
+                  className={`${isActive ? "bg-[#FFE6F2] text-[#FF007A]" : ""
+                    } cursor-pointer hover:text-[#FF007A] py-[8px] px-[16px] text-[14px] font-medium rounded-[8px] `}
                   initial={{ opacity: 0, y: -6 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -6 }}
@@ -498,6 +533,6 @@ export const Navbar = (props: Navbar) => {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </div >
   );
 };
