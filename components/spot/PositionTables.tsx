@@ -13,7 +13,7 @@ type TabType =
   | "activePositions";
 
 const PositionTables: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<TabType>("openOrders");
+  const [activeTab, setActiveTab] = useState<TabType>("activePositions");
   const userAddress = useUserStore((state) => state.address);
   const activePositions = useSpotTradeStore((state) => state.activePositions);
   const openOrders = useSpotTradeStore((state) => state.openOrders);

@@ -134,7 +134,15 @@ export const activePositionsColumns: Column<ActivePositionType>[] = [
     id: "actions",
     header: "Action Button",
     render: () => (
-      <div className="flex items-center justify-center gap-2">
+      <div className="flex items-center justify-center gap-1">
+        <button className="inline-flex items-center justify-center rounded-md border border-[#E2E2E2] p-2 bg-white">
+          <Image
+            src="/icons/action-button.svg"
+            alt="edit"
+            width={16}
+            height={16}
+          />
+        </button>
         <button className="inline-flex items-center justify-center rounded-md border border-[#E2E2E2] p-2 bg-white">
           <Image src="/icons/edit.svg" alt="edit" width={16} height={16} />
         </button>

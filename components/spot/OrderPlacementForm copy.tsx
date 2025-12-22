@@ -24,14 +24,6 @@ import { useUserStore } from "@/store/user";
 import { useSpotTradeStore } from "@/store/spot-trade-store";
 import { mapOrderToActivePosition, mapOrderToOpenOrder } from "@/lib/helper";
 
-type FormMode = "create" | "edit";
-
-interface OrderPlacementFormProps {
-  mode?: FormMode;
-  initialValues?: OrderPlacementFormValues;
-  onCancel?: () => void;
-  onSave?: (values: OrderPlacementFormValues) => void;
-}
 const tabs = [
   { id: "limit", label: "Limit" },
   { id: "market", label: "Market" },
@@ -56,12 +48,7 @@ const EMPTY_TP_ROW = {
   marketPrice: false,
 };
 
-export default function OrderPlacementForm({
-  mode = "create",
-  initialValues,
-  onCancel,
-  onSave,
-}: OrderPlacementFormProps) {
+export default function OrderPlacementForm() {
   const orderPlacementFormDefaultValues: OrderPlacementFormValues = {
     orderType: "limit",
     orderSide: "buy",
@@ -143,12 +130,6 @@ export default function OrderPlacementForm({
     append(EMPTY_TP_ROW);
   };
 
-  useEffect(() => {
-    if (mode === "edit" && initialValues) {
-      reset(initialValues);
-    }
-  }, [mode, initialValues, reset]);
-
   // as soon as multiTP is enabled, add a row if none exist
   useEffect(() => {
     if (multiTpEnabled && fields.length === 0) {
@@ -207,9 +188,7 @@ export default function OrderPlacementForm({
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className={`w-[380px] rounded-2xl ${
-        mode === "create" ? "border border-[#E2E2E2]" : ""
-      } bg-[#F7F7F7] p-4 flex flex-col gap-5 text-xs`}
+      className="w-[380px] rounded-2xl border border-[#E2E2E2]  bg-[#F7F7F7] p-4 flex flex-col gap-5 text-xs"
     >
       {/* <OrderTypeTabs
         tabs={tabs}
@@ -217,21 +196,17 @@ export default function OrderPlacementForm({
         onTabChange={handleOrderTypeChange}
       /> */}
 
-      {mode === "create" && (
-        <AnimatedTabs
-          tabs={tabs}
-          activeTab={orderType}
-          onTabChange={handleOrderTypeChange}
-          type="underline"
-        />
-      )}
+      <AnimatedTabs
+        tabs={tabs}
+        activeTab={orderType}
+        onTabChange={handleOrderTypeChange}
+        type="underline"
+      />
 
-      {mode === "create" && (
-        <BuySellToggle
-          value={orderSide}
-          onChange={(val) => setValue("orderSide", val)}
-        />
-      )}
+      <BuySellToggle
+        value={orderSide}
+        onChange={(val) => setValue("orderSide", val)}
+      />
 
       {/* <AnimatedTabs
         tabs={buySellTabs}
@@ -726,7 +701,7 @@ export default function OrderPlacementForm({
       )}
 
       {/* Submit */}
-      {/* {userAddress ? (
+      {userAddress ? (
         <Button text="Place Order" size="small" type="solid" disabled={false} />
       ) : (
         <Button
@@ -735,35 +710,6 @@ export default function OrderPlacementForm({
           type="solid"
           disabled={true}
         />
-      )} */}
-
-      {!userAddress ? (
-        <Button
-          text="Connect Wallet to Trade"
-          size="small"
-          type="solid"
-          disabled={true}
-        />
-      ) : mode === "edit" ? (
-        <div className="flex gap-3">
-          <Button
-            text="Cancel"
-            size="small"
-            type="ghost"
-            onClick={onCancel}
-            disabled={false}
-          />
-
-          <Button
-            text="Save As"
-            size="small"
-            type="solid"
-            onClick={handleSubmit(onSave!)}
-            disabled={false}
-          />
-        </div>
-      ) : (
-        <Button text="Place Order" size="small" type="solid" disabled={false} />
       )}
     </form>
   );

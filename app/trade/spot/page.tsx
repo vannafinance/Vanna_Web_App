@@ -3,32 +3,49 @@
 import Orderbook from "@/components/spot/OrderBook";
 import OrderPlacementForm from "@/components/spot/OrderPlacementForm";
 import PositionTables from "@/components/spot/PositionTables";
-import Toolbar from "@/components/spot/Toolbar";
 import TradingViewChart from "@/components/ui/trading-view-chart";
+import { useState } from "react";
 
-const spot = () => {
+const Spot = () => {
+  const [activeTab, setActiveTab] = useState<"chart" | "info">("chart");
   return (
-    <main className="min-h-screen w-full py-10 flex flex-col gap-4 bg-white">
-      <div className="px-5 grid grid-cols-[minmax(0,3.1fr)_minmax(0,1.1fr)] gap-4 ">
+    <main className="min-h-screen w-full py-10  flex flex-col gap-4 bg-white overflow-x-hidden">
+      <div className="px-5 grid grid-cols-[minmax(0,1fr)_380px] gap-4 overflow-hidden ">
         <section className="flex flex-col gap-4">
           <div className=" w-full flex gap-4 bg-white">
             <div className=" flex  flex-1 flex-col gap-3">
               <div className="flex gap-1 rounded-md">
-                <button className="bg-[#F1EBFD] text-[#703AE6]  font-semibold py-3 px-4 rounded-lg">
+                <button
+                  onClick={() => setActiveTab("chart")}
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition
+                        ${
+                          activeTab === "chart"
+                            ? "bg-[#F1EBFD] text-[#703AE6]"
+                            : "text-[#111111] hover:bg-white"
+                        }`}
+                >
                   Chart
                 </button>
-                <button className="bg-inherit text-[#111111] py-3 px-4 rounded-lg font-semibold">
+
+                <button
+                  onClick={() => setActiveTab("info")}
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition
+                        ${
+                          activeTab === "info"
+                            ? "bg-[#F1EBFD] text-[#703AE6]"
+                            : "text-[#111111] hover:bg-white"
+                        }`}
+                >
                   Info
                 </button>
               </div>
 
-              <div className="flex-1 rounded-lg">
+              <div className="flex-1 rounded-lg h-full">
                 <TradingViewChart />
               </div>
             </div>
 
-            {/* OrderBook */}
-            <div className="w-[335px]  rounded-xl flex flex-col gap-2 ">
+            <div className="w-full max-w-[335px]  h-[616px] rounded-xl  ">
               <Orderbook />
             </div>
           </div>
@@ -38,7 +55,7 @@ const spot = () => {
           </div>
         </section>
 
-        <aside className="rounded-2xl bg-white  ">
+        <aside className="rounded-2xl bg-white w-full  ">
           <OrderPlacementForm />
         </aside>
       </div>
@@ -46,4 +63,4 @@ const spot = () => {
   );
 };
 
-export default spot;
+export default Spot;

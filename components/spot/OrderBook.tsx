@@ -1,88 +1,85 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { OrderBookRow } from "./OrderBookRow";
+import { OrderSide } from "@/lib/types";
+import { calculateRatio, groupOrdersByTick } from "@/lib/helper";
+import { Dropdown } from "../ui/dropdown";
+import Image from "next/image";
 
-type Side = "buy" | "sell";
-
-type OrderRow = {
+export interface OrderBookRowType {
   price: number;
   amount: number;
   total: number;
-  side: "buy" | "sell";
-  depth: number;
+  side: OrderSide;
+}
+
+export type OrderBookView = "both" | "buy" | "sell";
+
+const VIEW_ICONS: Record<OrderBookView, string> = {
+  both: "/spot/orderbook-view-both.svg",
+  buy: "/spot/orderbook-view-buy.svg",
+  sell: "/spot/orderbook-view-sell.svg",
 };
 
-const sellOrders: OrderRow[] = [
-  {
-    price: 2615.8,
-    amount: 89012.3,
-    total: 701204.6,
-    side: "sell",
-    depth: 0.92,
-  },
-  {
-    price: 2615.7,
-    amount: 71009.9,
-    total: 663024.0,
-    side: "sell",
-    depth: 0.85,
-  },
-  {
-    price: 2615.5,
-    amount: 43211.6,
-    total: 621553.4,
-    side: "sell",
-    depth: 0.72,
-  },
-  {
-    price: 2615.3,
-    amount: 21241.4,
-    total: 592014.0,
-    side: "sell",
-    depth: 0.62,
-  },
-  {
-    price: 2615.2,
-    amount: 15430.2,
-    total: 585201.3,
-    side: "sell",
-    depth: 0.55,
-  },
-  { price: 2615.1, amount: 102.7, total: 570772.3, side: "sell", depth: 0.42 },
-  { price: 2615.0, amount: 12519.1, total: 569843.1, side: "sell", depth: 0.5 },
-  { price: 2614.9, amount: 8421.8, total: 559120.4, side: "sell", depth: 0.38 },
+const TICK_OPTIONS = ["0.01", "0.1", "1", "10", "50", "100", "1000"];
+
+const buyOrders: OrderBookRowType[] = [
+  { price: 102599.1, amount: 0.78, total: 79877, side: "buy" },
+  { price: 102599.3, amount: 1.31, total: 213466, side: "buy" },
+  { price: 102599.5, amount: 0.49, total: 263628, side: "buy" },
+  { price: 102599.7, amount: 0.91, total: 357014, side: "buy" },
+  { price: 102599.9, amount: 0.66, total: 424905, side: "buy" },
+  { price: 102600.1, amount: 1.42, total: 570868, side: "buy" },
+  { price: 102600.3, amount: 0.4, total: 611801, side: "buy" },
+  { price: 102600.5, amount: 1.1, total: 724980, side: "buy" },
 ];
 
-const buyOrders: OrderRow[] = [
-  {
-    price: 2601.1,
-    amount: 182540.3,
-    total: 182540.3,
-    side: "buy",
-    depth: 0.95,
-  },
-  {
-    price: 2600.9,
-    amount: 170625.3,
-    total: 170625.0,
-    side: "buy",
-    depth: 0.88,
-  },
-  { price: 2600.4, amount: 143250.7, total: 143250.7, side: "buy", depth: 0.8 },
-  { price: 2599.8, amount: 112035.6, total: 112035.6, side: "buy", depth: 0.7 },
-  { price: 2599.2, amount: 96410.4, total: 96410.4, side: "buy", depth: 0.62 },
-  { price: 2598.7, amount: 70122.9, total: 70122.9, side: "buy", depth: 0.55 },
-  { price: 2598.1, amount: 45892.6, total: 45892.6, side: "buy", depth: 0.42 },
-  { price: 2597.6, amount: 29760.2, total: 29760.2, side: "buy", depth: 0.3 },
+const sellOrders: OrderBookRowType[] = [
+  { price: 102615.4, amount: 0.69, total: 70752, side: "sell" },
+  { price: 102615.2, amount: 0.91, total: 164168, side: "sell" },
+  { price: 102615.0, amount: 1.33, total: 300415, side: "sell" },
+  { price: 102614.8, amount: 0.51, total: 352552, side: "sell" },
+  { price: 102614.6, amount: 0.94, total: 449185, side: "sell" },
+  { price: 102614.4, amount: 0.61, total: 511964, side: "sell" },
+  { price: 102614.2, amount: 0.78, total: 592424, side: "sell" },
+  { price: 102614.0, amount: 1.12, total: 707441, side: "sell" },
 ];
 
-export default function Orderbook() {
+export default function OrderBook() {
   const [activeTab, setActiveTab] = useState<"orderbook" | "trades">(
     "orderbook"
   );
+  const [view, setView] = useState<OrderBookView>("both");
+  const [tick, setTick] = useState(0.01);
+
+  // 🔥 replace these with WS / API state later
+  const rawBuys = buyOrders;
+  const rawSells = sellOrders;
+
+  const buys = useMemo(() => groupOrdersByTick(rawBuys, tick), [rawBuys, tick]);
+
+  const sells = useMemo(
+    () => groupOrdersByTick(rawSells, tick),
+    [rawSells, tick]
+  );
+
+  const maxTotal = useMemo(() => {
+    return Math.max(...buys.map((o) => o.total), ...sells.map((o) => o.total));
+  }, [buys, sells]);
+
+  const { buyRatio, sellRatio } = useMemo(
+    () => calculateRatio(buys, sells),
+    [buys, sells]
+  );
+
+  // mid price (best bid / ask)
+  const bestBid = buys[0]?.price;
+  const bestAsk = sells[0]?.price;
+  const mid = bestBid && bestAsk ? (bestBid + bestAsk) / 2 : undefined;
 
   return (
-    <div className="h-full flex flex-col   bg-white text-[12px]">
+    <div className="rounded-2xl bg-[#F7F7F7] flex flex-col gap-2 ">
       <div className="flex items-center gap-4 p-1 bg-white">
         {/* Orderbook tab */}
         <button
@@ -116,119 +113,83 @@ export default function Orderbook() {
           </div>
         </button>
       </div>
+      {/* Header */}
+      <div className="flex w-full items-center  px-4">
+        <div className="flex  gap-2">
+          {(Object.keys(VIEW_ICONS) as OrderBookView[]).map((v) => (
+            <button
+              key={v}
+              onClick={() => setView(v)}
+              className={`  w-4 cursor-pointer transition ${
+                view === v ? "" : "hover:bg-white/60"
+              }`}
+              aria-label={`View ${v}`}
+            >
+              <Image src={VIEW_ICONS[v]} alt={v} width={16} height={16} />
+            </button>
+          ))}
+        </div>
 
-      <div></div>
+        <div className="ml-auto">
+          <Dropdown
+            items={TICK_OPTIONS}
+            selectedOption={String(tick)}
+            setSelectedOption={(val) => setTick(Number(val))}
+            classname=" gap-1 text-[14px] leading-[21px] "
+            dropdownClassname="text-[14px] leading-[21px]"
+          />
+        </div>
+      </div>
 
-      {/* Parent div : buy/sell orders */}
-      <div className="flex flex-col pb-4 gap-3 self-stretch bg-[#F7F7F7]">
-        {/* Top Bar */}
-        <div className="flex flex-col flex-1 self-stretch items-start gap-2 p-4">
-          {/* Top Bar nested div */}
-          <div className="flex flex-col self-stretch items-start ">
-            {/* Top sell bar with header row */}
-            <div className="flex flex-col self-stretch items-start gap-3">
-              {/* Header Row */}
-              <div className="flex self-stretch px-4">
-                <div className="w-full grid grid-cols-[1.1fr_1fr_1.1fr] border-b border-slate-100 text-[12px] font-medium text-slate-500 pb-2">
-                  <span>Price(USDT)</span>
-                  <span className="text-center">Amount(BTC)</span>
-                  <span className="text-right">Total(in USDT)</span>
-                </div>
+      <div className="pb-4 rounded-lg flex flex-col gap-3 h-[532px]">
+        <div className="p-4 flex flex-col gap-2">
+          <div className="flex flex-col gap-2">
+            <div className=" flex flex-col gap-3 ">
+              <div className="px-1 grid grid-cols-3 text-[12px] leading-[18px] text-[#5C5B5B] font-medium">
+                <span>Price</span>
+                <span className="text-right">Amount</span>
+                <span className="text-right">Total</span>
               </div>
-
-              {/* sell div */}
-              <div className="flex flex-col self-stretch items-start">
-                {sellOrders.map((row, i) => (
-                  <OrderbookRow key={i} row={row} />
+              <div>
+                {(view === "both" || view === "sell") &&
+                  sells.map((r, i) => (
+                    <OrderBookRow key={i} row={r} maxTotal={maxTotal} />
+                  ))}
+              </div>
+            </div>
+            {view === "both" && mid && (
+              <div className="font-semibold  text-[16px] leading-6 text-[#FC5457]">
+                {mid.toLocaleString()}
+              </div>
+            )}
+            <div>
+              {(view === "both" || view === "buy") &&
+                buys.map((r, i) => (
+                  <OrderBookRow key={i} row={r} maxTotal={maxTotal} />
                 ))}
-              </div>
-            </div>
-
-            {/* MID price */}
-            <div className="px-4  border-y border-slate-100">
-              <div className="flex items-center gap-2">
-                <span className="text-[#FC5457] text-base leading-6 font-semibold">
-                  102,600.9
-                </span>
-                {/* Arrow */}
-                <span className="w-4 h-4 flex items-center justify-center">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 16 16"
-                    className="w-4 h-4"
-                  >
-                    <path
-                      d="M11.3335 9.69691L7.00016 14.5003M7.00016 14.5003L2.66683 9.69691M7.00016 14.5003L7.00016 1.16699"
-                      stroke="#FC5457"
-                      strokeWidth="1.7"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </span>
-                <span className="text-[#5C5B5B] text-[0.75rem] leading-[1.125rem] font-medium">
-                  102,610.1
-                </span>
-              </div>
-            </div>
-
-            {/* Bottom Buy bar */}
-            <div className="flex flex-col self-stretch items-start">
-              {buyOrders.map((row, i) => (
-                <OrderbookRow key={i} row={row} />
-              ))}
             </div>
           </div>
         </div>
 
-        {/* Bottom Bar – B/S % */}
-        <div className="flex items-center self-stretch px-5 gap-[0.1875rem]">
-          <span className="text-[11px] font-medium text-emerald-600">
-            B 78%
+        {/* Ratio */}
+        <div className="px-4 flex items-center gap-[3px]">
+          {/* Buy */}
+          <div className="text-[12px] leading-[18px] font-semibold text-[#24A0A9] shrink-0">
+            B {buyRatio}%
+          </div>
+
+          {/* Ratio Bar */}
+          <div className="flex-1 h-1 rounded-full overflow-hidden flex">
+            <div className="bg-[#24A0A9]" style={{ width: `${buyRatio}%` }} />
+            <div className="bg-[#FC5457]" style={{ width: `${sellRatio}%` }} />
+          </div>
+
+          {/* Sell */}
+          <span className="text-[12px] leading-[18px] font-semibold text-[#FC5457] shrink-0">
+            {sellRatio}% S
           </span>
-          <div className="flex-1 h-1.5 rounded-full bg-gradient-to-r from-emerald-400 via-slate-200 to-rose-400" />
-          <span className="text-[11px] font-medium text-rose-500">22% S</span>
         </div>
       </div>
     </div>
-  );
-}
-
-function OrderbookRow({ row }: { row: OrderRow }) {
-  const isSell = row.side === "sell";
-
-  const priceColor = isSell ? "text-[#FC5457]" : "text-[#0F7E79]";
-  const heatColor = isSell ? "bg-[#FAD1D1]" : "bg-[#CDEDE6]";
-
-  return (
-    <>
-      {/* SELL ROW */}
-      <div className="flex h-6 px-4 py-0.5 gap-2 items-start self-stretch">
-        {/* child 1 → Price */}
-        <div className="flex items-center w-[55px] h-[18px]">
-          <span className="text-[#FC5457] text-xs font-medium leading-[18px]">
-            {row.price.toLocaleString()}
-          </span>
-        </div>
-
-        {/* child 2 → Amount + heat */}
-        <div className="relative flex-1 flex items-center h-[18px] justify-center">
-          <div
-            className="absolute right-0 inset-y-0 rounded-l bg-[#F3D1C8]"
-            style={{ width: `${row.depth * 100}%` }}
-          />
-          <span className="relative text-xs font-medium text-black leading-[18px]">
-            {row.amount.toLocaleString()}
-          </span>
-        </div>
-
-        {/* child 3 → Total */}
-        <div className="flex items-center h-[18px] justify-end w-[80px]">
-          <span className="text-xs font-medium leading-[18px] text-black">
-            {row.total.toLocaleString()}
-          </span>
-        </div>
-      </div>
-    </>
   );
 }

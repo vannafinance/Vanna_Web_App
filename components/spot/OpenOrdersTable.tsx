@@ -5,10 +5,13 @@ import { useSpotTradeStore } from "@/store/spot-trade-store";
 import { useState } from "react";
 import { Modal } from "../ui/modal";
 import { LimitBracketModal } from "./LimitBracketModal";
+import OrderPlacementForm from "./OrderPlacementForm";
+import { EditBracketModal } from "./EditBracketModal";
 
 export default function OpenOrdersTable() {
   const openOrders = useSpotTradeStore((state) => state.openOrders);
   const [openLimitBracket, setOpenLimitBracket] = useState(false);
+  const [openEditBracket, setOpenEditBracket] = useState(false);
   const openOrderColumns: Column<OpenOrderType>[] = [
     {
       id: "view",
@@ -140,7 +143,10 @@ export default function OpenOrdersTable() {
       header: "Action Button",
       render: () => (
         <div className="flex items-center justify-center gap-2">
-          <button className="inline-flex items-center justify-center rounded-md border-[0.75px] border-[#E2E2E2] p-2 bg-white">
+          <button
+            onClick={() => setOpenEditBracket(true)}
+            className="inline-flex items-center justify-center rounded-md border-[0.75px] border-[#E2E2E2] p-2 bg-white"
+          >
             <Image
               className="object-cover"
               width={16}
@@ -172,7 +178,15 @@ export default function OpenOrdersTable() {
         />
       </div>
       <Modal open={openLimitBracket} onClose={() => setOpenLimitBracket(false)}>
-        <LimitBracketModal onEdit={() => console.log("Edit order:")} />
+        <LimitBracketModal
+          onEdit={() => {
+            setOpenLimitBracket(false);
+            setOpenEditBracket(true);
+          }}
+        />
+      </Modal>
+      <Modal open={openEditBracket} onClose={() => setOpenEditBracket(false)}>
+        <EditBracketModal onClose={() => setOpenEditBracket(false)} />
       </Modal>
     </>
   );
