@@ -48,7 +48,7 @@ const PositionTables: React.FC = () => {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`text-sm font-medium transition-colors  px-4 py-2 flex ${
+            className={`cursor-pointer text-sm font-medium transition-colors  px-4 py-2 flex ${
               activeTab === tab.id
                 ? "text-[#703AE6] bg-[#F1EBFD] rounded-lg"
                 : "text-[#111111] hover:text-gray-900 hover:bg-gray-50"

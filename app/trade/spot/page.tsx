@@ -17,7 +17,7 @@ const Spot = () => {
               <div className="flex gap-1 rounded-md">
                 <button
                   onClick={() => setActiveTab("chart")}
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition
+                  className={`cursor-pointer px-4 py-2 rounded-lg text-sm font-semibold transition
                         ${
                           activeTab === "chart"
                             ? "bg-[#F1EBFD] text-[#703AE6]"
@@ -29,7 +29,7 @@ const Spot = () => {
 
                 <button
                   onClick={() => setActiveTab("info")}
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition
+                  className={`cursor-pointer px-4 py-2 rounded-lg text-sm font-semibold transition
                         ${
                           activeTab === "info"
                             ? "bg-[#F1EBFD] text-[#703AE6]"

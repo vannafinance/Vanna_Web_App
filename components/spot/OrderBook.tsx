@@ -53,7 +53,7 @@ export default function OrderBook() {
   const [view, setView] = useState<OrderBookView>("both");
   const [tick, setTick] = useState(0.01);
 
-  // 🔥 replace these with WS / API state later
+  //  replace these with WS / API state later
   const rawBuys = buyOrders;
   const rawSells = sellOrders;
 
@@ -84,7 +84,7 @@ export default function OrderBook() {
         {/* Orderbook tab */}
         <button
           onClick={() => setActiveTab("orderbook")}
-          className={`flex flex-1 items-center justify-center rounded-lg py-3 px-2
+          className={`cursor-pointer flex flex-1 items-center justify-center rounded-lg py-3 px-2
       ${activeTab === "orderbook" ? "bg-[#F1EBFD]" : "bg-transparent"}`}
         >
           <div className="flex items-center justify-center px-2 gap-[0.625rem]">
@@ -100,7 +100,7 @@ export default function OrderBook() {
         {/* Market Trades tab */}
         <button
           onClick={() => setActiveTab("trades")}
-          className={`flex flex-1 items-center justify-center rounded-lg py-3 px-2
+          className={`cursor-pointer flex flex-1 items-center justify-center rounded-lg py-3 px-2
       ${activeTab === "trades" ? "bg-[#F1EBFD]" : "bg-transparent"}`}
         >
           <div className="flex items-center justify-center px-2 gap-[0.625rem]">

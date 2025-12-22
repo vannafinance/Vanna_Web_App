@@ -45,7 +45,7 @@ const buySellTabs: { id: OrderSide; label: string }[] = [
   { id: "sell", label: "Sell" },
 ];
 
-const MAX_TP_ROWS = 3;
+// const MAX_TP_ROWS = 3;
 
 const EMPTY_TP_ROW = {
   exitPricePercent: null,
@@ -139,7 +139,7 @@ export default function OrderPlacementForm({
 
   // ✅ MAX 3 ROWS GUARD
   const handleAddTp = () => {
-    if (fields.length >= MAX_TP_ROWS) return;
+    // if (fields.length >= MAX_TP_ROWS) return;
     append(EMPTY_TP_ROW);
   };
 
@@ -555,7 +555,7 @@ export default function OrderPlacementForm({
             register={register}
             onAdd={handleAddTp}
             onRemove={remove}
-            maxReached={fields.length >= MAX_TP_ROWS}
+            // maxReached={fields.length >= MAX_TP_ROWS}
           />
         )}
       </div>
