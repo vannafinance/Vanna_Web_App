@@ -62,7 +62,7 @@ export const Dropdown = (props: Dropdown) => {
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         type="button"
-        className={`w-fit rounded-[8px]  ${props.classname} cursor-pointer flex justify-center items-center `}
+        className={`w-[80px] rounded-[8px]  ${props.classname} cursor-pointer flex justify-center items-center `}
         aria-label={`Selected: ${props.selectedOption}. Click to change option`}
         aria-expanded={isHover}
         aria-haspopup="listbox"
@@ -102,7 +102,7 @@ export const Dropdown = (props: Dropdown) => {
             transition={{ duration: 0.2, ease: "easeOut" }}
             onMouseEnter={handleDropdownMouseEnter}
             onMouseLeave={handleDropdownMouseLeave}
-            className={`absolute z-[100] bg-white p-2 top-8 -left-4 shadow-lg rounded-[6px] thin-scrollbar ${
+            className={`min-w-[144px] absolute z-[100] bg-white p-2 top-8 -left-4 shadow-lg rounded-[6px] thin-scrollbar ${
               props.items.length > 4 ? "max-h-48 overflow-y-auto" : ""
             }`}
             role="listbox"

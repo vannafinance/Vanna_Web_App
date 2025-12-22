@@ -56,6 +56,17 @@ export const useCollateralBorrowStore = createNewStore(initialState, {
   persist: {
     name: "collateral-borrow-store",
     version: 2, // Increment version to clear old persisted data and load new POSITION data
+    migrate: (persistedState: any, version: number) => {
+      // Migrate from version 1 to version 2
+      if (version === 1) {
+        return {
+          ...persistedState,
+          position: JSON.parse(JSON.stringify(POSITION)) as Position[],
+        };
+      }
+      // For any other version, return the persisted state as-is
+      return persistedState;
+    },
   },
 });
 

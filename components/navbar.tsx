@@ -293,9 +293,9 @@ export const Navbar = (props: Navbar) => {
                         <path
                           d="M17 9L9 1L0.999999 9"
                           stroke="#19191A"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
                           className={
                             isActive
                               ? "stroke-[#FF007A]"

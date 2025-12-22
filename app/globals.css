@@ -209,6 +209,14 @@
   *::-webkit-scrollbar-thumb:hover {
     background-color: #D0D0D0;
   }
+
+  /* Hide TradingView attribution logo */
+  #tv-attr-logo,
+  a#tv-attr-logo {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+  }
   
 }
 

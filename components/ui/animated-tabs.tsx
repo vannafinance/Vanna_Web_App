@@ -8,7 +8,7 @@ export interface TabItem {
   label: string;
 }
 
-type TabType = "gradient" | "solid" | "underline";
+type TabType = "gradient" | "solid" | "underline" | "ghost";
 
 interface AnimatedTabsProps {
   tabs: TabItem[];
@@ -44,6 +44,7 @@ export const AnimatedTabs = ({
   // Helper to get text color
   const getTextColor = (isActive: boolean, isHovered: boolean) => {
     if (type === "solid" && isActive) return "#FFFFFF";
+    if (type === "ghost" && isActive) return "#19191A";
     if (type === "underline") {
       if (isActive) return "#703AE6";
       if (isHovered) return "#000000";
@@ -57,8 +58,11 @@ export const AnimatedTabs = ({
   const getBackground = (isActive: boolean, isHovered: boolean) => {
     if (isHovered && !isActive) return HOVER_GRADIENT;
     if (type === "solid" && isActive) return "#703AE6";
+    if (type === "ghost" && isActive) return "#F1EBFD";
     return "transparent";
   };
+
+  
 
   // Render underline type
   if (type === "underline") {
@@ -94,12 +98,12 @@ export const AnimatedTabs = ({
 
   
 
-  // Render gradient/solid types
-  const containerPadding = type === "solid" ? "p-[4px] w-fit h-fit" : "p-[6px]";
-  const tabWidth = type === "solid" ? "w-[160px]" : "";
-  const tabPadding = type === "solid" ? "py-[12px] px-[8px]" : "";
-  const tabHeight = type === "solid" ? "h-fit" : "h-[67px]";
-  const useFlex1 = type !== "solid";
+  // Render gradient/solid/ghost types
+  const containerPadding = (type === "solid" || type === "ghost") ? "p-[4px] w-fit h-fit" : "p-[6px]";
+  const tabWidth = (type === "solid" ) ? "w-[160px]" : type === "ghost" ? "w-[100px]" : "";
+  const tabPadding = (type === "solid" || type === "ghost") ? "py-[12px] px-[8px]" : "";
+  const tabHeight = (type === "solid") ? "h-fit" :  (type === "ghost") ? "h-[38px]" : "h-[67px]";
+  const useFlex1 = (type !== "solid" && type !== "ghost");
 
   return (
     <div className={containerClassName}>
