@@ -73,8 +73,6 @@ export const LeverageAssetsTab = () => {
   const showWrongNetworkWarning = !!address && !isSupportedChain;
 
 
-
-
   const { data: walletClient } = useWalletClient();
   const publicClient = usePublicClient();
 
@@ -92,101 +90,69 @@ export const LeverageAssetsTab = () => {
   };
 
 
+  const handlecreateAccount = async () => {
+  if (!address || !publicClient || !walletClient || !chainId) return;
 
-  const handlecreateAccount = () => {
-
-    if (!address && !publicClient) return;
-
-    const addressList = getAddressList();
-
-    console.log(`List of contract address with  ${chainId} ${addressList} `)
-
-
-
-
-
+  const addressList = getAddressList();
+  if (!addressList) {
+    console.error("Unsupported chain");
+    return;
   }
 
+  try {
+    setLoading(true);
 
+  
+    const accounts = await publicClient.readContract({
+      address: addressList.registryContractAddress as `0x${string}`,
+      abi: Registry.abi,
+      functionName: "accountsOwnedBy",
+      args: [address],
+    });
 
-  // Sync with Onchain 
+    if ((accounts as any[]).length > 0) {
+      setHasMarginAccount({ hasMarginAccount: true });
+      setActiveDialogue("deposit-earn");
+      return;
+    }
 
-  // const syncMarginAccount = async () => {
-  //   if (!address || !publicClient) return;
+ 
+    const { request } = await publicClient.simulateContract({
+      address: addressList.accountManagerContractAddress as `0x${string}`,
+      abi: AccountManager.abi,
+      functionName: "openAccount",
+      args: [address],
+      account: address,
+    });
 
-  //   const addressList = getAddressList();
+   
+    const txHash = await walletClient.writeContract(request);
 
-  //   const accounts = await publicClient.readContract({
-  //     address: addressList.registryContractAddress as `0x${string}`,
-  //     abi: Registry.abi,
-  //     functionName: "accountsOwnedBy",
-  //     args: [address],
-  //   });
+  
+    await publicClient.waitForTransactionReceipt({
+      hash: txHash,
+    });
 
-  //   setHasMarginAccount({
-  //     hasMarginAccount: Array.isArray(accounts) && accounts.length > 0,
-  //   });
-  // };
+   
+    setHasMarginAccount({ hasMarginAccount: true });
 
-  // useEffect(() => {
-  //   syncMarginAccount();
+    setActiveDialogue("deposit-earn");
 
-  // }, [address, chainId])
+  } catch (err: any) {
+    console.error("Margin account creation failed", err);
 
-
-  // // Create Margins Account 
-
-  // const handlecreateAccount = async () => {
-  //   if (!walletClient || !publicClient || !address) {
-  //     console.error('Missing wallet/client/address:', { walletClient: !!walletClient, publicClient: !!publicClient, address });
-  //     return;
-  //   }
-
-  //   setLoading(true);
-
-  //   try {
-  //     const addressList = getAddressList();
-
-  //     const accounts = await publicClient.readContract({
-  //       address: addressList.registryContractAddress as `0x${string}`,
-  //       abi: Registry.abi,
-  //       functionName: 'accountsOwnedBy',
-  //       args: [address],
-  //     });
-
-  //     if (Array.isArray(accounts) && accounts.length > 0) {
-  //       setHasMarginAccount({ hasMarginAccount: true });
-  //       return;
-  //     }
-
-  //     const accountManagerAbi = AccountManager.abi;
-
-
-  //     const hash =
-  //       await walletClient.writeContract({
-  //         address: addressList.accountManagerContractAddress as `0x${string}`,
-  //         abi: accountManagerAbi,
-  //         functionName: 'openAccount',
-  //         args: [address],
-  //         gas: BigInt(2300000),
-  //       });
-
-  //     await publicClient.waitForTransactionReceipt({ hash });
-
-  //     await syncMarginAccount();
-  //   } catch (err) {
-  //     console.error("Margin account creation failed:", err);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-
+    if (err?.code === 4001) {
+      setActiveDialogue("none");
+    }
+  } finally {
+    setLoading(false);
+  }
+};
 
 
 
   // Dialogue state - simplified
-  type DialogueState = "none" | "create-margin" | "sign-agreement";
+  type DialogueState = "none" | "create-margin" | "sign-agreement" | "deposit-borrow" | "deposit-earn";
   const [activeDialogue, setActiveDialogue] = useState<DialogueState>("none");
 
   // Local state to collect data from child component
@@ -394,8 +360,16 @@ export const LeverageAssetsTab = () => {
 
   // Handle create margin account button click
   const handleButtonClick = () => {
-    
-    setActiveDialogue("create-margin");
+
+    if(hasMarginAccount){
+      
+      setActiveDialogue("deposit-earn")
+
+    } 
+    else{
+      setActiveDialogue("create-margin");
+    }
+
   };
 
   return (
@@ -731,11 +705,9 @@ export const LeverageAssetsTab = () => {
                 size="large"
                 text={
                   !address ? "Login" :
-                    hasMarginAccount && !isMBMode
-                      ? "Deposit & Borrow"
-                      : hasMarginAccount && isMBMode
-                        ? "Borrow"
-                        : "Create your Margin Account"
+                    hasMarginAccount
+                      ? "Deposit & Earn"
+                      : "Create your Margin Account"
                 }
                 type="gradient"
                 onClick={handleButtonClick}
@@ -861,6 +833,46 @@ export const LeverageAssetsTab = () => {
                 heading="Review and Sign Agreement"
                 checkboxContent="I have read and agree to the VANNA Borrow Agreement."
                 onClose={() => setActiveDialogue("none")}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Deposit & Earn dialogue */}
+      <AnimatePresence>
+        {activeDialogue === "deposit-earn" && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[#45454566] "
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            onClick={() => setActiveDialogue("none")}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ duration: 0.3 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Dialogue
+                buttonOnClick={() => {
+                  // TODO: Implement deposit and earn logic
+                  setActiveDialogue("none");
+                }}
+                buttonText="Proceed to Deposit & Earn"
+                content={[
+                  { line: "Your Margin Account is ready." },
+                  { line: "Deposit assets to start earning yields and borrowing." },
+                  { line: "Earn competitive rates on your deposited collaterals." },
+                ]}
+                heading="Deposit & Earn"
+                onClose={() => {
+                  setActiveDialogue("none")
+                  setLoading(false)
+                }}
               />
             </motion.div>
           </motion.div>

@@ -8,11 +8,26 @@ import { useState, useRef, useEffect } from "react";
 import { tradeItems } from "@/lib/constants";
 import { useTheme } from "@/contexts/theme-context";
 import { useUserStore } from "@/store/user";
+import { useConnectModal } from '@rainbow-me/rainbowkit';
 
-import { useAccount, useClient, useDisconnect, useEnsAvatar, useEnsName } from "wagmi";
+
+
+import { useAccount, useClient, useDisconnect, useEnsAvatar, useEnsName, usePublicClient, useReadContract, useSimulateContract, useWalletClient } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 
-import { useConnectModal } from "@rainbow-me/rainbowkit"; // Use for integrating with out own Button 
+
+
+import AccountManager from "../abi/vanna/out/out/AccountManager.sol/AccountManager.json";
+import Registry from "../abi/vanna/out/out/Registry.sol/Registry.json"
+
+
+
+import {
+  arbAddressList,
+  baseAddressList,
+  opAddressList,
+} from ".././lib/web3Constants";
+import { useMarginAccountInfoStore } from "@/store/margin-account-info-store";
 
 
 
@@ -32,12 +47,16 @@ export const Navbar = (props: Navbar) => {
   const setUserAddress = useUserStore((state) => state.set);
   const userAddress = useUserStore((state) => state.address);
   const [open, setOpen] = useState(false)
+  const hasMarginAccount = useMarginAccountInfoStore((state) => state.hasMarginAccount);
+  const setHasMarginAccount = useMarginAccountInfoStore((state) => state.set);
 
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, chainId } = useAccount();
   const { disconnect } = useDisconnect();
 
-  const { openConnectModal } = useConnectModal();
+  const { data: walletClient } = useWalletClient();
+  const publicClient = usePublicClient();
 
+  const { openConnectModal } = useConnectModal();
 
   const { data: ensName } = useEnsName({
     address,
@@ -50,11 +69,18 @@ export const Navbar = (props: Navbar) => {
     query: { enabled: !!ensName },
   });
 
+  const loginTriggeredRef = useRef(false);
 
-  /** 
-   * Wen User connects then SetUserAddress will trigger and set the address in the store 
-   * 
-  */
+  const getAddressList = () => {
+
+    if (chainId === 42161) return arbAddressList;
+    if (chainId === 10) return opAddressList; // Optimism
+    if (chainId === 8453) return baseAddressList; // Base
+    return baseAddressList; // Default to Base
+
+
+  }
+
 
   useEffect(() => {
     if (isConnected && address) {
@@ -63,6 +89,69 @@ export const Navbar = (props: Navbar) => {
       setUserAddress(null);
     }
   }, [isConnected, address, setUserAddress]);
+
+
+
+  useEffect(() => {
+    if (loginTriggeredRef.current && isConnected && address && chainId && walletClient && publicClient) {
+      loginTriggeredRef.current = false;
+
+      const marginHandledKey = `margin_handled_${address}_${chainId}`;
+      if (localStorage.getItem(marginHandledKey) === "true") {
+        console.log("Margin account already handled");
+        return;
+      } 
+
+      const ensureMarginAccount = async () => {
+        try {
+          const addressList = getAddressList();
+
+          const accounts = await publicClient.readContract({
+            address: addressList.registryContractAddress as `0x${string}`,
+            abi: Registry.abi,
+            functionName: "accountsOwnedBy",
+            args: [address],
+          });
+
+          if ((accounts as any[]).length > 0) {
+            setHasMarginAccount({hasMarginAccount:true})
+            localStorage.setItem(marginHandledKey, 'true');
+            console.log("Margin account exists");
+            return;
+          }
+
+          console.log("Creating margin account…");
+
+          const { request } = await publicClient.simulateContract({
+            address: addressList.accountManagerContractAddress as `0x${string}`,
+            abi: AccountManager.abi,
+            functionName: "openAccount",
+            args: [address],
+            account: address,
+          });
+
+          const txHash = await walletClient.writeContract(request);
+          setHasMarginAccount({ hasMarginAccount: true });
+          localStorage.setItem(marginHandledKey!, "true");
+
+          console.log("Margin account created:", txHash);
+
+        } catch (err: any) {
+
+          //user rejected the tx
+
+          if (err?.code === 4001) {
+            localStorage.setItem(marginHandledKey!, 'true')
+          }
+
+        }
+      };
+
+      ensureMarginAccount();
+
+    }
+  }, [isConnected, address, chainId, walletClient, publicClient]);
+
 
 
 
@@ -465,23 +554,29 @@ export const Navbar = (props: Navbar) => {
                 size="small"
                 type="gradient"
                 disabled={false}
-                onClick={() => {
+                onClick={async () => {
+                  loginTriggeredRef.current = true;
                   openConnectModal?.();
+
                 }}
                 text="Login"
                 ariaLabel="Login to your account"
               ></Button>
-             
-              
+
+
             </>
 
           ) : (
             <div
-              onClick={() =>{
-                 disconnect()
-                 setUserAddress({address:null})
+              onClick={() => {
+                if (address && chainId) {
+                  const marginHandledKey = `margin_handled_${address}_${chainId}`;
+                  localStorage.removeItem(marginHandledKey);
+                }
+                disconnect()
+                setUserAddress({ address: null })
               }
-              
+
 
               }
               className="cursor-pointer py-[12px] px-[24px] text-[16px] font-semibold bg-[#F4F4F4] rounded-[8px] h-full w-fit"
