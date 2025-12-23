@@ -21,17 +21,36 @@ import { useCollateralBorrowStore } from "@/store/collateral-borrow-store";
 import { Radio } from "../ui/radio-button";
 import { useMarginAccountInfoStore } from "@/store/margin-account-info-store";
 import { useUserStore } from "@/store/user";
+import { useAccount, usePublicClient, useWalletClient } from "wagmi";
+
+
+import { arbAddressList, opAddressList, baseAddressList } from "@/lib/web3Constants";
+
+
+import AccountManager from "../../abi/vanna/out/out/AccountManager.sol/AccountManager.json";
+
+import AccountManagerop from "../../abi/vanna/out/out/AccountManager.sol/AccountManager.json";
+
+import Registry from "../../abi/vanna/out/out/Registry.sol/Registry.json";
+
+import { sleep } from "../../lib/helper"
+import { type } from '../../.next/dev/types/routes';
+import { log } from "console";
+
 
 type Modes = "Deposit" | "Borrow";
 
+type AddressList = typeof baseAddressList;
 
 
 export const LeverageAssetsTab = () => {
+
   // Get collaterals from global store using selector to prevent unnecessary re-renders
 
   // Component state
   const hasMarginAccount = useMarginAccountInfoStore((state) => state.hasMarginAccount);
   const setHasMarginAccount = useMarginAccountInfoStore((state) => state.set);
+
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [mode, setMode] = useState<Modes>("Deposit");
   const [borrowItems, setBorrowItems] = useState<BorrowInfo[]>([]);
@@ -39,9 +58,132 @@ export const LeverageAssetsTab = () => {
   const [depositAmount, setDepositAmount] = useState(0);
   const [depositCurrency, setDepositCurrency] = useState("USDT");
   const feesCurrency = "USDT";
+  // const address = useUserStore((state) => state.address);
 
-  const userAddress = useUserStore((state) => state.address);
-  
+
+
+  // Create Margin Accounts 
+
+  const { address, chainId } = useAccount();
+  const isSupportedChain =
+    chainId === 8453 || // Base
+    chainId === 42161 || // Arbitrum
+    chainId === 10;      // Optimism
+
+  const showWrongNetworkWarning = !!address && !isSupportedChain;
+
+
+
+
+  const { data: walletClient } = useWalletClient();
+  const publicClient = usePublicClient();
+
+  const [loading, setLoading] = useState(false);
+
+
+  const getAddressList = (): AddressList | null => {
+    if (!chainId) return null;
+
+    if (chainId === 42161) return arbAddressList;
+    if (chainId === 10) return opAddressList;
+    if (chainId === 8453) return baseAddressList;
+
+    return null;
+  };
+
+
+
+  const handlecreateAccount = () => {
+
+    if (!address && !publicClient) return;
+
+    const addressList = getAddressList();
+
+    console.log(`List of contract address with  ${chainId} ${addressList} `)
+
+
+
+
+
+  }
+
+
+
+  // Sync with Onchain 
+
+  // const syncMarginAccount = async () => {
+  //   if (!address || !publicClient) return;
+
+  //   const addressList = getAddressList();
+
+  //   const accounts = await publicClient.readContract({
+  //     address: addressList.registryContractAddress as `0x${string}`,
+  //     abi: Registry.abi,
+  //     functionName: "accountsOwnedBy",
+  //     args: [address],
+  //   });
+
+  //   setHasMarginAccount({
+  //     hasMarginAccount: Array.isArray(accounts) && accounts.length > 0,
+  //   });
+  // };
+
+  // useEffect(() => {
+  //   syncMarginAccount();
+
+  // }, [address, chainId])
+
+
+  // // Create Margins Account 
+
+  // const handlecreateAccount = async () => {
+  //   if (!walletClient || !publicClient || !address) {
+  //     console.error('Missing wallet/client/address:', { walletClient: !!walletClient, publicClient: !!publicClient, address });
+  //     return;
+  //   }
+
+  //   setLoading(true);
+
+  //   try {
+  //     const addressList = getAddressList();
+
+  //     const accounts = await publicClient.readContract({
+  //       address: addressList.registryContractAddress as `0x${string}`,
+  //       abi: Registry.abi,
+  //       functionName: 'accountsOwnedBy',
+  //       args: [address],
+  //     });
+
+  //     if (Array.isArray(accounts) && accounts.length > 0) {
+  //       setHasMarginAccount({ hasMarginAccount: true });
+  //       return;
+  //     }
+
+  //     const accountManagerAbi = AccountManager.abi;
+
+
+  //     const hash =
+  //       await walletClient.writeContract({
+  //         address: addressList.accountManagerContractAddress as `0x${string}`,
+  //         abi: accountManagerAbi,
+  //         functionName: 'openAccount',
+  //         args: [address],
+  //         gas: BigInt(2300000),
+  //       });
+
+  //     await publicClient.waitForTransactionReceipt({ hash });
+
+  //     await syncMarginAccount();
+  //   } catch (err) {
+  //     console.error("Margin account creation failed:", err);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+
+
+
 
   // Dialogue state - simplified
   type DialogueState = "none" | "create-margin" | "sign-agreement";
@@ -252,11 +394,14 @@ export const LeverageAssetsTab = () => {
 
   // Handle create margin account button click
   const handleButtonClick = () => {
+    
     setActiveDialogue("create-margin");
   };
 
   return (
     <>
+
+
       <motion.div
         className="w-full flex flex-col gap-[24px] pt-6"
         initial={{ opacity: 0 }}
@@ -423,7 +568,7 @@ export const LeverageAssetsTab = () => {
                       collaterals={null}
                       isEditing={true}
                       isAnyOtherEditing={false}
-                      onEdit={() => {}}
+                      onEdit={() => { }}
                       onSave={(data) => {
                         setCurrentCollaterals([data]);
                         setEditingIndex(null);
@@ -447,17 +592,16 @@ export const LeverageAssetsTab = () => {
               (mode === "Borrow" && currentCollaterals.length >= 1) ||
               isMBMode
             }
-            className={`w-fit py-[11px] px-[10px] rounded-[8px] flex gap-[4px] text-[14px] font-medium text-[#703AE6] items-center ${
-              editingIndex !== null ||
+            className={`w-fit py-[11px] px-[10px] rounded-[8px] flex gap-[4px] text-[14px] font-medium text-[#703AE6] items-center ${editingIndex !== null ||
               (mode === "Borrow" && currentCollaterals.length >= 1) ||
               isMBMode
-                ? "opacity-50 cursor-not-allowed"
-                : "hover:cursor-pointer hover:bg-[#F1EBFD]"
-            }`}
+              ? "opacity-50 cursor-not-allowed"
+              : "hover:cursor-pointer hover:bg-[#F1EBFD]"
+              }`}
             whileHover={
               editingIndex === null &&
-              !(mode === "Borrow" && currentCollaterals.length >= 1) &&
-              !isMBMode
+                !(mode === "Borrow" && currentCollaterals.length >= 1) &&
+                !isMBMode
                 ? { x: 5 }
                 : {}
             }
@@ -533,7 +677,7 @@ export const LeverageAssetsTab = () => {
             expandableSections={[
               {
                 title: "More Details",
-                
+
                 items: [
                   {
                     id: "platformPoints",
@@ -578,20 +722,26 @@ export const LeverageAssetsTab = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.4, delay: 0.3, ease: "easeOut" }}
         >
-          <Button
-            disabled={false}
-            size="large"
-            text={
-              !userAddress ? "Login" :
-              hasMarginAccount  && !isMBMode
-                ? "Deposit & Borrow"
-                : hasMarginAccount && isMBMode
-                ? "Borrow"
-                :  "Create your Margin Account"
-            }
-            type="gradient"
-            onClick={handleButtonClick}
-          />
+          {
+            showWrongNetworkWarning ? (<div className="mb-4 p-3 rounded-lg bg-red-100 text-red-700 text-sm">
+              Please switch to Base, Arbitrum, or Optimism.
+            </div>) : (
+              <Button
+                disabled={!address}
+                size="large"
+                text={
+                  !address ? "Login" :
+                    hasMarginAccount && !isMBMode
+                      ? "Deposit & Borrow"
+                      : hasMarginAccount && isMBMode
+                        ? "Borrow"
+                        : "Create your Margin Account"
+                }
+                type="gradient"
+                onClick={handleButtonClick}
+              />
+            )
+          }
         </motion.div>
       </motion.div>
 
@@ -624,7 +774,10 @@ export const LeverageAssetsTab = () => {
                   { line: "Make a deposit to activate borrowing." },
                 ]}
                 heading="Create Margin Account"
-                onClose={() => setActiveDialogue("none")}
+                onClose={() => {
+                  setActiveDialogue("none")
+                  setLoading(false)
+                }}
               />
             </motion.div>
           </motion.div>
@@ -651,8 +804,15 @@ export const LeverageAssetsTab = () => {
               onClick={(e) => e.stopPropagation()}
             >
               <Dialogue
+
                 description="Before you proceed, please review and accept the terms of borrowing on VANNA. This agreement ensures you understand the risks, responsibilities, and conditions associated with using the platform."
-                buttonOnClick={() => {setActiveDialogue("none"); setHasMarginAccount({hasMarginAccount:true}); } }
+
+                buttonOnClick={async () => {
+
+
+                  await handlecreateAccount()
+                  // setActiveDialogue("none")
+                }}
                 buttonText="Sign Agreement"
                 content={[
                   {

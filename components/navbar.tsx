@@ -8,9 +8,13 @@ import { useState, useRef, useEffect } from "react";
 import { tradeItems } from "@/lib/constants";
 import { useTheme } from "@/contexts/theme-context";
 import { useUserStore } from "@/store/user";
-import { Modal } from "./ui/modal";
-import { WalletOptions } from "./ui/wallet-options";
+
 import { useAccount, useClient, useDisconnect, useEnsAvatar, useEnsName } from "wagmi";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
+
+import { useConnectModal } from "@rainbow-me/rainbowkit"; // Use for integrating with out own Button 
+
+
 
 interface Navbar {
   items: {
@@ -32,6 +36,9 @@ export const Navbar = (props: Navbar) => {
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
 
+  const { openConnectModal } = useConnectModal();
+
+
   const { data: ensName } = useEnsName({
     address,
     query: { enabled: !!address }
@@ -43,6 +50,11 @@ export const Navbar = (props: Navbar) => {
     query: { enabled: !!ensName },
   });
 
+
+  /** 
+   * Wen User connects then SetUserAddress will trigger and set the address in the store 
+   * 
+  */
 
   useEffect(() => {
     if (isConnected && address) {
@@ -454,19 +466,14 @@ export const Navbar = (props: Navbar) => {
                 type="gradient"
                 disabled={false}
                 onClick={() => {
-                  setOpen(true)
-
+                  openConnectModal?.();
                 }}
                 text="Login"
                 ariaLabel="Login to your account"
               ></Button>
-
-              <Modal open={open} onClose={() => setOpen(false)}>
-                <WalletOptions open={open} onClose={() => setOpen(false)} />
-              </Modal>
+             
+              
             </>
-
-
 
           ) : (
             <div

@@ -130,3 +130,13 @@ export function mapOrderToOpenOrder(
     total: order.totalAmount ? `$${order.totalAmount}` : "-",
   };
 }
+
+
+export const sleep = (duration: number) => {
+  // duration = 1000 => 1 second
+  return new Promise<void>(function (resolve) {
+    setTimeout(() => {
+      resolve();
+    }, duration);
+  });
+};
