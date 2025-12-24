@@ -44,7 +44,7 @@ export const AnimatedTabs = ({
   // Helper to get text color
   const getTextColor = (isActive: boolean, isHovered: boolean) => {
     if (type === "solid" && isActive) return "#FFFFFF";
-    if (type === "ghost" && isActive) return "#19191A";
+    if (type === "ghost" && isActive) return "#703AE6";
     if (type === "underline") {
       if (isActive) return "#703AE6";
       if (isHovered) return "#000000";
@@ -100,7 +100,8 @@ export const AnimatedTabs = ({
 
   // Render gradient/solid/ghost types
   const containerPadding = (type === "solid" || type === "ghost") ? "p-[4px] w-fit h-fit" : "p-[6px]";
-  const tabWidth = (type === "solid" ) ? "w-[160px]" : type === "ghost" ? "w-[100px]" : "";
+  const containerWidth = (type === "solid" || type === "ghost") ? "" : "w-full";
+  const tabWidth = (type === "solid" ) ? "w-[160px]" : type === "ghost" ? "w-[120px]" : "";
   const tabPadding = (type === "solid" || type === "ghost") ? "py-[12px] px-[8px]" : "";
   const tabHeight = (type === "solid") ? "h-fit" :  (type === "ghost") ? "h-[38px]" : "h-[67px]";
   const useFlex1 = (type !== "solid" && type !== "ghost");
@@ -108,7 +109,7 @@ export const AnimatedTabs = ({
   return (
     <div className={containerClassName}>
       <div
-        className={`border-[1px] border-[#E2E2E2] w-full bg-white flex gap-[16px] ${containerPadding} rounded-[12px] h-fit relative overflow-hidden`}
+        className={`border-[1px] border-[#E2E2E2] ${containerWidth} bg-white flex gap-[16px] ${containerPadding} rounded-[12px] h-fit relative overflow-hidden`}
         onMouseLeave={() => setHoveredTab(null)}
       >
         {/* Gradient indicator */}

@@ -1,6 +1,7 @@
 "use client"
 
 import { Chart } from "@/components/earn/chart"
+import { Table } from "@/components/earn/table"
 import { AccountStats } from "@/components/margin/account-stats"
 import { ACCOUNT_STATS_ITEMS } from "@/lib/constants/margin"
 import { useUserStore } from "@/store/user"
@@ -34,6 +35,10 @@ export default function Earn(){
             collateralLeftBeforeLiquidation:!userAddress ? "-": 1000,
             netAvailableCollateral:!userAddress ? "-": 1000,
         }} />
+       </div>
+
+       <div className="p-[40px] w-full h-fit ">
+        <Table filters={{allChainDropdown:true,filters:["Deposit", "Collateral"],supplyApyTab:true}}  heading={{tabsItems:[{id:"vaults",label:"Vaults"},{id:"positions",label:"Positions"}],tabType:"underline"}}/>
        </div>
     </div>
 }
