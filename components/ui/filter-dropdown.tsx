@@ -5,7 +5,7 @@ import { SearchBar } from "./search-bar";
 import { Checkbox } from "./checkbox";
 
 interface FilterDropdownProps {
-  dropDownType: "collateral" | "deposit" | "all-chains";
+  dropDownType: "collateral" | "deposit" | "all-chains" ;
   onDropdownItemChange: (item: string[]) => void;
   currentDropdownItem: string[];
   dropdownOptions: string[];
@@ -43,7 +43,7 @@ export const FilterDropdown = (props: FilterDropdownProps) => {
       {props.dropDownType === "all-chains" && (
         <div
           onClick={() => setIsOpen(!isOpen)}
-          className=" cursor-pointer  w-fit h-[48px] border border-[#E2E2E2] rounded-[12px] py-[12px] px-[24px] flex items-center gap-[4px] bg-white"
+          className=" cursor-pointer  w-fit h-[48px] border border-[#E2E2E2] rounded-[8px] py-[12px] px-[16px] flex items-center gap-[4px] bg-white"
         >
           {Object.entries(iconPaths)
             .slice(0, 3)
@@ -80,9 +80,9 @@ export const FilterDropdown = (props: FilterDropdownProps) => {
               <path
                 d="M0.833008 0.833496L5.83301 5.8335L10.833 0.833496"
                 stroke="black"
-                stroke-width="1.66667"
-                stroke-linecap="round"
-                stroke-linejoin="round"
+                strokeWidth="1.66667"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               />
             </svg>
           </div>
@@ -156,9 +156,9 @@ export const FilterDropdown = (props: FilterDropdownProps) => {
                   <path
                     d="M7.25 0.75L0.75 7.25M0.75 0.75L7.25 7.25"
                     stroke="#111111"
-                    stroke-width="1.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                 </svg>
               </div>
@@ -167,7 +167,9 @@ export const FilterDropdown = (props: FilterDropdownProps) => {
         </div>
       )}
       {isOpen && (
-        <div className="bg-[#F4F4F4] absolute top-6 right-0 w-[368px] h-fit  rounded-[16px] p-[16px] flex flex-col gap-[15px]  shadow-md">
+        <div className={`bg-[#F4F4F4] absolute  ${props.currentDropdownItem.length>0?"top-12":"top-6"}   w-[368px] h-fit rounded-[16px] p-[16px] flex flex-col gap-[15px] shadow-md ${
+          props.dropDownType === "all-chains" ? "left-0 top-14" :  " right-0" 
+        }`}>
           <SearchBar
             placeholder={props.dropDownType}
             onChange={(e) => setSearchValue(e.target.value)}

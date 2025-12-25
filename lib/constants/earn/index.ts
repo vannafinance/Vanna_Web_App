@@ -56,4 +56,93 @@ export const netApyData = [
     { date: "2025-12-01", amount: 251.90 },
     { date: "2025-12-15", amount: 270.10 },
     { date: "2025-12-31", amount: 289.20 },
-]       
+]     
+
+export const tableHeadings = [
+    { label: "Pool", id: "pool" },
+    { label: "Assets Supplied", id: "assets-supplied" ,icon:true},
+    { label: "Supply APY", id: "supply-apy" ,icon:true},
+    { label: "Assets Borrowed", id: "assets-borrowed" ,icon:true},
+    { label: "Borrow APY", id: "borrow-apy" ,icon:true},
+    { label: "Utilization Rate", id: "utilization-rate" ,icon:true},
+    { label: "Collateral", id: "collateral" },
+  ]
+
+ export  const tableBody = {
+    rows: [
+      {
+        cell: [
+          {
+            chain: "ETH",
+            title: "WBTC",
+         
+            tag: "Active",
+          },
+          {
+            title: "$345.8K",
+            
+            tag: "7.51M USDC",
+          },
+          {
+            title: "22.16%",
+            tag: "22.16%",
+          },
+          {
+            title: "$4.66M USD",
+            tag: "4.66M USDC",
+          },
+          {
+            title: "22.16%",
+            tag: "22.16%",
+          },
+          {
+            title: "62.07%",
+            tag: "62.07%",
+          },
+          {
+            onlyIcons: ["WBTC", "USDC","USDT"],
+            tag: "Collateral",
+            clickable: "toggle",
+          },
+        ],
+      },
+  
+      {
+        cell: [
+          {
+            chain: "ETH",
+            title: "WBTC",
+            
+            tag: "Active",
+          },
+          {
+            title: "$345.8K",
+            
+            tag: "7.51M USDC",
+          },
+          {
+            title: "22.16%",
+            tag: "22.16%",
+          },
+          {
+            title: "$4.66M USD",
+            tag: "4.66M USDC",
+          },
+          {
+            title: "22.16%",
+            tag: "22.16%",
+          },
+          {
+            title: "62.07%",    
+            tag: "62.07%",
+          },
+          {
+            onlyIcons: ["WBTC", "USDC","USDT"],
+            tag: "Collateral",
+            clickable: "toggle",
+          },
+        ],
+      },
+    ],
+  };
+  

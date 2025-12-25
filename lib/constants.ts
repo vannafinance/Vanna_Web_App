@@ -41,5 +41,6 @@ export const iconPaths: Record<string, string> = {
   KATANA: "/icons/katana.jpg",
   ARBITRUM: "/icons/arbitrum-icon.svg",
   BASE: "/icons/base-icon.svg",
+  WBTC: "/icons/wbtc-icon.png",
 };
 
