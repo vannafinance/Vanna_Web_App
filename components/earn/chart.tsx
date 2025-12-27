@@ -8,6 +8,7 @@ import { ExpandableModal } from "../ui/expandable-modal";
 interface ChartProps {
   type: "overall-deposit" | "net-apy" | "my-supply" | "deposit-apy";
   currencyTab?: boolean;
+  height?: number;
 }
 
 const filterOptions = ["3 Months", "6 Months", "1 Year", "All Time"];
@@ -83,7 +84,7 @@ const filterDataByDays = (
   });
 };
 
-export const Chart = ({ type, currencyTab }: ChartProps) => {
+export const Chart = ({ type, currencyTab, height }: ChartProps) => {
   const [selectedFilter, setSelectedFilter] = useState(filterOptions[0]);
   const [selectedCurrency, setSelectedCurrency] = useState<string>("usd");
   const [selectedDays, setSelectedDays] = useState<string>(dayOptions[0]);
@@ -145,7 +146,7 @@ export const Chart = ({ type, currencyTab }: ChartProps) => {
   };
 
   return (
-    <div className="flex flex-col gap-[24px] w-full h-full rounded-[16px] p-[16px] border-[1px] border-[#E2E2E2] bg-[#FFFFFF]">
+    <div className="w-[437.33px] h-[331px] flex flex-col gap-[24px]  rounded-[16px] p-[16px] border-[1px] border-[#E2E2E2] bg-[#FFFFFF]">
       <div className="w-full h-fit flex justify-between ">
         <div
           className={`w-full h-fit flex flex-col ${
@@ -191,7 +192,8 @@ export const Chart = ({ type, currencyTab }: ChartProps) => {
           {type !== "deposit-apy" && (
             <>
               {currencyTab && (
-                <AnimatedTabs
+                <div className="w-[220px]">
+                  <AnimatedTabs
                   type="ghost"
                   tabs={[
                     { id: "usd", label: "USD" },
@@ -200,6 +202,8 @@ export const Chart = ({ type, currencyTab }: ChartProps) => {
                   activeTab={selectedCurrency}
                   onTabChange={(tabId: string) => setSelectedCurrency(tabId)}
                 />
+                </div>
+                
               )}
               <div className="p-[10px] h-fit rounded-[6px] border-[1px] border-[#E2E2E2]">
                 <Dropdown
@@ -279,7 +283,7 @@ export const Chart = ({ type, currencyTab }: ChartProps) => {
                   )}
                 </div>
                 <div className="flex items-top gap-[8px]">
-                  {type !== "deposit-apy" && (
+                  {type !== "deposit-apy" &&  (
                     <>
                       {currencyTab && (
                         <AnimatedTabs
@@ -337,7 +341,7 @@ export const Chart = ({ type, currencyTab }: ChartProps) => {
                     "rgba(124, 53, 248, 0.05)",
                   ]}
                   lineColor="#7C35F8"
-                  height={600}
+                  height={450}
                   showGrid={true}
                   formatYAxisLabel={formatYAxisLabel}
                 />
@@ -362,7 +366,7 @@ export const Chart = ({ type, currencyTab }: ChartProps) => {
               "rgba(124, 53, 248, 0.05)",
             ]}
             lineColor="#7C35F8"
-            height={393}
+            height={height || 206}
             showGrid={true}
             formatYAxisLabel={formatYAxisLabel}
           />

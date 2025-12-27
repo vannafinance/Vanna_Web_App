@@ -1,4 +1,12 @@
-export const SearchBar = ({placeholder , onChange}: {placeholder: string, onChange: (e: React.ChangeEvent<HTMLInputElement>) => void}) => {
+export const SearchBar = ({
+  placeholder,
+  onChange,
+  value,
+}: {
+  placeholder: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  value: string;
+}) => {
   return (
     <div className="border-[1px] border-[#E0E0E0] w-full h-[48px] flex items-center gap-[9px] pr-[24px] py-[8px] pl-[16px] rounded-[8px] bg-white">
       <div className="w-[24px] h-[24px] flex flex-col items-center justify-center">
@@ -19,7 +27,13 @@ export const SearchBar = ({placeholder , onChange}: {placeholder: string, onChan
         </svg>
       </div>
       <div className="w-full h-full">
-        <input onChange={onChange} type="text" placeholder={`Search for ${placeholder}`} className="placeholder:text-[#A7A7A7] w-full h-full outline-none text-[14px] font-medium text-black " />
+        <input
+          onChange={onChange}
+          type="text"
+          value={value}
+          placeholder={`Search for ${placeholder}`}
+          className="placeholder:text-[#A7A7A7] w-full h-full outline-none text-[14px] font-medium text-black "
+        />
       </div>
     </div>
   );

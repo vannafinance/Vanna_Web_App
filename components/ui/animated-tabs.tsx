@@ -100,8 +100,8 @@ export const AnimatedTabs = ({
 
   // Render gradient/solid/ghost types
   const containerPadding = (type === "solid" || type === "ghost") ? "p-[4px] w-fit h-fit" : "p-[6px]";
-  const containerWidth = (type === "solid" || type === "ghost") ? "" : "w-full";
-  const tabWidth = (type === "solid" ) ? "w-[160px]" : type === "ghost" ? "w-[120px]" : "";
+  const containerWidth = (type === "solid" || type === "ghost") ? "w-full" : "w-full";
+  const tabWidth = (type === "solid" ) ? "w-[160px]" : type === "ghost" ? "w-[180px]" : "";
   const tabPadding = (type === "solid" || type === "ghost") ? "py-[12px] px-[8px]" : "";
   const tabHeight = (type === "solid") ? "h-fit" :  (type === "ghost") ? "h-[38px]" : "h-[67px]";
   const useFlex1 = (type !== "solid" && type !== "ghost");
@@ -134,7 +134,7 @@ export const AnimatedTabs = ({
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
               onMouseEnter={() => setHoveredTab(tab.id)}
-              className={`${tabWidth} ${tabPadding} hover:cursor-pointer text-[16px] font-semibold flex flex-col justify-center text-center ${tabHeight} rounded-[12px] ${useFlex1 ? "flex-1" : ""} relative z-10 ${tabClassName}`}
+              className={`${tabWidth} ${tabPadding} hover:cursor-pointer text-[16px] font-semibold flex flex-col justify-center text-center ${tabHeight} rounded-[10px] ${useFlex1 ? "flex-1" : ""} relative z-10 ${tabClassName}`}
               animate={{
                 color: getTextColor(isActive, isHovered),
                 background: getBackground(isActive, isHovered),

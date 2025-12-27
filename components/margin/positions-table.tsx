@@ -25,9 +25,9 @@ export const Positionstable = ({ onRepayClick, onOpenPositionClick }: Positionst
   // Filter positions based on active tab
   const filteredPositions = useMemo(() => {
     if (activeTab === "currentPositions") {
-      return positions.filter((pos) => pos.isOpen === true);
+      return positions.filter((pos: Position) => pos.isOpen === true);
     } else {
-      return positions.filter((pos) => pos.isOpen === false);
+      return positions.filter((pos: Position) => pos.isOpen === false);
     }
   }, [positions, activeTab]);
 
@@ -35,7 +35,7 @@ export const Positionstable = ({ onRepayClick, onOpenPositionClick }: Positionst
   const totalPages = Math.ceil(filteredPositions.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
-  const paginatedPositions = filteredPositions.slice(startIndex, endIndex);
+  const paginatedPositions: Position[] = filteredPositions.slice(startIndex, endIndex);
 
   // Reset to page 1 when tab changes
   const handleTabChange = (tab: string) => {

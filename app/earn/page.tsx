@@ -1,26 +1,44 @@
 "use client";
 
+import { useState } from "react";
 import { Chart } from "@/components/earn/chart";
 import { Table } from "@/components/earn/table";
 import { AccountStats } from "@/components/margin/account-stats";
 import { tableBody, tableHeadings } from "@/lib/constants/earn";
 import { ACCOUNT_STATS_ITEMS } from "@/lib/constants/margin";
 import { useUserStore } from "@/store/user";
+import { RewardsTable } from "@/components/earn/rewards-table";
 
 export default function Earn() {
   const userAddress = useUserStore((state) => state.address);
+  const [activeTab, setActiveTab] = useState("vaults");
+  
+  // Tab-based data - you can pass different data for each tab
+  const getTableDataForTab = (tabId: string) => {
+    // For now, using same data for both tabs
+    // You can customize this to return different data based on tabId
+    if (tabId === "vaults") {
+      return tableBody;
+    } else if (tabId === "positions") {
+      // Return empty data for positions tab to test empty state
+      return { rows: [] };
+    }
+    return { rows: [] };
+  };
   return (
     <div>
       {userAddress && (
         <div className="p-[40px] w-full h-fit  flex gap-[24px]  ">
-          <div className="flex gap-[24px] w-full h-fit ">
-            <div className="w-[732px] h-[510px]">
-              <Chart type="overall-deposit" currencyTab={true} />
+          <div className="flex gap-[16px] w-full h-fit ">
+            <div className="w-[437.33px] h-fit">
+              <Chart type="overall-deposit" />
             </div>
-            <div className="flex-1 min-w-0">
-              <Chart type="deposit-apy" />
+            <div className="w-[437.33px] h-fit" >
+              <Chart type="net-apy" />
             </div>
-            <div></div>
+            <div className="w-full h-fit">
+              <RewardsTable />
+            </div>
           </div>
         </div>
       )}
@@ -38,10 +56,10 @@ export default function Earn() {
 
       <div className="p-[40px] w-full h-fit ">
         <Table
-            
           filters={{
             filters: ["Deposit", "Collateral"],
             allChainDropdown: true,
+            supplyApyTab: true,
           }}
           heading={{
             tabsItems: [
@@ -50,8 +68,10 @@ export default function Earn() {
             ],
             tabType: "underline",
           }}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
           tableHeadings={tableHeadings}
-          tableBody={tableBody}
+          tableBody={getTableDataForTab(activeTab)}
         />
       </div>
     </div>
