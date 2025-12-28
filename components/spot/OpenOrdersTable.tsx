@@ -5,7 +5,6 @@ import { useSpotTradeStore } from "@/store/spot-trade-store";
 import { useState } from "react";
 import { Modal } from "../ui/modal";
 import { LimitBracketModal } from "./LimitBracketModal";
-import OrderPlacementForm from "./OrderPlacementForm";
 import { EditBracketModal } from "./EditBracketModal";
 
 export default function OpenOrdersTable() {
@@ -20,7 +19,7 @@ export default function OpenOrdersTable() {
       render: () => (
         <div className="flex justify-center">
           <button
-            className="inline-flex  items-center justify-center "
+            className="cursor-pointer inline-flex  items-center justify-center "
             onClick={() => setOpenLimitBracket(true)}
           >
             <Image width={18} height={18} alt="icons" src="/icons/eye.svg" />
@@ -145,7 +144,7 @@ export default function OpenOrdersTable() {
         <div className="flex items-center justify-center gap-2">
           <button
             onClick={() => setOpenEditBracket(true)}
-            className="inline-flex items-center justify-center rounded-md border-[0.75px] border-[#E2E2E2] p-2 bg-white"
+            className="cursor-pointer inline-flex items-center justify-center rounded-md border-[0.75px] border-[#E2E2E2] p-2 bg-white"
           >
             <Image
               className="object-cover"
@@ -155,7 +154,7 @@ export default function OpenOrdersTable() {
               src="/icons/edit.svg"
             />
           </button>
-          <button className="inline-flex items-center justify-center rounded-md border-[0.75px] border-[#E2E2E2] p-2 bg-white">
+          <button className="cursor-pointer inline-flex items-center justify-center rounded-md border-[0.75px] border-[#E2E2E2] p-2 bg-white">
             <Image
               className="object-cover"
               width={16}

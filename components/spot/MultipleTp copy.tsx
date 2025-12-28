@@ -17,7 +17,7 @@ interface MultipleTpProps {
   // maxReached: boolean;
 }
 
-const headerCell = "w-11 p-1 text-[8px] leading-3 font-medium text-[#A7A7A7] ";
+const headerCell = "w-11 p-1 text-[8px] leading-3 font-medium text-[#A7A7A7]";
 
 export default function MultipleTp({
   fields,
@@ -30,35 +30,35 @@ MultipleTpProps) {
     <div className="flex flex-col rounded-sm gap-3">
       {/* Header */}
       <div className="sticky top-0 z-10 ">
-        <div className="flex  gap-2.5 w-full min-w-0 ">
-          <div className="flex gap-1 px-1 shrink">
+        <div className="flex  gap-2.5 w-full ">
+          <div className="flex gap-1 px-1">
             <div className={headerCell}>Exit Price (USD)</div>
             <div className={headerCell}>Profit (%)</div>
           </div>
 
-          <div className={`${headerCell} shrink`}>Profit (USD)</div>
+          <div className={headerCell}>Profit (USD)</div>
 
           <div className="flex gap-1 px-1">
             <div className={headerCell}>Units (%)</div>
             <div className={headerCell}>Units</div>
           </div>
 
-          <div className={`${headerCell} shrink`}>Market Price</div>
-          <div className={`${headerCell} shrink`}>Add/Del</div>
+          <div className={headerCell}>Market Price</div>
+          <div className={headerCell}>Add/Del</div>
         </div>
       </div>
 
       {/* Rows */}
-      <div className="max-h-[109px] overflow-y-auto overflow-x-hidden scrollbar-hide flex flex-col gap-2">
+      <div className="max-h-[109px] overflow-y-auto scrollbar-hide flex flex-col gap-2">
         {fields.map((field, index) => (
-          <div key={field.id} className="flex gap-1 w-full min-w-0">
+          <div key={field.id} className="flex gap-1 w-full">
             {/* Exit + Profit % */}
-            <div className="flex rounded-sm bg-white border border-[#E2E2E2] gap-1 p-1 shrink">
+            <div className="flex rounded-sm bg-white border border-[#E2E2E2] gap-1 p-1">
               <input
                 type="number"
                 placeholder="Exit Price(USD)"
                 {...register(`multipleTakeProfits.${index}.exitPricePercent`)}
-                className="rounded-sm p-1 w-11 shrink text-[10px] font-medium leading-[15px] text-[#111111]
+                className="rounded-sm p-1 w-11 text-[10px] font-medium leading-[15px] text-[#111111]
                 placeholder:text-[8px]
                 placeholder:font-medium
                 placeholder:text-[#C6C6C6]
@@ -70,7 +70,7 @@ MultipleTpProps) {
                 type="number"
                 placeholder="Profit(%)"
                 {...register(`multipleTakeProfits.${index}.profitPercent`)}
-                className="rounded-sm p-1 w-11 shrink text-[10px] font-medium leading-[15px] text-[#111111]
+                className="rounded-sm p-1 w-11 text-[10px] font-medium leading-[15px] text-[#111111]
                 placeholder:text-[8px]
                 placeholder:font-medium
                 placeholder:text-[#C6C6C6]
@@ -86,7 +86,7 @@ MultipleTpProps) {
                 type="number"
                 placeholder="Profit(USD)"
                 {...register(`multipleTakeProfits.${index}.profitAmount`)}
-                className="rounded-sm p-1 w-11 shrink text-[10px] font-medium leading-[15px] text-[#111111]
+                className="rounded-sm p-1 w-11 text-[10px] font-medium leading-[15px] text-[#111111]
                 placeholder:text-[8px]
                 placeholder:font-medium
                 placeholder:text-[#C6C6C6]
@@ -102,7 +102,7 @@ MultipleTpProps) {
                 type="number"
                 placeholder="Units (%)"
                 {...register(`multipleTakeProfits.${index}.unitsPercent`)}
-                className="rounded-sm p-1 w-11 shrink text-[10px] font-medium leading-[15px] text-[#111111]
+                className="rounded-sm p-1 w-11 text-[10px] font-medium leading-[15px] text-[#111111]
                 placeholder:text-[8px]
                 placeholder:font-medium
                 placeholder:text-[#C6C6C6]
@@ -114,7 +114,7 @@ MultipleTpProps) {
                 type="number"
                 placeholder="Units"
                 {...register(`multipleTakeProfits.${index}.units`)}
-                className="rounded-sm p-1 w-11 shrink text-[10px] font-medium leading-[15px] text-[#111111]
+                className="rounded-sm p-1 w-11 text-[10px] font-medium leading-[15px] text-[#111111]
                 placeholder:text-[8px]
                 placeholder:font-medium
                 placeholder:text-[#C6C6C6]
@@ -125,7 +125,7 @@ MultipleTpProps) {
             </div>
 
             {/* Market Price */}
-            <div className="w-11 p-1 shrink">
+            <div className="w-11 p-1">
               <Checkbox
                 {...register(`multipleTakeProfits.${index}.marketPrice`)}
               />
@@ -137,7 +137,7 @@ MultipleTpProps) {
                 type="button"
                 onClick={onAdd}
                 // disabled={maxReached}
-                className={`w-10 py-1 flex justify-center items-center cursor-pointer shrink `}
+                className={`w-10 py-1 flex justify-center items-center cursor-pointer `}
               >
                 <Image
                   src="/icons/plus.svg"
@@ -151,7 +151,7 @@ MultipleTpProps) {
               <button
                 type="button"
                 onClick={() => onRemove(index)}
-                className="w-10 py-1 flex justify-center items-center cursor-pointer shrink"
+                className="w-10 py-1 flex justify-center items-center cursor-pointer"
               >
                 <Image
                   src="/icons/minus.svg"

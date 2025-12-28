@@ -6,6 +6,7 @@ import { OrderSide } from "@/lib/types";
 import { calculateRatio, groupOrdersByTick } from "@/lib/helper";
 import { Dropdown } from "../ui/dropdown";
 import Image from "next/image";
+import { MarketTrades } from "./MarketTrades";
 
 export interface OrderBookRowType {
   price: number;
@@ -47,7 +48,7 @@ const sellOrders: OrderBookRowType[] = [
 ];
 
 export default function OrderBook() {
-  const [activeTab, setActiveTab] = useState<"orderbook" | "trades">(
+  const [activeTab, setActiveTab] = useState<"orderbook" | "markettrades">(
     "orderbook"
   );
   const [view, setView] = useState<OrderBookView>("both");
@@ -79,76 +80,82 @@ export default function OrderBook() {
   const mid = bestBid && bestAsk ? (bestBid + bestAsk) / 2 : undefined;
 
   return (
-    <div className="rounded-2xl bg-[#F7F7F7] flex flex-col gap-2 ">
-      <div className="flex items-center gap-4 p-1 bg-white">
-        {/* Orderbook tab */}
-        <button
-          onClick={() => setActiveTab("orderbook")}
-          className={`cursor-pointer flex flex-1 items-center justify-center rounded-lg py-3 px-2
+    <div className=" flex flex-col bg-[#F7F7F7]  rounded-xl p-2    gap-2 ">
+      <div className="flex flex-col gap-1.5">
+        <div className="flex items-center gap-4 p-1 rounded-lg bg-white h-[47px]">
+          <button
+            onClick={() => setActiveTab("orderbook")}
+            className={`cursor-pointer flex flex-1 items-center justify-center rounded-lg py-3 px-2
       ${activeTab === "orderbook" ? "bg-[#F1EBFD]" : "bg-transparent"}`}
-        >
-          <div className="flex items-center justify-center px-2 gap-[0.625rem]">
-            <span
-              className={`text-[0.75rem] font-semibold text-center
+          >
+            <div className="flex items-center justify-center px-2 gap-2.5">
+              <span
+                className={`text-[0.75rem] font-semibold text-center
           ${activeTab === "orderbook" ? "text-[#703AE6]" : "text-black"}`}
-            >
-              Orderbook
-            </span>
-          </div>
-        </button>
+              >
+                Orderbook
+              </span>
+            </div>
+          </button>
 
-        {/* Market Trades tab */}
-        <button
-          onClick={() => setActiveTab("trades")}
-          className={`cursor-pointer flex flex-1 items-center justify-center rounded-lg py-3 px-2
-      ${activeTab === "trades" ? "bg-[#F1EBFD]" : "bg-transparent"}`}
-        >
-          <div className="flex items-center justify-center px-2 gap-[0.625rem]">
-            <span
-              className={`text-[0.75rem] font-semibold text-center
-          ${activeTab === "trades" ? "text-[#703AE6]" : "text-black"}`}
-            >
-              Market Trades
-            </span>
-          </div>
-        </button>
-      </div>
-      {/* Header */}
-      <div className="flex w-full items-center  px-4">
-        <div className="flex  gap-2">
-          {(Object.keys(VIEW_ICONS) as OrderBookView[]).map((v) => (
-            <button
-              key={v}
-              onClick={() => setView(v)}
-              className={`  w-4 cursor-pointer transition ${
-                view === v ? "" : "hover:bg-white/60"
-              }`}
-              aria-label={`View ${v}`}
-            >
-              <Image src={VIEW_ICONS[v]} alt={v} width={16} height={16} />
-            </button>
-          ))}
+          <button
+            onClick={() => setActiveTab("markettrades")}
+            className={`cursor-pointer flex flex-1 items-center justify-center rounded-lg py-3 px-2
+      ${activeTab === "markettrades" ? "bg-[#F1EBFD]" : "bg-transparent"}`}
+          >
+            <div className="flex items-center justify-center px-2 gap-[0.625rem]">
+              <span
+                className={`text-[0.75rem] font-semibold text-center
+          ${activeTab === "markettrades" ? "text-[#703AE6]" : "text-black"}`}
+              >
+                Market Trades
+              </span>
+            </div>
+          </button>
         </div>
+        {activeTab === "orderbook" && (
+          <div className="flex w-full items-center  px-1">
+            <div className="flex  gap-2">
+              {(Object.keys(VIEW_ICONS) as OrderBookView[]).map((v) => (
+                <button
+                  key={v}
+                  onClick={() => setView(v)}
+                  className={`  w-4 cursor-pointer transition ${
+                    view === v ? "" : "hover:bg-white/60"
+                  }`}
+                  aria-label={`View ${v}`}
+                >
+                  <Image src={VIEW_ICONS[v]} alt={v} width={16} height={16} />
+                </button>
+              ))}
+            </div>
 
-        <div className="ml-auto">
-          <Dropdown
-            items={TICK_OPTIONS}
-            selectedOption={String(tick)}
-            setSelectedOption={(val) => setTick(Number(val))}
-            classname=" gap-1 text-[14px] leading-[21px] "
-            dropdownClassname="text-[14px] leading-[21px]"
-          />
-        </div>
+            <div className="ml-auto">
+              <Dropdown
+                items={TICK_OPTIONS}
+                selectedOption={String(tick)}
+                setSelectedOption={(val) => setTick(Number(val))}
+                classname=" gap-0.5 text-[14px] leading-[21px] "
+                dropdownClassname="text-[14px] leading-[21px] "
+              />
+            </div>
+          </div>
+        )}
       </div>
 
-      <div className="pb-4 rounded-lg flex flex-col gap-3 h-[532px]">
-        <div className="p-4 flex flex-col gap-2">
+      {activeTab === "orderbook" && (
+        <>
           <div className="flex flex-col gap-2">
-            <div className=" flex flex-col gap-3 ">
-              <div className="px-1 grid grid-cols-3 text-[12px] leading-[18px] text-[#5C5B5B] font-medium">
-                <span>Price</span>
-                <span className="text-right">Amount</span>
-                <span className="text-right">Total</span>
+            {/** sell side */}
+            <div className=" flex flex-col">
+              <div className=" grid grid-cols-3 text-[12px]  leading-[18px] text-[#5C5B5B] font-medium">
+                <span className="py-1 min-w-[84px]">Price(USDT)</span>
+                <span className="py-1 min-w-[84px] text-right">
+                  Amount(BTC)
+                </span>
+                <span className="py-1 min-w-[84px] text-right">
+                  Total(USDT)
+                </span>
               </div>
               <div>
                 {(view === "both" || view === "sell") &&
@@ -157,11 +164,15 @@ export default function OrderBook() {
                   ))}
               </div>
             </div>
+
+            {/** mid price */}
             {view === "both" && mid && (
               <div className="font-semibold  text-[16px] leading-6 text-[#FC5457]">
                 {mid.toLocaleString()}
               </div>
             )}
+
+            {/**Buy Side */}
             <div>
               {(view === "both" || view === "buy") &&
                 buys.map((r, i) => (
@@ -169,27 +180,37 @@ export default function OrderBook() {
                 ))}
             </div>
           </div>
-        </div>
 
-        {/* Ratio */}
-        <div className="px-4 flex items-center gap-[3px]">
-          {/* Buy */}
-          <div className="text-[12px] leading-[18px] font-semibold text-[#24A0A9] shrink-0">
-            B {buyRatio}%
-          </div>
+          {/* Ratio */}
+          {view === "both" && (
+            <div className="flex items-center gap-[3px]">
+              {/* Buy */}
+              <div className="text-[12px] leading-[18px] font-semibold text-[#24A0A9] shrink-0">
+                B {buyRatio}%
+              </div>
 
-          {/* Ratio Bar */}
-          <div className="flex-1 h-1 rounded-full overflow-hidden flex">
-            <div className="bg-[#24A0A9]" style={{ width: `${buyRatio}%` }} />
-            <div className="bg-[#FC5457]" style={{ width: `${sellRatio}%` }} />
-          </div>
+              {/* Ratio Bar */}
+              <div className="flex-1 h-1 rounded-full overflow-hidden flex">
+                <div
+                  className="bg-[#24A0A9]"
+                  style={{ width: `${buyRatio}%` }}
+                />
+                <div
+                  className="bg-[#FC5457]"
+                  style={{ width: `${sellRatio}%` }}
+                />
+              </div>
 
-          {/* Sell */}
-          <span className="text-[12px] leading-[18px] font-semibold text-[#FC5457] shrink-0">
-            {sellRatio}% S
-          </span>
-        </div>
-      </div>
+              {/* Sell */}
+              <span className="text-[12px] leading-[18px] font-semibold text-[#FC5457] shrink-0">
+                {sellRatio}% S
+              </span>
+            </div>
+          )}
+        </>
+      )}
+
+      {activeTab === "markettrades" && <MarketTrades />}
     </div>
   );
 }

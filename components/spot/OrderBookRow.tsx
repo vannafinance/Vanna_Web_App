@@ -21,7 +21,7 @@ export const OrderBookRow = ({
 
       {/* Price */}
       <span
-        className={`relative z-10 ${
+        className={`relative z-10 min-w-[84px] ${
           row.side === "sell" ? "text-[#FC5457]" : "text-[#1C7C83]"
         }`}
       >
@@ -29,12 +29,12 @@ export const OrderBookRow = ({
       </span>
 
       {/* Amount */}
-      <span className="relative z-10 text-right">
+      <span className="relative z-10 min-w-[84px] text-right">
         {row.amount.toLocaleString()}
       </span>
 
       {/* Total */}
-      <span className="relative z-10 text-right">
+      <span className="relative z-10 min-w-[84px]  text-right">
         {row.total.toLocaleString()}
       </span>
     </div>
