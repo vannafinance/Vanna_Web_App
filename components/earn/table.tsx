@@ -186,7 +186,7 @@ const TableRow = memo(
 
     return (
       <tr
-        className={`cursor-pointer w-full h-fit rounded-[12px] py-[16px] px-[20px] flex gap-[16px] items-center ${
+        className={`hover:bg-[#F1EBFD] cursor-pointer w-full h-fit rounded-[12px] py-[16px] px-[20px] flex gap-[16px] items-center ${
           tableBodyBackground || "bg-[#F7F7F7]"
         } border-[1px] border-[#E2E2E2]`}
       >
