@@ -1,41 +1,66 @@
 "use client";
 
 import { motion } from "framer-motion";
+import React from "react";
 
-interface Button {
-  text: string;
-  size: "small" | "medium" | "large";
-  type: "solid" | "gradient" | "ghost";
+interface ButtonProps {
+  children?: React.ReactNode;
+  text?: string;
+  size?: "small" | "medium" | "large";
+  type?: "solid" | "gradient" | "ghost";
   onClick?: React.MouseEventHandler<HTMLButtonElement>;
-  disabled: boolean;
-  icon?: Element;
+  disabled?: boolean;
+  icon?: React.ReactNode;
   ariaLabel?: string;
 }
 
-export const Button = (props: Button) => {
-  return (
-    <motion.button
-      whileTap={{ scale: 0.95 }}
-      disabled={props.disabled}
-      onClick={props.onClick}
-      aria-label={props.ariaLabel || props.text}
-      className={`w-full h-fit ${
-        props.size == "medium"
-          ? "py-[16px] px-[12px] text-[16px] rounded-[12px]"
-          : props.size == "large"
-          ? "rounded-[16px] text-[20px] py-[20px] px-[16px]"
-          : "text-[12px] py-[12px] px-[24px]"
-      } disabled:cursor-not-allowed transition  cursor-pointer rounded-[8px] font-semibold ${
-        props.type == "solid"
-          ? "bg-[#703AE6] disabled:bg-[#A7A7A7]  hover:bg-[#6635D1] active:bg-[#6635D1] text-white"
-          : props.type == "gradient"
-          ? props.disabled
-            ? "bg-[#A7A7A7] text-white"
-            : "bg-gradient text-white hover:bg-gradient active:bg-gradient"
-          : " disabled:text-[#A7A7A7] text-black hover:bg-[#F1EBFD] hover:text-[#703AE6] active:bg-[#F1EBFD] active:text-[#703AE6] focus:text-[#703AE6]"
-      }`}
-    >
-      {props.text}
-    </motion.button>
-  );
-};
+export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  (
+    {
+      children,
+      text,
+      size = "medium",
+      type = "solid",
+      onClick,
+      disabled = false,
+      icon,
+      ariaLabel,
+    },
+    ref
+  ) => {
+    return (
+      <motion.button
+        ref={ref}
+        whileTap={{ scale: 0.95 }}
+        disabled={disabled}
+        onClick={onClick}
+        aria-label={ariaLabel || text}
+        className={`w-full h-fit transition font-semibold disabled:cursor-not-allowed cursor-pointer
+          ${
+            size === "medium"
+              ? "py-[16px] px-[12px] text-[16px] rounded-[12px]"
+              : size === "large"
+              ? "py-[20px] px-[16px] text-[20px] rounded-[16px]"
+              : "py-[12px] px-[24px] text-[12px] rounded-[8px]"
+          }
+          ${
+            type === "solid"
+              ? "bg-[#703AE6] text-white hover:bg-[#6635D1] active:bg-[#6635D1] disabled:bg-[#A7A7A7]"
+              : type === "gradient"
+              ? disabled
+                ? "bg-[#A7A7A7] text-white"
+                : "bg-gradient text-white"
+              : "text-black hover:bg-[#F1EBFD] hover:text-[#703AE6] active:bg-[#F1EBFD]"
+          }
+        `}
+      >
+        <span className="flex items-center justify-center gap-2">
+          {icon}
+          {children ?? text}
+        </span>
+      </motion.button>
+    );
+  }
+);
+
+Button.displayName = "Button";

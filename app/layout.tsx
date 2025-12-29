@@ -5,6 +5,7 @@ import { Navbar } from "@/components/navbar";
 import { navbarItems } from "@/lib/constants";
 import { ThemeProvider } from "@/contexts/theme-context";
 import { Providers } from '../Provider/wagmi-provider'
+import ChainLogger from "@/hooks/chainlogger";
 
 
 const plusJakartaSans = Plus_Jakarta_Sans({

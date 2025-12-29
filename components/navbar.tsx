@@ -9,26 +9,16 @@ import { tradeItems } from "@/lib/constants";
 import { useTheme } from "@/contexts/theme-context";
 import { useUserStore } from "@/store/user";
 import { useConnectModal } from '@rainbow-me/rainbowkit';
-
-
-
 import { useAccount, useClient, useDisconnect, useEnsAvatar, useEnsName, usePublicClient, useReadContract, useSimulateContract, useWalletClient } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-
-
-
 import AccountManager from "../abi/vanna/out/out/AccountManager.sol/AccountManager.json";
-import Registry from "../abi/vanna/out/out/Registry.sol/Registry.json"
-
-
-
+import Registry from "../abi/vanna/out/out/Registry.sol/Registry.json" ;
 import {
   arbAddressList,
   baseAddressList,
   opAddressList,
 } from ".././lib/web3Constants";
 import { useMarginAccountInfoStore } from "@/store/margin-account-info-store";
-
 
 
 interface Navbar {
@@ -40,7 +30,7 @@ interface Navbar {
 }
 
 export const Navbar = (props: Navbar) => {
-  // Get current pathname for active link detection
+
   const pathname = usePathname();
   const router = useRouter();
   const { isDark, toggleTheme } = useTheme();
@@ -69,17 +59,6 @@ export const Navbar = (props: Navbar) => {
     query: { enabled: !!ensName },
   });
 
-  const loginTriggeredRef = useRef(false);
-
-  const getAddressList = () => {
-
-    if (chainId === 42161) return arbAddressList;
-    if (chainId === 10) return opAddressList; // Optimism
-    if (chainId === 8453) return baseAddressList; // Base
-    return baseAddressList; // Default to Base
-
-
-  }
 
 
   useEffect(() => {
@@ -89,69 +68,6 @@ export const Navbar = (props: Navbar) => {
       setUserAddress(null);
     }
   }, [isConnected, address, setUserAddress]);
-
-
-
-  useEffect(() => {
-    if (loginTriggeredRef.current && isConnected && address && chainId && walletClient && publicClient) {
-      loginTriggeredRef.current = false;
-
-      const marginHandledKey = `margin_handled_${address}_${chainId}`;
-      if (localStorage.getItem(marginHandledKey) === "true") {
-        console.log("Margin account already handled");
-        return;
-      } 
-
-      const ensureMarginAccount = async () => {
-        try {
-          const addressList = getAddressList();
-
-          const accounts = await publicClient.readContract({
-            address: addressList.registryContractAddress as `0x${string}`,
-            abi: Registry.abi,
-            functionName: "accountsOwnedBy",
-            args: [address],
-          });
-
-          if ((accounts as any[]).length > 0) {
-            setHasMarginAccount({hasMarginAccount:true})
-            localStorage.setItem(marginHandledKey, 'true');
-            console.log("Margin account exists");
-            return;
-          }
-
-          console.log("Creating margin account…");
-
-          const { request } = await publicClient.simulateContract({
-            address: addressList.accountManagerContractAddress as `0x${string}`,
-            abi: AccountManager.abi,
-            functionName: "openAccount",
-            args: [address],
-            account: address,
-          });
-
-          const txHash = await walletClient.writeContract(request);
-          setHasMarginAccount({ hasMarginAccount: true });
-          localStorage.setItem(marginHandledKey!, "true");
-
-          console.log("Margin account created:", txHash);
-
-        } catch (err: any) {
-
-          //user rejected the tx
-
-          if (err?.code === 4001) {
-            localStorage.setItem(marginHandledKey!, 'true')
-          }
-
-        }
-      };
-
-      ensureMarginAccount();
-
-    }
-  }, [isConnected, address, chainId, walletClient, publicClient]);
-
 
 
 
@@ -165,7 +81,6 @@ export const Navbar = (props: Navbar) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
       if (closeTimeoutRef.current) {
@@ -555,7 +470,6 @@ export const Navbar = (props: Navbar) => {
                 type="gradient"
                 disabled={false}
                 onClick={async () => {
-                  loginTriggeredRef.current = true;
                   openConnectModal?.();
 
                 }}

@@ -23,30 +23,16 @@ import { useMarginAccountInfoStore } from "@/store/margin-account-info-store";
 import { useUserStore } from "@/store/user";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 
-
 import { arbAddressList, opAddressList, baseAddressList } from "@/lib/web3Constants";
 
-
 import AccountManager from "../../abi/vanna/out/out/AccountManager.sol/AccountManager.json";
-
 import AccountManagerop from "../../abi/vanna/out/out/AccountManager.sol/AccountManager.json";
-
 import Registry from "../../abi/vanna/out/out/Registry.sol/Registry.json";
 
-import { sleep } from "../../lib/helper"
-import { type } from '../../.next/dev/types/routes';
-import { log } from "console";
-
-
 type Modes = "Deposit" | "Borrow";
-
 type AddressList = typeof baseAddressList;
 
-
 export const LeverageAssetsTab = () => {
-
-  // Get collaterals from global store using selector to prevent unnecessary re-renders
-
   // Component state
   const hasMarginAccount = useMarginAccountInfoStore((state) => state.hasMarginAccount);
   const setHasMarginAccount = useMarginAccountInfoStore((state) => state.set);
@@ -58,26 +44,20 @@ export const LeverageAssetsTab = () => {
   const [depositAmount, setDepositAmount] = useState(0);
   const [depositCurrency, setDepositCurrency] = useState("USDT");
   const feesCurrency = "USDT";
-  // const address = useUserStore((state) => state.address);
 
-
-
-  // Create Margin Accounts 
-
+  // Wagmi hooks
   const { address, chainId } = useAccount();
   const isSupportedChain =
     chainId === 8453 || // Base
     chainId === 42161 || // Arbitrum
     chainId === 10;      // Optimism
 
-  const showWrongNetworkWarning = !!address && !isSupportedChain;
-
-
   const { data: walletClient } = useWalletClient();
   const publicClient = usePublicClient();
 
+  // Loading states
   const [loading, setLoading] = useState(false);
-
+  const [loadingMessage, setLoadingMessage] = useState("");
 
   const getAddressList = (): AddressList | null => {
     if (!chainId) return null;
@@ -89,86 +69,93 @@ export const LeverageAssetsTab = () => {
     return null;
   };
 
-
   const handlecreateAccount = async () => {
-  if (!address || !publicClient || !walletClient || !chainId) return;
+    if (!address || !publicClient || !walletClient || !chainId) return;
 
-  const addressList = getAddressList();
-  if (!addressList) {
-    console.error("Unsupported chain");
-    return;
-  }
-
-  try {
-    setLoading(true);
-
-  
-    const accounts = await publicClient.readContract({
-      address: addressList.registryContractAddress as `0x${string}`,
-      abi: Registry.abi,
-      functionName: "accountsOwnedBy",
-      args: [address],
-    });
-
-    if ((accounts as any[]).length > 0) {
-      setHasMarginAccount({ hasMarginAccount: true });
-      setActiveDialogue("deposit-earn");
+    const addressList = getAddressList();
+    if (!addressList) {
+      console.error("Unsupported chain");
+      setLoadingMessage("Unsupported network");
+      setTimeout(() => setLoadingMessage(""), 2000);
       return;
     }
 
- 
-    const { request } = await publicClient.simulateContract({
-      address: addressList.accountManagerContractAddress as `0x${string}`,
-      abi: AccountManager.abi,
-      functionName: "openAccount",
-      args: [address],
-      account: address,
-    });
+    try {
+      setLoading(true);
+      setLoadingMessage("Checking existing accounts...");
 
-   
-    const txHash = await walletClient.writeContract(request);
+      const accounts = await publicClient.readContract({
+        address: addressList.registryContractAddress as `0x${string}`,
+        abi: Registry.abi,
+        functionName: "accountsOwnedBy",
+        args: [address],
+      });
 
-  
-    await publicClient.waitForTransactionReceipt({
-      hash: txHash,
-    });
+      if ((accounts as any[]).length > 0) {
+        setLoadingMessage("Account found!");
+        setHasMarginAccount({ hasMarginAccount: true });
+        setActiveDialogue("deposit-earn");
+        return;
+      }
 
-   
-    setHasMarginAccount({ hasMarginAccount: true });
+      setLoadingMessage("Preparing transaction...");
 
-    setActiveDialogue("deposit-earn");
+      const { request } = await publicClient.simulateContract({
+        address: addressList.accountManagerContractAddress as `0x${string}`,
+        abi: AccountManager.abi,
+        functionName: "openAccount",
+        args: [address],
+        account: address,
+      });
 
-  } catch (err: any) {
-    console.error("Margin account creation failed", err);
+      setLoadingMessage("Please confirm transaction in your wallet...");
 
-    if (err?.code === 4001) {
-      setActiveDialogue("none");
+      const txHash = await walletClient.writeContract(request);
+
+      setLoadingMessage("Transaction submitted. Waiting for confirmation...");
+
+      await publicClient.waitForTransactionReceipt({
+        hash: txHash,
+      });
+
+      setLoadingMessage("Success! Account created.");
+      setHasMarginAccount({ hasMarginAccount: true });
+      
+      // Small delay to show success message
+      setTimeout(() => {
+        setActiveDialogue("deposit-earn");
+      }, 1000);
+
+    } catch (err: any) {
+      console.error("Margin account creation failed", err);
+
+      // User rejected transaction
+      if (err?.code === 4001) {
+        setLoadingMessage("Transaction rejected");
+        setTimeout(() => {
+          setActiveDialogue("none");
+          setLoadingMessage("");
+        }, 1500);
+      } else {
+        setLoadingMessage("Transaction failed. Please try again.");
+        setTimeout(() => {
+          setLoadingMessage("");
+        }, 3000);
+      }
+    } finally {
+      setLoading(false);
     }
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
-
-
-  // Dialogue state - simplified
+  // Dialogue state
   type DialogueState = "none" | "create-margin" | "sign-agreement" | "deposit-borrow" | "deposit-earn";
   const [activeDialogue, setActiveDialogue] = useState<DialogueState>("none");
 
-  // Local state to collect data from child component
-  const [currentCollaterals, setCurrentCollaterals] = useState<Collaterals[]>(
-    []
-  );
-  const [currentBorrowItems, setCurrentBorrowItems] = useState<BorrowInfo[]>(
-    []
-  );
-  const [selectedBalanceType, setSelectedBalanceType] = useState<string>(
-    BALANCE_TYPE_OPTIONS[0]
-  );
-  // Store full collateral objects: array for Deposit (multiple), single for Borrow
-  const [selectedMBCollaterals, setSelectedMBCollaterals] = useState<
-    Collaterals[]
-  >([]);
+  // Local state
+  const [currentCollaterals, setCurrentCollaterals] = useState<Collaterals[]>([]);
+  const [currentBorrowItems, setCurrentBorrowItems] = useState<BorrowInfo[]>([]);
+  const [selectedBalanceType, setSelectedBalanceType] = useState<string>(BALANCE_TYPE_OPTIONS[0]);
+  const [selectedMBCollaterals, setSelectedMBCollaterals] = useState<Collaterals[]>([]);
 
   // Get collateral mock data from store
   const collateralMock = useCollateralBorrowStore((state) => state.collaterals);
@@ -213,10 +200,9 @@ export const LeverageAssetsTab = () => {
     [currentCollaterals]
   );
 
-  // Use totalDepositValue for MB display (no need for separate calculation)
   const mbTotalUsd = isMBMode ? totalDepositValue : 0;
 
-  // Simple calculations (no need for useMemo)
+  // Simple calculations
   const fees = totalDepositValue > 0 ? totalDepositValue * 0.000234 : 0;
   const totalDeposit = totalDepositValue + fees;
   const platformPoints = Number((leverage * 0.575).toFixed(1));
@@ -227,16 +213,12 @@ export const LeverageAssetsTab = () => {
   useEffect(() => {
     setDepositAmount(totalDepositValue);
 
-    // Use currency from first collateral
     if (currentCollaterals.length > 0 && currentCollaterals[0].asset) {
       setDepositCurrency(currentCollaterals[0].asset);
     }
   }, [totalDepositValue, currentCollaterals]);
 
-  // Removed redundant useEffect - state is already managed directly
-
-  // Add new collateral
-  // Prevents adding if already editing or in Borrow mode with 1 collateral
+  // Collateral handlers
   const handleAddCollateral = () => {
     if (editingIndex !== null) return;
     if (mode === "Borrow" && currentCollaterals.length >= 1) return;
@@ -253,27 +235,18 @@ export const LeverageAssetsTab = () => {
     setEditingIndex(newIndex);
   };
 
-  // Start editing a collateral
-  // Only allows if not already editing another one
   const handleEditCollateral = (index: number) => {
     if (editingIndex !== null && editingIndex !== index) return;
     setEditingIndex(index);
   };
 
-  // Save edited collateral
-  const handleSaveCollateral = (
-    index: number,
-    updatedCollateral: Collaterals
-  ) => {
-    // If MB is selected, clear all other collaterals and keep only this one
+  const handleSaveCollateral = (index: number, updatedCollateral: Collaterals) => {
     if (updatedCollateral.balanceType.toLowerCase() === "mb") {
       setCurrentCollaterals([updatedCollateral]);
       setEditingIndex(null);
     } else {
-      // If saving a non-MB collateral, remove all MB collaterals and update this one
       const newCollaterals = [...currentCollaterals];
       newCollaterals[index] = updatedCollateral;
-      // Remove all MB collaterals
       const filteredCollaterals = newCollaterals.filter(
         (c) => c.balanceType.toLowerCase() !== "mb"
       );
@@ -282,8 +255,6 @@ export const LeverageAssetsTab = () => {
     }
   };
 
-  // Cancel editing
-  // Removes empty new collateral if it's the last one
   const handleCancelEdit = () => {
     if (
       editingIndex !== null &&
@@ -298,8 +269,6 @@ export const LeverageAssetsTab = () => {
     setEditingIndex(null);
   };
 
-  // Delete collateral
-  // Prevents deletion if editing or deleting first collateral
   const handleDeleteCollateral = (index: number) => {
     if (editingIndex !== null) return;
     if (index === 0) return;
@@ -308,14 +277,10 @@ export const LeverageAssetsTab = () => {
     setCurrentCollaterals(newCollaterals);
   };
 
-  // Handler for mode toggle
   const handleModeToggle = () => {
     setMode((prev) => (prev === "Borrow" ? "Deposit" : "Borrow"));
   };
 
-  // Removed wrapper functions - use inline arrow functions in JSX
-
-  // Unified balance type change handler
   const handleBalanceTypeChange = (index: number) => {
     return (balanceType: string | ((prev: string) => string)) => {
       const value =
@@ -324,7 +289,6 @@ export const LeverageAssetsTab = () => {
           : balanceType(selectedBalanceType);
       const normalized = value.toLowerCase();
 
-      // Get current collateral or create default
       const currentCollateral = currentCollaterals[index] || {
         amount: 0,
         amountInUsd: 0,
@@ -339,11 +303,9 @@ export const LeverageAssetsTab = () => {
       };
 
       if (normalized === "mb") {
-        // MB mode: single collateral with MB type
         setCurrentCollaterals([updatedCollateral]);
         setEditingIndex(null);
       } else {
-        // Normal mode: update balance type, remove any MB collaterals
         const newCollaterals = [...currentCollaterals];
         newCollaterals[index] = updatedCollateral;
         const filteredCollaterals = newCollaterals.filter(
@@ -358,24 +320,16 @@ export const LeverageAssetsTab = () => {
     };
   };
 
-  // Handle create margin account button click
   const handleButtonClick = () => {
-
-    if(hasMarginAccount){
-      
-      setActiveDialogue("deposit-earn")
-
-    } 
-    else{
+    if (hasMarginAccount) {
+      setActiveDialogue("deposit-earn");
+    } else {
       setActiveDialogue("create-margin");
     }
-
   };
 
   return (
     <>
-
-
       <motion.div
         className="w-full flex flex-col gap-[24px] pt-6"
         initial={{ opacity: 0 }}
@@ -415,7 +369,7 @@ export const LeverageAssetsTab = () => {
             {/* Render MB UI if MB is selected, otherwise render collaterals */}
             {isMBMode ? (
               <motion.div
-                className="flex flex-col gap-[24px] bg-white p-[20px] rounded-[16px] border-[1px] border-[#E2E2E2] "
+                className="flex flex-col gap-[24px] bg-white p-[20px] rounded-[16px] border-[1px] border-[#E2E2E2]"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
@@ -431,7 +385,7 @@ export const LeverageAssetsTab = () => {
                       items={[...BALANCE_TYPE_OPTIONS]}
                       selectedOption={selectedBalanceType}
                       setSelectedOption={handleBalanceTypeChange(0)}
-                      dropdownClassname="text-[14px] gap-[10px] "
+                      dropdownClassname="text-[14px] gap-[10px]"
                     />
                   </div>
                 </div>
@@ -450,7 +404,6 @@ export const LeverageAssetsTab = () => {
                               checked={isSelected}
                               onChange={() => {
                                 if (isSelected) {
-                                  // Remove from selection
                                   setSelectedMBCollaterals((prev) =>
                                     prev.filter(
                                       (coll) =>
@@ -461,7 +414,6 @@ export const LeverageAssetsTab = () => {
                                     )
                                   );
                                 } else {
-                                  // Add to selection (multiple allowed)
                                   setSelectedMBCollaterals((prev) => [
                                     ...prev,
                                     item,
@@ -475,7 +427,6 @@ export const LeverageAssetsTab = () => {
                               value={`collateral-${index}`}
                               checked={isSelected}
                               onChange={() => {
-                                // Only one selection allowed (replace array with single item)
                                 setSelectedMBCollaterals([item]);
                               }}
                             />
@@ -542,7 +493,7 @@ export const LeverageAssetsTab = () => {
                       collaterals={null}
                       isEditing={true}
                       isAnyOtherEditing={false}
-                      onEdit={() => { }}
+                      onEdit={() => {}}
                       onSave={(data) => {
                         setCurrentCollaterals([data]);
                         setEditingIndex(null);
@@ -566,16 +517,17 @@ export const LeverageAssetsTab = () => {
               (mode === "Borrow" && currentCollaterals.length >= 1) ||
               isMBMode
             }
-            className={`w-fit py-[11px] px-[10px] rounded-[8px] flex gap-[4px] text-[14px] font-medium text-[#703AE6] items-center ${editingIndex !== null ||
+            className={`w-fit py-[11px] px-[10px] rounded-[8px] flex gap-[4px] text-[14px] font-medium text-[#703AE6] items-center ${
+              editingIndex !== null ||
               (mode === "Borrow" && currentCollaterals.length >= 1) ||
               isMBMode
-              ? "opacity-50 cursor-not-allowed"
-              : "hover:cursor-pointer hover:bg-[#F1EBFD]"
-              }`}
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:cursor-pointer hover:bg-[#F1EBFD]"
+            }`}
             whileHover={
               editingIndex === null &&
-                !(mode === "Borrow" && currentCollaterals.length >= 1) &&
-                !isMBMode
+              !(mode === "Borrow" && currentCollaterals.length >= 1) &&
+              !isMBMode
                 ? { x: 5 }
                 : {}
             }
@@ -630,7 +582,7 @@ export const LeverageAssetsTab = () => {
           </div>
         </motion.div>
 
-        {/* Details panel - shows calculations and info */}
+        {/* Details panel */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -651,7 +603,6 @@ export const LeverageAssetsTab = () => {
             expandableSections={[
               {
                 title: "More Details",
-
                 items: [
                   {
                     id: "platformPoints",
@@ -696,24 +647,21 @@ export const LeverageAssetsTab = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.4, delay: 0.3, ease: "easeOut" }}
         >
-          {
-            showWrongNetworkWarning ? (<div className="mb-4 p-3 rounded-lg bg-red-100 text-red-700 text-sm">
-              Please switch to Base, Arbitrum, or Optimism.
-            </div>) : (
-              <Button
-                disabled={!address}
-                size="large"
-                text={
-                  !address ? "Login" :
-                    hasMarginAccount
-                      ? "Deposit & Earn"
-                      : "Create your Margin Account"
-                }
-                type="gradient"
-                onClick={handleButtonClick}
-              />
-            )
-          }
+          <Button
+            disabled={!address || loading}
+            size="large"
+            text={
+              loading
+                ? "Processing..."
+                : !address
+                ? "Connect Wallet"
+                : hasMarginAccount
+                ? "Deposit & Earn"
+                : "Create your Margin Account"
+            }
+            type="gradient"
+            onClick={handleButtonClick}
+          />
         </motion.div>
       </motion.div>
 
@@ -721,12 +669,12 @@ export const LeverageAssetsTab = () => {
       <AnimatePresence>
         {activeDialogue === "create-margin" && (
           <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-[#45454566] "
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[#45454566]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            onClick={() => setActiveDialogue("none")}
+            onClick={() => !loading && setActiveDialogue("none")}
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -747,8 +695,8 @@ export const LeverageAssetsTab = () => {
                 ]}
                 heading="Create Margin Account"
                 onClose={() => {
-                  setActiveDialogue("none")
-                  setLoading(false)
+                  setActiveDialogue("none");
+                  setLoading(false);
                 }}
               />
             </motion.div>
@@ -756,16 +704,16 @@ export const LeverageAssetsTab = () => {
         )}
       </AnimatePresence>
 
-      {/* Second dialogue: Review and Sign Agreement */}
+      {/* Second dialogue: Review and Sign Agreement with Loading State */}
       <AnimatePresence>
         {activeDialogue === "sign-agreement" && (
           <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-[#45454566] "
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[#45454566]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            onClick={() => setActiveDialogue("none")}
+            onClick={() => !loading && setActiveDialogue("none")}
           >
             <motion.div
               className="w-full max-w-[891px]"
@@ -776,16 +724,12 @@ export const LeverageAssetsTab = () => {
               onClick={(e) => e.stopPropagation()}
             >
               <Dialogue
-
                 description="Before you proceed, please review and accept the terms of borrowing on VANNA. This agreement ensures you understand the risks, responsibilities, and conditions associated with using the platform."
-
                 buttonOnClick={async () => {
-
-
-                  await handlecreateAccount()
-                  // setActiveDialogue("none")
+                  await handlecreateAccount();
                 }}
-                buttonText="Sign Agreement"
+                buttonText={loading ? "Processing..." : "Sign Agreement"}
+                buttonDisabled={loading}
                 content={[
                   {
                     line: "Collateral Requirement",
@@ -832,7 +776,8 @@ export const LeverageAssetsTab = () => {
                 ]}
                 heading="Review and Sign Agreement"
                 checkboxContent="I have read and agree to the VANNA Borrow Agreement."
-                onClose={() => setActiveDialogue("none")}
+                onClose={() => !loading && setActiveDialogue("none")}
+                loadingMessage={loadingMessage}
               />
             </motion.div>
           </motion.div>
@@ -843,7 +788,7 @@ export const LeverageAssetsTab = () => {
       <AnimatePresence>
         {activeDialogue === "deposit-earn" && (
           <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-[#45454566] "
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[#45454566]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -870,8 +815,8 @@ export const LeverageAssetsTab = () => {
                 ]}
                 heading="Deposit & Earn"
                 onClose={() => {
-                  setActiveDialogue("none")
-                  setLoading(false)
+                  setActiveDialogue("none");
+                  setLoading(false);
                 }}
               />
             </motion.div>
