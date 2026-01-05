@@ -5,9 +5,7 @@ import { Navbar } from "@/components/navbar";
 import { navbarItems } from "@/lib/constants";
 import { ThemeProvider } from "@/contexts/theme-context";
 import { Providers } from '../Provider/wagmi-provider'
-import ChainLogger from "@/hooks/chainlogger";
-
-
+import { Toaster } from "@/components/ui/toaster";
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
   weight: ["200", "300", "400", "500", "600", "700", "800"],
@@ -35,10 +33,12 @@ export default function RootLayout({
         <Providers>
           <ThemeProvider>
             <Navbar items={navbarItems} />
-            {children}
+              <Toaster/>
+              {children}
           </ThemeProvider>
 
         </Providers>
+
       </body>
     </html>
   );

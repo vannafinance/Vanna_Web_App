@@ -29,12 +29,17 @@ import AccountManager from "../../abi/vanna/out/out/AccountManager.sol/AccountMa
 import AccountManagerop from "../../abi/vanna/out/out/AccountManager.sol/AccountManager.json";
 import Registry from "../../abi/vanna/out/out/Registry.sol/Registry.json";
 
+import { toast } from "sonner"
+
 type Modes = "Deposit" | "Borrow";
 type AddressList = typeof baseAddressList;
 
 export const LeverageAssetsTab = () => {
   // Component state
   const hasMarginAccount = useMarginAccountInfoStore((state) => state.hasMarginAccount);
+
+
+
   const setHasMarginAccount = useMarginAccountInfoStore((state) => state.set);
 
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -45,8 +50,12 @@ export const LeverageAssetsTab = () => {
   const [depositCurrency, setDepositCurrency] = useState("USDT");
   const feesCurrency = "USDT";
 
+  const address = useUserStore((state) => state.address);
+
+
+
   // Wagmi hooks
-  const { address, chainId } = useAccount();
+  const { chainId } = useAccount();
   const isSupportedChain =
     chainId === 8453 || // Base
     chainId === 42161 || // Arbitrum
@@ -70,15 +79,21 @@ export const LeverageAssetsTab = () => {
   };
 
   const handlecreateAccount = async () => {
-    if (!address || !publicClient || !walletClient || !chainId) return;
 
     const addressList = getAddressList();
     if (!addressList) {
-      console.error("Unsupported chain");
+      toast("Unsupported network")
+
       setLoadingMessage("Unsupported network");
       setTimeout(() => setLoadingMessage(""), 2000);
       return;
     }
+
+    if (!address || !publicClient || !walletClient || !chainId) {
+      toast("Wallet not ready");
+      return;
+    }
+
 
     try {
       setLoading(true);
@@ -120,14 +135,15 @@ export const LeverageAssetsTab = () => {
 
       setLoadingMessage("Success! Account created.");
       setHasMarginAccount({ hasMarginAccount: true });
-      
+
       // Small delay to show success message
       setTimeout(() => {
         setActiveDialogue("deposit-earn");
+        toast("Margin account Created")
       }, 1000);
 
     } catch (err: any) {
-      console.error("Margin account creation failed", err);
+      toast("Margin account creation failed", err);
 
       // User rejected transaction
       if (err?.code === 4001) {
@@ -189,6 +205,9 @@ export const LeverageAssetsTab = () => {
       }
     }
   }, [mode, currentCollaterals.length, editingIndex]);
+
+
+
 
   // Calculate total deposit value from all collaterals
   const totalDepositValue = useMemo(
@@ -493,7 +512,7 @@ export const LeverageAssetsTab = () => {
                       collaterals={null}
                       isEditing={true}
                       isAnyOtherEditing={false}
-                      onEdit={() => {}}
+                      onEdit={() => { }}
                       onSave={(data) => {
                         setCurrentCollaterals([data]);
                         setEditingIndex(null);
@@ -517,17 +536,16 @@ export const LeverageAssetsTab = () => {
               (mode === "Borrow" && currentCollaterals.length >= 1) ||
               isMBMode
             }
-            className={`w-fit py-[11px] px-[10px] rounded-[8px] flex gap-[4px] text-[14px] font-medium text-[#703AE6] items-center ${
-              editingIndex !== null ||
-              (mode === "Borrow" && currentCollaterals.length >= 1) ||
-              isMBMode
+            className={`w-fit py-[11px] px-[10px] rounded-[8px] flex gap-[4px] text-[14px] font-medium text-[#703AE6] items-center ${editingIndex !== null ||
+                (mode === "Borrow" && currentCollaterals.length >= 1) ||
+                isMBMode
                 ? "opacity-50 cursor-not-allowed"
                 : "hover:cursor-pointer hover:bg-[#F1EBFD]"
-            }`}
+              }`}
             whileHover={
               editingIndex === null &&
-              !(mode === "Borrow" && currentCollaterals.length >= 1) &&
-              !isMBMode
+                !(mode === "Borrow" && currentCollaterals.length >= 1) &&
+                !isMBMode
                 ? { x: 5 }
                 : {}
             }
@@ -654,10 +672,10 @@ export const LeverageAssetsTab = () => {
               loading
                 ? "Processing..."
                 : !address
-                ? "Connect Wallet"
-                : hasMarginAccount
-                ? "Deposit & Earn"
-                : "Create your Margin Account"
+                  ? "Connect Wallet"
+                  : hasMarginAccount
+                    ? "Deposit & Earn"
+                    : "Create your Margin Account"
             }
             type="gradient"
             onClick={handleButtonClick}

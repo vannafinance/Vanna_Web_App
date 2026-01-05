@@ -29,6 +29,7 @@ interface Navbar {
   }[];
 }
 
+
 export const Navbar = (props: Navbar) => {
 
   const pathname = usePathname();
@@ -48,6 +49,7 @@ export const Navbar = (props: Navbar) => {
 
   const { openConnectModal } = useConnectModal();
 
+
   const { data: ensName } = useEnsName({
     address,
     query: { enabled: !!address }
@@ -59,8 +61,6 @@ export const Navbar = (props: Navbar) => {
     query: { enabled: !!ensName },
   });
 
-
-
   useEffect(() => {
     if (isConnected && address) {
       setUserAddress({ address });
@@ -68,9 +68,6 @@ export const Navbar = (props: Navbar) => {
       setUserAddress(null);
     }
   }, [isConnected, address, setUserAddress]);
-
-
-
 
   const groupedItems = {
     primary: props.items.filter((item) => item.group === "primary"),
@@ -143,8 +140,15 @@ export const Navbar = (props: Navbar) => {
       }
     };
 
+
+    const notify=()=>toast("Working 🏇🏾")
+
   return (
     <div className="relative">
+      
+
+
+
       <motion.div
         className="py-[12px] px-[40px] w-full h-fit flex justify-between items-center"
         initial={{ y: -100, opacity: 0 }}
@@ -203,6 +207,8 @@ export const Navbar = (props: Navbar) => {
             // Check if current item is active
             const isActive = pathname === item.link;
             return (
+             
+
               <motion.div
                 key={item.link}
                 onClick={() => {
@@ -392,12 +398,13 @@ export const Navbar = (props: Navbar) => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
         >
-          {userAddress && (
+          {address && (
             <Button
               size="small"
               type="gradient"
               disabled={false}
               onClick={() => {
+                
                 // TODO: Implement deposit logic
               }}
               text="DEPOSIT"
@@ -423,7 +430,7 @@ export const Navbar = (props: Navbar) => {
               whileTap={{ scale: 0.9 }}
               className="w-[24px] h-[24px] flex flex-col justify-center items-center "
             >
-              {/* Sun icon (dark mode) */}
+             
               {isDark ? (
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -442,7 +449,7 @@ export const Navbar = (props: Navbar) => {
                   />
                 </svg>
               ) : (
-                // Moon icon (light mode)
+                
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="#FF007A"
@@ -483,10 +490,6 @@ export const Navbar = (props: Navbar) => {
           ) : (
             <div
               onClick={() => {
-                if (address && chainId) {
-                  const marginHandledKey = `margin_handled_${address}_${chainId}`;
-                  localStorage.removeItem(marginHandledKey);
-                }
                 disconnect()
                 setUserAddress({ address: null })
               }
