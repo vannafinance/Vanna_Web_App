@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { Chart } from "@/components/earn/chart";
 import { Table } from "@/components/earn/table";
 import { AccountStats } from "@/components/margin/account-stats";
@@ -11,6 +12,7 @@ import { RewardsTable } from "@/components/earn/rewards-table";
 
 export default function Earn() {
   const userAddress = useUserStore((state) => state.address);
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("vaults");
   
   // Tab-based data - you can pass different data for each tab
@@ -25,16 +27,27 @@ export default function Earn() {
     }
     return { rows: [] };
   };
+
+  // Handle row click - navigate to earn detail page
+  const handleRowClick = useCallback(
+    (row: any, rowIndex: number) => {
+      const id = row.cell[0]?.title;
+      if (id) {
+        router.push(`/earn/${id}`);
+      }
+    },
+    [router]
+  );
   return (
     <div>
       {userAddress && (
         <div className="p-[40px] w-full h-fit  flex gap-[24px]  ">
           <div className="flex gap-[16px] w-full h-fit ">
             <div className="w-[437.33px] h-fit">
-              <Chart type="overall-deposit" />
+              <Chart containerWidth="w-[437.33px]" containerHeight="h-[331px]" type="overall-deposit" />
             </div>
             <div className="w-[437.33px] h-fit" >
-              <Chart type="net-apy" />
+              <Chart containerWidth="w-[437.33px]" containerHeight="h-[331px]" type="net-apy" />
             </div>
             <div className="w-full h-fit">
               <RewardsTable />
@@ -72,6 +85,8 @@ export default function Earn() {
           onTabChange={setActiveTab}
           tableHeadings={tableHeadings}
           tableBody={getTableDataForTab(activeTab)}
+          onRowClick={handleRowClick}
+          hoverBackground="hover:bg-[#F1EBFD]"
         />
       </div>
     </div>

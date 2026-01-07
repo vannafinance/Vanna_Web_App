@@ -32,29 +32,25 @@ const MBSelectionGridComponent = ({
 
         return (
           <article key={index} className="flex gap-[10px] items-center">
-            <div>
-              {mode === "Deposit" ? (
-                <Checkbox
-                  checked={isSelected}
-                  onChange={() => onToggle(itemId, isSelected)}
-                />
-              ) : (
-                <Radio
-                  name="mb-collateral-radio"
-                  value={`collateral-${index}`}
-                  checked={isSelected}
-                  onChange={() => onRadioSelect(itemId)}
-                />
-              )}
-            </div>
-            <div>
-              <Image
-                src={iconPaths[item.asset]}
-                alt={item.asset}
-                width={20}
-                height={20}
+            {mode === "Deposit" ? (
+              <Checkbox
+                checked={isSelected}
+                onChange={() => onToggle(itemId, isSelected)}
               />
-            </div>
+            ) : (
+              <Radio
+                name="mb-collateral-radio"
+                value={`collateral-${index}`}
+                checked={isSelected}
+                onChange={() => onRadioSelect(itemId)}
+              />
+            )}
+            <Image
+              src={iconPaths[item.asset]}
+              alt={item.asset}
+              width={20}
+              height={20}
+            />
             <div className="text-[16px] font-semibold">
               {item.amount} {item.asset}
             </div>

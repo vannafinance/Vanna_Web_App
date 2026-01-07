@@ -503,15 +503,13 @@ export const LeverageAssetsTab = () => {
           >
             Borrow
           </motion.h2>
-          <div>
-            <BorrowBox
-              mode={mode}
-              leverage={leverage}
-              setLeverage={setLeverage}
-              totalDeposit={totalDeposit}
-              onBorrowItemsChange={setBorrowItems}
-            />
-          </div>
+          <BorrowBox
+            mode={mode}
+            leverage={leverage}
+            setLeverage={setLeverage}
+            totalDeposit={totalDeposit}
+            onBorrowItemsChange={setBorrowItems}
+          />
         </motion.section>
 
         {/* Details panel - shows calculations and info */}

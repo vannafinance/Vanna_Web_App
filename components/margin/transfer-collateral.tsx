@@ -44,18 +44,17 @@ export const TransferCollateral = () => {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3, delay: 0.1 }}
       >
-        <section>
-          <motion.header
-            key="editing"
-            className="flex justify-between "
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{
-              duration: 0.3,
-              ease: [0.4, 0, 0.2, 1],
-            }}
-          >
+        <motion.header
+          key="editing"
+          className="flex justify-between "
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{
+            duration: 0.3,
+            ease: [0.4, 0, 0.2, 1],
+          }}
+        >
             {/* Currency dropdown */}
             <div className="p-[10px]">
               <Dropdown
@@ -69,7 +68,9 @@ export const TransferCollateral = () => {
             <AnimatePresence mode="wait">
               <motion.div
                 key="editing-middle"
-                className="flex flex-col justify-between"
+                className="flex gap-[8px]"
+                role="group"
+                aria-label="Deposit percentage"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
@@ -79,37 +80,30 @@ export const TransferCollateral = () => {
                 }}
               >
                 {/* Percentage buttons */}
-                <div
-                  className="flex gap-[8px]"
-                  role="group"
-                  aria-label="Deposit percentage"
-                >
-                  {DEPOSIT_PERCENTAGES.map((item) => {
-                    return (
-                      <motion.button
-                        type="button"
-                        key={item}
-                        onClick={() => handlePercentageClick(item)}
-                        className={`h-[44px] w-[95px] text-center text-[14px] text-medium cursor-pointer ${
-                          percentage === item
-                            ? `${PERCENTAGE_COLORS[item]} text-white`
-                            : "bg-[#F4F4F4]"
-                        } p-[10px] rounded-[12px]`}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        transition={{ duration: 0.1 }}
-                        aria-label={`Select ${item} percent`}
-                        aria-pressed={percentage === item}
-                      >
-                        {item}%
-                      </motion.button>
-                    );
-                  })}
-                </div>
+                {DEPOSIT_PERCENTAGES.map((item) => {
+                  return (
+                    <motion.button
+                      type="button"
+                      key={item}
+                      onClick={() => handlePercentageClick(item)}
+                      className={`h-[44px] w-[95px] text-center text-[14px] text-medium cursor-pointer ${
+                        percentage === item
+                          ? `${PERCENTAGE_COLORS[item]} text-white`
+                          : "bg-[#F4F4F4]"
+                      } p-[10px] rounded-[12px]`}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      transition={{ duration: 0.1 }}
+                      aria-label={`Select ${item} percent`}
+                      aria-pressed={percentage === item}
+                    >
+                      {item}%
+                    </motion.button>
+                  );
+                })}
               </motion.div>
             </AnimatePresence>
           </motion.header>
-        </section>
         <motion.section 
           className="flex justify-between gap-[10px] items-center"
           initial={{ opacity: 0, y: 10 }}
@@ -122,20 +116,18 @@ export const TransferCollateral = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3, delay: 0.25 }}
           >
-            <div>
-              <label htmlFor={`collateral-amount-input`} className="sr-only">
-                Collateral amount
-              </label>
-              <input
-                id={`collateral-amount-input`}
-                onChange={handleInputChange}
-                className="w-full text-[20px] focus:border-[0px] focus:outline-none font-medium"
-                type="text"
-                placeholder="0.0"
-                value={valueInput}
-              />
-            </div>
-            <motion.div
+            <label htmlFor={`collateral-amount-input`} className="sr-only">
+              Collateral amount
+            </label>
+            <input
+              id={`collateral-amount-input`}
+              onChange={handleInputChange}
+              className="w-full text-[20px] focus:border-[0px] focus:outline-none font-medium"
+              type="text"
+              placeholder="0.0"
+              value={valueInput}
+            />
+            <motion.p
               className="text-[12px] font-medium text-[#76737B]"
               aria-live="polite"
               key={valueInUsd}
@@ -144,7 +136,7 @@ export const TransferCollateral = () => {
               transition={{ duration: 0.2 }}
             >
               {valueInUsd} USD
-            </motion.div>
+            </motion.p>
           </motion.div>
           <motion.aside 
             className="flex flex-col gap-[8px] items-end"
@@ -152,10 +144,10 @@ export const TransferCollateral = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3, delay: 0.25 }}
           >
-            <div className=" text-[10px] font-medium ">
+            <p className=" text-[10px] font-medium ">
               Transfer To: <span className="font-semibold">WB</span>
-            </div>
-            <div className="text-[20px] font-medium ">2000 USD</div>
+            </p>
+            <p className="text-[20px] font-medium ">2000 USD</p>
 
             <motion.button
               onClick={handleMaxValueClick}

@@ -67,8 +67,8 @@ export const AnimatedTabs = ({
   // Render underline type
   if (type === "underline") {
     return (
-      <div className={`w-full h-fit border-b-[1px] border-[#E2E2E2] ${containerClassName}`}>
-        <div className="w-full flex" onMouseLeave={() => setHoveredTab(null)}>
+      <div className={` h-fit  ${containerClassName}`}>
+        <div className="w-full  flex" onMouseLeave={() => setHoveredTab(null)}>
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             const isHovered = hoveredTab === tab.id;
@@ -78,7 +78,7 @@ export const AnimatedTabs = ({
                 key={tab.id}
                 onClick={() => onTabChange(tab.id)}
                 onMouseEnter={() => setHoveredTab(tab.id)}
-                className={`w-full py-[8px] text-[14px] font-semibold flex items-center justify-center cursor-pointer relative ${tabClassName}`}
+                className={`whitespace-nowrap  px-[20px] font-semibold flex items-center justify-center cursor-pointer relative ${tabClassName}`}
                 animate={{
                   color: getTextColor(isActive, isHovered),
                   borderBottomWidth: isActive ? "2px" : "0px",
@@ -103,7 +103,7 @@ export const AnimatedTabs = ({
   const containerWidth = (type === "solid" || type === "ghost") ? "w-full" : "w-full";
   const tabWidth = (type === "solid" ) ? "w-[160px]" : type === "ghost" ? "w-[180px]" : "";
   const tabPadding = (type === "solid" || type === "ghost") ? "py-[12px] px-[8px]" : "";
-  const tabHeight = (type === "solid") ? "h-fit" :  (type === "ghost") ? "h-[38px]" : "h-[67px]";
+  const tabHeight = (type === "solid") ? "h-fit" :  (type === "ghost") ? "h-[38px]" : "h-[64px]";
   const useFlex1 = (type !== "solid" && type !== "ghost");
 
   return (
@@ -115,7 +115,7 @@ export const AnimatedTabs = ({
         {/* Gradient indicator */}
         {type === "gradient" && (
           <motion.div
-            className={`absolute top-[6px] left-[6px] h-[67px] rounded-[12px] bg-gradient p-[2px] ${indicatorClassName}`}
+            className={`absolute top-[6px] left-[6px] h-[64px] rounded-[12px] bg-gradient p-[2px] ${indicatorClassName}`}
             style={{ width: indicatorWidth }}
             animate={{ x: `${currentIndex * 100}%` }}
             transition={SPRING_CONFIG}

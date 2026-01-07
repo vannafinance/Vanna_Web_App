@@ -61,7 +61,7 @@ export const AccountStats = ({
                 />
               </motion.div>
               <div className=" flex flex-col gap-[32px] w-full ">
-                <div className="flex flex-col justify-center  w-[289.33px]  text-[20px]  font-semibold">
+                <div className="w-[289.33px] text-[20px] font-semibold">
                   {item.name}
                 </div>
                 <motion.div

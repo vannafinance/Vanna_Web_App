@@ -6,6 +6,8 @@ import Image from "next/image";
 import { iconPaths } from "@/lib/constants";
 import { useDebounce } from "@/hooks/use-debounce";
 import { SupplyApy } from "./supply-apy";
+import { PieChart } from "../ui/pie-chart";
+import { ProgressBar } from "../ui/progress-bar";
 
 // Move constants outside component
 const ITEMS_PER_PAGE = 4;
@@ -17,8 +19,8 @@ const FILTER_OPTIONS = {
   depositFilters: ["All"],
   allChains: ["ETH", "USDC", "USDT"],
   allChainsFilters: ["All", "ETH", "USDC", "USDT"],
-  all: ["Value Deposit", "Value Collateral", "Value Total"],
-  allFilters: ["All", "Value Deposit", "Value Collateral", "Value Total"],
+  all: ["Vault Deposit", "Vault Collateral", "Vault Total", "Vault Withdraw"],
+  allFilters: ["All"],
 };
 
 interface TableProps {
@@ -45,12 +47,18 @@ interface TableProps {
         icon?: string;
         title?: string;
         description?: string;
-        tag: string | number;
+        tag?: string | number;
         clickable?: string;
         onlyIcons?: string[];
+        percentage?: number;
+        value?: string;
       }[];
     }[];
   };
+  onRowClick?: (row: any, rowIndex: number) => void;
+  hoverBackground?: string;
+  showPieChart?: boolean;
+  showProgressBar?: boolean;
 }
 
 type FiltersState = {
@@ -172,21 +180,40 @@ const TableRow = memo(
     tableBodyBackground,
     tableHeadings,
     filtersState,
+    onRowClick,
+    hoverBackground,
+    rowIndex,
+    showPieChart,
+    showProgressBar,
   }: {
     row: any;
     visibleHeadings: any[];
     tableBodyBackground?: string;
     tableHeadings: TableProps["tableHeadings"];
     filtersState: FiltersState;
+    onRowClick?: (row: any, rowIndex: number) => void;
+    hoverBackground?: string;
+    rowIndex: number;
+    showPieChart?: boolean;
+    showProgressBar?: boolean;
   }) => {
     const visibleCells = row.cell.filter((_: any, cellIdx: number) => {
       const heading = tableHeadings[cellIdx];
       return heading && !filtersState.customize.includes(heading.label);
     });
 
+    const handleClick = useCallback(() => {
+      if (onRowClick) {
+        onRowClick(row, rowIndex);
+      }
+    }, [onRowClick, row, rowIndex]);
+
     return (
       <tr
-        className={`hover:bg-[#F1EBFD] cursor-pointer w-full h-fit rounded-[12px] py-[16px] px-[20px] flex gap-[16px] items-center ${
+        onClick={onRowClick ? handleClick : undefined}
+        className={`${onRowClick ? "cursor-pointer" : ""} ${
+          hoverBackground || ""
+        } w-full h-fit rounded-[12px] py-[16px] px-[20px] flex gap-[16px] items-center ${
           tableBodyBackground || "bg-[#F7F7F7]"
         } border-[1px] border-[#E2E2E2]`}
       >
@@ -194,46 +221,101 @@ const TableRow = memo(
           <td
             key={idx}
             className={`flex flex-col gap-[6px] h-full ${
-              visibleHeadings.length - 1 === idx
+              visibleHeadings.length - 1 === idx && !showProgressBar
                 ? "w-[120px] min-w-[120px] items-end"
+                : visibleHeadings.length - 1 === idx && showProgressBar
+                ? "w-full min-w-[120px] items-end"
                 : "w-full min-w-[120px] items-start"
             }`}
           >
-            {cell.title && !cell.onlyIcons && (
-              <div className="w-fit h-fit flex gap-[8px] items-center text-[14px] font-medium text-[#181822]">
-                {cell.chain && (
-                  <Image
-                    src={iconPaths[cell.chain]}
-                    alt={cell.chain}
-                    width={10}
-                    height={10}
-                  />
-                )}
-                {(iconPaths[cell.title] || cell.icon) && (
-                  <Image
-                    src={cell.icon || iconPaths[cell.title]}
-                    alt={cell.title}
-                    width={16}
-                    height={16}
-                  />
-                )}
-                {cell.title}
-                {cell.clickable && (
-                  <div className="w-[20px] h-[20px] flex flex-col justify-center items-center">
-                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                      <path
-                        d="M9.29169 4.95838L0.625 4.95838M9.29169 4.95838L4.95829 0.625M9.29169 4.95838L4.95829 9.29162"
-                        stroke="#434C53"
-                        strokeOpacity="0.95"
-                        strokeWidth="1.25"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
+            {(cell.title ||
+              (showPieChart && cell.percentage !== undefined) ||
+              (showProgressBar && cell.percentage !== undefined)) &&
+              !cell.onlyIcons && (
+                <div
+                  className={`${
+                    showProgressBar && cell.percentage !== undefined
+                      ? "w-full"
+                      : "w-fit"
+                  } h-fit flex flex-col gap-[2px]`}
+                >
+                  {showProgressBar && cell.percentage !== undefined && (
+                    <div className="w-full h-fit">
+                      <ProgressBar
+                        percentage={cell.percentage}
+                        height={34}
+                        progressColor="#703AE6"
+                        backgroundColor="#FFFFFF"
+                        showPercentage={true}
+                        value={cell.value}
                       />
-                    </svg>
+                    </div>
+                  )}
+                  <div className="w-fit h-fit flex gap-[8px] items-center ">
+                    {cell.chain && (
+                      <Image
+                        src={iconPaths[cell.chain]}
+                        alt={cell.chain}
+                        width={10}
+                        height={10}
+                      />
+                    )}
+                    {showPieChart && cell.percentage !== undefined ? (
+                      <div className="w-[24px] h-[24px]">
+                        <PieChart
+                          percentage={cell.percentage}
+                          strokeWidth={10}
+                          showPercentage={false}
+                          textSize="text-[8px]"
+                        />
+                      </div>
+                    ) : iconPaths[cell.title] || cell.icon ? (
+                      <Image
+                        src={cell.icon || iconPaths[cell.title]}
+                        alt={cell.title}
+                        width={16}
+                        height={16}
+                        className="rounded-full"
+                      />
+                    ) : null}
+                    {(!showProgressBar || cell.title) && (
+                      <div className="w-fit h-fit flex flex-col gap-[4px] text-[14px] font-medium text-[#181822]">
+                        <div className="break-words break-all">
+                          {cell.title ||
+                            (cell.percentage !== undefined
+                              ? `${cell.percentage}%`
+                              : "")}
+                        </div>
+                        {cell.description && (
+                          <div className="py-[3px]  text-[10px] font-medium text-[#111111]">
+                            {cell.description}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {cell.clickable && (
+                      <div className="cursor-pointer w-[20px] h-[20px] flex flex-col justify-center items-center">
+                        <svg
+                          width="10"
+                          height="10"
+                          viewBox="0 0 10 10"
+                          fill="none"
+                        >
+                          <path
+                            d="M9.29169 4.95838L0.625 4.95838M9.29169 4.95838L4.95829 0.625M9.29169 4.95838L4.95829 9.29162"
+                            stroke="#434C53"
+                            strokeOpacity="0.95"
+                            strokeWidth="1.25"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            )}
+                </div>
+              )}
             {cell.tag && !cell.onlyIcons && (
               <div className="w-fit h-fit rounded-[6px] py-[2px] px-[6px] font-medium text-[12px] bg-[#703AE6] text-white">
                 {cell.tag}
@@ -384,10 +466,7 @@ export const Table = memo((props: TableProps) => {
     () => props.tableHeadings.map((h) => h.label),
     [props.tableHeadings]
   );
-  const customizeOptionsFilters = useMemo(
-    () => ["All"],
-    [customizeOptions]
-  );
+  const customizeOptionsFilters = useMemo(() => ["All"], [customizeOptions]);
 
   return (
     <div className="w-full h-fit flex flex-col gap-[24px]">
@@ -425,13 +504,22 @@ export const Table = memo((props: TableProps) => {
                   onDropdownItemChange={updateFilter("all")}
                 />
               )}
+              {showCustomizeDropdown && customizeOptions.length > 0 && (
+                <FilterDropdown
+                  dropdownOptions={customizeOptions}
+                  dropdownOptionsFilters={customizeOptionsFilters}
+                  currentDropdownItem={filtersState.customize}
+                  dropDownType="customize"
+                  onDropdownItemChange={updateFilter("customize")}
+                />
+              )}
             </div>
           )}
         </div>
       )}
 
       {props.heading.tabsItems && (
-        <div className="w-[180px] h-fit">
+        <div className="w-fit h-fit">
           <AnimatedTabs
             tabs={props.heading.tabsItems}
             activeTab={activeTab}
@@ -549,6 +637,11 @@ export const Table = memo((props: TableProps) => {
                 tableBodyBackground={props.tableBodyBackground}
                 tableHeadings={props.tableHeadings}
                 filtersState={filtersState}
+                onRowClick={props.onRowClick}
+                hoverBackground={props.hoverBackground}
+                rowIndex={idx}
+                showPieChart={props.showPieChart}
+                showProgressBar={props.showProgressBar}
               />
             ))}
           </tbody>

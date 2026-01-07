@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { Dropdown } from "../ui/dropdown";
 import { ReusableChart } from "../ui/reusable-chart";
 import { depositData, netApyData } from "@/lib/constants/earn";
@@ -9,6 +9,8 @@ interface ChartProps {
   type: "overall-deposit" | "net-apy" | "my-supply" | "deposit-apy";
   currencyTab?: boolean;
   height?: number;
+  containerWidth?: string;
+  containerHeight?: string;
 }
 
 const filterOptions = ["3 Months", "6 Months", "1 Year", "All Time"];
@@ -84,13 +86,15 @@ const filterDataByDays = (
   });
 };
 
-export const Chart = ({ type, currencyTab, height }: ChartProps) => {
+export const Chart = ({ type, currencyTab, height, containerWidth, containerHeight }: ChartProps) => {
   const [selectedFilter, setSelectedFilter] = useState(filterOptions[0]);
   const [selectedCurrency, setSelectedCurrency] = useState<string>("usd");
-  const [selectedDays, setSelectedDays] = useState<string>(dayOptions[0]);
+  const [selectedDays, setSelectedDays] = useState<string>(dayOptions[3]);
   const [selectedDepositApy, setSelectedDepositApy] = useState<string>(
     depositApyOptions[0]
   );
+  const chartContainerRef = useRef<HTMLDivElement>(null);
+  const [dynamicHeight, setDynamicHeight] = useState<number>(height || 206);
   // Get data based on chart type
   const rawData = useMemo(() => {
     switch (type) {
@@ -132,6 +136,37 @@ export const Chart = ({ type, currencyTab, height }: ChartProps) => {
     return filteredData[filteredData.length - 1].amount;
   }, [filteredData]);
 
+  // Calculate dynamic height when containerHeight is h-full
+  useEffect(() => {
+    if (containerHeight !== "h-full") {
+      setDynamicHeight(height || 206);
+      return;
+    }
+
+    const updateHeight = () => {
+      if (chartContainerRef.current) {
+        const containerHeight = chartContainerRef.current.clientHeight;
+        if (containerHeight > 0) {
+          setDynamicHeight(containerHeight);
+        }
+      }
+    };
+
+    // Initial calculation with a small delay to ensure layout is complete
+    const timeoutId = setTimeout(updateHeight, 0);
+
+    // Use ResizeObserver to watch for container size changes
+    const resizeObserver = new ResizeObserver(updateHeight);
+    if (chartContainerRef.current) {
+      resizeObserver.observe(chartContainerRef.current);
+    }
+
+    return () => {
+      clearTimeout(timeoutId);
+      resizeObserver.disconnect();
+    };
+  }, [containerHeight, height]);
+
   // Format Y-axis label
   const formatYAxisLabel = (value: number): string => {
     if (type === "net-apy" || type === "deposit-apy") {
@@ -146,8 +181,8 @@ export const Chart = ({ type, currencyTab, height }: ChartProps) => {
   };
 
   return (
-    <div className="w-[437.33px] h-[331px] flex flex-col gap-[24px]  rounded-[16px] p-[16px] border-[1px] border-[#E2E2E2] bg-[#FFFFFF]">
-      <div className="w-full h-fit flex justify-between ">
+    <div className={` flex flex-col gap-[24px]  rounded-[16px] p-[16px] border-[1px] border-[#E2E2E2] bg-[#FFFFFF] ${containerWidth} ${containerHeight}`}>
+      <div className="w-full h-fit flex justify-between flex-shrink-0">
         <div
           className={`w-full h-fit flex flex-col ${
             type === "deposit-apy" ? "gap-[16px]" : ""
@@ -346,7 +381,7 @@ export const Chart = ({ type, currencyTab, height }: ChartProps) => {
                   formatYAxisLabel={formatYAxisLabel}
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
+                <div className={`w-full h-[450px] flex items-center justify-center text-gray-400 text-sm`}>
                   No data available
                 </div>
               )}
@@ -355,8 +390,9 @@ export const Chart = ({ type, currencyTab, height }: ChartProps) => {
         </div>
       </div>
       <div
-        className="w-full flex-shrink-0"
-        style={{ height: "203px", minHeight: "203px" }}
+        ref={chartContainerRef}
+        className={`w-full ${containerHeight === "h-full" ? "flex-1 min-h-0" : ""}`}
+        style={containerHeight !== "h-full" ? { height: height ? `${height}px` : "203px", minHeight: height ? `${height}px` : "203px" } : {}}
       >
         {Object.keys(chartData).length > 0 ? (
           <ReusableChart
@@ -366,12 +402,12 @@ export const Chart = ({ type, currencyTab, height }: ChartProps) => {
               "rgba(124, 53, 248, 0.05)",
             ]}
             lineColor="#7C35F8"
-            height={height || 206}
+            height={dynamicHeight}
             showGrid={true}
             formatYAxisLabel={formatYAxisLabel}
           />
         ) : (
-          <div className="w-full h-[203px] flex items-center justify-center text-gray-400 text-sm">
+          <div className={`w-full ${dynamicHeight?`h-[${dynamicHeight}px]` : "h-[393px]"} flex items-center justify-center text-gray-400 text-sm`}>
             No data available
           </div>
         )}

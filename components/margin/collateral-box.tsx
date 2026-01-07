@@ -176,22 +176,20 @@ const CollateralComponent = (props: Collateral) => {
 
             {/* Amount input and USD value */}
             <div className="px-[10px] flex flex-col gap-[8px]">
-              <div>
-                <label
-                  htmlFor={`collateral-amount-input-${props.index}`}
-                  className="sr-only"
-                >
-                  Collateral amount
-                </label>
-                <input
-                  id={`collateral-amount-input-${props.index}`}
-                  onChange={handleInputChange}
-                  className="w-full text-[20px] focus:border-[0px] focus:outline-none font-medium"
-                  type="text"
-                  placeholder="0.0"
-                  value={valueInput}
-                />
-              </div>
+              <label
+                htmlFor={`collateral-amount-input-${props.index}`}
+                className="sr-only"
+              >
+                Collateral amount
+              </label>
+              <input
+                id={`collateral-amount-input-${props.index}`}
+                onChange={handleInputChange}
+                className="w-full text-[20px] focus:border-[0px] focus:outline-none font-medium"
+                type="text"
+                placeholder="0.0"
+                value={valueInput}
+              />
               <div
                 className="text-[12px] font-medium text-[#76737B]"
                 aria-live="polite"
@@ -383,15 +381,13 @@ const CollateralComponent = (props: Collateral) => {
           >
             {/* Balance type badge and unified balance */}
             <div className="flex flex-col justify-end items-end gap-[4px]">
-              <div className="items-center flex rounded-[4px] gap-[4px]">
-                <motion.div
-                  className="w-[28px] h-[28px] bg-[#703AE6] rounded-[4px] text-white p-[4px] text-center text-[12px] font-medium"
-                  whileHover={{ scale: 1.1 }}
-                  transition={{ duration: 0.1 }}
-                >
-                  {collateral.balanceType.toUpperCase()}
-                </motion.div>
-              </div>
+              <motion.div
+                className="w-[28px] h-[28px] bg-[#703AE6] rounded-[4px] text-white p-[4px] text-center text-[12px] font-medium items-center flex"
+                whileHover={{ scale: 1.1 }}
+                transition={{ duration: 0.1 }}
+              >
+                {collateral.balanceType.toUpperCase()}
+              </motion.div>
               <motion.button
                 type="button"
                 onClick={handleUnifiedBalanceClick}

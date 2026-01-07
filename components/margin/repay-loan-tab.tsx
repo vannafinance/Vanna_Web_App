@@ -156,33 +156,34 @@ export const RepayLoanTab = () => {
 
             {/* Percentage buttons */}
             <motion.div
+              className="flex gap-[8px]"
+              role="group"
+              aria-label="Repay percentage"
               initial={{ opacity: 0, x: 10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.3, delay: 0.4, ease: "easeOut" }}
             >
-              <div className="flex gap-[8px]" role="group" aria-label="Repay percentage">
-                {DEPOSIT_PERCENTAGES.map((item: number, idx: number) => {
-                  return (
-                    <motion.button
-                      type="button"
-                      key={item}
-                      onClick={() => handlePercentageClick(item)}
-                      className={`h-[44px] w-[95px] text-center text-[14px] text-medium cursor-pointer ${
-                        selectedRepayPercentage === item
-                          ? `${PERCENTAGE_COLORS[item]} text-white`
-                          : "bg-[#F4F4F4]"
-                      } p-[10px] rounded-[12px]`}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      transition={{ duration: 0.1 }}
-                      aria-label={`Repay ${item} percent`}
-                      aria-pressed={selectedRepayPercentage === item}
-                    >
-                      {item}%
-                    </motion.button>
-                  );
-                })}
-              </div>
+              {DEPOSIT_PERCENTAGES.map((item: number, idx: number) => {
+                return (
+                  <motion.button
+                    type="button"
+                    key={item}
+                    onClick={() => handlePercentageClick(item)}
+                    className={`h-[44px] w-[95px] text-center text-[14px] text-medium cursor-pointer ${
+                      selectedRepayPercentage === item
+                        ? `${PERCENTAGE_COLORS[item]} text-white`
+                        : "bg-[#F4F4F4]"
+                    } p-[10px] rounded-[12px]`}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ duration: 0.1 }}
+                    aria-label={`Repay ${item} percent`}
+                    aria-pressed={selectedRepayPercentage === item}
+                  >
+                    {item}%
+                  </motion.button>
+                );
+              })}
             </motion.div>
           </motion.header>
 
@@ -213,7 +214,7 @@ export const RepayLoanTab = () => {
             </motion.div>
 
             {/* USD value display */}
-            <motion.div
+            <motion.p
               className="text-[12px] font-medium text-[#76737B]"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -221,7 +222,7 @@ export const RepayLoanTab = () => {
               aria-live="polite"
             >
               {repayAmountInUsd} USD
-            </motion.div>
+            </motion.p>
           </motion.section>
         </motion.article>
 
