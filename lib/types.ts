@@ -161,7 +161,7 @@ export interface OrderPlacementFormValues {
 
   // loop
   loopEnabled?: boolean;
-  noOfLoops?: number | string | null; // null = ∞
+  noOfLoops?: number | null; // null = ∞
 
   // prices & size
   triggerPrice?: number | null;

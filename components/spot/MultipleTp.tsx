@@ -17,7 +17,8 @@ interface MultipleTpProps {
   // maxReached: boolean;
 }
 
-const headerCell = "w-11 p-1 text-[8px] leading-3 font-medium text-[#A7A7A7] ";
+const inputBase =
+  "w-full min-w-0 py-1 bg-transparent outline-none text-[10px] leading-[15px] font-medium text-[#111111] text-left placeholder:text-[8px] placeholder:font-medium placeholder:text-[#C6C6C6]";
 
 export default function MultipleTp({
   fields,
@@ -27,117 +28,82 @@ export default function MultipleTp({
 }: // maxReached,
 MultipleTpProps) {
   return (
-    <div className="flex flex-col rounded-sm gap-3">
+    <div className="flex flex-col rounded-sm gap-3 overflow-hidden">
       {/* Header */}
-      <div className="sticky top-0 z-10 ">
-        <div className="flex  gap-2.5 w-full min-w-0 ">
-          <div className="flex gap-1 px-1 shrink">
-            <div className={headerCell}>Exit Price (USD)</div>
-            <div className={headerCell}>Profit (%)</div>
-          </div>
-
-          <div className={`${headerCell} shrink`}>Profit (USD)</div>
-
-          <div className="flex gap-1 px-1">
-            <div className={headerCell}>Units (%)</div>
-            <div className={headerCell}>Units</div>
-          </div>
-
-          <div className={`${headerCell} shrink`}>Market Price</div>
-          <div className={`${headerCell} shrink`}>Add/Del</div>
+      <div className="sticky top-0 z-10 flex gap-1 text-[#A7A7A7] text-[8px] leading-3 font-medium">
+        <div className="flex flex-2 gap-1 px-1">
+          <div className="flex-1 py-1 text-left">Exit Price (USD)</div>
+          <div className="flex-1 py-1 text-left">Profit (%)</div>
         </div>
+
+        <div className="flex-1 py-1 text-left ">Profit (USD)</div>
+
+        <div className="flex flex-2 gap-1 px-1">
+          <div className="flex-1 py-1 text-left">Units (%)</div>
+          <div className="flex-1 py-1 text-left ">Units</div>
+        </div>
+
+        <div className="w-9 py-1 text-center">Market Price</div>
+
+        <div className="w-9 py-1 text-center">Add/Del</div>
       </div>
 
       {/* Rows */}
-      <div className="max-h-[109px] overflow-y-auto overflow-x-hidden scrollbar-hide flex flex-col gap-2">
+      <div className="max-h-[109px] overflow-y-auto  overscroll-contain scrollbar-hide flex flex-col gap-2">
         {fields.map((field, index) => (
-          <div key={field.id} className="flex gap-1 w-full min-w-0">
-            {/* Exit + Profit % */}
-            <div className="flex rounded-sm bg-white border border-[#E2E2E2] gap-1 p-1 shrink">
+          <div
+            key={field.id}
+            className="flex gap-1 item-center text-[10px] leading-[15px] font-medium text-[#111111]"
+          >
+            <div className="flex flex-2 rounded-sm bg-white border border-[#E2E2E2] gap-1 p-1 ">
               <input
                 type="number"
                 placeholder="Exit Price(USD)"
                 {...register(`multipleTakeProfits.${index}.exitPricePercent`)}
-                className="rounded-sm p-1 w-11 shrink text-[10px] font-medium leading-[15px] text-[#111111]
-                placeholder:text-[8px]
-                placeholder:font-medium
-                placeholder:text-[#C6C6C6]
-                outline-none [appearance:textfield]
-                [&::-webkit-inner-spin-button]:appearance-none
-                [&::-webkit-outer-spin-button]:appearance-none"
+                className={inputBase}
               />
               <input
                 type="number"
                 placeholder="Profit(%)"
                 {...register(`multipleTakeProfits.${index}.profitPercent`)}
-                className="rounded-sm p-1 w-11 shrink text-[10px] font-medium leading-[15px] text-[#111111]
-                placeholder:text-[8px]
-                placeholder:font-medium
-                placeholder:text-[#C6C6C6]
-                outline-none [appearance:textfield]
-                [&::-webkit-inner-spin-button]:appearance-none
-                [&::-webkit-outer-spin-button]:appearance-none"
+                className={inputBase}
               />
             </div>
-
-            {/* Profit USD */}
-            <div className="flex rounded-sm bg-white border border-[#E2E2E2] py-1">
+            <div className="flex-1 rounded-sm bg-white border border-[#E2E2E2] items-center justify-center p-1">
               <input
                 type="number"
-                placeholder="Profit(USD)"
+                placeholder="Profit"
                 {...register(`multipleTakeProfits.${index}.profitAmount`)}
-                className="rounded-sm p-1 w-11 shrink text-[10px] font-medium leading-[15px] text-[#111111]
-                placeholder:text-[8px]
-                placeholder:font-medium
-                placeholder:text-[#C6C6C6]
-                outline-none [appearance:textfield]
-                [&::-webkit-inner-spin-button]:appearance-none
-                [&::-webkit-outer-spin-button]:appearance-none"
+                className={inputBase}
               />
             </div>
-
-            {/* Units % + Units */}
-            <div className="flex rounded-sm bg-white border border-[#E2E2E2] gap-1 p-1">
+            <div className="flex flex-2 rounded-sm bg-white border border-[#E2E2E2] gap-1 p-1 ">
               <input
                 type="number"
                 placeholder="Units (%)"
                 {...register(`multipleTakeProfits.${index}.unitsPercent`)}
-                className="rounded-sm p-1 w-11 shrink text-[10px] font-medium leading-[15px] text-[#111111]
-                placeholder:text-[8px]
-                placeholder:font-medium
-                placeholder:text-[#C6C6C6]
-                outline-none [appearance:textfield]
-                [&::-webkit-inner-spin-button]:appearance-none
-                [&::-webkit-outer-spin-button]:appearance-none"
+                className={inputBase}
               />
               <input
                 type="number"
                 placeholder="Units"
                 {...register(`multipleTakeProfits.${index}.units`)}
-                className="rounded-sm p-1 w-11 shrink text-[10px] font-medium leading-[15px] text-[#111111]
-                placeholder:text-[8px]
-                placeholder:font-medium
-                placeholder:text-[#C6C6C6]
-                outline-none [appearance:textfield]
-                [&::-webkit-inner-spin-button]:appearance-none
-                [&::-webkit-outer-spin-button]:appearance-none"
+                className={inputBase}
               />
             </div>
-
             {/* Market Price */}
-            <div className="w-11 p-1 shrink">
+            <div className="w-9 flex justify-center ">
               <Checkbox
                 {...register(`multipleTakeProfits.${index}.marketPrice`)}
               />
             </div>
-
             {/* Add / Remove */}
-            {index === 0 ? (
+            {index === fields.length - 1 ? (
               <button
                 type="button"
                 onClick={onAdd}
                 // disabled={maxReached}
-                className={`w-10 py-1 flex justify-center items-center cursor-pointer shrink `}
+                className={`w-9 p-1 flex justify-center items-center cursor-pointer  `}
               >
                 <Image
                   src="/icons/plus.svg"
@@ -151,7 +117,7 @@ MultipleTpProps) {
               <button
                 type="button"
                 onClick={() => onRemove(index)}
-                className="w-10 py-1 flex justify-center items-center cursor-pointer shrink"
+                className="min-w-9 p-1 flex justify-center items-center cursor-pointer"
               >
                 <Image
                   src="/icons/minus.svg"

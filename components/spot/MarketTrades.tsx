@@ -44,31 +44,27 @@ export function MarketTrades() {
   return (
     <div className="flex flex-col gap-1">
       {/* Header */}
-      <div className="grid grid-cols-3 text-[12px] leading-[18px] text-[#5C5B5B] font-medium">
-        <span className="py-1 min-w-[84px]">Price(USDT)</span>
-        <span className="py-1 min-w-[84px] text-right">Amount(BTC)</span>
-        <span className="py-1 min-w-[84px] text-right">Time</span>
+      <div className="grid grid-cols-3 text-[10px] leading-[15px] text-[#5C5B5B] font-medium">
+        <span className="py-1 ">Price(USDT)</span>
+        <span className="py-1  text-right">Amount(BTC)</span>
+        <span className="py-1  text-right">Time</span>
       </div>
 
       {/* Rows */}
-      <div className="flex flex-col max-h-[480px] overflow-y-auto scrollbar-hide gap-1">
+      <div className="flex flex-col max-h-[445px] overflow-y-auto scrollbar-hide gap-1">
         {mockTrades.map((trade, i) => (
-          <div key={i} className="grid grid-cols-3 text-[12px] leading-[18px]">
+          <div key={i} className="grid grid-cols-3 text-[10px] leading-[15px]">
             <span
-              className={`font-medium min-w-[84px] ${
+              className={`font-medium  ${
                 trade.side === "buy" ? "text-[#1C7C83]" : "text-[#FC5457]"
               }`}
             >
               {trade.price.toLocaleString()}
             </span>
 
-            <span className="text-right text-[#111111] min-w-[84px]">
-              {trade.amount}
-            </span>
+            <span className="text-right text-[#111111]">{trade.amount}</span>
 
-            <span className="text-right text-[#111111] min-w-[84px]">
-              {trade.time}
-            </span>
+            <span className="text-right text-[#111111] ">{trade.time}</span>
           </div>
         ))}
       </div>

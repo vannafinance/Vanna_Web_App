@@ -300,4 +300,24 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none; /* Chrome, Safari */
   }
+
+  .shadow {
+    box-shadow: 0px 7px 15px rgba(0, 0, 0, 0.08),
+      0px 28px 28px rgba(0, 0, 0, 0.07);
+  }
+}
+
+@layer base {
+  /* Remove number input arrows (Chrome, Edge, Safari) */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  /* Firefox */
+  input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
 }

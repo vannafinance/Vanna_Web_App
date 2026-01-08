@@ -31,7 +31,7 @@ export const RiskRewardSelector = ({
       </span>
 
       {/* Pills */}
-      <div className="flex flex-1 items-center justify-between gap-1 ">
+      <div className="flex flex-1 items-center justify-between gap-0.5 ">
         {RATIOS.map((ratio) => (
           <button
             key={ratio}
@@ -52,12 +52,11 @@ export const RiskRewardSelector = ({
           </button>
         ))}
 
-        {/* OR */}
-        <div className=" px-2 py-1">
+        {/* <div className=" px-2 py-1">
           <span className="text-[10px] leading-[15px] font-medium text-[#111111]">
             OR
           </span>
-        </div>
+        </div> */}
 
         {/* Custom Input Field */}
         <input

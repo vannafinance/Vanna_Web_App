@@ -23,6 +23,8 @@ import { resetOrderForm } from "@/lib/resetOrderForm";
 import { useUserStore } from "@/store/user";
 import { useSpotTradeStore } from "@/store/spot-trade-store";
 import { mapOrderToActivePosition, mapOrderToOpenOrder } from "@/lib/helper";
+import { InputWithUnit } from "../ui/InputWithUnit";
+import { BaseInput } from "../ui/BaseInput";
 
 type FormMode = "create" | "edit";
 
@@ -66,8 +68,8 @@ export default function OrderPlacementForm({
     orderType: "limit",
     orderSide: "buy",
 
-    loopEnabled: true,
-    noOfLoops: null, // null = infinity
+    loopEnabled: false,
+    noOfLoops: undefined, // null = infinity
 
     triggerPrice: null,
     triggerMode: "limit",
@@ -124,6 +126,7 @@ export default function OrderPlacementForm({
   const orderType: OrderType = watch("orderType");
   const orderSide: OrderSide = watch("orderSide");
   const isLoopOn = watch("loopEnabled");
+  const noOfLoops = watch("noOfLoops");
   const triggerMode = watch("triggerMode");
   const takeProfitEnabled = watch("takeProfitEnabled");
   const multiTpEnabled = watch("multipleTpEnabled");
@@ -207,16 +210,10 @@ export default function OrderPlacementForm({
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className={`max-w-[380px] w-full min-w-0 rounded-2xl ${
+      className={`max-w-[316px] rounded-2xl bg-[#F7F7F7] p-4 flex flex-col gap-5 text-[10px] leading-[15px] text-[#111111] font-medium ${
         mode === "create" ? "border border-[#E2E2E2]" : ""
-      } bg-[#F7F7F7] p-4 flex flex-col gap-5 text-xs`}
+      } `}
     >
-      {/* <OrderTypeTabs
-        tabs={tabs}
-        activeTab={orderType}
-        onTabChange={handleOrderTypeChange}
-      /> */}
-
       {mode === "create" && (
         <AnimatedTabs
           tabs={tabs}
@@ -233,15 +230,9 @@ export default function OrderPlacementForm({
         />
       )}
 
-      {/* <AnimatedTabs
-        tabs={buySellTabs}
-        activeTab={orderSide}
-        onTabChange={handleTabChange}
-      /> */}
-
       {/* Loop toggle row */}
       {orderType === "limit" && (
-        <div>
+        <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2 justify-end">
             <span className="text-[10px] leading-[15px] text-[#111111] font-medium">
               Loop
@@ -252,65 +243,60 @@ export default function OrderPlacementForm({
               onToggle={(val) => setValue("loopEnabled", val)}
             />
           </div>
-
-          {/* No of Loops */}
           {isLoopOn && (
             <div className="flex flex-col gap-2">
-              <label className=" text-[10px]  text-[#111111] leading-[15px] font-medium">
-                No of Loops
-              </label>
-              <div className="flex gap-2 ">
-                <div className=" flex h-9 w-[150px] lg:w-[170px] items-center rounded-lg border border-[#E2E2E2] bg-white px-2">
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] leading-[15px] text-[#111111] font-medium">
+                  No of Loops
+                </label>
+                <div className="h-9 flex items-center rounded-lg border border-[#E2E2E2] bg-white px-2">
                   <input
                     placeholder="Enter No of Loops"
-                    className="w-full text-[12px] leading-[18px] font-medium outline-none placeholder:text-[#C6C6C6] appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                    disabled={noOfLoops === null}
+                    className="w-full text-[12px] leading-[18px] font-medium outline-none bg-transparent placeholder:text-[#C6C6C6]
+
+                    disabled:text-[#9CA3AF]
+                    disabled:placeholder:text-[#D1D5DB]
+                    disabled:cursor-not-allowed
+                    "
                     {...register("noOfLoops", {
                       min: { value: 1, message: "Min 1 loop" },
                     })}
                   />
                 </div>
+              </div>
 
-                <div className="flex gap-1.5 lg:gap-2 items-center min-w-0">
-                  {[5, 10, 15].map((n) => (
-                    <button
-                      key={n}
-                      type="button"
-                      onClick={() => setValue("noOfLoops", n)}
-                      className="
-        flex items-center justify-center
-        h-8 lg:h-9
-        w-8 lg:w-9
-        shrink
-        rounded-lg
-        bg-white
-        text-[12px]
-        leading-[18px]
-        font-medium
-        text-[#111111]
-      "
-                    >
-                      {n}
-                    </button>
-                  ))}
-
+              <div className="flex gap-2 min-w-0 ">
+                {[5, 10, 15].map((n) => (
                   <button
+                    key={n}
                     type="button"
-                    onClick={() => setValue("noOfLoops", "Infinite")}
-                    className="
-      flex items-center justify-center
-      h-8 lg:h-9
-      w-8 lg:w-9
-      shrink
-      rounded-lg
-      bg-white
-      text-[14px] lg:text-[16px]
-      font-medium
-      text-[#111111]
-    "
+                    onClick={() => setValue("noOfLoops", n)}
+                    className={`flex-1 min-w-0 cursor-pointer  h-9 rounded-lg p-2.5  text-[12px] leading-[18px] font-medium  ${
+                      noOfLoops === n
+                        ? "bg-[#F1EBFD] text-[#703AE6]"
+                        : "bg-white text-[#111111]"
+                    }`}
                   >
-                    &infin;
+                    {n}
                   </button>
-                </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setValue("noOfLoops", null)}
+                  className={`flex-1 min-w-0 flex items-center justify-center cursor-pointer h-9 rounded-lg p-2.5 text-[20px] leading-[22px] font-medium ${
+                    noOfLoops === null
+                      ? "bg-[#703AE6] text-white"
+                      : "bg-white text-[#111111]"
+                  }`}
+                >
+                  <Image
+                    src="/icons/infinite.svg"
+                    alt="infinite"
+                    width={18}
+                    height={17}
+                  />
+                </button>
               </div>
             </div>
           )}
@@ -318,34 +304,21 @@ export default function OrderPlacementForm({
       )}
 
       {orderType === "trigger" && (
-        <div className="flex flex-col gap-1">
-          <label className=" text-[10px] text-[#111111] font-medium leading-[15px]">
-            Trigger Price
-          </label>
-          <div className="flex h-9  items-center  rounded-lg border border-[#E2E2E2] bg-white p-2">
-            <div className="rounded-md py-1 flex flex-1 gap-2.5 items-center justify-between">
-              <input
-                type="number"
-                placeholder="Trigger Price"
-                className=" flex-1 h-[18] text-[12px] leading-[18px] font-medium outline-none
-                   placeholder:text-[#C6C6C6]
-                   [appearance:textfield]
-                   [&::-webkit-inner-spin-button]:appearance-none
-                   [&::-webkit-outer-spin-button]:appearance-none"
-                {...register("triggerPrice", {
-                  required: "Required",
-                  min: { value: 0, message: "Must be positive" },
-                })}
-              />
-              <div className="text-[8px]  leading-3 font-medium text-[#111111]">
-                USDT
-              </div>
-            </div>
-          </div>
-        </div>
+        <InputWithUnit
+          label="Trigger Price"
+          unit="USDT"
+          placeholder="Trigger Price"
+          name="triggerPrice"
+          register={register}
+          rules={{
+            required: "Required",
+            min: { value: 0, message: "Must be positive" },
+            valueAsNumber: true,
+          }}
+        />
       )}
 
-      <div className=" flex flex-col gap-3">
+      <div className=" flex flex-col gap-3 ">
         {/* Limit market toggle */}
         {orderType === "trigger" && (
           <div className="flex items-center gap-1 justify-end">
@@ -359,69 +332,57 @@ export default function OrderPlacementForm({
           </div>
         )}
 
-        <div className=" flex gap-3">
-          {orderType !== "market" && (
-            <div className="flex flex-col flex-1 min-w-0 gap-1">
-              <label className="text-[10px] font-medium leading-[15px] text-[#111111]">
-                Entry Price
-              </label>
-
-              <div className="flex h-9 items-center rounded-lg border border-[#E2E2E2] bg-white px-2 overflow-hidden">
-                <input
-                  type="number"
-                  placeholder="Enter Amount"
-                  className="flex-1 min-w-0 text-[12px] leading-[18px] font-medium outline-none placeholder:text-[#C6C6C6] appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                  {...register("entryPrice")}
-                />
-
-                <span className="ml-1 shrink-0 text-[8px] leading-3 font-medium text-[#111111]">
-                  BTC
-                </span>
-              </div>
+        <div className=" flex gap-3  min-w-0">
+          {orderType !== "market" ? (
+            <div className="flex-1 min-w-0">
+              <InputWithUnit
+                label="Entry Price"
+                unit="USDT"
+                placeholder="Enter Price"
+                name="entryPrice"
+                register={register}
+                rules={{
+                  required: "Required",
+                  min: { value: 0, message: "Must be positive" },
+                  valueAsNumber: true,
+                }}
+              />
             </div>
-          )}
-
-          {orderType === "market" && (
-            <div className="flex flex-col gap-1">
-              <span className="font-medium text-[10px] leading-[15px] text-[#111111]">
-                Market Price
-              </span>
-              <div className="h-9 rounded-md border border-[#E2E2E2] flex  items-center  justify-center gap-2.5 p-2">
-                <span className="text-[12px] w-[117px] leading-[18px] font-medium">
+          ) : (
+            <div className="flex-1 min-w-0">
+              <BaseInput label="Market Price" disabled={true}>
+                <div className="flex-1 min-w-0 text-[12px] leading-[18px] font-medium">
                   66500
-                </span>
+                </div>
                 <span className="text-[8px] leading-3 font-medium text-[#111111]">
                   USDT
                 </span>
-              </div>
+              </BaseInput>
             </div>
           )}
 
-          <div className="flex flex-col flex-1 min-w-0 gap-1">
-            <label className="text-[10px] font-medium leading-[15px] text-[#111111]">
-              Total Units
-            </label>
-
-            <div className="flex h-9 items-center rounded-lg border border-[#E2E2E2] bg-white px-2 overflow-hidden">
-              <input
-                type="number"
-                placeholder="Enter Unit"
-                className="flex-1 min-w-0 text-[12px] leading-[18px] font-medium outline-none placeholder:text-[#C6C6C6] appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none "
-                {...register("totalUnits")}
-              />
-
-              <span className="ml-1 shrink-0 text-[8px] leading-3 font-medium text-[#111111]">
-                BTC
-              </span>
-            </div>
+          {/* Total Units */}
+          <div className="flex-1 min-w-0">
+            <InputWithUnit
+              label="Total Units"
+              unit="BTC"
+              placeholder="Enter Unit"
+              name="totalUnits"
+              register={register}
+              rules={{
+                required: "Required",
+                min: { value: 0, message: "Must be positive" },
+                valueAsNumber: true,
+              }}
+            />
           </div>
         </div>
       </div>
 
       {/* Total Amount + % buttons */}
       <div className="flex flex-col gap-2">
-        {/* Top row */}
-        <div className="flex items-center justify-between">
+        {/* label + MB text */}
+        <div className="flex items-center justify-between ">
           <label className="text-[10px] leading-[15px] font-medium text-[#111111]">
             Total Amount
           </label>
@@ -438,62 +399,47 @@ export default function OrderPlacementForm({
           </span>
         </div>
 
-        {/* Input + % buttons */}
-        <div className="flex gap-3">
-          {/* Input */}
-          <div className="flex flex-1 min-w-0">
-            <div className="flex h-9 w-full items-center rounded-lg border border-[#E2E2E2] bg-white px-2 overflow-hidden">
-              <input
-                type="number"
-                placeholder="Enter Amount"
-                className="flex-1 min-w-0 text-[12px] leading-[18px] font-medium outline-none placeholder:text-[#C6C6C6]
-            [appearance:textfield]
-            [&::-webkit-inner-spin-button]:appearance-none
-            [&::-webkit-outer-spin-button]:appearance-none"
-                {...register("totalAmount", {
-                  required: "Required",
-                  min: { value: 0, message: "Must be positive" },
-                })}
-              />
+        {/* Input + % buttons row */}
 
-              <span className="ml-1 shrink-0 text-[8px] leading-3 font-medium text-[#111111]">
-                USDT
-              </span>
-            </div>
-          </div>
+        <BaseInput>
+          <input
+            type="number"
+            placeholder="Enter Amount"
+            className=" flex-1 min-w-0 bg-transparent text-[12px] leading-[18px] font-medium outline-none placeholder:text-[#C6C6C6] "
+            {...register("totalAmount", {
+              required: "Required",
+              min: { value: 0, message: "Must be positive" },
+              valueAsNumber: true,
+            })}
+          />
 
-          {/* % buttons */}
-          <div className="flex flex-1 min-w-0 gap-2">
-            {[10, 25, 50, 100].map((p) => (
-              <button
-                key={p}
-                type="button"
-                className="
-            flex flex-1 items-center justify-center
-            h-9 w-9
-            rounded-lg
-            bg-white
-            text-[10px]
-            leading-[15px]
-            font-medium
-            text-[#111111]
-          "
-              >
-                {p}%
-              </button>
-            ))}
-          </div>
+          <span className="text-[8px] leading-3 font-medium text-[#111111]">
+            USDT
+          </span>
+        </BaseInput>
+
+        {/* % BUTTONS */}
+        <div className="flex gap-2 min-w-0">
+          {[10, 25, 50, 100].map((p) => (
+            <button
+              key={p}
+              type="button"
+              className="flex-1  cursor-pointer min-w-0 h-9 rounded-lg bg-white text-[10px] leading-[15px] font-medium text-[#111111] "
+            >
+              {p}%
+            </button>
+          ))}
         </div>
       </div>
 
       <div
         className={` ${
           takeProfitEnabled
-            ? "flex flex-col gap-3 $ border-b border-[#E2E2E2] pb-4"
+            ? "flex flex-col gap-2 $ border-b border-[#E2E2E2] pb-4"
             : ""
         }`}
       >
-        <div className="flex justify-between">
+        <div className="flex justify-between  ">
           <Checkbox label="Take Profit" {...register("takeProfitEnabled")} />
 
           {takeProfitEnabled && (
@@ -510,45 +456,39 @@ export default function OrderPlacementForm({
         </div>
 
         {takeProfitEnabled && !multiTpEnabled && (
-          <div className="flex justify-between w-full h-auto gap-1 bg-white border rounded-lg border-[#E2E2E2] p-2">
-            <div className="flex-1 flex flex-col gap-2.5 h-auto justify-between items-start self-stretch">
+          <div className="flex  gap-1 min-w-0  bg-white border rounded-lg border-[#E2E2E2] p-2">
+            <div className=" flex flex-1 flex-col min-w-0 gap-1">
               <label className="text-[8px] font-medium leading-3 text-[#C6C6C6]">
                 Exit Price (USD)
               </label>
               <input
                 type="number"
                 placeholder="00.00"
-                className="w-[59px] h-[18] text-[12px]  font-medium  leading-[18px] text-[#000000] outline-none      [appearance:textfield]
-                   [&::-webkit-inner-spin-button]:appearance-none
-                   [&::-webkit-outer-spin-button]:appearance-none"
+                className=" w-full min-w-0 text-[12px]  font-medium  leading-[18px] text-[#000000] outline-none"
                 {...register("singleTakeProfit.exitPrice", { min: 0 })}
               />
             </div>
 
-            <div className="flex-1 flex flex-col gap-2.5  items-center self-stretch">
+            <div className="flex flex-1 flex-col min-w-0 items-center gap-1">
               <label className="text-[8px] font-medium leading-3 text-[#C6C6C6]">
                 Profit (%)
               </label>
               <input
                 type="number"
                 placeholder="00.00"
-                className="w-[59px] h-[18] text-[12px] font-medium text-center  flex-1 leading-[18px] text-[#000000] outline-none      [appearance:textfield]
-                   [&::-webkit-inner-spin-button]:appearance-none
-                   [&::-webkit-outer-spin-button]:appearance-none"
+                className="w-full min-w-0 text-[12px] font-medium text-center  flex-1 leading-[18px] text-[#000000] outline-none"
                 {...register("singleTakeProfit.profitPercent", { min: 0 })}
               />
             </div>
 
-            <div className="flex-1 flex flex-col gap-2.5 items-end self-stretch">
+            <div className="flex flex-1 flex-col min-w-0 items-end gap-1">
               <label className="text-[8px] font-medium leading-3 text-[#C6C6C6]">
                 Profit (USD)
               </label>
               <input
                 type="number"
                 placeholder="00.00"
-                className="w-[59px] h-[18] text-[12px] font-medium text-right flex-1 leading-[18px] text-[#000000] outline-none      [appearance:textfield]
-                   [&::-webkit-inner-spin-button]:appearance-none
-                   [&::-webkit-outer-spin-button]:appearance-none"
+                className="w-full min-w-0 text-[12px] font-medium text-right flex-1 leading-[18px] text-[#000000] outline-none"
                 {...register("singleTakeProfit.profitAmount", { min: 0 })}
               />
             </div>
@@ -566,9 +506,9 @@ export default function OrderPlacementForm({
       </div>
 
       <div
-        className={` ${
+        className={`${
           stopLossEnabled
-            ? "flex flex-col gap-3 $ border-b border-[#E2E2E2] pb-4"
+            ? "flex flex-col gap-2 $ border-b border-[#E2E2E2] pb-4 "
             : ""
         }`}
       >
@@ -576,89 +516,38 @@ export default function OrderPlacementForm({
 
         {stopLossEnabled && (
           <>
-            <div className="flex gap-0.5 w-full items-start overflow-hidden">
-              {/* SL Trigger */}
-              <div className="flex flex-1 min-w-0 flex-col gap-1">
-                <label className="text-[10px] leading-[15px] font-medium flex gap-0.5 items-center">
-                  SL Trigger Price
-                  <Image
-                    src="/icons/info-black.svg"
-                    alt="info-icon"
-                    width={12}
-                    height={12}
-                  />
-                </label>
-
-                <div className="relative flex h-9 w-full items-center rounded-md border border-[#E2E2E2] bg-white px-1">
-                  <input
-                    type="number"
-                    placeholder="00.00"
-                    className="flex-1 min-w-0 text-[10px] font-medium leading-[15px] text-[#111111]
-          outline-none [appearance:textfield]
-          [&::-webkit-inner-spin-button]:appearance-none
-          [&::-webkit-outer-spin-button]:appearance-none"
-                    {...register("stopLoss.triggerPrice", { min: 0 })}
-                  />
-                  <span className="absolute right-1 text-[8px] leading-3 font-medium">
-                    USDT
-                  </span>
-                </div>
+            <div className="flex gap-1 w-full items-start overflow-hidden">
+              <div className="flex-1 min-w-0">
+                <InputWithUnit
+                  label="SL Trigger Price"
+                  unit="USDT"
+                  placeholder="00.00"
+                  name="stopLoss.triggerPrice"
+                  register={register}
+                  rules={{ min: 0 }}
+                />
               </div>
 
-              {/* SL Limit */}
-              <div className="flex flex-1 min-w-0 flex-col gap-1">
-                <label className="text-[10px] leading-[15px] font-medium flex gap-0.5 items-center">
-                  SL Limit (optional)
-                  <Image
-                    src="/icons/info-black.svg"
-                    alt="info-icon"
-                    width={12}
-                    height={12}
-                  />
-                </label>
-
-                <div className="relative flex h-9 w-full items-center rounded-md border border-[#E2E2E2] bg-white px-1">
-                  <input
-                    type="number"
-                    placeholder="00.00"
-                    className="flex-1 min-w-0 text-[10px] font-medium leading-[15px] text-[#111111]
-          outline-none [appearance:textfield]
-          [&::-webkit-inner-spin-button]:appearance-none
-          [&::-webkit-outer-spin-button]:appearance-none"
-                    {...register("stopLoss.limitPrice", { min: 0 })}
-                  />
-                  <span className="absolute right-1 text-[8px] leading-3 font-medium">
-                    USDT
-                  </span>
-                </div>
+              <div className="flex-1 min-w-0">
+                <InputWithUnit
+                  label="SL Limit (optional)"
+                  unit="USDT"
+                  placeholder="00.00"
+                  name="stopLoss.limitPrice"
+                  register={register}
+                  rules={{ min: 0 }}
+                />
               </div>
 
-              {/* Trail Variance */}
-              <div className="flex flex-1 min-w-0 flex-col gap-1">
-                <label className="text-[10px] leading-[15px] font-medium flex gap-0.5 items-center">
-                  Trail Variance
-                  <Image
-                    src="/icons/info-black.svg"
-                    alt="info-icon"
-                    width={12}
-                    height={12}
-                  />
-                </label>
-
-                <div className="relative flex h-9 w-full items-center rounded-md border border-[#E2E2E2] bg-white px-1">
-                  <input
-                    type="number"
-                    placeholder="00.00"
-                    className="flex-1 min-w-0 text-[10px] font-medium leading-[15px] text-[#111111]
-          outline-none [appearance:textfield]
-          [&::-webkit-inner-spin-button]:appearance-none
-          [&::-webkit-outer-spin-button]:appearance-none"
-                    {...register("stopLoss.trailVariance", { min: 0 })}
-                  />
-                  <span className="absolute right-1 text-[8px] leading-3 font-medium">
-                    USDT
-                  </span>
-                </div>
+              <div className="flex-1 min-w-0">
+                <InputWithUnit
+                  label="Trail Variance"
+                  unit="USDT"
+                  placeholder="00.00"
+                  name="stopLoss.trailVariance"
+                  register={register}
+                  rules={{ min: 0 }}
+                />
               </div>
             </div>
 
@@ -688,7 +577,7 @@ export default function OrderPlacementForm({
               Risk (in %):
             </div>
             <div className="text-[#464545] text-[10px] font-medium leading-[15px]">
-              00.00 USDT
+              00.00
             </div>
           </div>
         </div>
@@ -706,7 +595,7 @@ export default function OrderPlacementForm({
               Gain (in %):
             </div>
             <div className="text-[#464545] text-[10px] font-medium leading-[15px]">
-              00.00 USDT
+              00.00
             </div>
           </div>
         </div>
@@ -724,7 +613,7 @@ export default function OrderPlacementForm({
             setSelectedOption={(val) =>
               setValue("timeInForce", val as TimeInForce)
             }
-            classname="gap-0.5"
+            classname="gap-0.5 text-[12px] leading-[18px] font-medium"
             dropdownClassname="text-[12px] font-semibold"
           />
         </div>

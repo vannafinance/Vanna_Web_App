@@ -42,7 +42,10 @@ function TradingViewChart() {
   }, []);
 
   return (
-    <div ref={container} className="tradingview-widget-container h-full w-full">
+    <div
+      ref={container}
+      className="tradingview-widget-container h-full w-full "
+    >
       <div className="tradingview-widget-container__widget h-full w-full" />
     </div>
   );

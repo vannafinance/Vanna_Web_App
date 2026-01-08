@@ -25,7 +25,7 @@ export const Checkbox = ({
   return (
     <label
       onClick={handleFocusForward}
-      className={`flex items-center gap-3 select-none
+      className={`flex items-center gap-2 select-none
         ${isDisabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"}
       `}
     >
@@ -38,7 +38,7 @@ export const Checkbox = ({
 
       <span
         className={`
-          w-6 h-6 rounded-md flex items-center justify-center border-2 transition-all
+          w-5 h-5 rounded-md flex items-center justify-center border-2 transition-all
           ${error ? "border-[#FC5457]" : "border-gray-300"}
 
           peer-hover:border-[#703AE6]
@@ -64,9 +64,7 @@ export const Checkbox = ({
       </span>
 
       {label && (
-        <span className={`${error ? "text-[#FC5457]" : ""}`}>
-          {label}
-        </span>
+        <span className={`${error ? "text-[#FC5457]" : ""}`}>{label}</span>
       )}
     </label>
   );

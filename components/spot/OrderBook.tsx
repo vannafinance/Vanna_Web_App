@@ -80,82 +80,73 @@ export default function OrderBook() {
   const mid = bestBid && bestAsk ? (bestBid + bestAsk) / 2 : undefined;
 
   return (
-    <div className=" flex flex-col bg-[#F7F7F7]  rounded-xl p-2    gap-2 ">
-      <div className="flex flex-col gap-1.5">
-        <div className="flex items-center gap-4 p-1 rounded-lg bg-white h-[47px]">
-          <button
-            onClick={() => setActiveTab("orderbook")}
-            className={`cursor-pointer flex flex-1 items-center justify-center rounded-lg py-3 px-2
+    <div className=" flex flex-col bg-[#F7F7F7]  rounded-xl p-2    gap-1 ">
+      {/* Buttons */}
+      <div className="flex items-center  p-1 rounded-lg bg-white h-[47px]">
+        <button
+          onClick={() => setActiveTab("orderbook")}
+          className={`cursor-pointer flex flex-1 items-center justify-center rounded-lg py-3 px-2
       ${activeTab === "orderbook" ? "bg-[#F1EBFD]" : "bg-transparent"}`}
-          >
-            <div className="flex items-center justify-center px-2 gap-2.5">
-              <span
-                className={`text-[0.75rem] font-semibold text-center
+        >
+          <span
+            className={`text-[12px] font-semibold text-center
           ${activeTab === "orderbook" ? "text-[#703AE6]" : "text-black"}`}
-              >
-                Orderbook
-              </span>
-            </div>
-          </button>
-
-          <button
-            onClick={() => setActiveTab("markettrades")}
-            className={`cursor-pointer flex flex-1 items-center justify-center rounded-lg py-3 px-2
-      ${activeTab === "markettrades" ? "bg-[#F1EBFD]" : "bg-transparent"}`}
           >
-            <div className="flex items-center justify-center px-2 gap-[0.625rem]">
-              <span
-                className={`text-[0.75rem] font-semibold text-center
-          ${activeTab === "markettrades" ? "text-[#703AE6]" : "text-black"}`}
-              >
-                Market Trades
-              </span>
-            </div>
-          </button>
-        </div>
-        {activeTab === "orderbook" && (
-          <div className="flex w-full items-center  px-1">
-            <div className="flex  gap-2">
-              {(Object.keys(VIEW_ICONS) as OrderBookView[]).map((v) => (
-                <button
-                  key={v}
-                  onClick={() => setView(v)}
-                  className={`  w-4 cursor-pointer transition ${
-                    view === v ? "" : "hover:bg-white/60"
-                  }`}
-                  aria-label={`View ${v}`}
-                >
-                  <Image src={VIEW_ICONS[v]} alt={v} width={16} height={16} />
-                </button>
-              ))}
-            </div>
+            Orderbook
+          </span>
+        </button>
 
-            <div className="ml-auto">
-              <Dropdown
-                items={TICK_OPTIONS}
-                selectedOption={String(tick)}
-                setSelectedOption={(val) => setTick(Number(val))}
-                classname=" gap-0.5 text-[14px] leading-[21px] "
-                dropdownClassname="text-[14px] leading-[21px] "
-              />
-            </div>
-          </div>
-        )}
+        <button
+          onClick={() => setActiveTab("markettrades")}
+          className={`cursor-pointer flex flex-1 items-center justify-center rounded-lg py-3 px-2
+      ${activeTab === "markettrades" ? "bg-[#F1EBFD]" : "bg-transparent"}`}
+        >
+          <span
+            className={`text-[12px] font-semibold text-center
+          ${activeTab === "markettrades" ? "text-[#703AE6]" : "text-black"}`}
+          >
+            Market Trades
+          </span>
+        </button>
       </div>
+      {activeTab === "orderbook" && (
+        <div className="flex w-full items-center  px-1">
+          <div className="flex  gap-2">
+            {(Object.keys(VIEW_ICONS) as OrderBookView[]).map((v) => (
+              <button
+                key={v}
+                onClick={() => setView(v)}
+                className={`  w-4 h-4 cursor-pointer transition ${
+                  view === v ? "" : "hover:bg-white/60"
+                }`}
+                aria-label={`View ${v}`}
+              >
+                <Image src={VIEW_ICONS[v]} alt={v} width={16} height={16} />
+              </button>
+            ))}
+          </div>
+
+          <div className="ml-auto">
+            <Dropdown
+              items={TICK_OPTIONS}
+              selectedOption={String(tick)}
+              setSelectedOption={(val) => setTick(Number(val))}
+              classname=" gap-0.5 text-[10px] leading-[15px] font-medium  "
+              dropdownClassname="text-[12px] leading-[18px] font-medium "
+            />
+          </div>
+        </div>
+      )}
 
       {activeTab === "orderbook" && (
         <>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1">
             {/** sell side */}
             <div className=" flex flex-col">
-              <div className=" grid grid-cols-3 text-[12px]  leading-[18px] text-[#5C5B5B] font-medium">
-                <span className="py-1 min-w-[84px]">Price(USDT)</span>
-                <span className="py-1 min-w-[84px] text-right">
-                  Amount(BTC)
-                </span>
-                <span className="py-1 min-w-[84px] text-right">
-                  Total(USDT)
-                </span>
+              <div className=" grid grid-cols-3 text-[10px]  leading-[15px] text-[#5C5B5B] font-medium">
+                <span className="py-1 ">Price(USDT)</span>
+                <span className="py-1  text-right">Amount(BTC)</span>
+                <span className="py-1  text-right">Total(USDT)</span>
               </div>
               <div>
                 {(view === "both" || view === "sell") &&
@@ -167,7 +158,7 @@ export default function OrderBook() {
 
             {/** mid price */}
             {view === "both" && mid && (
-              <div className="font-semibold  text-[16px] leading-6 text-[#FC5457]">
+              <div className="font-semibold  text-[12px] leading-[18px] text-[#FC5457]">
                 {mid.toLocaleString()}
               </div>
             )}
