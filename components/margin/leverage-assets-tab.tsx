@@ -3,11 +3,10 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useMemo } from "react";
 import ToggleButton from "@/components/ui/toggle";
-import { Collaterals, BorrowInfo, RiskState } from "@/lib/types";
-import {
-  DropdownOptions,
-  iconPaths,
-} from "@/lib/constants";
+import { Collaterals, BorrowInfo } from "@/lib/types";
+
+import { DropdownOptions,iconPaths,poolsPlaceholder } from "@/lib/constants";
+
 import { BALANCE_TYPE_OPTIONS } from "@/lib/constants/margin";
 import { Button } from "@/components/ui/button";
 import { Collateral } from "./collateral-box";
@@ -23,46 +22,54 @@ import { useMarginAccountInfoStore } from "@/store/margin-account-info-store";
 import { useUserStore } from "@/store/user";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 
-import { arbAddressList, opAddressList, baseAddressList } from "@/lib/web3Constants";
+import { arbAddressList, opAddressList, baseAddressList, arbTokensAddress, opTokensAddress, baseTokensAddress } from "@/lib/web3Constants";
 
 import AccountManager from "../../abi/vanna/out/out/AccountManager.sol/AccountManager.json";
 import AccountManagerop from "../../abi/vanna/out/out/AccountManager.sol/AccountManager.json";
 import Registry from "../../abi/vanna/out/out/Registry.sol/Registry.json";
+import ERC20 from "../../abi/vanna/out/out/ERC20.sol/ERC20.json"
+
 
 import { toast } from "sonner"
-
-import ERC20 from "../../abi/vanna/out/out/ERC20.sol/ERC20.json"
-import type { Address, PublicClient, WalletClient } from "viem";
-
-
-
+import { PoolTable } from "@/lib/utils/margin/types";
+import { ceilWithPrecision, formatBignumberToUnits } from "@/lib/helper";
 
 type Modes = "Deposit" | "Borrow";
 type AddressList = typeof baseAddressList;
 
-
-
 export const LeverageAssetsTab = () => {
   // Component state
   const hasMarginAccount = useMarginAccountInfoStore((state) => state.hasMarginAccount);
-  const risk = useMarginAccountInfoStore((state) => state.risk);
-  const setrisk = useMarginAccountInfoStore((state) => state.set)
+
+
   const setHasMarginAccount = useMarginAccountInfoStore((state) => state.set);
 
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [mode, setMode] = useState<Modes>("Deposit");
   const [borrowItems, setBorrowItems] = useState<BorrowInfo[]>([]);
   const [leverage, setLeverage] = useState(2);
-  const [depositAmount, setDepositAmount] = useState(0);
+  const [depositAmount, setDepositAmount] = useState<number | undefined>(0);
+  const [borrowAmount, setBorrowAmount] = useState<number | undefined>(0);
+  const [depositBalance, setDepositBalance] = useState<number | undefined>(0);
+  const [borrowBalance, setBorrowBalance] = useState<number | undefined>(0);
+
+  const [isleverage, setisleverage] = useState(true)
   const [depositCurrency, setDepositCurrency] = useState("USDT");
   const feesCurrency = "USDT";
-  const address = useUserStore((state) => state.address);
-  const { chainId } = useAccount();
 
-  const isSupportedChain =
-    chainId === 8453 || // Base
-    chainId === 42161 || // Arbitrum
-    chainId === 10;      // Optimism
+  const address = useUserStore((state) => state.address);
+
+  const [depositToken, setDepositToken] = useState<PoolTable>(
+    poolsPlaceholder[0]
+  );
+  const [borrowToken, setBorrowToken] = useState<PoolTable>(
+    poolsPlaceholder[0]
+  );
+
+
+
+  // Wagmi hooks
+  const { chainId } = useAccount();
 
   const { data: walletClient } = useWalletClient();
   const publicClient = usePublicClient();
@@ -70,255 +77,6 @@ export const LeverageAssetsTab = () => {
   // Loading states
   const [loading, setLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState("");
-
-
-  /////////////////////////////////////////
-
-  //  handleLeverage : Later we will refractor it to reduce number of line 
-
-  /////////////////////////////////////////
-
-
-  const fetchWalletBalance = async ({
-    publicClient,
-    tokenAddress,
-    tokenAbi,
-    user,
-  }: {
-    publicClient: PublicClient;
-    tokenAddress: Address;
-    tokenAbi: any;
-    user: Address;
-  }): Promise<bigint> => {
-    return await publicClient.readContract({
-      address: tokenAddress,
-      abi: tokenAbi,
-      functionName: "balanceOf",
-      args: [user],
-    });
-  };
-
-
-  const fetchAllowance = async ({
-    publicClient,
-    tokenAddress,
-    tokenAbi,
-    owner,
-    spender,
-  }: {
-    publicClient: PublicClient;
-    tokenAddress: Address;
-    tokenAbi: any;
-    owner: Address;
-    spender: Address;
-  }): Promise<bigint> => {
-    return await publicClient.readContract({
-      address: tokenAddress,
-      abi: tokenAbi,
-      functionName: "allowance",
-      args: [owner, spender],
-    });
-  };
-
-
-  const approveToken = async ({
-    walletClient,
-    publicClient,
-    tokenAddress,
-    tokenAbi,
-    spender,
-    amount,
-  }: {
-    walletClient: WalletClient;
-    publicClient: PublicClient;
-    tokenAddress: Address;
-    tokenAbi: any;
-    spender: Address;
-    amount: bigint;
-  }): Promise<void> => {
-    const account = walletClient.account?.address;
-    if (!account) throw new Error("Wallet account not connected");
-
-    const { request } = await publicClient.simulateContract({
-      address: tokenAddress,
-      abi: tokenAbi,
-      functionName: "approve",
-      args: [spender, amount],
-      account,
-    });
-
-    const txHash = await walletClient.writeContract(request);
-
-    await publicClient.waitForTransactionReceipt({ hash: txHash });
-  };
-
-  const depositCollateral = async ({
-    walletClient,
-    publicClient,
-    accountManagerAddress,
-    accountManagerAbi,
-    amount,
-  }: {
-    walletClient: WalletClient;
-    publicClient: PublicClient;
-    accountManagerAddress: Address;
-    accountManagerAbi: any;
-    amount: bigint;
-  }): Promise<void> => {
-    const account = walletClient.account?.address;
-    if (!account) throw new Error("Wallet not connected");
-
-    const { request } = await publicClient.simulateContract({
-      address: accountManagerAddress,
-      abi: accountManagerAbi,
-      functionName: "depositCollateral",
-      args: [amount],
-      account,
-    });
-
-    const txHash = await walletClient.writeContract(request);
-
-    await publicClient.waitForTransactionReceipt({ hash: txHash });
-  };
-
-
-const fetchRiskState = async ({
-  publicClient,
-  accountManagerAddress,
-  accountManagerAbi,
-  userAccount,
-}: {
-  publicClient: PublicClient;
-  accountManagerAddress: Address;
-  accountManagerAbi: any;
-  userAccount: Address;
-}): Promise<{
-  collateralValue: bigint;
-  debtValue: bigint;
-  maxLtvBps: bigint;
-}> => {
-  const [collateralValue, debtValue, maxLtvBps] =
-    (await publicClient.readContract({
-      address: accountManagerAddress,
-      abi: accountManagerAbi,
-      functionName: "getRiskState",
-      args: [userAccount],
-    })) as readonly [bigint, bigint, bigint];
-
-  return { collateralValue, debtValue, maxLtvBps };
-};
-
-
-
-  const handleleverage = async () => {
-
-    if (!walletClient || !publicClient || !address) {
-      toast("wallet not connected yet")
-    }
-
-    const addressList = getAddressList();
-
-    if (!addressList) {
-      toast("Unsupported chains")
-      return
-    }
-
-    try {
-
-
-      setLoading(true)
-
-
-      if (!hasMarginAccount) {
-        toast("Create margin account first ");
-        return
-      }
-
-
-      // fetch wallet balance 
-
-      const walletBalance = await fetchWalletBalance({
-        publicClient,
-        tokenAddress: addressList.vUSDTContractAddress as Address,
-        tokenAbi: ERC20.abi,
-        user: address as Address,
-      });
-
-
-      if (walletBalance < depositAmount) {
-        toast("Insufficient Balance ")
-        return;
-      }
-
-
-      // Allowance check 
-
-      const allowance = await fetchAllowance({
-        publicClient,
-        tokenAddress: addressList.vUSDTContractAddress as Address,
-        tokenAbi: ERC20.abi,
-        owner: address as Address,
-        spender: addressList.accountManagerContractAddress as Address,
-      });
-
-      if (!walletClient) {
-        toast("Wallet not connected");
-        return;
-      }
-
-      const depositAmountBn = BigInt(depositAmount);
-
-      if (allowance < depositAmountBn) {
-        await approveToken({
-          walletClient,
-          publicClient,
-          tokenAddress: addressList.vUSDTContractAddress as `0x${string}`,
-          tokenAbi: ERC20.abi,
-          spender: addressList.accountManagerContractAddress as `0x${string}`,
-          amount: depositAmountBn,
-        });
-
-        toast("Approved");
-      }
-
-
-
-      await depositCollateral({
-        walletClient,
-        publicClient,
-        accountManagerAddress: addressList.accountManagerContractAddress as `0x${string}`,
-        accountManagerAbi: AccountManager.abi,
-        amount: depositAmountBn,
-      });
-
-
-      // Update the risk state 
-
-      const risk = await fetchRiskState({
-        publicClient,
-        accountManagerAddress: addressList.accountManagerContractAddress as `0x${string}`,
-        accountManagerAbi: AccountManager.abi,
-        userAccount: address as `0x${string}`,
-      });
-
-      setrisk(risk);
-
-
-    } catch (err: any) {
-
-      toast(err.message ?? "Leverage Failed ")
-
-    }
-
-    finally {
-      setLoading(false)
-    }
-
-
-
-  }
-
-
 
   const getAddressList = (): AddressList | null => {
     if (!chainId) return null;
@@ -333,7 +91,7 @@ const fetchRiskState = async ({
   const handlecreateAccount = async () => {
 
     const addressList = getAddressList();
-    if (!isSupportedChain) {
+    if (!addressList) {
       toast("Unsupported network")
 
       setLoadingMessage("Unsupported network");
@@ -352,7 +110,7 @@ const fetchRiskState = async ({
       setLoadingMessage("Checking existing accounts...");
 
       const accounts = await publicClient.readContract({
-        address: addressList!.registryContractAddress as `0x${string}`,
+        address: addressList.registryContractAddress as `0x${string}`,
         abi: Registry.abi,
         functionName: "accountsOwnedBy",
         args: [address],
@@ -368,7 +126,7 @@ const fetchRiskState = async ({
       setLoadingMessage("Preparing transaction...");
 
       const { request } = await publicClient.simulateContract({
-        address: addressList!.accountManagerContractAddress as `0x${string}`,
+        address: addressList.accountManagerContractAddress as `0x${string}`,
         abi: AccountManager.abi,
         functionName: "openAccount",
         args: [address],
@@ -414,6 +172,106 @@ const fetchRiskState = async ({
       setLoading(false);
     }
   };
+
+
+  const fetchTokenBalance = async () => {
+    if (!walletClient || !publicClient || !address) return;
+
+    try {
+      setDepositAmount(0)
+      setBorrowAmount(0)
+
+
+      if (address && publicClient && walletClient) {
+        let depositedBalance;
+
+        if (isleverage) {
+
+          if (depositToken?.name === undefined) return;
+          if (depositToken?.name === "ETH") {
+            depositedBalance = await publicClient.getBalance({
+              address: address as `0x${string}`
+            })
+          }
+          else {
+            let tokenAddress;
+
+            if (chainId === 42161) {
+              tokenAddress = arbTokensAddress[depositToken?.name]
+
+            }
+            else if (chainId === 10) {
+              tokenAddress = opTokensAddress[depositToken?.name]
+            }
+            else if (chainId === 8453) {
+              tokenAddress = baseTokensAddress[depositToken?.name]
+
+            }
+
+            if (tokenAddress) {
+              depositedBalance = await publicClient.readContract({
+                address: tokenAddress as `0x${string}`,
+                abi: ERC20.abi,
+                functionName: 'balanceOf',
+                args: [address],
+              })
+
+            }
+
+
+
+          }
+
+
+          const depositedBalanceInNumber =  formatBignumberToUnits(
+            depositToken?.name,
+            depositedBalance as any 
+          )
+
+          setDepositBalance(
+            Number(ceilWithPrecision(String(depositedBalanceInNumber)))
+          )
+          setBorrowBalance(0);
+
+          console.log(depositedBalanceInNumber,"Here is your deposited Blance in Number")
+
+
+
+        }
+
+        else {
+          // fetchRepayBalance()
+          // fetchWithDrawBalance()
+
+        }
+      }
+
+
+
+
+
+
+    } catch (error) {
+
+    }
+
+
+
+
+
+
+
+
+  }
+
+  const handleFetchBalance = (asset: string) => {
+    const token = poolsPlaceholder.find(p => p.name === asset);
+    if (token) {
+      setDepositToken(token);
+      fetchTokenBalance();
+    }
+  };
+
 
   // Dialogue state
   type DialogueState = "none" | "create-margin" | "sign-agreement" | "deposit-borrow" | "deposit-earn";
@@ -488,8 +346,6 @@ const fetchRiskState = async ({
       setDepositCurrency(currentCollaterals[0].asset);
     }
   }, [totalDepositValue, currentCollaterals]);
-
-
 
   // Collateral handlers
   const handleAddCollateral = () => {
@@ -752,6 +608,7 @@ const fetchRiskState = async ({
                         onDelete={() => handleDeleteCollateral(index)}
                         onBalanceTypeChange={handleBalanceTypeChange(index)}
                         index={index}
+                        onFetchBalance={handleFetchBalance}
                       />
                     </motion.div>
                   ))
@@ -774,6 +631,7 @@ const fetchRiskState = async ({
                       onCancel={handleCancelEdit}
                       onBalanceTypeChange={handleBalanceTypeChange(0)}
                       index={0}
+                      onFetchBalance={handleFetchBalance}
                     />
                   </motion.div>
                 )}
@@ -1075,11 +933,8 @@ const fetchRiskState = async ({
               onClick={(e) => e.stopPropagation()}
             >
               <Dialogue
-                buttonOnClick={async () => {
+                buttonOnClick={() => {
                   // TODO: Implement deposit and earn logic
-
-                  await handleleverage()
-
                   setActiveDialogue("none");
                 }}
                 buttonText="Proceed to Deposit & Earn"

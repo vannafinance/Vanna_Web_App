@@ -3,14 +3,16 @@
 import { networkOptions } from "@/lib/web3Constants";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSwitchChain,  useChainId} from "wagmi";
 
 export const NetworkDropdown = () => {
   // Dropdown visibility state
   const [isHover, setIsHover] = useState(false);
+  const chainId=useChainId();
 
-  // Selected network state
-  const [selectedNetwork, setSelectedNetwork] = useState<typeof networkOptions[0] >(networkOptions[0])
+  const {switchChain } =useSwitchChain()
+
 
   // Handler for mouse enter
   const handleMouseEnter = () => {
@@ -24,10 +26,43 @@ export const NetworkDropdown = () => {
 
   // Handler for network select
   const handleNetworkSelect = (item: typeof networkOptions[0]) => {
-    return () => {
-      setSelectedNetwork(item);
-    };
+  
+
+    return async ()=>{
+
+      setIsHover(false); // close dropdown immediately 
+
+      if(item.chainId!==chainId){
+        try{
+          await switchChain({chainId:item.chainId})
+        }
+        catch(err){
+                console.warn("Chain switch rejected or failed", err);
+            
+        }
+      }
+
+
+    }
+    
+   
   };
+
+
+  useEffect(()=>{
+      console.log(chainId)
+  },[chainId])
+
+
+  //If the user directly opens with wallet6 already on base/Arbitrum it will show wrtong selection 
+  // handle that selection from derive state 
+
+  const selectedNetwork = networkOptions.find((n) => n.chainId === chainId) 
+  ?? networkOptions[0];
+
+  
+
+
 
   return (
     <div

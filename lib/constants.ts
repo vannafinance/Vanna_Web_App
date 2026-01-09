@@ -1,3 +1,5 @@
+import { PoolTable } from "./utils/margin/types";
+
 export const navbarItems = [
   { title: "Portfolio", link: "/portfolio", group: "primary" },
   { title: "Earn", link: "/earn", group: "primary" },
@@ -43,3 +45,65 @@ export const iconPaths: Record<string, string> = {
   BASE: "/icons/base-icon.svg",
 };
 
+export const poolsPlaceholder: PoolTable[] = [
+  {
+    id: 1,
+    name: "WETH",
+    icon: "/eth-icon.svg",
+    supply: "0",
+    supplyAPY: "0",
+    borrowAPY: "0",
+    yourBalance: "0",
+    isActive: false,
+    version: 0,
+    vToken: "vWETH",
+  },
+  {
+    id: 2,
+    name: "WBTC",
+    icon: "/btc-icon.svg",
+    supply: "0",
+    supplyAPY: "0",
+    borrowAPY: "0",
+    yourBalance: "0",
+    isActive: false,
+    version: 0,
+    vToken: "vWBTC",
+  },
+  {
+    id: 3,
+    name: "USDC",
+    icon: "/usdc-icon.svg",
+    supply: "0",
+    supplyAPY: "0",
+    borrowAPY: "0",
+    yourBalance: "0",
+    isActive: false,
+    version: 0,
+    vToken: "vUSDC",
+  },
+  {
+    id: 4,
+    name: "USDT",
+    icon: "/usdt-icon.svg",
+    supply: "0",
+    supplyAPY: "0",
+    borrowAPY: "0",
+    yourBalance: "0",
+    isActive: false,
+    version: 0,
+    vToken: "vUSDT",
+  },
+  {
+    id: 5,
+    name: "DAI",
+    icon: "/dai-icon.svg",
+    supply: "0",
+    supplyAPY: "0",
+    borrowAPY: "0",
+    yourBalance: "0",
+    isActive: false,
+    version: 0,
+    vToken: "vDAI",
+  },
+];

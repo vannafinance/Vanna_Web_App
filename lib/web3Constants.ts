@@ -149,42 +149,48 @@ const chains: readonly Chain[] = [
   
   
 
+/* 
+@author sanujit
+@ 
+*/
   
 const networkOptions = [
-    {
-      id: "base",
-      name: "Base",
-      icon: "/icons/base-icon.svg",
-      chainId: "0x2105",
-      rpcUrl: "https://mainnet.base.org/",
-      blockExplorerUrl: "https://base.blockscout.com/",
-    },
-    {
-      id: "arbitrum",
-      name: "Arbitrum One",
-      icon: "/icons/arbitrum-icon.svg",
-      chainId: "0xa4b1",
-      rpcUrl: "https://arb1.arbitrum.io/rpc/",
-      blockExplorerUrl: "https://arbiscan.io/",
-    },
-    {
-      id: "optimism",
-      name: "OP Mainnet",
-      icon: "/icons/optimism-icon.svg",
-      chainId: "0xa",
-      rpcUrl: "https://mainnet.optimism.io/",
-      blockExplorerUrl: "https://optimistic.etherscan.io/",
-    },
-    {
-      id: "katana",
-      name: "Katana",
-      icon: "/icons/katana.jpg", // apna custom icon rakhna
-      chainId: "0xB6B6A", // 747474 in hex
-      rpcUrl: "https://rpc.katana.network/",
-      blockExplorerUrl: "https://explorer.katanarpc.com/",
-    }  
-  ];
-  
+  {
+    id: "base",
+    name: "Base",
+    icon: "/icons/base-icon.svg",
+    chainId: 8453, // 0x2105 in hex
+    rpcUrl: "https://mainnet.base.org",
+    blockExplorerUrl: "https://basescan.org",
+  },
+  {
+    id: "arbitrum",
+    name: "Arbitrum One",
+    icon: "/icons/arbitrum-icon.svg",
+    chainId: 42161, // 0xa4b1 in hex
+    rpcUrl: "https://arb1.arbitrum.io/rpc",
+    blockExplorerUrl: "https://arbiscan.io",
+  },
+  {
+    id: "optimism",
+    name: "OP Mainnet",
+    icon: "/icons/optimism-icon.svg",
+    chainId: 10, // 0xa in hex
+    rpcUrl: "https://mainnet.optimism.io",
+    blockExplorerUrl: "https://optimistic.etherscan.io",
+  },
+  {
+    id: "katana",
+    name: "Katana",
+    icon: "/icons/katana.jpg",
+    chainId: 747474, // 0xB6B6A in hex
+    rpcUrl: "https://rpc.katana.network",
+    blockExplorerUrl: "https://explorer.katanarpc.com",
+  },
+] as const;
+
+
+
    const BASE_NETWORK = "base";
   const ARBITRUM_NETWORK = "arbitrum";
   const OPTIMISM_NETWORK = "optimism";

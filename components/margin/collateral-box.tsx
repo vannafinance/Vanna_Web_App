@@ -31,6 +31,8 @@ interface Collateral {
   onCancel?: () => void;
   onDelete?: () => void;
   onBalanceTypeChange?: (balanceType: string) => void;
+  onFetchBalance?:(asset:string) => void ;
+
   index?: number;
 }
 
@@ -69,6 +71,14 @@ export const Collateral = (props: Collateral) => {
       setSelectedBalanceType(props.collaterals.balanceType.toUpperCase());
     }
   }, [props.collaterals, isEditing]);
+
+useEffect(() => {
+  if (!isEditing) return; // do not fetch in non-edit state
+  if (!props.onFetchBalance) return;
+  if (!selectedCurrency) return;
+  props.onFetchBalance(selectedCurrency);
+}, [selectedCurrency]);
+
 
   // Calculate USD value from input (1:1 conversion)
   useEffect(() => {

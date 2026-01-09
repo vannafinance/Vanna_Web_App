@@ -14,14 +14,6 @@ export interface MarginAccountInfoStateType {
   minDebt: number;
   maxDebt: number;
   hasMarginAccount: boolean;
-
-  risk:{
-        collateralValue: bigint;
-        debtValue:bigint;
-        maxLtvBps: bigint;
-  } | null ;
-
-
 }
 
 // Initial State (using same constant values)
@@ -38,7 +30,6 @@ const initialState: MarginAccountInfoStateType = {
   minDebt: 0,
   maxDebt: 0,
   hasMarginAccount: false,
-  risk:null
 };
 
 // Export Store

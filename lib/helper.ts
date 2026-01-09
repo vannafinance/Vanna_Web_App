@@ -1,3 +1,4 @@
+import { formatUnits, parseUnits } from "viem";
 import {
   ActivePositionType,
   OpenOrderType,
@@ -139,4 +140,33 @@ export const sleep = (duration: number) => {
       resolve();
     }, duration);
   });
+};
+
+
+export const formatBignumberToUnits = (coin: string, balance: number) => {
+  let units = 18;
+  if (coin == "USDC" || coin == "USDT") {
+    units = 6;
+  }
+
+  return formatUnits(balance, units);
+};
+
+export const formatStringToUnits = (coin: string, balance: number) => {
+  let units = 18;
+  if (coin == "USDC" || coin == "USDT") {
+    units = 6;
+  }
+
+  return parseUnits(String(balance), units);
+};
+
+
+export const ceilWithPrecision = (n: string, precision = 3) => {
+  const num = parseFloat(n);
+  // Check if the conversion was successful
+  if (isNaN(num)) {
+    return n;
+  }
+  return num.toFixed(precision);
 };

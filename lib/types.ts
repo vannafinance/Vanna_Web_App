@@ -136,12 +136,6 @@ export interface SingleTakeProfit {
   profitAmount: number | null;
 }
 
-export interface RiskState {
-  collateralValue: bigint;
-  debtValue: bigint;
-  maxLtvBps: bigint;
-}
-
 export interface MultipleTakeProfitRow {
   exitPricePercent: number | null;
   profitPercent: number | null;
