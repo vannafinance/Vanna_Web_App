@@ -30,7 +30,6 @@ export const NetworkDropdown = () => {
 
     return async ()=>{
 
-      setIsHover(false); // close dropdown immediately 
 
       if(item.chainId!==chainId){
         try{
@@ -60,7 +59,6 @@ export const NetworkDropdown = () => {
   const selectedNetwork = networkOptions.find((n) => n.chainId === chainId) 
   ?? networkOptions[0];
 
-  
 
 
 

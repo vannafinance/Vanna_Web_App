@@ -301,7 +301,7 @@ const baseTokensAddress: { [key: string]: string } = {
 const baseAddressList = {
   daiTokenAddress: "0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb",
   usdcTokenAddress: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-  wethTokenAddress: "0x4200000000000000000000000000000000000006",
+  wethTokenAddress: "0x4200000000000000000000000000000000000006", 
   usdtTokenAddress: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
   wbtcTokenAddress: "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f",
 

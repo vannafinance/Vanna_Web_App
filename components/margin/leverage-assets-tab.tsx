@@ -33,6 +33,7 @@ import { PoolTable } from "@/lib/utils/margin/types";
 
 import { baseAddressList, arbAddressList, opAddressList } from "@/lib/web3Constants";
 import { formatUnits } from "viem";
+import { iconPaths } from "@/lib/constants";
 
 type Modes = "Deposit" | "Borrow";
 type AddressList = typeof baseAddressList;
@@ -55,10 +56,6 @@ export const LeverageAssetsTab = () => {
 
 
   const [walletBalanceByAsset, setWalletBalanceByAsset] = useState<Record<string, number>>({});
-
-
-
-
 
   // Wagmi hooks
   const { chainId } = useAccount();
@@ -165,53 +162,84 @@ export const LeverageAssetsTab = () => {
     }
   };
 
-
-  //Fetch Balance 
-
- 
-    
-  const fetchBalance = async (asset: string, balanceType: "WB" | "MB") => {
+  const fetchBalance = async (
+  asset: string | null,
+  balanceType: "WB" | "MB"
+) => {
   if (!chainId || !publicClient || !address) return;
 
+  //
+  // MB = Multi Wallet Balances (list)
+  //
   if (balanceType === "MB") {
+    const entries = Object.entries(tokenAddressByChain[chainId] || {});
+    const result: { asset: string; balance: number }[] = [];
+
+    for (const [sym, addr] of entries) {
+      try {
+        // Native ETH case mapped as WETH in UI
+        //sym = symbol 
+
+        if (sym === "WETH") {
+          const ethBal = await publicClient.getBalance({ address });
+          result.push({
+            asset: sym,
+            balance: Number(formatUnits(ethBal, 18)),
+          });
+          continue;
+        }
+
+        if (!addr) continue; // skip invalid token
+
+        const bal = await publicClient.readContract({
+          address: addr as `0x${string}`,
+          abi: ERC20.abi,
+          functionName: "balanceOf",
+          args: [address],
+        });
+
+        result.push({
+          asset: sym,
+          balance: Number(formatUnits(bal, TOKEN_DECIMALS[sym] || 18)),
+        });
+      } catch (err) {
+        console.warn(`Skipping wallet token ${sym} — not valid on chain`, err);
+        continue;
+      }
+    }
+
+    return result; // ARRAY RETURN
+  }
+
+  //
+  // WB = Single Vault Balance (vToken)
+  //
+  if (balanceType === "WB" && asset) {
     const vToken = vTokenAddressByChain[chainId]?.[asset];
-    if (!vToken) return;
+    if (!vToken) return 0;
 
-    const bal = await publicClient.readContract({
-      address: vToken,
-      abi: ERC20.abi,
-      functionName: "balanceOf",
-      args: [address],
-    });
+    try {
+      const bal = await publicClient.readContract({
+        address: vToken as `0x${string}`,
+        abi: ERC20.abi,
+        functionName: "balanceOf",
+        args: [address],
+      });
 
-    return formatUnits(bal, TOKEN_DECIMALS[asset]);
+      return Number(formatUnits(bal, TOKEN_DECIMALS[asset] || 18));
+    } catch (err) {
+      console.warn(`vToken balance fetch failed for ${asset}`, err);
+      return 0;
+    }
   }
 
-  if (asset === "WETH" && balanceType === "WB") {
-    const bal = await publicClient.getBalance({ address });
-    return formatUnits(bal, 18);
-  }
-
-  const token = tokenAddressByChain[chainId]?.[asset];
-  if (!token) return;
-
-  const bal = await publicClient.readContract({
-    address: token,
-    abi: ERC20.abi,
-    functionName: "balanceOf",
-    args: [address],
-  });
-
-   // value and decimals 
-  const human = Number(formatUnits(bal, TOKEN_DECIMALS[asset]));
-  console.log(`${human.toFixed(2)} - ${TOKEN_DECIMALS} `, 'here is your balance');
-
-
-  return formatUnits(bal, TOKEN_DECIMALS[asset]);
+  return 0;
 };
 
+ 
 
 
+  // return formatUnits(bal, TOKEN_DECIMALS[asset]);
 
 
   // Dialogue state
@@ -223,6 +251,7 @@ export const LeverageAssetsTab = () => {
   const [currentBorrowItems, setCurrentBorrowItems] = useState<BorrowInfo[]>([]);
   const [selectedBalanceType, setSelectedBalanceType] = useState<string>(BALANCE_TYPE_OPTIONS[0]);
   const [selectedMBCollaterals, setSelectedMBCollaterals] = useState<Collaterals[]>([]);
+  const [mbAvailableCollaterals, setMbAvailableCollaterals] = useState<Collaterals[]>([]);
 
   // Get collateral mock data from store
   const collateralMock = useCollateralBorrowStore((state) => state.collaterals);
@@ -351,13 +380,74 @@ export const LeverageAssetsTab = () => {
     setMode((prev) => (prev === "Borrow" ? "Deposit" : "Borrow"));
   };
 
-  const handleBalanceTypeChange = (index: number) => {
+
+
+
+  // This will  make a changes 
+
+ const handleBalanceTypeChange = (index: number) => {
   return async (balanceType: string | ((prev: string) => string)) => {
-    const value =
-      typeof balanceType === "string" ? balanceType : balanceType(selectedBalanceType);
+    let value = typeof balanceType === "function" ? balanceType(selectedBalanceType) : balanceType;
 
     const normalized = value.toLowerCase();
-    const balanceKey = normalized.toUpperCase() as "WB" | "MB";
+
+    // No-op if same
+    if (normalized === selectedBalanceType.toLowerCase()) return;
+
+    if (!chainId || !address || !publicClient) return;
+
+    if (normalized === "mb") {
+      // === MB MODE ===
+      setLoading(true);
+      const rawBalances = await fetchBalance(null, "MB");
+      setLoading(false);
+
+      let available: Collaterals[] = [];
+
+      if (Array.isArray(rawBalances)) {
+        available = rawBalances
+          .filter((b: any) => b.balance > 0)
+          .map((b: any) => ({
+            asset: b.asset,
+            amount: b.balance,
+            amountInUsd: b.balance, // 1:1 USD assumption (matches rest of code)
+            balanceType: "mb" as const,
+            unifiedBalance: b.balance,
+          }));
+      }
+
+      setMbAvailableCollaterals(available);
+
+      // Initial selection: all in Deposit mode, none in Borrow mode
+      const initialSelected = mode === "Deposit" ? available : [];
+      setSelectedMBCollaterals(initialSelected);
+
+      // Compute initial sum for the dummy MB collateral entry
+      const sumUsd = initialSelected.reduce((acc, c) => acc + c.amountInUsd, 0);
+      const displayAsset =
+        initialSelected.length === 0
+          ? TOKEN_OPTIONS[0]
+          : initialSelected.length === 1
+          ? initialSelected[0].asset
+          : "Various";
+
+      const updated: Collaterals = {
+        asset: displayAsset,
+        amount: sumUsd,
+        amountInUsd: sumUsd,
+        balanceType: "mb",
+        unifiedBalance: sumUsd,
+      };
+
+      setCurrentCollaterals([updated]);
+      setSelectedBalanceType("MB");
+      setEditingIndex(null);
+
+      return;
+    }
+
+    // === WB MODE (existing logic, only minor cleanup) ===
+    const balanceKey = "WB" as const;
 
     const prev = currentCollaterals[index] ?? {
       amount: 0,
@@ -368,42 +458,54 @@ export const LeverageAssetsTab = () => {
     };
 
     const asset = prev.asset;
-
     const fetched = await fetchBalance(asset, balanceKey);
+    const unified = typeof fetched === "number" ? fetched : 0;
 
     const updated: Collaterals = {
       ...prev,
-      balanceType: normalized,
-      unifiedBalance: fetched ? Number(fetched) : 0,
+      balanceType: "wb",
+      unifiedBalance: unified,
     };
 
-    if (normalized === "mb") {
-      setCurrentCollaterals([updated]);
-      setSelectedBalanceType("MB");
-      setEditingIndex(0);
-      return;
-    }
-
-    const next = [...currentCollaterals];
+    let next = [...currentCollaterals];
     next[index] = updated;
-    const filtered = next.filter(c => c.balanceType !== "mb");
-    setCurrentCollaterals(filtered);
 
-    setSelectedBalanceType(value);
+    // Remove any lingering MB entries
+    next = next.filter((c) => c.balanceType.toLowerCase() !== "mb");
+
+    setCurrentCollaterals(next);
+    setSelectedBalanceType("WB");
     setEditingIndex(index);
+
+    // Clean up MB state when leaving MB mode
+    setMbAvailableCollaterals([]);
+    setSelectedMBCollaterals([]);
   };
 };
 
 useEffect(() => {
-  if (editingIndex !== null) {
-    const c = currentCollaterals[editingIndex];
-    if (!c) return;
-    if (c.balanceType.toUpperCase() === "WB") {
-      handleBalanceTypeChange(editingIndex)("WB");
-    }
-  }
-}, [currentCollaterals[editingIndex]?.asset]);
+  if (isMBMode && currentCollaterals.length === 1 && currentCollaterals[0]?.balanceType === "mb") {
+    const sumUsd = selectedMBCollaterals.reduce((acc, c) => acc + c.amountInUsd, 0);
 
+    const selectedAssets = selectedMBCollaterals.map((c) => c.asset);
+    const displayAsset =
+      selectedAssets.length === 0
+        ? TOKEN_OPTIONS[0]
+        : selectedAssets.length === 1
+        ? selectedAssets[0]
+        : "Various";
+
+    setCurrentCollaterals([
+      {
+        ...currentCollaterals[0],
+        asset: displayAsset,
+        amount: sumUsd,
+        amountInUsd: sumUsd,
+        unifiedBalance: sumUsd,
+      },
+    ]);
+  }
+}, [selectedMBCollaterals, isMBMode, currentCollaterals]);
 
   const handleButtonClick = () => {
     if (hasMarginAccount) {
@@ -415,6 +517,7 @@ useEffect(() => {
 
   return (
     <>
+
       <motion.div
         className="w-full flex flex-col gap-[24px] pt-6"
         initial={{ opacity: 0 }}

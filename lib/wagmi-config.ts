@@ -8,7 +8,7 @@ import { getDefaultConfig } from "@rainbow-me/rainbowkit";
 const config = getDefaultConfig({
   appName: "Vanna",
   projectId: "f22dfa1f5a575e7a9ca23001ebc6bec8",
-  chains: [mainnet, base, optimism, arbitrum],  // Add arbitrum here if you want it supported
+  chains: [mainnet, base, optimism, arbitrum],  
   transports: {
     [mainnet.id]: http(),
     [base.id]: http(),
