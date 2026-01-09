@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 interface Button {
   text: string;
   size: "small" | "medium" | "large";
-  type: "solid" | "gradient" | "ghost";
+  type: "solid" | "gradient" | "ghost" | "navbar";
   onClick?: React.MouseEventHandler<HTMLButtonElement>;
   disabled: boolean;
   icon?: Element;
@@ -13,6 +13,7 @@ interface Button {
 }
 
 export const Button = (props: Button) => {
+  
   return (
     <motion.button
       whileTap={{ scale: 0.95 }}
@@ -24,11 +25,13 @@ export const Button = (props: Button) => {
           ? "py-[16px] px-[12px] text-[16px] rounded-[12px]"
           : props.size == "large"
           ? "rounded-[16px] text-[20px] py-[20px] px-[16px]"
-          : "text-[12px] py-[12px] px-[24px]"
+          : props.type === "navbar"
+          ? "text-[12px] py-[12px] px-[24px]"
+          : "text-[12px] p-[8px]"
       } disabled:cursor-not-allowed transition  cursor-pointer rounded-[8px] font-semibold ${
         props.type == "solid"
           ? "bg-[#703AE6] disabled:bg-[#A7A7A7]  hover:bg-[#6635D1] active:bg-[#6635D1] text-white"
-          : props.type == "gradient"
+          : props.type == "gradient" || props.type == "navbar"
           ? props.disabled
             ? "bg-[#A7A7A7] text-white"
             : "bg-gradient text-white hover:bg-gradient active:bg-gradient"

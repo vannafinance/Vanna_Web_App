@@ -9,9 +9,11 @@ import { tableBody, tableHeadings } from "@/lib/constants/earn";
 import { ACCOUNT_STATS_ITEMS } from "@/lib/constants/margin";
 import { useUserStore } from "@/store/user";
 import { RewardsTable } from "@/components/earn/rewards-table";
+import { useEarnVaultStore } from "@/store/earn-vault-store";
 
 export default function Earn() {
   const userAddress = useUserStore((state) => state.address);
+  const setSelectedVault = useEarnVaultStore((state) => state.set);
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("vaults");
   
@@ -31,12 +33,47 @@ export default function Earn() {
   // Handle row click - navigate to earn detail page
   const handleRowClick = useCallback(
     (row: any, rowIndex: number) => {
-      const id = row.cell[0]?.title;
+      const cells = row.cell;
+      const id = cells[0]?.title;
+      
       if (id) {
+        // Save selected vault data to store
+        const vaultData = {
+          id: id,
+          chain: cells[0]?.chain || "ETH",
+          title: cells[0]?.title || "",
+          tag: cells[0]?.tag || "Active",
+          assetsSupplied: {
+            title: cells[1]?.title || "",
+            tag: cells[1]?.tag || "",
+          },
+          supplyApy: {
+            title: cells[2]?.title || "",
+            tag: cells[2]?.tag || "",
+          },
+          assetsBorrowed: {
+            title: cells[3]?.title || "",
+            tag: cells[3]?.tag || "",
+          },
+          borrowApy: {
+            title: cells[4]?.title || "",
+            tag: cells[4]?.tag || "",
+          },
+          utilizationRate: {
+            title: cells[5]?.title || "",
+            tag: cells[5]?.tag || "",
+          },
+          collateral: {
+            onlyIcons: cells[6]?.onlyIcons || [],
+            tag: cells[6]?.tag || "Collateral",
+          },
+        };
+        
+        setSelectedVault({ selectedVault: vaultData });
         router.push(`/earn/${id}`);
       }
     },
-    [router]
+    [router, setSelectedVault]
   );
   return (
     <div>

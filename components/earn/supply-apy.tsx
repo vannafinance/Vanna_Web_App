@@ -63,13 +63,16 @@ export const SupplyApy = (props: SupplyApyProps) => {
         </div>
       </div>
       {isOpen && (
-        <div
-          className="shadow-md w-[370px] h-fit top-14 right-0 absolute rounded-[16px] p-[16px] flex flex-col gap-[15px] bg-[#F4F4F4] z-50"
-        >
-          <div onClick={() => props.setSupplyApyFilter((prev) => ({
-            ...prev,
-            percentage: 0,
-          }))} className="text-end w-full text-[14px] font-semibold underline cursor-pointer hover:text-[#703AE6] transition-colors">
+        <div className="shadow-md w-[370px] h-fit top-14 right-0 absolute rounded-[16px] p-[16px] flex flex-col gap-[15px] bg-[#F4F4F4] z-50">
+          <div
+            onClick={() =>
+              props.setSupplyApyFilter((prev) => ({
+                ...prev,
+                percentage: 0,
+              }))
+            }
+            className="text-end w-full text-[14px] font-semibold underline cursor-pointer hover:text-[#703AE6] transition-colors"
+          >
             Reset
           </div>
           <div className="w-full h-[38px]">
@@ -101,6 +104,7 @@ export const SupplyApy = (props: SupplyApyProps) => {
             <input
               type="number"
               placeholder="Enter Amount"
+              value={props.supplyApy.percentage.toString()}
               onChange={(e) => {
                 props.setSupplyApyFilter((prev) => ({
                   ...prev,

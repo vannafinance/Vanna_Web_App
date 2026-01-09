@@ -355,7 +355,7 @@ export const Navbar = (props: Navbar) => {
           {userAddress && (
             <Button
               size="small"
-              type="gradient"
+              type="navbar"
               disabled={false}
               onClick={() => {
                 // TODO: Implement deposit logic
@@ -426,7 +426,7 @@ export const Navbar = (props: Navbar) => {
           {!userAddress ? (
             <Button
               size="small"
-              type="gradient"
+              type="navbar"
               disabled={false}
               onClick={() => {
                 setUserAddress({

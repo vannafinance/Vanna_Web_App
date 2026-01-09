@@ -10,28 +10,28 @@ const rewardsHeading = [
 const rewardsData = [
   {
     id: 1,
-        name: "ETH Rewards",
+        name: "2k Assets",
     points: "100",
     rewards: "100",
   },
   {
     id: 2,
-    name: "USDC Rewards",
+    name: "2k Assets",
     points: "100",
     rewards: "100",
   },
   {
     id: 3,
-    name: "USDT Rewards",
+    name: "5k Assets",
     points: "100",
     rewards: "100",
   },
   {
     id: 4,
-    name: "WBTC Rewards",
+    name: "10k Assets",
     points: "100",
     rewards: "100",
-  },
+  }
 ];
 export const RewardsTable = () => {
   return (
@@ -54,10 +54,10 @@ export const RewardsTable = () => {
             ))}
           </tr>
         </thead>
-        <tbody className="flex flex-col gap-[4px]">
-          {rewardsData.map((reward) => (
+        <tbody className="flex flex-col gap-[4px] max-h-[220px] overflow-y-auto">
+          {rewardsData.map((reward,idx) => (
             <tr
-              key={reward.name}
+              key={idx}
               className="cursor-pointer    w-full h-fit flex hover:bg-[#F1EBFD] rounded-[8px]  items-center"
             >
               <td className="w-full h-full py-[4px] px-[8px] text-[10px] font-medium text-[#090909] flex items-center">
@@ -70,7 +70,7 @@ export const RewardsTable = () => {
                 {reward.rewards}
               </td>
               <td className="w-full h-full py-[4px] px-[8px] text-[10px] font-medium text-[#090909] flex items-center justify-end">
-                <Button text="Claim all" size="small" type="solid" disabled={false}  />
+                <Button text="Claim" size="small" type="solid" disabled={false}  />
               </td>
             </tr>
           ))}

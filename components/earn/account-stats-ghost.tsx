@@ -1,32 +1,15 @@
-import { formatNumber } from "@/lib/utils/format-value";
+interface AccountStatsItem {
+  id: string;
+  name: string;
+  amount: string;
+  amountInToken?: string;
+}
 
-const items = [
-  {
-    id: "1",
-    name: "Total Supply",
-    amount: "1000",
-    amountInToken: "20",
-  },
-  {
-    id: "2",
-    name: "Available Liquidity",
-    amount: "3400",
-    amountInToken: "30.4",
-  },
-  {
-    id: "3",
-    name: "Utilization Rate ",
-    amount: "6.5",
-    
-  },
-  {
-    id: "4",
-    name: "Supply APY",
-    amount: "2.5",
-  },
-];
+interface AccountStatsGhostProps {
+  items: AccountStatsItem[];
+}
 
-export const AccountStatsGhost = () => {
+export const AccountStatsGhost = ({ items }: AccountStatsGhostProps) => {
   return (
     <div className="w-full h-full flex justify-between ">
       {items.map((items) => {
@@ -40,11 +23,13 @@ export const AccountStatsGhost = () => {
             </div>
             <div className="w-full h-fit flex flex-col gap-[4px] ">
               <div className="text-[28px] font-bold ">
-                ${formatNumber(Number(items.amount))}
+                {items.amount}
               </div>
-              {items.amountInToken && <div className="text-[12px] font-medium ">
-                {formatNumber(Number(items.amountInToken))} ETH
-              </div>}
+              {items.amountInToken && (
+                <div className="text-[12px] font-medium ">
+                  {items.amountInToken}
+                </div>
+              )}
             </div>
           </div>
         );

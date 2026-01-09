@@ -50,6 +50,8 @@ const Margin = () => {
 
   const userAddress = useUserStore((state) => state.address);
 
+  
+
   // Account statistics state
   const [accountStats, setAccountStats] = useState({
     netHealthFactor: 567777,
@@ -86,6 +88,7 @@ const Margin = () => {
   const hasMarginAccount = useMarginAccountInfoStore(
     (state) => state.hasMarginAccount
   );
+
 
   // Format data for InfoCard component
   const marginAccountInfo = {
