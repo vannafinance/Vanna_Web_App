@@ -1,0 +1,56 @@
+AccountManager Contract Functions
+View / Read-only Functions
+
+accountFactory() → returns address
+admin() → returns address
+assetCap() → returns uint256
+controller() → returns address
+getInactiveAccountsOf(address user) → returns address[] (list of inactive accounts for a user)
+inactiveAccountsOf(address, uint256) → returns address (mapping lookup)
+isCollateralAllowed(address token) → returns bool
+isValidSignature(address signer, bytes32 hash, bytes signature) → returns bytes32 (EIP-1271 style)
+paused() → returns bool
+registry() → returns address
+riskEngine() → returns address
+
+Non-view / State-changing Functions
+
+approve(address account, address token, address spender, uint256 amt)
+borrow(address account, address token, uint256 amt)
+closeAccount(address _account)
+deposit(address account, address token, uint256 amt)
+depositEth(address account)payable (send ETH with call)
+exec(address account, address[] target, uint256 amt, bytes[] data) (general external call executor)
+init(address _registry) (one-time initialization)
+initDep() (initialize dependencies)
+liquidate(address account)
+openAccount(address owner) → returns address (creates/opens your margin account)
+repay(address account, address token, uint256 amt)
+setAssetCap(uint256 cap) (admin only)
+settle(address account)
+toggleCollateralStatus(address token) (admin only)
+togglePause() (admin only)
+transferOwnership(address newAdmin) (admin only)
+withdraw(address account, address token, uint256 amt)
+withdrawEth(address account, uint256 amt)
+
+TrackToken Contract Functions (ERC20 with mint)
+View / Read-only Functions
+
+allowance(address owner, address spender) → returns uint256
+balanceOf(address account) → returns uint256 (this is the key one for your deposited margin balance)
+decimals() → returns uint8 (usually 18)
+name() → returns string
+symbol() → returns string
+totalSupply() → returns uint256
+
+Non-view / State-changing Functions
+
+approve(address spender, uint256 value) → returns bool
+mint(address account) → returns uint256 (mints shares; usually called internally by protocol)
+transfer(address to, uint256 value) → returns bool
+transferFrom(address from, address to, uint256 value) → returns bool
+
+
+Use AccountManager → openAccount(yourWallet) or check events to get your personal Margin Account address.
+Use TrackToken → balanceOf(yourMarginAccountAddress) → this gives your deposited balance (in vault shares, representing collateral + PnL).

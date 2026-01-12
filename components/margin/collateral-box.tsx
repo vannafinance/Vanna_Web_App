@@ -22,6 +22,7 @@ import { usePublicClient, useAccount } from "wagmi";
 import { useUserStore } from "@/store/user";
 import { formatUnits } from "viem";
 import ERC20 from "../../abi/vanna/out/out/ERC20.sol/ERC20.json";
+import { erc20Abi } from "viem";
 
 interface CollateralProps {
   collaterals: {
@@ -60,9 +61,6 @@ export const Collateral = (props: CollateralProps) => {
     BALANCE_TYPE_OPTIONS[0]
   );
 
-  // Local unified balance (fetched inside component for editing mode)
-  const [unifiedBalance, setUnifiedBalance] = useState<number>(0);
-
   // Dialogue visibility states
   const [isViewSourcesOpen, setIsViewSourcesOpen] = useState(false);
   const [isUnifiedBalanceOpen, setIsUnifiedBalanceOpen] = useState(false);
@@ -76,80 +74,69 @@ export const Collateral = (props: CollateralProps) => {
 
   // Sync form with props when entering editing mode from standard view
   useEffect(() => {
-    if (props.collaterals && isEditing) {
+    if (props.collaterals) {
       setValueInput(props.collaterals.amount.toString());
       setValueInUsd(props.collaterals.amountInUsd.toString());
       setSelectedCurrency(props.collaterals.asset);
       setSelectedBalanceType(props.collaterals.balanceType.toUpperCase());
-    }
-  }, [props.collaterals, isEditing]);
 
-  // Sync unified balance from props when in standard (non-editing) mode
-  useEffect(() => {
-    if (!isEditing && props.collaterals) {
-      setUnifiedBalance(props.collaterals.unifiedBalance);
     }
-  }, [!isEditing, props.collaterals?.unifiedBalance]);
 
-  // Fetch unified balance when in editing mode (triggers on asset/type change)
-  const fetchUnifiedBalance = async () => {
-    if (!isEditing || !publicClient || !userAddress || !chainId) {
-      setUnifiedBalance(0);
+  }, [props.collaterals])
+
+  // Add new state for live unified balance
+  const [liveUnifiedBalance, setLiveUnifiedBalance] = useState<number>(0);
+
+  // Fetch function
+  const fetchLiveBalance = async () => {
+    if (!chainId || !publicClient || !userAddress || selectedBalanceType !== "WB") {
+      setLiveUnifiedBalance(0);
       return;
     }
 
-    const balanceType = selectedBalanceType.toUpperCase() as "WB" | "MB";
-    const asset = selectedCurrency;
+    let balance = 0;
 
-    let bal: bigint | undefined;
-
-    try {
-      if (balanceType === "MB") {
-        const vToken = vTokenAddressByChain[chainId]?.[asset];
-        if (!vToken) {
-          setUnifiedBalance(0);
-          return;
-        }
-        bal = await publicClient.readContract({
-          address: vToken as `0x${string}`,
-          abi: ERC20.abi,
-          functionName: "balanceOf",
-          args: [userAddress],
-        });
-      } else {
-        // WB
-        if (asset === "WETH") {
-          bal = await publicClient.getBalance({ address: userAddress });
-          setUnifiedBalance(Number(formatUnits(bal, 18)));
-          return;
-        }
-
-        const token = tokenAddressByChain[chainId]?.[asset];
-        if (!token) {
-          setUnifiedBalance(0);
-          return;
-        }
-
-        bal = await publicClient.readContract({
-          address: token as `0x${string}`,
-          abi: ERC20.abi,
-          functionName: "balanceOf",
-          args: [userAddress],
-        });
+    if (selectedCurrency === "ETH") {
+      const raw = await publicClient.getBalance({ address: userAddress });
+      balance = Number(formatUnits(raw, 18));
+    } else {
+      const tokenAddress = tokenAddressByChain[chainId]?.[selectedCurrency];
+      if (!tokenAddress) {
+        setLiveUnifiedBalance(0);
+        return;
       }
 
-      const decimals = TOKEN_DECIMALS[asset] ?? 18;
-      setUnifiedBalance(Number(formatUnits(bal!, decimals)));
-    } catch (err) {
-      setUnifiedBalance(0);
+      try {
+        const raw = await publicClient.readContract({
+          address: tokenAddress as `0x${string}`,
+          abi: erc20Abi,
+          functionName: "balanceOf",
+          args: [userAddress],
+        }) as bigint;
+        const decimals = TOKEN_DECIMALS[selectedCurrency];
+        balance = Number(formatUnits(raw, decimals));
+      } catch (err) {
+        console.error("Balance fetch error:", err);
+        balance = 0;
+      }
     }
+
+    setLiveUnifiedBalance(balance);
   };
 
+  // Run fetch when relevant things change
   useEffect(() => {
-    if (isEditing) {
-      fetchUnifiedBalance();
+    if (isEditing && selectedBalanceType === "WB") {
+      fetchLiveBalance();
+    } else {
+      setLiveUnifiedBalance(0);
     }
-  }, [isEditing, selectedCurrency, selectedBalanceType, chainId, userAddress]);
+  }, [isEditing, selectedBalanceType, selectedCurrency, chainId, userAddress, publicClient]);
+
+
+  // Fetch unified balance when in editing mode (triggers on asset/type change)
+  // Here we will check with parent function not maintain a differend function here 
+
 
   // Calculate USD value from input (1:1 conversion)
   useEffect(() => {
@@ -168,7 +155,7 @@ export const Collateral = (props: CollateralProps) => {
       amount: parseFloat(valueInput) || 0,
       amountInUsd: parseFloat(valueInUsd) || 0,
       balanceType: selectedBalanceType.toLowerCase(),
-      unifiedBalance: unifiedBalance,
+      unifiedBalance: liveUnifiedBalance,
     };
     props.onSave(updatedCollateral);
   };
@@ -189,7 +176,7 @@ export const Collateral = (props: CollateralProps) => {
   const handlePercentageClick = (item: number) => {
     setPercentage(item);
 
-    const calculatedAmount = (item / 100) * unifiedBalance;
+    const calculatedAmount = (item / 100) * liveUnifiedBalance;
 
     let formatted = "0";
     if (calculatedAmount > 0) {
@@ -354,11 +341,10 @@ export const Collateral = (props: CollateralProps) => {
                     type="button"
                     key={item}
                     onClick={() => handlePercentageClick(item)}
-                    className={`h-[44px] w-[95px] text-center text-[14px] text-medium cursor-pointer ${
-                      percentage === item
+                    className={`h-[44px] w-[95px] text-center text-[14px] text-medium cursor-pointer ${percentage === item
                         ? `${PERCENTAGE_COLORS[item]} text-white`
                         : "bg-[#F4F4F4]"
-                    } p-[10px] rounded-[12px]`}
+                      } p-[10px] rounded-[12px]`}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     transition={{ duration: 0.1 }}
@@ -375,11 +361,11 @@ export const Collateral = (props: CollateralProps) => {
             <div className="flex flex-col justify-end items-end gap-[4px]">
               {/* PB/WB toggle */}
               <div className="py-[4px] pr-[4px] pl-[8px] bg-[#F2EBFE] rounded-[8px] ">
-                <Dropdown 
+                <Dropdown
                   dropdownClassname="text-[14px] gap-[10px] "
-                  classname="text-[16px] font-medium gap-[8px]" 
-                  items={[...BALANCE_TYPE_OPTIONS]} 
-                  selectedOption={selectedBalanceType} 
+                  classname="text-[16px] font-medium gap-[8px]"
+                  items={[...BALANCE_TYPE_OPTIONS]}
+                  selectedOption={selectedBalanceType}
                   setSelectedOption={(value) => {
                     setSelectedBalanceType(value);
                     if (props.onBalanceTypeChange) {
@@ -399,7 +385,7 @@ export const Collateral = (props: CollateralProps) => {
                 transition={{ duration: 0.1 }}
                 aria-label="View unified balance breakdown"
               >
-                Unified Balance: {unifiedBalance} {selectedCurrency}
+                Unified Balance: {liveUnifiedBalance} {selectedCurrency}
               </motion.button>
             </div>
           </motion.div>
@@ -481,7 +467,7 @@ export const Collateral = (props: CollateralProps) => {
                 transition={{ duration: 0.1 }}
                 aria-label="View unified balance breakdown"
               >
-                Unified Balance: {unifiedBalance} {collateral.asset}
+                Unified Balance: {collateral.unifiedBalance} {collateral.asset}
               </motion.button>
             </div>
 
@@ -491,11 +477,10 @@ export const Collateral = (props: CollateralProps) => {
                 type="button"
                 onClick={props.onEdit}
                 disabled={props.isAnyOtherEditing}
-                className={`p-[8.73px] rounded-[8px] bg-[#F4F4F4] h-fit min-w-[32px] flex-shrink-0 ${
-                  props.isAnyOtherEditing
+                className={`p-[8.73px] rounded-[8px] bg-[#F4F4F4] h-fit min-w-[32px] flex-shrink-0 ${props.isAnyOtherEditing
                     ? "opacity-50 cursor-not-allowed"
                     : "cursor-pointer"
-                }`}
+                  }`}
                 whileHover={
                   props.isAnyOtherEditing
                     ? {}

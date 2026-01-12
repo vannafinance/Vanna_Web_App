@@ -6,6 +6,7 @@ export const TOKEN_OPTIONS = poolsPlaceholder.map(p=>p.name)  //["WETH", "WBTC",
 export type TokenSymbol = (typeof TOKEN_OPTIONS)[number];
 
 
+// This is for ERC-20 token 
 export const TOKEN_DECIMALS: Record<TokenSymbol, number> = {
   WETH: 18,
   WBTC: 8,
@@ -21,8 +22,6 @@ export const tokenAddressByChain: Record<number, Record<string, `0x${string}`>> 
   10: opTokensAddress as Record<string, `0x${string}`>,
   8453: baseTokensAddress as Record<string, `0x${string}`>,
 };
-
-
 
 
 
