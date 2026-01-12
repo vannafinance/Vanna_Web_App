@@ -4,14 +4,18 @@ import OrderBook from "@/components/spot/OrderBook";
 import OrderPlacementForm from "@/components/spot/OrderPlacementForm";
 import PositionTables from "@/components/spot/PositionTables";
 import TradingPairInfo from "@/components/spot/TradingPairInfo";
-import TradingPairSelector from "@/components/spot/TradingPairSelector";
+import TradingPairSearch from "@/components/spot/TradingPairSearch";
+import { Dropdown } from "@/components/ui/dropdown";
 import TradingViewChart from "@/components/ui/trading-view-chart";
 import { useEffect, useRef, useState } from "react";
+
+const PROTCOL_OPTIONS = ["Aster", "Avantis"];
 
 const Spot = () => {
   const [isTradingPairSelectorOpen, setIsTradingPairSelectorOpen] =
     useState(false);
   const tradingPairSelectorRef = useRef<HTMLDivElement>(null);
+  const [protocol, setProtocol] = useState("Aster");
 
   useEffect(() => {
     if (!isTradingPairSelectorOpen) return;
@@ -44,10 +48,10 @@ const Spot = () => {
     <main className="w-full min-h-screen px-5 pt-10 bg-[#FFFFFF] grid grid-cols-[minmax(0,1fr)_316px] gap-2">
       <div className="flex flex-col flex-1 gap-2">
         {/* TradingPairInfo, charts & orderbook */}
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col  gap-2">
           {/* TradingPairInfo */}
-          <div>
-            <div ref={tradingPairSelectorRef} className="relative">
+          <div className="flex  gap-2">
+            <div ref={tradingPairSelectorRef} className="relative flex-1">
               <TradingPairInfo
                 isOpen={isTradingPairSelectorOpen}
                 onOpenPairSelector={() =>
@@ -55,14 +59,27 @@ const Spot = () => {
                 }
               />
               {isTradingPairSelectorOpen && (
-                <div className="absolute top-[60px] left-2  z-50 ">
-                  <TradingPairSelector />
+                <div className="absolute top-[60px] left-2  z-150 ">
+                  <TradingPairSearch />
                 </div>
               )}
             </div>
 
             {/* dex navigation dropdown */}
-            <div></div>
+            <div className="bg-[#F7F7F7] border border-[#E2E2E2]  rounded-lg p-4 flex gap-5">
+              <div className="flex flex-col gap-1">
+                <div className="text-[#A7A7A7] font-medium text-[12px] leading-[18px]">
+                  Protocol
+                </div>
+                <Dropdown
+                  items={PROTCOL_OPTIONS}
+                  selectedOption={protocol}
+                  setSelectedOption={(val) => setProtocol(val)}
+                  classname=" gap-2 text-[#111111] font-medium text-[12px] leading-[18px] "
+                  dropdownClassname="text-[12px] leading-[18px] font-medium "
+                />
+              </div>
+            </div>
           </div>
 
           {/* chart & orderBook */}
