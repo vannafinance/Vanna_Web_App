@@ -35,11 +35,14 @@ const rewardsData = [
 ];
 export const RewardsTable = () => {
   return (
-    <div className="w-full h-[330px] rounded-[16px] border-[1px] border-[#E2E2E2] bg-[#F7F7F7] p-[16px] flex flex-col gap-[16px]">
-      <div className="w-full h-fit text-[14px] font-semibold text-black">
+    <section 
+      className="w-full h-[330px] rounded-[16px] border-[1px] border-[#E2E2E2] bg-[#F7F7F7] p-[16px] flex flex-col gap-[16px]"
+      aria-label="Rewards Summary"
+    >
+      <h2 className="w-full h-fit text-[14px] font-semibold text-black">
         Rewards
-      </div>
-      <table className="w-full h-fit flex flex-col gap-[4px] ">
+      </h2>
+      <table className="w-full h-fit flex flex-col gap-[4px]" aria-label="Claimable Rewards">
         <thead>
           <tr className="w-full h-fit flex gap-[2px] rounded-[12px]  items-center">
             {rewardsHeading.map((heading) => (
@@ -76,6 +79,6 @@ export const RewardsTable = () => {
           ))}
         </tbody>
       </table>
-    </div>
+    </section>
   );
 };

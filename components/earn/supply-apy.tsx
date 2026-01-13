@@ -41,30 +41,37 @@ export const SupplyApy = (props: SupplyApyProps) => {
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <div
+      <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
         className="cursor-pointer bg-white w-fit h-[48px] flex rounded-[8px] border-[1px] border-[#E2E2E2] py-[8px] px-[12px] items-center gap-[8px]"
+        aria-expanded={isOpen}
+        aria-haspopup="true"
       >
-        <div className="text-[14px] font-semibold text-[#111111]">
+        <span className="text-[14px] font-semibold text-[#111111]">
           Supply APY is
-        </div>
-        <div className="w-fit h-fit rounded-[4px] p-[8px] bg-[#F1EBFD] ">
+        </span>
+        <span className="w-fit h-fit rounded-[4px] p-[8px] bg-[#F1EBFD]">
           {props.supplyApy.percentage > 0 ? (
-            <div className="text-[12px] font-semibold text-[#703AE6]">
+            <span className="text-[12px] font-semibold text-[#703AE6]">
               {props.supplyApy.greaterThan
                 ? `>${props.supplyApy.percentage}%`
                 : `<${props.supplyApy.percentage}%`}
-            </div>
+            </span>
           ) : (
-            <div className="text-[12px] font-semibold text-[#703AE6]">
+            <span className="text-[12px] font-semibold text-[#703AE6]">
               Anything
-            </div>
+            </span>
           )}
-        </div>
-      </div>
+        </span>
+      </button>
       {isOpen && (
-        <div className="shadow-md w-[370px] h-fit top-14 right-0 absolute rounded-[16px] p-[16px] flex flex-col gap-[15px] bg-[#F4F4F4] z-50">
-          <div
+        <section 
+          className="shadow-md w-[370px] h-fit top-14 right-0 absolute rounded-[16px] p-[16px] flex flex-col gap-[15px] bg-[#F4F4F4] z-50"
+          aria-label="Supply APY Filter"
+        >
+          <button
+            type="button"
             onClick={() =>
               props.setSupplyApyFilter((prev) => ({
                 ...prev,
@@ -74,8 +81,8 @@ export const SupplyApy = (props: SupplyApyProps) => {
             className="text-end w-full text-[14px] font-semibold underline cursor-pointer hover:text-[#703AE6] transition-colors"
           >
             Reset
-          </div>
-          <div className="w-full h-[38px]">
+          </button>
+          <nav className="w-full h-[38px]" aria-label="Filter Type Selection">
             <AnimatedTabs
               tabs={[
                 { label: "Greater than", id: "greater-than" },
@@ -99,9 +106,13 @@ export const SupplyApy = (props: SupplyApyProps) => {
                 }
               }}
             />
-          </div>
+          </nav>
           <div className="bg-white flex justify-between items-center w-full h-[36px] rounded-[8px] border-[1px] border-[#E2E2E2] p-[8px]">
+            <label htmlFor="apy-percentage" className="sr-only">
+              APY Percentage
+            </label>
             <input
+              id="apy-percentage"
               type="number"
               placeholder="Enter Amount"
               value={props.supplyApy.percentage.toString()}
@@ -112,10 +123,11 @@ export const SupplyApy = (props: SupplyApyProps) => {
                 }));
               }}
               className="bg-white outline-none placeholder:text-[#C6C6C6] p-[4px] rounded-[6px] w-full h-fit text-[12px] font-medium"
+              aria-label="APY Percentage Value"
             />
-            <div className="text-[12px] font-medium">%</div>
+            <span className="text-[12px] font-medium" aria-hidden="true">%</span>
           </div>
-        </div>
+        </section>
       )}
     </div>
   );

@@ -156,9 +156,30 @@ const tableHeadings = [
   }
 
 
-export const ActivityTab =()=>{
-    return <div className="w-full h-fit rounded-[20px] border-[1px] border-[#E2E2E2] bg-[#F7F7F7] p-[24px] flex flex-col gap-[24px]">
-        <Table showPieChart={true} tableBodyBackground="bg-white" heading={{heading:"User Distribution"}} tableHeadings={tableHeadings} tableBody={tableBody} />
-        <Table  tableBodyBackground="bg-white" heading={{heading:"All Transactions",}} filters={{filters:["All"],customizeDropdown:true}} tableHeadings={transactionTableHeadings} tableBody={transactionTableBody}/>
-    </div>
-}
+export const ActivityTab = () => {
+  return (
+    <section 
+      className="w-full h-fit rounded-[20px] border-[1px] border-[#E2E2E2] bg-[#F7F7F7] p-[24px] flex flex-col gap-[24px]"
+      aria-label="Activity Overview"
+    >
+      <article aria-label="User Distribution">
+        <Table 
+          showPieChart={true} 
+          tableBodyBackground="bg-white" 
+          heading={{heading: "User Distribution"}} 
+          tableHeadings={tableHeadings} 
+          tableBody={tableBody} 
+        />
+      </article>
+      <article aria-label="All Transactions">
+        <Table 
+          tableBodyBackground="bg-white" 
+          heading={{heading: "All Transactions"}} 
+          filters={{filters: ["All"], customizeDropdown: true}} 
+          tableHeadings={transactionTableHeadings} 
+          tableBody={transactionTableBody}
+        />
+      </article>
+    </section>
+  );
+};

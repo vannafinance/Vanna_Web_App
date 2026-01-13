@@ -21,58 +21,63 @@ interface SupplyApyPopupProps {
 
 export const SupplyApyPopup = ({ onClose }: SupplyApyPopupProps) => {
   return (
-    <div className="shadow-md w-[349px] h-fit rounded-[12px] p-[16px] flex flex-col gap-[16px] bg-[#FFFFFF] ">
-      <div className="w-full h-fit flex flex-col gap-[12px] ">
-        <div className="w-full h-fit flex justify-between items-center border-[1px] border-[#E2E2E2] bg-[#F7F7F7] p-[12px] rounded-[8px]">
-          <div className="text-[10px] font-medium w-full">APY TYPE</div>
-          <div className="w-[137.5px] h-fit flex justify-between items-center ">
-            <div className="text-[10px] font-medium w-full ">1D</div>
-            <div className="text-[10px] font-medium w-full ">7D</div>
+    <article 
+      className="shadow-md w-[349px] h-fit rounded-[12px] p-[16px] flex flex-col gap-[16px] bg-[#FFFFFF]"
+      aria-label="Supply APY Breakdown"
+    >
+      <section className="w-full h-fit flex flex-col gap-[12px]">
+        <header className="w-full h-fit flex justify-between items-center border-[1px] border-[#E2E2E2] bg-[#F7F7F7] p-[12px] rounded-[8px]">
+          <h2 className="text-[10px] font-medium w-full">APY TYPE</h2>
+          <div className="w-[137.5px] h-fit flex justify-between items-center">
+            <h3 className="text-[10px] font-medium w-full">1D</h3>
+            <h3 className="text-[10px] font-medium w-full">7D</h3>
           </div>
-        </div>
-        <div className="w-full h-fit flex flex-col gap-[4px] ">
+        </header>
+        <dl className="w-full h-fit flex flex-col gap-[4px]">
           {supplyApyPopupItem.map((item) => {
             return (
               <div
                 key={item.title}
                 className="w-full h-fit rounded-[8px] flex justify-between items-center py-[8px] px-[12px] bg-[#FBFBFB]"
               >
-                <div className="w-full h-fit flex flex-col gap-[4px] ">
-                  <div className="w-full text-[10px] font-semibold">
+                <div className="w-full h-fit flex flex-col gap-[4px]">
+                  <dt className="w-full text-[10px] font-semibold">
                     {item.title}
-                  </div>
-                  <div className="w-full text-[10px] font-medium text-[#5C5B5B] ">
+                  </dt>
+                  <dd className="w-full text-[10px] font-medium text-[#5C5B5B]">
                     {item.description}
-                  </div>
+                  </dd>
                 </div>
-                <div className="flex justify-between items-center w-[137.5px] h-fit ">
-                  <div className="text-[10px] font-semibold w-full ">
+                <div className="flex justify-between items-center w-[137.5px] h-fit">
+                  <dd className="text-[10px] font-semibold w-full">
                     {item.oneDay}
-                  </div>
-                  <div className="text-[10px] font-semibold w-full ">
+                  </dd>
+                  <dd className="text-[10px] font-semibold w-full">
                     {item.sevenDay}
-                  </div>
+                  </dd>
                 </div>
               </div>
             );
           })}
-        </div>
-        <div className="w-[317px] h-px bg-[#E2E2E2]" />
-        <div className="w-full h-fit flex justify-between items-center ">
-          <div className="text-[10px] font-semibold w-full">Overall APY</div>
-          <div className="flex justify-between items-center  w-[137.5px] h-fit ">
-            <div className="text-[10px] font-semibold w-full ">10.08%</div>
-            <div className="text-[10px] font-semibold w-full ">10.02%</div>
+        </dl>
+        <hr className="w-[317px] h-px bg-[#E2E2E2] border-0" />
+        <div className="w-full h-fit flex justify-between items-center">
+          <strong className="text-[10px] font-semibold w-full">Overall APY</strong>
+          <div className="flex justify-between items-center w-[137.5px] h-fit">
+            <strong className="text-[10px] font-semibold w-full">10.08%</strong>
+            <strong className="text-[10px] font-semibold w-full">10.02%</strong>
           </div>
         </div>
-      </div>
-      <Button
-        text="Close"
-        size="small"
-        type="ghost"
-        disabled={false}
-        onClick={onClose || (() => {})}
-      />
-    </div>
+      </section>
+      <footer>
+        <Button
+          text="Close"
+          size="small"
+          type="ghost"
+          disabled={false}
+          onClick={onClose || (() => {})}
+        />
+      </footer>
+    </article>
   );
 };

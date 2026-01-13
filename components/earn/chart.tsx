@@ -181,14 +181,14 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
   };
 
   return (
-    <div className={` flex flex-col gap-[24px]  rounded-[16px] p-[16px] border-[1px] border-[#E2E2E2] bg-[#FFFFFF] ${containerWidth} ${containerHeight}`}>
-      <div className="w-full h-fit flex justify-between flex-shrink-0">
+    <article className={`flex flex-col gap-[24px] rounded-[16px] p-[16px] border-[1px] border-[#E2E2E2] bg-[#FFFFFF] ${containerWidth} ${containerHeight}`}>
+      <header className="w-full h-fit flex justify-between flex-shrink-0">
         <div
           className={`w-full h-fit flex flex-col ${
             type === "deposit-apy" ? "gap-[16px]" : ""
-          } `}
+          }`}
         >
-          <div className="text-[12px] font-semibold">
+          <h2 className="text-[12px] font-semibold">
             {type === "overall-deposit" ? (
               "Overall Deposit"
             ) : type === "net-apy" ? (
@@ -204,22 +204,22 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
                 selectedOption={selectedDepositApy}
               />
             )}
-          </div>
+          </h2>
           {type !== "deposit-apy" && (
-            <div className="w-full text-[20px] font-semibold">
+            <p className="w-full text-[20px] font-semibold">
               $
               {totalValue.toLocaleString(undefined, {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               })}
-            </div>
+            </p>
           )}
           {type === "deposit-apy" && (
             <div className="w-full h-fit flex flex-col gap-[4px]">
-              <div className="text-[16px] font-semibold">0%</div>
-              <div className="text-[12px] font-medium text-[#5C5B5B]">
+              <p className="text-[16px] font-semibold">0%</p>
+              <time className="text-[12px] font-medium text-[#5C5B5B]" dateTime="2025-03-11T15:14:00">
                 03/11/2025 15:14
-              </div>
+              </time>
             </div>
           )}
         </div>
@@ -252,35 +252,37 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
             </>
           )}
           {type === "deposit-apy" && (
-            <div className="w-fit h-fit flex gap-[6px]">
+            <nav className="w-fit h-fit flex gap-[6px]" aria-label="Time Period Selection">
               {dayOptions.map((item, idx) => {
                 return (
-                  <div
+                  <button
                     key={idx}
+                    type="button"
                     onClick={() => setSelectedDays(item)}
-                    className={` cursor-pointer flex flex-col items-center justify-center font-semibold text-[14px] w-[56px] py-[10px] px-[20px] rounded-[8px] ${
+                    className={`cursor-pointer flex flex-col items-center justify-center font-semibold text-[14px] w-[56px] py-[10px] px-[20px] rounded-[8px] ${
                       selectedDays === item
                         ? "text-white bg-[#703AE6]"
                         : "text-black bg-white border-[1px] border-[#E2E2E2]"
-                    } `}
+                    }`}
+                    aria-pressed={selectedDays === item}
                   >
                     {item}
-                  </div>
+                  </button>
                 );
               })}
-            </div>
+            </nav>
           )}
           <ExpandableModal
             scrollable={true}
             contentPosition="bottom"
             modalHeader={
-              <div className="w-full h-fit flex justify-between">
+              <header className="w-full h-fit flex justify-between">
                 <div
                   className={`w-full h-fit flex flex-col ${
                     type === "deposit-apy" ? "gap-[16px]" : ""
                   }`}
                 >
-                  <div className="text-[12px] font-semibold">
+                  <h2 className="text-[12px] font-semibold">
                     {type === "overall-deposit" ? (
                       "Overall Deposit"
                     ) : type === "net-apy" ? (
@@ -298,22 +300,22 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
                         selectedOption={selectedDepositApy}
                       />
                     )}
-                  </div>
+                  </h2>
                   {type !== "deposit-apy" && (
-                    <div className="w-full text-[20px] font-semibold">
+                    <p className="w-full text-[20px] font-semibold">
                       $
                       {totalValue.toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })}
-                    </div>
+                    </p>
                   )}
                   {type === "deposit-apy" && (
                     <div className="w-full h-fit flex flex-col gap-[4px]">
-                      <div className="text-[16px] font-semibold">0%</div>
-                      <div className="text-[12px] font-medium text-[#5C5B5B]">
+                      <p className="text-[16px] font-semibold">0%</p>
+                      <time className="text-[12px] font-medium text-[#5C5B5B]" dateTime="2025-03-11T15:14:00">
                         03/11/2025 15:14
-                      </div>
+                      </time>
                     </div>
                   )}
                 </div>
@@ -345,29 +347,31 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
                     </>
                   )}
                   {type === "deposit-apy" && (
-                    <div className="w-fit h-fit flex gap-[6px]">
+                    <nav className="w-fit h-fit flex gap-[6px]" aria-label="Time Period Selection">
                       {dayOptions.map((item, idx) => {
                         return (
-                          <div
+                          <button
                             key={idx}
+                            type="button"
                             onClick={() => setSelectedDays(item)}
                             className={`cursor-pointer flex flex-col items-center justify-center font-semibold text-[14px] w-[56px] py-[10px] px-[20px] rounded-[8px] ${
                               selectedDays === item
                                 ? "text-white bg-[#703AE6]"
                                 : "text-black bg-white border-[1px] border-[#E2E2E2]"
                             }`}
+                            aria-pressed={selectedDays === item}
                           >
                             {item}
-                          </div>
+                          </button>
                         );
                       })}
-                    </div>
+                    </nav>
                   )}
                 </div>
-              </div>
+              </header>
             }
           >
-            <div className="w-full h-full">
+            <figure className="w-full h-full">
               {Object.keys(chartData).length > 0 ? (
                 <ReusableChart
                   data={chartData}
@@ -381,15 +385,15 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
                   formatYAxisLabel={formatYAxisLabel}
                 />
               ) : (
-                <div className={`w-full h-[450px] flex items-center justify-center text-gray-400 text-sm`}>
+                <p className="w-full h-[450px] flex items-center justify-center text-gray-400 text-sm">
                   No data available
-                </div>
+                </p>
               )}
-            </div>
+            </figure>
           </ExpandableModal>
         </div>
-      </div>
-      <div
+      </header>
+      <figure
         ref={chartContainerRef}
         className={`w-full ${containerHeight === "h-full" ? "flex-1 min-h-0" : ""}`}
         style={containerHeight !== "h-full" ? { height: height ? `${height}px` : "203px", minHeight: height ? `${height}px` : "203px" } : {}}
@@ -407,11 +411,11 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
             formatYAxisLabel={formatYAxisLabel}
           />
         ) : (
-          <div className={`w-full ${dynamicHeight?`h-[${dynamicHeight}px]` : "h-[393px]"} flex items-center justify-center text-gray-400 text-sm`}>
+          <p className={`w-full ${dynamicHeight?`h-[${dynamicHeight}px]` : "h-[393px]"} flex items-center justify-center text-gray-400 text-sm`}>
             No data available
-          </div>
+          </p>
         )}
-      </div>
-    </div>
+      </figure>
+    </article>
   );
 };

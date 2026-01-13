@@ -84,58 +84,65 @@ export const WithdrawLiquidity = () => {
 
   return (
     <>
-      <div className="flex gap-[16px] items-start w-full h-fit border-[1px] border-[#E2E2E2] rounded-[16px] bg-[#FFFFFF] p-[16px]">
+      <form className="flex gap-[16px] items-start w-full h-fit border-[1px] border-[#E2E2E2] rounded-[16px] bg-[#FFFFFF] p-[16px]">
         <div className="w-full h-full flex flex-col gap-[44px] justify-between">
           <div className="w-fit h-fit flex items-center gap-[4px]">
-            <div className="w-[20px] h-[20px] ">
-                <Image src={"/icons/eth-icon.png"} alt="eth-icon" width={20} height={20} />
-            </div>
-            <div className="text-[14px] font-semibold text-[#111111]">
-                vETH
-            </div>
+            <span className="w-[20px] h-[20px]">
+              <Image src={"/icons/eth-icon.png"} alt="vETH token icon" width={20} height={20} />
+            </span>
+            <h3 className="text-[14px] font-semibold text-[#111111]">
+              vETH
+            </h3>
           </div>
           <div className="w-full h-fit flex flex-col gap-[8px]">
-            <div className="w-full h-fit ">
+            <div className="w-full h-fit">
+              <label htmlFor="withdraw-amount" className="sr-only">
+                Withdraw Amount
+              </label>
               <input
+                id="withdraw-amount"
                 onChange={(e) => setValue(Number(e.target.value))}
                 value={value}
-                type="text"
+                type="number"
                 placeholder="Enter amount"
-                className="w-full h-fit placeholder:text-[#CCCCCC] text-[16px] font-medium outline-none "
+                className="w-full h-fit placeholder:text-[#CCCCCC] text-[16px] font-medium outline-none"
+                aria-describedby="withdraw-usd-value"
               />
             </div>
-            <div className="w-full h-fit text-[10px] font-medium text-[#76737B]">
+            <output id="withdraw-usd-value" className="w-full h-fit text-[10px] font-medium text-[#76737B]">
               {valueInUSD.toFixed(2)}
-            </div>
+            </output>
           </div>
         </div>
         <div className="w-fit h-fit flex flex-col items-end self-end">
-          <div className="w-fit h-fit flex flex-col items-end  gap-[4px] ">
-            <div className="text-[10px] font-semibold text-[#363636]">
+          <fieldset className="w-fit h-fit flex flex-col items-end gap-[4px]">
+            <legend className="text-[10px] font-semibold text-[#363636]">
               Transfer to:
-            </div>
+            </legend>
 
-            <div
-              className={`text-center w-[28px] h-fit rounded-[4px] p-[4px] text-[12px] font-medium cursor-pointer bg-[#F1EBFD] text-[#703AE6]`}
+            <span
+              className="text-center w-[28px] h-fit rounded-[4px] p-[4px] text-[12px] font-medium bg-[#F1EBFD] text-[#703AE6]"
+              role="status"
+              aria-label="Protocol Balance"
             >
               PB
-            </div>
-            <div className="w-fit h-fit text-[10px] flex  gap-[4px] font-semibold  ">
+            </span>
+            <output className="w-fit h-fit text-[10px] flex gap-[4px] font-semibold">
               Balance:{" "}
               <span className="text-[#363636] font-semibold text-[10px]">
                 {value.toFixed(2)}
               </span>
-            </div>
-          </div>
+            </output>
+          </fieldset>
         </div>
-      </div>
-      <div className="flex flex-col gap-[8px]">
+      </form>
+      <section className="flex flex-col gap-[8px]" aria-label="Withdraw Details">
         <InfoCard
           data={infoPropsData.data}
           expandableSections={infoPropsData.expandableSections}
           showExpandable={infoPropsData.showExpandable}
         />
-      </div>
+      </section>
       <Button
         text={
           !userAddress

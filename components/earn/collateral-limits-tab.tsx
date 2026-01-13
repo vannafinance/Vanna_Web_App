@@ -77,7 +77,16 @@ const tableHeadings = [
   }
 
 export const CollateralLimitsTab = () => {
-  return <div className="w-full h-fit ">
-        <Table heading={{}} tableHeadings={tableHeadings} tableBody={tableBody} showProgressBar={true}/>
-  </div>;
+  return (
+    <section className="w-full h-fit" aria-label="Collateral Limits Overview">
+      <article aria-label="Asset Limits Usage">
+        <Table 
+          heading={{}} 
+          tableHeadings={tableHeadings} 
+          tableBody={tableBody} 
+          showProgressBar={true}
+        />
+      </article>
+    </section>
+  );
 };

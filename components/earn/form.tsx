@@ -11,16 +11,19 @@ const tabs = [
 export const Form = () => {
   const [activeTab, setActiveTab] = useState<string>("supply-liquidity");
   return (
-    <div className="w-[480px] h-fit rounded-[20px] border-[1px] border-[#E2E2E2] bg-[#F4F4F4] p-[20px] flex flex-col gap-[20px]">
-      <div className="w-full ">
+    <section 
+      className="w-[480px] h-fit rounded-[20px] border-[1px] border-[#E2E2E2] bg-[#F4F4F4] p-[20px] flex flex-col gap-[20px]"
+      aria-label="Liquidity Management"
+    >
+      <nav className="w-full" aria-label="Liquidity Actions">
         <AnimatedTabs
           tabs={tabs}
           activeTab={activeTab}
           onTabChange={setActiveTab}
         />
-      </div>
+      </nav>
       {activeTab === "supply-liquidity" && <SupplyLiquidityTab />}
       {activeTab === "withdraw-liquidity" && <WithdrawLiquidity />}
-    </div>
+    </section>
   );
 };

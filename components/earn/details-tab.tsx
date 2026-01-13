@@ -91,10 +91,10 @@ export const Details = () => {
   });
 
   return (
-    <div className="w-full h-fit flex flex-col gap-[16px] rounded-[20px] border-[1px] border-[#E2E2E2] bg-[#F4F4F4] ">
-      <div className="w-full h-fit rounded-[20px] pt-[24px] px-[24px] flex flex-col gap-[16px] ">
-        <div className="w-full h-fit text-[20px] font-semibold">Statistics</div>
-        <div className="w-full h-fit flex items-center rounded-[16px]  gap-[12px] bg-[#FFFFFF] ">
+    <section className="w-full h-fit flex flex-col gap-[16px] rounded-[20px] border-[1px] border-[#E2E2E2] bg-[#F4F4F4]" aria-label="Vault Details">
+      <div className="w-full h-fit rounded-[20px] pt-[24px] px-[24px] flex flex-col gap-[16px]">
+        <h2 className="w-full h-fit text-[20px] font-semibold">Statistics</h2>
+        <article className="w-full h-fit flex items-center rounded-[16px] gap-[12px] bg-[#FFFFFF]" aria-label="Supply and Borrow Overview">
           <StatsCard
             percentage={getPercentage(totalSupplied.inEth, maxEth)}
             heading="Total Supplied"
@@ -133,8 +133,8 @@ export const Details = () => {
             })} USD`}
             pie={true}
           />
-        </div>
-        <div className="w-full h-full grid grid-cols-3 grid-rows-3 gap-x-[15px]">
+        </article>
+        <article className="w-full h-full grid grid-cols-3 grid-rows-3 gap-x-[15px]" aria-label="Vault Statistics">
           {items.map((item, idx) => {
             return (
               <StatsCard
@@ -146,12 +146,12 @@ export const Details = () => {
               />
             );
           })}
-        </div>
-        <div className="w-full h-fit rounded-[20px] pb-[24px] ">
-          <div className="text-[20px] font-semibold w-full h-fit ">
+        </article>
+        <article className="w-full h-fit rounded-[20px] pb-[24px]" aria-label="Contract Addresses">
+          <h3 className="text-[20px] font-semibold w-full h-fit">
             Adresses
-          </div>
-          <div className="w-full h-full grid grid-cols-3 grid-rows-2 ">
+          </h3>
+          <div className="w-full h-full grid grid-cols-3 grid-rows-2">
             {addresses.map((item, idx) => {
               return (
                 <StatsCard
@@ -163,8 +163,8 @@ export const Details = () => {
               );
             })}
           </div>
-        </div>
+        </article>
       </div>
-    </div>
+    </section>
   );
 };

@@ -132,32 +132,34 @@ export default function EarnPage({ params }: { params: Promise<{ id: string }> }
   }, [vaultData]);
 
   return (
-    <div className="flex flex-col gap-[40px]">
-      <div className="pt-[40px] px-[80px] w-full h-fit ">
+    <main className="flex flex-col gap-[40px]">
+      <header className="pt-[40px] px-[80px] w-full h-fit">
         <div className="w-full h-fit flex flex-col gap-[20px]">
-          <button
-            type="button"
-            onClick={handleBackToPools}
-            className="w-fit h-fit flex gap-[12px] items-center cursor-pointer text-[16px] font-medium text-[#5A5555] hover:text-[#703AE6] transition-colors"
-          >
-            <svg
-              width="9"
-              height="16"
-              viewBox="0 0 9 16"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
+          <nav aria-label="Breadcrumb">
+            <button
+              type="button"
+              onClick={handleBackToPools}
+              className="w-fit h-fit flex gap-[12px] items-center cursor-pointer text-[16px] font-medium text-[#5A5555] hover:text-[#703AE6] transition-colors"
             >
-              <path
-                d="M8 1L1 8L8 15"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            Back to pools
-          </button>
-          <div className="w-full h-fit flex gap-[16px] items-center ">
+              <svg
+                width="9"
+                height="16"
+                viewBox="0 0 9 16"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M8 1L1 8L8 15"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              Back to pools
+            </button>
+          </nav>
+          <div className="w-full h-fit flex gap-[16px] items-center">
             <div className="flex gap-[16px]">
               <Image
                 src={iconPath}
@@ -165,21 +167,21 @@ export default function EarnPage({ params }: { params: Promise<{ id: string }> }
                 width={36}
                 height={36}
               />
-              <div className="w-fit h-fit flex gap-[8px] items-center ">
-                <div className="w-fit h-fit text-[24px] font-bold text-[#181822]">
+              <div className="w-fit h-fit flex gap-[8px] items-center">
+                <h1 className="w-fit h-fit text-[24px] font-bold text-[#181822]">
                   {vaultData.title}
-                </div>
-                <div className="w-fit h-fit flex gap-[8px] items-center ">
-                  <div className="text-[12px] font-semibold text-[#0C0C0C]  text-center w-fit h-fit rounded-[4px] bg-[#F4F4F4] py-[2px] px-[6px] ">
+                </h1>
+                <div className="w-fit h-fit flex gap-[8px] items-center">
+                  <span className="text-[12px] font-semibold text-[#0C0C0C] text-center w-fit h-fit rounded-[4px] bg-[#F4F4F4] py-[2px] px-[6px]">
                     V3
-                  </div>
-                  <div className="text-[12px] font-semibold text-[#0C0C0C]  text-center w-fit h-fit rounded-[4px] bg-[#F4F4F4] py-[2px] px-[6px] ">
+                  </span>
+                  <span className="text-[12px] font-semibold text-[#0C0C0C] text-center w-fit h-fit rounded-[4px] bg-[#F4F4F4] py-[2px] px-[6px]">
                     {vaultData.tag}
-                  </div>
+                  </span>
                 </div>
               </div>
             </div>
-            <div className="text-[16px] font-semibold w-fit h-[48px] rounded-[12px] py-[12px] pr-[16px] pl-[8px] flex gap-[4px] bg-[#F4F4F4] ">
+            <div className="text-[16px] font-semibold w-fit h-[48px] rounded-[12px] py-[12px] pr-[16px] pl-[8px] flex gap-[4px] bg-[#F4F4F4]">
               Network:{" "}
               <Image
                 src={iconPath}
@@ -190,15 +192,16 @@ export default function EarnPage({ params }: { params: Promise<{ id: string }> }
             </div>
           </div>
         </div>
-      </div>
-      <div className="px-[80px] ">
+      </header>
+      
+      <section className="px-[80px]" aria-label="Vault Statistics">
         <AccountStatsGhost items={accountStatsItems} />
-      </div>
+      </section>
 
-      <div className="px-[80px] pb-[80px] w-full h-fit ">
-        <div className="flex gap-[20px] w-full h-fit ">
-          <div className="w-[700px] h-full flex flex-col gap-[24px] ">
-            <div className="w-full h-[48px]">
+      <section className="px-[80px] pb-[80px] w-full h-fit" aria-label="Vault Details and Actions">
+        <div className="flex gap-[20px] w-full h-fit">
+          <article className="w-[700px] h-full flex flex-col gap-[24px]">
+            <nav className="w-full h-[48px]" aria-label="Vault Information Tabs">
               <AnimatedTabs
                 tabs={tabs}
                 activeTab={activeTab}
@@ -207,17 +210,19 @@ export default function EarnPage({ params }: { params: Promise<{ id: string }> }
                 tabClassName="w-[130px] h-[48px] text-[12px]"
                 containerClassName="w-full"
               />
-            </div>
+            </nav>
             {activeTab === "your-positions" && <YourPositions />}
             {activeTab === "details" && <Details />}
             {activeTab === "activity" && <ActivityTab />}
             {activeTab === "analytics" && <AnalyticsTab />}
             {activeTab === "margin-managers" && <MarginManagersTab />}
             {activeTab === "collateral-limits" && <CollateralLimitsTab />}
-          </div>
-          <Form />
+          </article>
+          <aside aria-label="Transaction Form">
+            <Form />
+          </aside>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }

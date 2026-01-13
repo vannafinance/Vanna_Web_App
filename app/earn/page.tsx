@@ -76,24 +76,24 @@ export default function Earn() {
     [router, setSelectedVault]
   );
   return (
-    <div>
+    <main>
       {userAddress && (
-        <div className="p-[40px] w-full h-fit  flex gap-[24px]  ">
-          <div className="flex gap-[16px] w-full h-fit ">
-            <div className="w-[437.33px] h-fit">
+        <section className="p-[40px] w-full h-fit flex gap-[24px]" aria-label="User Dashboard">
+          <div className="flex gap-[16px] w-full h-fit">
+            <article className="w-[437.33px] h-fit">
               <Chart containerWidth="w-[437.33px]" containerHeight="h-[331px]" type="overall-deposit" />
-            </div>
-            <div className="w-[437.33px] h-fit" >
+            </article>
+            <article className="w-[437.33px] h-fit">
               <Chart containerWidth="w-[437.33px]" containerHeight="h-[331px]" type="net-apy" />
-            </div>
-            <div className="w-full h-fit">
+            </article>
+            <aside className="w-full h-fit">
               <RewardsTable />
-            </div>
+            </aside>
           </div>
-        </div>
+        </section>
       )}
 
-      <div className="h-[206px] w-full pt-[40px] px-[40px]">
+      <section className="h-[206px] w-full pt-[40px] px-[40px]" aria-label="Account Statistics">
         <AccountStats
           items={ACCOUNT_STATS_ITEMS.slice(0, 3)}
           values={{
@@ -102,9 +102,9 @@ export default function Earn() {
             netAvailableCollateral: !userAddress ? "-" : 1000,
           }}
         />
-      </div>
+      </section>
 
-      <div className="p-[40px] w-full h-fit ">
+      <section className="p-[40px] w-full h-fit" aria-label="Vaults and Positions">
         <Table
           filters={{
             filters: ["Deposit", "Collateral"],
@@ -125,7 +125,7 @@ export default function Earn() {
           onRowClick={handleRowClick}
           hoverBackground="hover:bg-[#F1EBFD]"
         />
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }

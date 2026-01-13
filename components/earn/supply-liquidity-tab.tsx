@@ -99,9 +99,12 @@ export const SupplyLiquidityTab = () => {
   };
   return (
     <>
-      <div className="flex gap-[16px] items-center w-full h-fit border-[1px] border-[#E2E2E2] rounded-[16px] bg-[#FFFFFF] p-[16px]">
+      <form className="flex gap-[16px] items-center w-full h-fit border-[1px] border-[#E2E2E2] rounded-[16px] bg-[#FFFFFF] p-[16px]">
         <div className="w-full h-full flex flex-col gap-[44px] justify-between">
-          <div className="w-full h-fit ">
+          <div className="w-full h-fit">
+            <label htmlFor="asset-select" className="sr-only">
+              Select Asset
+            </label>
             <Dropdown
               items={DropdownOptions}
               setSelectedOption={setSelectedOption}
@@ -111,51 +114,63 @@ export const SupplyLiquidityTab = () => {
             />
           </div>
           <div className="w-full h-fit flex flex-col gap-[8px]">
-            <div className="w-full h-fit ">
+            <div className="w-full h-fit">
+              <label htmlFor="supply-amount" className="sr-only">
+                Supply Amount
+              </label>
               <input
+                id="supply-amount"
                 onChange={(e) => setValue(Number(e.target.value))}
                 value={value}
-                type="text"
+                type="number"
                 placeholder="Enter amount"
-                className="w-full h-fit placeholder:text-[#CCCCCC] text-[16px] font-medium outline-none "
+                className="w-full h-fit placeholder:text-[#CCCCCC] text-[16px] font-medium outline-none"
+                aria-describedby="usd-value"
               />
             </div>
-            <div className="w-full h-fit text-[10px] font-medium text-[#76737B]">
+            <output id="usd-value" className="w-full h-fit text-[10px] font-medium text-[#76737B]">
               {valueInUSD.toFixed(2)}
-            </div>
+            </output>
           </div>
         </div>
         <div className="w-fit h-fit flex flex-col gap-[32px] items-end">
-          <div className="w-full h-fit flex gap-[8px] ">
+          <fieldset className="w-full h-fit flex gap-[8px]">
+            <legend className="sr-only">Select deposit percentage</legend>
             {DEPOSIT_PERCENTAGES.map((item) => {
               return (
-                <div
+                <button
+                  type="button"
                   onClick={() => setSelectedPercentage(item)}
                   key={item}
-                  className={`flex  justify-center items-center cursor-pointer text-[14px] font-semibold text-black w-fit h-[44px] rounded-[12px] p-[10px] ${
+                  className={`flex justify-center items-center cursor-pointer text-[14px] font-semibold text-black w-fit h-[44px] rounded-[12px] p-[10px] ${
                     selectedPercentage === item
                       ? `${PERCENTAGE_COLORS[item]} text-white`
                       : "bg-[#F4F4F4]"
                   }`}
+                  aria-pressed={selectedPercentage === item}
                 >
                   {item}%
-                </div>
+                </button>
               );
             })}
-          </div>
-          <div className="w-fit h-fit flex flex-col items-end  gap-[4px] ">
-            <div className="flex w-fit h-fit rounded-[4px] gap-[4px] items-center">
-              <div
+          </fieldset>
+          <div className="w-fit h-fit flex flex-col items-end gap-[4px]">
+            <fieldset className="flex w-fit h-fit rounded-[4px] gap-[4px] items-center">
+              <legend className="sr-only">Select balance type</legend>
+              <button
+                type="button"
                 onClick={() => setSelectedBalance("PB")}
                 className={`w-[28px] h-fit rounded-[4px] p-[4px] text-[12px] font-medium cursor-pointer ${
                   selectedBalance === "PB"
                     ? "bg-[#F1EBFD] text-[#703AE6]"
                     : "bg-[#F4F4F4] text-black"
                 }`}
+                aria-pressed={selectedBalance === "PB"}
+                aria-label="Protocol Balance"
               >
                 PB
-              </div>
-              <div className="w-[16px] h-[16px] flex items-center  justify-center">
+              </button>
+              <span className="w-[16px] h-[16px] flex items-center justify-center" aria-hidden="true">
                 <svg
                   width="12"
                   height="11"
@@ -168,39 +183,44 @@ export const SupplyLiquidityTab = () => {
                     fill="black"
                   />
                 </svg>
-              </div>
-              <div
+              </span>
+              <button
+                type="button"
                 onClick={() => setSelectedBalance("WB")}
                 className={`w-[28px] h-fit rounded-[4px] p-[4px] text-[12px] font-medium cursor-pointer ${
                   selectedBalance === "WB"
                     ? "bg-[#F1EBFD] text-[#703AE6]"
                     : "bg-[#F4F4F4] text-black"
                 }`}
+                aria-pressed={selectedBalance === "WB"}
+                aria-label="Wallet Balance"
               >
                 WB
-              </div>
-            </div>
-            <div className="w-fit h-fit text-[10px] flex  gap-[4px] font-semibold  ">
-              <span 
+              </button>
+            </fieldset>
+            <output className="w-fit h-fit text-[10px] flex gap-[4px] font-semibold">
+              <button
+                type="button"
                 onClick={handleBalanceBreakdownClick}
                 className={`${selectedBalance==="WB"?"underline cursor-pointer":""} text-[#111111] text-[10px] font-semibold`}
+                disabled={selectedBalance !== "WB"}
               >
                 {selectedBalance==="WB"?"Unified Balance:":"Balance:"}
-              </span>{" "}
+              </button>
               <span className="text-[#363636]">
                 {unifiedBalance.toFixed(2)}
               </span>
-            </div>
+            </output>
           </div>
         </div>
-      </div>
-      <div className="flex flex-col gap-[8px]">
+      </form>
+      <section className="flex flex-col gap-[8px]" aria-label="Supply Details">
         <InfoCard
           data={infoPropsData.data}
           expandableSections={infoPropsData.expandableSections}
           showExpandable={infoPropsData.showExpandable}
         />
-      </div>
+      </section>
       <Button
         text={!userAddress ? "Connect Wallet" : value === 0 ? "Enter Amount" : "Supply Liquidity"}
         size="large"
@@ -208,10 +228,12 @@ export const SupplyLiquidityTab = () => {
         disabled={value === 0 ? true : false}
       />
 
-      {/* Balance Breakdown Dialogue */}
       <AnimatePresence>
         {isBalanceBreakdownOpen && (
-          <motion.div
+          <motion.aside
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="balance-breakdown-title"
             className="fixed inset-0 z-50 flex items-center justify-center bg-[#45454566]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -219,7 +241,7 @@ export const SupplyLiquidityTab = () => {
             transition={{ duration: 0.3 }}
             onClick={handleCloseBalanceBreakdown}
           >
-            <motion.div
+            <motion.article
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -236,8 +258,8 @@ export const SupplyLiquidityTab = () => {
                 }))}
                 onClose={handleCloseBalanceBreakdown}
               />
-            </motion.div>
-          </motion.div>
+            </motion.article>
+          </motion.aside>
         )}
       </AnimatePresence>
     </>

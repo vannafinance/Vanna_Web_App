@@ -552,14 +552,14 @@ export const Table = memo((props: TableProps) => {
   const hasData = sortedData.length > 0;
 
   return (
-    <div className="w-full h-fit flex flex-col gap-[24px]">
+    <section className="w-full h-fit flex flex-col gap-[24px]" aria-label={props.heading.heading || "Data Table"}>
       {hasHeadingTitle && (
-        <div className="flex justify-between items-center">
-          <div className="text-[16px] font-semibold text-[#434C53F2]">
+        <header className="flex justify-between items-center">
+          <h2 className="text-[16px] font-semibold text-[#434C53F2]">
             {props.heading.heading}
-          </div>
+          </h2>
           {!showAllChainDropdown && (
-            <div className="flex items-center gap-[16px]">
+            <div className="flex items-center gap-[16px]" role="toolbar" aria-label="Table Filters">
               {hasCollateral && (
                 <FilterDropdown
                   dropdownOptions={FILTER_OPTIONS.collateral}
@@ -598,11 +598,11 @@ export const Table = memo((props: TableProps) => {
               )}
             </div>
           )}
-        </div>
+        </header>
       )}
 
       {hasTabs && (
-        <div className="w-fit h-fit">
+        <nav className="w-fit h-fit" aria-label="Table Navigation Tabs">
           <AnimatedTabs
             tabs={props.heading.tabsItems!}
             activeTab={activeTab}
@@ -610,12 +610,12 @@ export const Table = memo((props: TableProps) => {
             type={props.heading.tabType}
             tabClassName="text-[12px]"
           />
-        </div>
+        </nav>
       )}
 
       {showAllChainDropdown && (
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-[12px]">
+        <header className="flex justify-between items-center">
+          <div className="flex items-center gap-[12px]" role="search" aria-label="Table Search and Filters">
             <FilterDropdown
               dropdownOptions={FILTER_OPTIONS.allChains}
               dropdownOptionsFilters={FILTER_OPTIONS.allChainsFilters}
@@ -629,7 +629,7 @@ export const Table = memo((props: TableProps) => {
               onChange={handleSearchChange}
             />
           </div>
-          <div className="flex items-center gap-[16px]">
+          <div className="flex items-center gap-[16px]" role="toolbar" aria-label="Additional Table Filters">
             {hasCollateral && (
               <FilterDropdown
                 dropdownOptions={FILTER_OPTIONS.collateral}
@@ -673,7 +673,7 @@ export const Table = memo((props: TableProps) => {
               />
             )}
           </div>
-        </div>
+        </header>
       )}
 
       {hasData ? (
@@ -749,7 +749,7 @@ export const Table = memo((props: TableProps) => {
       )}
 
       {hasData && totalPages > 1 && (
-        <div className="flex items-center justify-center gap-[16px] py-[16px]">
+        <nav className="flex items-center justify-center gap-[16px] py-[16px]" aria-label="Table Pagination">
           <button
             type="button"
             onClick={handlePreviousPage}
@@ -759,8 +759,9 @@ export const Table = memo((props: TableProps) => {
                 ? "bg-[#F4F4F4] text-[#A3A3A3] cursor-not-allowed"
                 : "bg-white border-[1px] border-[#E2E2E2] text-[#111111] cursor-pointer hover:bg-[#F7F7F7]"
             }`}
+            aria-label="Previous page"
           >
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
               <path
                 d="M7.5 9L4.5 6L7.5 3"
                 stroke="currentColor"
@@ -771,11 +772,11 @@ export const Table = memo((props: TableProps) => {
             </svg>
           </button>
 
-          <div className="text-[14px] font-medium text-[#111111]">
+          <span className="text-[14px] font-medium text-[#111111]" aria-live="polite" aria-atomic="true">
             {(currentPage - 1) * ITEMS_PER_PAGE + 1}-
             {Math.min(currentPage * ITEMS_PER_PAGE, sortedData.length)} of{" "}
             {sortedData.length}
-          </div>
+          </span>
 
           <button
             type="button"
@@ -786,8 +787,9 @@ export const Table = memo((props: TableProps) => {
                 ? "bg-[#F4F4F4] text-[#A3A3A3] cursor-not-allowed"
                 : "bg-white border-[1px] border-[#E2E2E2] text-[#111111] cursor-pointer hover:bg-[#F7F7F7]"
             }`}
+            aria-label="Next page"
           >
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
               <path
                 d="M4.5 9L7.5 6L4.5 3"
                 stroke="currentColor"
@@ -797,9 +799,9 @@ export const Table = memo((props: TableProps) => {
               />
             </svg>
           </button>
-        </div>
+        </nav>
       )}
-    </div>
+    </section>
   );
 });
 

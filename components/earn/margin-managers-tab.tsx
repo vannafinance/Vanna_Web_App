@@ -58,7 +58,15 @@ const tableHeadings = [
 
 
 export const MarginManagersTab = () => {
-  return <div className="w-full h-fit ">
-        <Table heading={{}} tableHeadings={tableHeadings} tableBody={tableBody} />
-  </div>;
+  return (
+    <section className="w-full h-fit" aria-label="Margin Managers Overview">
+      <article aria-label="Margin Managers List">
+        <Table 
+          heading={{}} 
+          tableHeadings={tableHeadings} 
+          tableBody={tableBody} 
+        />
+      </article>
+    </section>
+  );
 };
