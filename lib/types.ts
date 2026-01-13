@@ -9,6 +9,17 @@ export interface BorrowInfo {
   usdValue: number;
 }
 
+export type MarginState = {
+  collateral: { token: string; amount: number; usd: number }[];
+  borrow: { token: string; amount: number; usd: number }[];
+  collateralUsd: number;
+  borrowUsd: number;
+  hf: number;
+  ltv: number;
+  maxBorrow: number;
+  maxWithdraw: number;
+};
+
 export interface Position {
   positionId: number;
 

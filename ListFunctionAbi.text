@@ -51,6 +51,7 @@ mint(address account) → returns uint256 (mints shares; usually called internal
 transfer(address to, uint256 value) → returns bool
 transferFrom(address from, address to, uint256 value) → returns bool
 
+Quick Summary for Your Use Case (Fetching Deposited Margin Balance)
 
 Use AccountManager → openAccount(yourWallet) or check events to get your personal Margin Account address.
 Use TrackToken → balanceOf(yourMarginAccountAddress) → this gives your deposited balance (in vault shares, representing collateral + PnL).

@@ -81,6 +81,9 @@ export const Collateral = (props: CollateralProps) => {
       setSelectedBalanceType(props.collaterals.balanceType.toUpperCase());
 
     }
+    else{
+      setSelectedBalanceType("WB")
+    }
 
   }, [props.collaterals])
 
@@ -126,12 +129,25 @@ export const Collateral = (props: CollateralProps) => {
 
   // Run fetch when relevant things change
   useEffect(() => {
-    if (isEditing && selectedBalanceType === "WB") {
-      fetchLiveBalance();
-    } else {
-      setLiveUnifiedBalance(0);
-    }
-  }, [isEditing, selectedBalanceType, selectedCurrency, chainId, userAddress, publicClient]);
+  if (!(isEditing && selectedBalanceType === "WB")) {
+    setLiveUnifiedBalance(0);
+    return;
+  }
+
+  const id = setTimeout(() => {
+    fetchLiveBalance();
+  }, 300);
+
+  return () => clearTimeout(id);
+}, [
+  isEditing,
+  selectedBalanceType,
+  selectedCurrency,
+  chainId,
+  userAddress,
+  publicClient
+]);
+
 
 
   // Fetch unified balance when in editing mode (triggers on asset/type change)

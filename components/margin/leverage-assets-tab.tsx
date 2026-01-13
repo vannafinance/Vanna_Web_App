@@ -1,9 +1,9 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import ToggleButton from "@/components/ui/toggle";
-import { Collaterals, BorrowInfo } from "@/lib/types";
+import { Collaterals, BorrowInfo, MarginState } from "@/lib/types";
 
 import { TOKEN_DECIMALS, TOKEN_OPTIONS, tokenAddressByChain, vTokenAddressByChain } from "@/lib/utils/web3/token";
 
@@ -26,6 +26,7 @@ import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import AccountManager from "../../abi/vanna/out/out/AccountManager.sol/AccountManager.json";
 import Registry from "../../abi/vanna/out/out/Registry.sol/Registry.json";
 import ERC20 from "../../abi/vanna/out/out/ERC20.sol/ERC20.json"
+import RiskEngine from "../../abi/vanna/out/out/RiskEngine.sol/RiskEngine.json"
 
 
 import { toast } from "sonner"
@@ -36,6 +37,7 @@ import { erc20Abi, formatUnits, parseEther, parseUnits } from "viem";
 import { iconPaths } from "@/lib/constants";
 import { constants } from "node:buffer";
 import { getEnsAddressQueryOptions } from "wagmi/query";
+import { withdraw } from "viem/zksync";
 
 type Modes = "Deposit" | "Borrow";
 type AddressList = typeof baseAddressList;
@@ -53,6 +55,7 @@ export const LeverageAssetsTab = () => {
   const [leverage, setLeverage] = useState(2);
   const [depositAmount, setDepositAmount] = useState<number | undefined>(0);
   const address = useUserStore((state) => state.address);
+  const [marginState, setMarginState] = useState<MarginState | null>(null);
 
 
   const [depositCurrency, setDepositCurrency] = useState(TOKEN_OPTIONS[0])
@@ -80,6 +83,8 @@ export const LeverageAssetsTab = () => {
     return null;
   };
 
+
+  // Margin account creation Flow  
   const handlecreateAccount = async () => {
 
     const addressList = getAddressList();
@@ -167,9 +172,7 @@ export const LeverageAssetsTab = () => {
 
 
 
-  //fetchWalletBalance
-
-
+  //fetchWalletBalance 
   const fetchWalletBalance = async (asset: string) => {
     if (!chainId || !publicClient || !address) return;
 
@@ -197,6 +200,7 @@ export const LeverageAssetsTab = () => {
 
   }
 
+  // fetchMarginBalance
   const fetchMarginBalances = async (): Promise<Collaterals[]> => {
     if (!chainId || !publicClient || !address) return [];
 
@@ -205,12 +209,7 @@ export const LeverageAssetsTab = () => {
 
     try {
       // 1. Resolve margin account
-      const accounts = await publicClient.readContract({
-        address: addressList.registryContractAddress,
-        abi: Registry.abi,
-        functionName: "accountsOwnedBy",
-        args: [address],
-      }) as `0x${string}`[];
+      const accounts = await fetchAccountCheck();
 
       if (!accounts || accounts.length === 0) {
         return []; // no margin account → no MB
@@ -272,8 +271,7 @@ export const LeverageAssetsTab = () => {
     }
   };
 
-
-
+  // Main function To handle the fetchBalance Mode(MB OR WB)
   const fetchBalance = async (asset: string | null, balanceType: "WB" | "MB") => {
     if (!chainId || !publicClient || !address) return;
 
@@ -289,11 +287,122 @@ export const LeverageAssetsTab = () => {
 
   };
 
-  // const fetchRepayBalance 
-  // const fetchwithdrawBalance
-  // fetchRiskFactor 
+  const fetchAccountCheck = useCallback(async (): Promise<`0x${string}`[]> => {
+  const addressList = getAddressList();
+  if (!addressList) return [];
+
+  const accounts = await publicClient.readContract({
+    address: addressList.registryContractAddress,
+    abi: Registry.abi,
+    functionName: "accountsOwnedBy",
+    args: [address],
+  }) as `0x${string}`[];
+
+  return accounts;
+}, [address, publicClient, chainId]);
 
 
+  //Fecth-Collatral state 
+  const fetchCollateralState = useCallback(async (acc: `0x${string}`) => {
+    if (!publicClient || !chainId) return [];
+
+    const addressList = getAddressList();
+    if (!addressList) return [];
+
+    const raw = await publicClient.readContract({
+      address: addressList.riskEngineContractAddress,
+      abi: RiskEngine.abi,
+      functionName: "getBalance",
+      args: [acc]
+    }) as bigint[];
+
+
+    const collatralUsd = Number(raw) / 1e16;
+
+    return [
+      {
+        token: "USD",
+        amount: collatralUsd,
+        usd: collatralUsd
+      }
+    ]
+
+
+
+  }, [publicClient, chainId])
+
+
+  // Fetch-Borrow (from Risk-Engine Contract )
+
+  const fetchBorrowState = useCallback(async (acc: `0x${string}`) => {
+    if (!publicClient || !chainId) return []
+
+    const addressList = getAddressList()
+    if (!addressList) return []
+
+    const raw = await publicClient.readContract({
+      address: addressList.riskEngineContractAddress,
+      abi: RiskEngine.abi,
+      functionName: "getBorrows",
+      args: [acc]
+    }) as bigint[];
+
+    const borrowUsd = Number(raw) / 1e16;
+
+    return [
+      {
+        token: "USD",
+        amount: borrowUsd,
+        usd: borrowUsd
+      }
+    ];
+
+
+
+  }, [publicClient, chainId])
+
+
+  //////////////////////////////////////////
+
+  // Later i will placed in  a Lib file 
+
+  //////////////////////////////////////////
+
+  const calcCollateralUsd = (c: { usd: number }[]) =>
+    c.reduce((s, x) => s + x.usd, 0);
+
+  const calcBorrowUsd = (b: { usd: number }[]) =>
+    b.reduce((s, x) => s + x.usd, 0);
+
+  const calcHF = (collUsd: number, debtUsd: number) => {
+    if (debtUsd <= 0) return Infinity;
+    const CF = 0.9;
+    return (collUsd * CF) / debtUsd;
+  };
+
+  const calcLTV = (collUsd: number, debtUsd: number) => {
+    if (collUsd <= 0) return 0;
+    return debtUsd / collUsd;
+  };
+
+  const calcMaxBorrow = (collUsd: number, debtUsd: number) => {
+    const LTV_LIMIT = 0.9;
+    return Math.max(0, collUsd * LTV_LIMIT - debtUsd);
+  };
+
+  const calcMaxWithdraw = (collUsd: number, debtUsd: number) => {
+    const LTV_LIMIT = 0.9;
+    if (debtUsd <= 0) return collUsd;
+    return Math.max(0, collUsd - debtUsd / LTV_LIMIT);
+  };
+
+
+  // Fetch-WithdrawBalance 
+
+  // 
+
+
+  // Get Approval for ERC-20 token 
   const getapproved = async (token: `0x${string}`, parsed: bigint, spender: string) => {
     if (!publicClient || !walletClient || !address) return;
 
@@ -310,7 +419,7 @@ export const LeverageAssetsTab = () => {
     if (allowance >= parsed) return;
 
     const MAX_UINT256 = BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-    
+
 
     // 3. Approve required amount
     return walletClient.writeContract({
@@ -323,31 +432,151 @@ export const LeverageAssetsTab = () => {
 
   }
 
-
-  const deposit = async (asset: string, amount: string, marginAccount: string) => {
+  // Deposit into Margin Account 
+  const deposit = async (
+    asset: string,
+    amount: string,
+    marginAccount: string,
+    opts?: {
+      onStart?: () => void;
+      onApproved?: () => void;
+      onTxSubmitted?: (hash: string) => void;
+      onSuccess?: (hash: string) => void;
+      onError?: (err: any) => void;
+      onFinally?: () => void;
+    }
+  ) => {
     if (!walletClient || !publicClient || !chainId || !amount) return;
 
-    const addresses = getAddressList();
-    if (!addresses) throw new Error("Unsupported network");
+    try {
+      opts?.onStart?.();
 
-    const token = tokenAddressByChain[chainId]?.[asset];
-    const decimals = TOKEN_DECIMALS[asset];
-    const parsed = parseUnits(amount, decimals);
+      const addresses = getAddressList();
+      if (!addresses) throw new Error("Unsupported network");
 
-    await getapproved(
-      token,
-      parsed,
-      addresses.accountManagerContractAddress,
-    );
+      const token = tokenAddressByChain[chainId]?.[asset];
+      const decimals = TOKEN_DECIMALS[asset];
+      const parsed = parseUnits(amount, decimals);
 
+      // APPROVAL Needes 
+      opts?.onApproved?.();
+      await getapproved(token, parsed, addresses.accountManagerContractAddress);
 
-    return walletClient.writeContract({
-      address: addresses.accountManagerContractAddress,
-      abi: AccountManager.abi,
-      functionName: 'deposit',
-      args: [marginAccount, token, parsed],
-    });
+      // TX
+      const txHash = await walletClient.writeContract({
+        address: addresses.accountManagerContractAddress,
+        abi: AccountManager.abi,
+        functionName: "deposit",
+        args: [marginAccount, token, parsed],
+      });
+
+      opts?.onTxSubmitted?.(txHash);
+
+      // RECEIPT
+      await publicClient.waitForTransactionReceipt({
+        hash: txHash,
+      });
+
+      await reloadMarginState();
+
+      opts?.onSuccess?.(txHash);
+      return txHash;
+    } catch (err: any) {
+      if (err?.code === 4001) {
+        // USER REJECTED
+        opts?.onError?.({ type: "REJECTED", err });
+        return;
+      }
+
+      opts?.onError?.({ type: "FAILED", err });
+      throw err;
+    } finally {
+      opts?.onFinally?.();
+    }
   };
+
+  // Withdraw to WB  
+  const withdraw = async (asset: string, amount: string) => {
+  if (!publicClient || !walletClient || !address) return;
+
+  const token = tokenAddressByChain[chainId!]?.[asset] as `0x${string}`;
+  const decimals = TOKEN_DECIMALS[asset];
+  const parsed = parseUnits(amount, decimals);
+
+  const addressList = getAddressList();
+  const acc = await fetchAccountCheck();
+  const marginaccount = acc[0] ;
+
+  let withdraw_hash;
+
+  // Native/Wrapped logic by asset name, NOT token address
+  if (asset === "WETH") {
+    withdraw_hash = await walletClient.writeContract({
+      address: addressList!.accountManagerContractAddress,
+      abi: AccountManager.abi,
+      functionName: "withdrawEth",
+      args: [marginaccount, parsed]
+    });
+  } else {
+    withdraw_hash = await walletClient.writeContract({
+      address: addressList!.accountManagerContractAddress,
+      abi: AccountManager.abi,
+      functionName: "withdraw",
+      args: [marginaccount, token, parsed]
+    });
+  }
+
+  return withdraw_hash;
+};
+
+
+ 
+
+  
+
+  // const borrow={we will write Borrow logic here }
+
+
+  // Our Ui need a single function which tells wat is the current state of Margin acc 
+
+  const reloadMarginState = useCallback(async () => {
+    const accounts = await fetchAccountCheck();
+
+    if (!accounts.length) {
+      setMarginState(null)
+      return null
+    }
+
+    const acc = accounts[0];
+
+    const [col, bor] = await Promise.all([
+      fetchCollateralState(acc),
+      fetchBorrowState(acc)
+    ]);
+
+    const cUsd = calcCollateralUsd(col);
+    const bUsd = calcBorrowUsd(bor);
+
+    const state = {
+      collateral: col,
+      borrow: bor,
+      collateralUsd: cUsd,
+      borrowUsd: bUsd,
+      hf: calcHF(cUsd, bUsd),
+      ltv: calcLTV(cUsd, bUsd),
+      maxBorrow: calcMaxBorrow(cUsd, bUsd),
+      maxWithdraw: calcMaxWithdraw(cUsd, bUsd),
+
+    }
+    setMarginState(state)
+    return state;
+
+
+  }, [
+    fetchAccountCheck,
+    fetchCollateralState,
+    fetchBorrowState
+  ]);
 
 
   // Dialogue state
@@ -395,8 +624,6 @@ export const LeverageAssetsTab = () => {
   }, [mode, currentCollaterals.length, editingIndex]);
 
 
-
-
   // Calculate total deposit value from all collaterals
   const totalDepositValue = useMemo(
     () =>
@@ -413,7 +640,7 @@ export const LeverageAssetsTab = () => {
   const fees = totalDepositValue > 0 ? totalDepositValue * 0.000234 : 0;
   const totalDeposit = totalDepositValue + fees;
   const platformPoints = Number((leverage * 0.575).toFixed(1));
-  const updatedCollateral = Math.round(depositAmount * leverage * 0.6);
+  const updatedCollateral = Math.round(depositAmount! * leverage * 0.6);
   const netHealthFactor = Number((2.0 - leverage * 0.0875).toFixed(2));
 
   // Update deposit amount and currency when collaterals change
@@ -483,8 +710,7 @@ export const LeverageAssetsTab = () => {
   };
 
 
-  // This will  make a changes 
-
+  // This will  make a changes On Balance 
   const handleBalanceTypeChange = (index: number) => {
     return async (balanceType: string | ((prev: string) => string)) => {
       let value = typeof balanceType === "function"
@@ -621,52 +847,94 @@ export const LeverageAssetsTab = () => {
       setActiveDialogue("create-margin");
     }
   };
-  
 
-  const handleDepositClick = async () => {
-  
-  const addresses=getAddressList();
+  useEffect(() => {
+    (async () => {
+      if (!publicClient || !chainId || !address) return;
+      const state = await reloadMarginState();
+      console.log("initial margin-state:", state);
+    })();
+  }, [chainId, address, publicClient, reloadMarginState]);
 
-  const accounts = await publicClient.readContract({
-    address: addresses!.registryContractAddress,
-    abi: Registry.abi,
-    functionName: "accountsOwnedBy",
-    args: [address],
-  });
+  // 🧪 Test here 
+  const handleTest = async () => {
+    // -----------------
+    // deposit test 
+    //------------------
 
-  if (accounts.length === 0) {
-    console.log("NO MARGIN ACCOUNT FOUND");
-    return;
-  }
+  //   const addresses = getAddressList();
 
-  const marginAccount = accounts[0];
+  //   const accounts = await publicClient.readContract({
+  //     address: addresses!.registryContractAddress,
+  //     abi: Registry.abi,
+  //     functionName: "accountsOwnedBy",
+  //     args: [address],
+  //   });
 
-  await deposit("USDC", "1", marginAccount);
-};
+  //   if (accounts.length === 0) {
+  //     console.log("NO MARGIN ACCOUNT FOUND");
+  //     return;
+  //   }
+
+  //   const marginAccount = accounts[0];
+
+  //   await deposit("USDC", "0.1", marginAccount,{
+  //      onStart: () => {
+  //   console.log("Deposit started");
+  //   setLoading(true);
+  // },
+  // onApproved: () => {
+  //   console.log("Token approved!");
+  //   toast.success("USDC approved!");
+  // },
+ 
+  // onSuccess: (hash) => {
+  //   console.log("Deposit success:", hash);
+  //   toast.success("Deposit complete!");
+  // },
+  // onError: ({ type, err }) => {
+  //   console.error("Deposit failed:", type, err);
+  //   toast.error(type === "REJECTED" ? "User rejected" : "Failed");
+  // },
+  // onFinally: () => {
+  //   setLoading(false);
+  // }
+  //   });
+
+
+    // ---------------------------
+    // Fetch Borrow Test 
+    // ---------------------------
+
+  //  const withdraw_tx=await withdraw("USDC","1")
+  //  console.log(withdraw_tx)
+
+
+  };
 
 
   return (
     <>
-      
+
       {/* //This is  only for test Purpose  */}
       <button
-  onClick={handleDepositClick}
-  className="
-    px-5 py-2
-    rounded-lg
-    text-white
-    font-medium
-    bg-gradient-to-r from-purple-600 to-indigo-600
-    shadow-md
-    hover:shadow-lg
-    hover:scale-[1.03]
-    active:scale-[0.97]
-    transition-all
-    duration-200
-  "
->
-  TestDeposit
-</button>
+        onClick={handleTest}
+        className="
+                px-5 py-2
+                rounded-lg
+                text-white
+                font-medium
+                bg-gradient-to-r from-purple-600 to-indigo-600
+                shadow-md
+                hover:shadow-lg
+                hover:scale-[1.03]
+                active:scale-[0.97]
+                transition-all
+                duration-200
+              "
+      >
+        TestDeposit
+      </button>
 
 
 
