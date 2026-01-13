@@ -100,6 +100,15 @@
   --spacing-14: 120px;
 }
 
+/* Global page background for dark theme */
+body {
+  background-color: #FFFFFF;
+}
+
+html.dark body {
+  background-color: #111111;
+}
+
 @layer utilities {
   
   .bg-gradient {

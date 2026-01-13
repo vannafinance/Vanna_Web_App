@@ -1,3 +1,5 @@
+import { useTheme } from "@/contexts/theme-context";
+
 export const SearchBar = ({
   placeholder,
   onChange,
@@ -7,8 +9,14 @@ export const SearchBar = ({
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   value: string;
 }) => {
+  const { isDark } = useTheme();
+  
   return (
-    <div className="border-[1px] border-[#E0E0E0] w-full h-[48px] flex items-center gap-[9px] pr-[24px] py-[8px] pl-[16px] rounded-[8px] bg-white">
+    <div className={`border-[1px] w-full h-[48px] flex items-center gap-[9px] pr-[24px] py-[8px] pl-[16px] rounded-[8px] ${
+      isDark
+        ? "border-[#333333] bg-[#111111]"
+        : "border-[#E2E2E2] bg-white"
+    }`}>
       <div className="w-[24px] h-[24px] flex flex-col items-center justify-center">
         <svg
           width="18"
@@ -32,7 +40,9 @@ export const SearchBar = ({
           type="text"
           value={value}
           placeholder={`Search for ${placeholder}`}
-          className="placeholder:text-[#A7A7A7] w-full h-full outline-none text-[14px] font-medium text-black "
+          className={`placeholder:text-[#A7A7A7] w-full h-full outline-none text-[14px] font-medium ${
+            isDark ? "text-white bg-[#111111]" : "text-black"
+          }`}
         />
       </div>
     </div>

@@ -19,6 +19,7 @@ import { useCollateralBorrowStore } from "@/store/collateral-borrow-store";
 import { MBSelectionGrid } from "./mb-selection-grid";
 import { useMarginAccountInfoStore } from "@/store/margin-account-info-store";
 import { useUserStore } from "@/store/user";
+import { useTheme } from "@/contexts/theme-context";
 
 type Modes = "Deposit" | "Borrow";
 
@@ -36,6 +37,7 @@ const ensureCollateralId = (collateral: Collaterals): Collaterals => {
 
 
 export const LeverageAssetsTab = () => {
+  const { isDark } = useTheme();
   // Component state
   const hasMarginAccount = useMarginAccountInfoStore((state) => state.hasMarginAccount);
   const setHasMarginAccount = useMarginAccountInfoStore((state) => state.set);
@@ -309,7 +311,9 @@ export const LeverageAssetsTab = () => {
       >
         {/* Mode toggle: Deposit / Borrow */}
         <motion.header
-          className="w-full flex justify-end text-[14px] font-medium gap-2 items-center"
+          className={`w-full flex justify-end text-[14px] font-medium gap-2 items-center ${
+            isDark ? "text-white" : ""
+          }`}
           initial={{ opacity: 0, x: 20 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
@@ -328,7 +332,7 @@ export const LeverageAssetsTab = () => {
           transition={{ duration: 0.4, ease: "easeOut" }}
         >
           <motion.h2
-            className="w-full text-[16px] font-medium"
+            className={`w-full text-[16px] font-medium ${isDark ? "text-white" : ""}`}
             initial={{ opacity: 0, x: -10 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
@@ -340,17 +344,21 @@ export const LeverageAssetsTab = () => {
             {/* Render MB UI if MB is selected, otherwise render collaterals */}
             {isMBMode ? (
               <motion.article
-                className="flex flex-col gap-[24px] bg-white p-[20px] rounded-[16px] border-[1px] border-[#E2E2E2] "
+                className={`flex flex-col gap-[24px] p-[20px] rounded-[16px] border-[1px] ${
+                  isDark ? "bg-[#111111] border-[#333333]" : "bg-white border-[#E2E2E2]"
+                }`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
               >
                 <header className="flex justify-between items-center">
-                  <h3 className="text-[20px] font-medium py-[10px]">
+                  <h3 className={`text-[20px] font-medium py-[10px] ${isDark ? "text-white" : ""}`}>
                     {mbTotalUsd} USD
                   </h3>
-                  <div className="py-[4px] pr-[4px] pl-[8px] bg-[#F2EBFE] rounded-[8px]">
+                  <div className={`py-[4px] pr-[4px] pl-[8px] rounded-[8px] ${
+                    isDark ? "bg-[#222222] " : "bg-[#F2EBFE]"
+                  }`}>
                     <Dropdown
                       classname="text-[16px] font-medium gap-[8px]"
                       items={[...BALANCE_TYPE_OPTIONS]}
@@ -495,7 +503,7 @@ export const LeverageAssetsTab = () => {
           transition={{ duration: 0.4, delay: 0.1, ease: "easeOut" }}
         >
           <motion.h2
-            className="w-full text-[16px] font-medium"
+            className={`w-full text-[16px] font-medium ${isDark ? "text-white" : ""}`}
             initial={{ opacity: 0, x: -10 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}

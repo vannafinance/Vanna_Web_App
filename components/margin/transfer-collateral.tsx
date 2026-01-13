@@ -5,8 +5,10 @@ import { DropdownOptions } from "@/lib/constants";
 import { DEPOSIT_PERCENTAGES, PERCENTAGE_COLORS } from "@/lib/constants/margin";
 import { DetailsPanel } from "../ui/details-panel";
 import { Button } from "../ui/button";
+import { useTheme } from "@/contexts/theme-context";
 
 export const TransferCollateral = () => {
+  const { isDark } = useTheme();
   const [selectedCurrency, setSelectedCurrency] = useState<string>("USDC");
   const [valueInput, setValueInput] = useState<string>("");
   const [valueInUsd, setValueInUsd] = useState<number>(0.0);
@@ -39,7 +41,9 @@ export const TransferCollateral = () => {
       transition={{ duration: 0.4, ease: "easeOut" }}
     >
       <motion.article 
-        className="flex flex-col gap-[24px] rounded-[16px] p-[20px] bg-[#FFFFFF] border-[1px] border-[#E2E2E2]"
+        className={`flex flex-col gap-[24px] rounded-[16px] p-[20px] border-[1px] ${
+          isDark ? "bg-[#111111] border-[#333333]" : "bg-[#FFFFFF] border-[#E2E2E2]"
+        }`}
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3, delay: 0.1 }}
@@ -89,6 +93,8 @@ export const TransferCollateral = () => {
                       className={`h-[44px] w-[95px] text-center text-[14px] text-medium cursor-pointer ${
                         percentage === item
                           ? `${PERCENTAGE_COLORS[item]} text-white`
+                          : isDark
+                          ? "bg-[#222222] text-white"
                           : "bg-[#F4F4F4]"
                       } p-[10px] rounded-[12px]`}
                       whileHover={{ scale: 1.05 }}
@@ -122,13 +128,17 @@ export const TransferCollateral = () => {
             <input
               id={`collateral-amount-input`}
               onChange={handleInputChange}
-              className="w-full text-[20px] focus:border-[0px] focus:outline-none font-medium"
+              className={`w-fit text-[20px] focus:border-[0px] focus:outline-none focus:bg-transparent font-medium placeholder:text-[#C7C7C7] ${
+                isDark ? "placeholder:text-[#A7A7A7]  text-white bg-[#111111]" : "bg-white"
+              }`}
               type="text"
               placeholder="0.0"
               value={valueInput}
             />
             <motion.p
-              className="text-[12px] font-medium text-[#76737B]"
+              className={`text-[12px] font-medium ${
+                isDark ? "text-[#919191]" : "text-[#76737B]"
+              }`}
               aria-live="polite"
               key={valueInUsd}
               initial={{ opacity: 0 }}
@@ -144,10 +154,10 @@ export const TransferCollateral = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3, delay: 0.25 }}
           >
-            <p className=" text-[10px] font-medium ">
+            <p className={`text-[10px] font-medium ${isDark ? "text-white" : ""}`}>
               Transfer To: <span className="font-semibold">WB</span>
             </p>
-            <p className="text-[20px] font-medium ">2000 USD</p>
+            <p className={`text-[20px] font-medium ${isDark ? "text-white" : ""}`}>2000 USD</p>
 
             <motion.button
               onClick={handleMaxValueClick}

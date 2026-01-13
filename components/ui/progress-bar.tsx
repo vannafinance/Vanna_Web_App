@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useTheme } from "@/contexts/theme-context";
 
 interface ProgressBarProps {
   /**
@@ -73,10 +74,15 @@ export const ProgressBar = ({
   label,
   value,
   textSize = "text-[14px]",
-  textColor = "text-[#0C0C0C]",
+  textColor,
   borderRadius = "rounded-[4px]",
   animated = true,
 }: ProgressBarProps) => {
+  const { isDark } = useTheme();
+  
+  // Default text color based on theme if not provided
+  const finalTextColor = textColor || (isDark ? "text-white" : "text-[#0C0C0C]");
+  
   // Clamp percentage between 0 and 100
   const clampedPercentage = Math.min(Math.max(percentage, 0), 100);
 
@@ -119,7 +125,7 @@ export const ProgressBar = ({
     >
       {/* Text above bar (if position is not "none") */}
       {shouldShowText && (
-        <div className={`flex ${getTextAlignment()} ${textSize} ${textColor} font-medium`}>
+        <div className={`flex ${getTextAlignment()} ${textSize} ${finalTextColor} font-medium`}>
           {displayText}
         </div>
       )}
@@ -145,7 +151,7 @@ export const ProgressBar = ({
       
       {/* Percentage and value below bar */}
       {showPercentageAndValue && (
-        <div className={`flex justify-between items-center ${textSize} ${textColor} font-medium`}>
+        <div className={`flex justify-between items-center ${textSize} ${finalTextColor} font-medium`}>
           <span>{`${clampedPercentage.toFixed(2)}%`}</span>
           <span>{value}</span>
         </div>

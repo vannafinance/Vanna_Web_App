@@ -15,6 +15,7 @@ import { useEarnVaultStore } from "@/store/earn-vault-store";
 import { iconPaths } from "@/lib/constants";
 import { formatNumber } from "@/lib/utils/format-value";
 import { useRouter } from "next/navigation";
+import { useTheme } from "@/contexts/theme-context";
 
 // Helper function to parse values with K/M/B suffixes
 const parseAmountValue = (value?: string): number => {
@@ -50,6 +51,7 @@ const tabs = [
 
 export default function EarnPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const { isDark } = useTheme();
   const router = useRouter();
   const selectedVault = useEarnVaultStore((state) => state.selectedVault);
   const [activeTab, setActiveTab] = useState<string>("details");
@@ -139,7 +141,9 @@ export default function EarnPage({ params }: { params: Promise<{ id: string }> }
             <button
               type="button"
               onClick={handleBackToPools}
-              className="w-fit h-fit flex gap-[12px] items-center cursor-pointer text-[16px] font-medium text-[#5A5555] hover:text-[#703AE6] transition-colors"
+              className={`w-fit h-fit flex gap-[12px] items-center cursor-pointer text-[16px] font-medium hover:text-[#703AE6] transition-colors ${
+                isDark ? "text-white" : "text-[#5A5555]"
+              }`}
             >
               <svg
                 width="9"
@@ -168,20 +172,28 @@ export default function EarnPage({ params }: { params: Promise<{ id: string }> }
                 height={36}
               />
               <div className="w-fit h-fit flex gap-[8px] items-center">
-                <h1 className="w-fit h-fit text-[24px] font-bold text-[#181822]">
+                <h1 className={`w-fit h-fit text-[24px] font-bold ${
+                  isDark ? "text-white" : "text-[#181822]"
+                }`}>
                   {vaultData.title}
                 </h1>
                 <div className="w-fit h-fit flex gap-[8px] items-center">
-                  <span className="text-[12px] font-semibold text-[#0C0C0C] text-center w-fit h-fit rounded-[4px] bg-[#F4F4F4] py-[2px] px-[6px]">
+                  <span className={`text-[12px] font-semibold text-center w-fit h-fit rounded-[4px] py-[2px] px-[6px] ${
+                    isDark ? "bg-[#222222] text-white" : "bg-[#F4F4F4] text-[#0C0C0C]"
+                  }`}>
                     V3
                   </span>
-                  <span className="text-[12px] font-semibold text-[#0C0C0C] text-center w-fit h-fit rounded-[4px] bg-[#F4F4F4] py-[2px] px-[6px]">
+                  <span className={`text-[12px] font-semibold text-center w-fit h-fit rounded-[4px] py-[2px] px-[6px] ${
+                    isDark ? "bg-[#222222] text-white" : "bg-[#F4F4F4] text-[#0C0C0C]"
+                  }`}>
                     {vaultData.tag}
                   </span>
                 </div>
               </div>
             </div>
-            <div className="text-[16px] font-semibold w-fit h-[48px] rounded-[12px] py-[12px] pr-[16px] pl-[8px] flex gap-[4px] bg-[#F4F4F4]">
+            <div className={`text-[16px] font-semibold w-fit h-[48px] rounded-[12px] py-[12px] pr-[16px] pl-[8px] flex gap-[4px] ${
+              isDark ? "bg-[#222222] text-white" : "bg-[#F4F4F4]"
+            }`}>
               Network:{" "}
               <Image
                 src={iconPath}

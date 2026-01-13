@@ -7,6 +7,7 @@ import { RepayLoanTab } from "./repay-loan-tab";
 import { TransferCollateral } from "./transfer-collateral";
 import { AnimatedTabs, TabItem } from "../ui/animated-tabs";
 import { LEVERAGE_TABS } from "@/lib/constants/margin";
+import { useTheme } from "@/contexts/theme-context";
 
 interface LeverageCollateralProps {
   switchToRepayTab?: boolean;
@@ -17,6 +18,7 @@ export const LeverageCollateral = ({
   switchToRepayTab,
   onTabSwitched,
 }: LeverageCollateralProps = {}) => {
+  const { isDark } = useTheme();
   const [activeTab, setActiveTab] = useState<string>("leverage-assets");
 
   // Handle external repay click trigger - change tab when repay is clicked
@@ -53,7 +55,9 @@ export const LeverageCollateral = ({
 
   return (
     <motion.section
-      className="flex flex-col justify-between rounded-[26px] bg-[#F7F7F7] border-[1px] border-[#E2E2E2] py-[36px] px-[16px] min-w-[691px] h-full"
+      className={`flex flex-col justify-between rounded-[26px] border-[1px] py-[36px] px-[16px] min-w-[691px] h-full ${
+        isDark ? "bg-[#222222] border-[#333333]" : "bg-[#F7F7F7] border-[#E2E2E2]"
+      }`}
       initial={{ opacity: 0, scale: 0.95 }}
       whileInView={{ opacity: 1, scale: 1 }}
       viewport={{ once: true }}

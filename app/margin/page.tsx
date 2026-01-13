@@ -20,8 +20,10 @@ import { useCollateralBorrowStore } from "@/store/collateral-borrow-store";
 import { useUserStore } from "@/store/user";
 import { formatValue } from "@/lib/utils/format-value";
 import { ACCOUNT_STATS_ITEMS } from "@/lib/constants/margin";
+import { useTheme } from "@/contexts/theme-context";
 
 const Margin = () => {
+  const { isDark } = useTheme();
   // State to trigger tab switch to Repay Loan
   const [switchToRepayTab, setSwitchToRepayTab] = useState(false);
 
@@ -175,7 +177,7 @@ const Margin = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.4, ease: "easeOut" }}
         >
-          <h1 className="text-[34px] font-semibold">
+          <h1 className={`text-[34px] font-semibold ${isDark ? "text-white" : ""}`}>
             Leverage your Collateral
           </h1>
           <div className="flex-shrink-0">
@@ -209,7 +211,9 @@ const Margin = () => {
             >
               {/* Vanna logo icon */}
               <motion.div
-                className="border-[1px] border-[#E2E2E2] flex flex-col justify-center items-center p-2 rounded-[11px] w-[62px] h-[62px]"
+                className={`border-[1px] flex flex-col justify-center items-center p-2 rounded-[11px] w-[62px] h-[62px] ${
+                  isDark ? "border-[#333333]" : "border-[#E2E2E2]"
+                }`}
                 initial={{ scale: 0, rotate: -180 }}
                 whileInView={{ scale: 1, rotate: 0 }}
                 viewport={{ once: true }}
@@ -223,10 +227,10 @@ const Margin = () => {
                 />
               </motion.div>
               <div className="flex flex-col">
-                <h2 className="w-full text-[24px] font-bold ">
+                <h2 className={`w-full text-[24px] font-bold ${isDark ? "text-white" : ""}`}>
                   Margin Account Info
                 </h2>
-                <p className="w-full text-[16px] font-medium text-[#A3A3A3]">
+                <p className={`w-full text-[16px] font-medium text-[#A3A3A3]`}>
                   Stay updated details and status.
                 </p>
               </div>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { StatsCard } from "../ui/stats-card";
 import { getPercentage } from "@/lib/utils/helper";
 import { formatValue } from "@/lib/utils/format-value";
+import { useTheme } from "@/contexts/theme-context";
 
 const maxEth = 200000;
 const maxUsd = 200000;
@@ -81,6 +82,7 @@ const items = [
 ];
 
 export const Details = () => {
+  const { isDark } = useTheme();
   const [totalSupplied, setTotalSupplied] = useState({
     inEth: 100000,
     inUsd: 4700,
@@ -91,10 +93,16 @@ export const Details = () => {
   });
 
   return (
-    <section className="w-full h-fit flex flex-col gap-[16px] rounded-[20px] border-[1px] border-[#E2E2E2] bg-[#F4F4F4]" aria-label="Vault Details">
+    <section className={`w-full h-fit flex flex-col gap-[16px] rounded-[20px] border-[1px] ${
+      isDark ? "bg-[#111111] border-[#333333]" : "bg-[#F4F4F4] border-[#E2E2E2]"
+    }`} aria-label="Vault Details">
       <div className="w-full h-fit rounded-[20px] pt-[24px] px-[24px] flex flex-col gap-[16px]">
-        <h2 className="w-full h-fit text-[20px] font-semibold">Statistics</h2>
-        <article className="w-full h-fit flex items-center rounded-[16px] gap-[12px] bg-[#FFFFFF]" aria-label="Supply and Borrow Overview">
+        <h2 className={`w-full h-fit text-[20px] font-semibold ${
+          isDark ? "text-white" : ""
+        }`}>Statistics</h2>
+        <article className={`w-full h-fit flex items-center rounded-[16px] gap-[12px] ${
+          isDark ? "bg-[#222222]" : "bg-[#FFFFFF]"
+        }`} aria-label="Supply and Borrow Overview">
           <StatsCard
             percentage={getPercentage(totalSupplied.inEth, maxEth)}
             heading="Total Supplied"
@@ -148,7 +156,9 @@ export const Details = () => {
           })}
         </article>
         <article className="w-full h-fit rounded-[20px] pb-[24px]" aria-label="Contract Addresses">
-          <h3 className="text-[20px] font-semibold w-full h-fit">
+          <h3 className={`text-[20px] font-semibold w-full h-fit ${
+            isDark ? "text-white" : ""
+          }`}>
             Adresses
           </h3>
           <div className="w-full h-full grid grid-cols-3 grid-rows-2">

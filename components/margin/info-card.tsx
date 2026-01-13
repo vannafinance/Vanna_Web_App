@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { FIELD_FORMAT_MAP, LARGE_FORMAT_FIELDS } from "@/lib/constants/margin";
 import { formatValue, FormatType } from "@/lib/utils/format-value";
+import { useTheme } from "@/contexts/theme-context";
 
 interface InfoItem {
   id: string;
@@ -54,6 +55,7 @@ export const InfoCard = ({
   expandableSections = [],
   showExpandable = false,
 }: InfoProps) => {
+  const { isDark } = useTheme();
   // Track expanded state for each section
   const [expandedStates, setExpandedStates] = useState<Record<string, boolean>>(
     expandableSections.reduce(
@@ -73,7 +75,7 @@ export const InfoCard = ({
   const renderItem = (item: InfoItem, idx: number, useAnimate = false) => (
     <motion.div
       key={item.id}
-      className="flex justify-between"
+      className={`flex justify-between ${isDark ? "text-white" : ""}`}
       initial={{ opacity: 0, x: -10 }}
       {...(useAnimate
         ? {
@@ -98,7 +100,9 @@ export const InfoCard = ({
       {/* Main info items */}
       {items && items.length > 0 && (
         <motion.article
-          className="bg-[#F7F7F7] flex flex-col gap-[24px] w-full h-full p-[24px] border-[1px] border-[#E2E2E2] rounded-[16px]"
+          className={`flex flex-col gap-[24px] w-full h-full p-[24px] border-[1px] rounded-[16px] ${
+            isDark ? "bg-[#222222] border-[#333333]" : "bg-[#F7F7F7] border-[#E2E2E2]"
+          }`}
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -113,7 +117,9 @@ export const InfoCard = ({
         expandableSections.map((section, sectionIdx) => (
           <motion.article
             key={section.title}
-            className="bg-[#F7F7F7] flex flex-col gap-[24px] w-full h-full p-[24px] border-[1px] border-[#E2E2E2] rounded-[16px]"
+            className={`flex flex-col gap-[24px] w-full h-full p-[24px] border-[1px] rounded-[16px] ${
+              isDark ? "bg-[#222222] border-[#333333]" : "bg-[#F7F7F7] border-[#E2E2E2]"
+            }`}
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -129,7 +135,9 @@ export const InfoCard = ({
               onClick={() => {
                 toggleExpanded(section.title);
               }}
-              className={`items-center cursor-pointer flex justify-between text-[16px] ${section.headingBold ? "font-bold" : "font-medium"} w-full`}
+              className={`items-center cursor-pointer flex justify-between text-[16px] ${section.headingBold ? "font-bold" : "font-medium"} w-full ${
+                isDark ? "text-white" : ""
+              }`}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               aria-expanded={expandedStates[section.title]}
@@ -152,7 +160,7 @@ export const InfoCard = ({
               >
                 <path
                   d="M11.91 8.38201e-05L12.97 1.06108L7.193 6.84008C7.10043 6.93324 6.99036 7.00717 6.8691 7.05761C6.74785 7.10806 6.61783 7.13403 6.4865 7.13403C6.35517 7.13403 6.22514 7.10806 6.10389 7.05761C5.98264 7.00717 5.87257 6.93324 5.78 6.84008L0 1.06108L1.06 0.00108375L6.485 5.42508L11.91 8.38201e-05Z"
-                  fill="black"
+                  fill={isDark ? "#FFFFFF" : "black"}
                 />
               </motion.svg>
             </motion.button>

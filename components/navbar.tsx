@@ -98,9 +98,9 @@ export const Navbar = (props: Navbar) => {
     };
 
   return (
-    <div className="relative">
+    <div className={`relative ${isDark ? "bg-[#111111]" : ""}`}>
       <motion.div
-        className="py-[12px] px-[40px] w-full h-fit flex justify-between items-center"
+        className={`py-[12px] px-[40px] w-full h-fit flex justify-between items-center ${isDark ? "text-white" : ""}`}
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
@@ -147,7 +147,7 @@ export const Navbar = (props: Navbar) => {
             alt="Vanna"
             width={153.4}
             height={48}
-            src={"/logos/vanna.png"}
+            src={isDark ? "/logos/vanna-white.png" : "/logos/vanna.png"}
           />
         </motion.a>
 
@@ -165,8 +165,8 @@ export const Navbar = (props: Navbar) => {
                 onKeyDown={handleNavKeyDown(item)}
                 role="button"
                 tabIndex={0}
-                className={`rounded-[8px] py-[8px] px-[16px] text-[14px] font-medium group flex gap-[4px]  items-center hover:text-[#FF007A] cursor-pointer transition-colors ${
-                  isActive ? "bg-[#FFE6F2] text-[#FF007A]" : ""
+                className={`rounded-[8px] py-[8px] px-[16px] text-[14px] font-medium group flex gap-[4px] items-center hover:text-[#FF007A] cursor-pointer transition-colors ${
+                  isActive ? "bg-[#FFE6F2] text-[#FF007A]" : isDark ? "text-white" : ""
                 }`}
                 aria-label={`Navigate to ${item.title}`}
                 aria-current={isActive ? "page" : undefined}
@@ -187,7 +187,9 @@ export const Navbar = (props: Navbar) => {
               </motion.div>
             );
           })}
-          <div className="rounded-[8px] border-[1px] border-[#E2E2E2] p-[8px] flex gap-[8px] ">
+          <div className={`rounded-[8px] border-[1px] p-[8px] flex gap-[8px] ${
+            isDark ? "border-[#333333]" : "border-[#E2E2E2]"
+          }`}>
             {groupedItems.bordered.map((item, idx) => {
               // For Trade button, check if current path matches Trade link or any trade dropdown item
               const isActive =
@@ -206,8 +208,8 @@ export const Navbar = (props: Navbar) => {
                   onKeyDown={handleNavKeyDown(item)}
                   role="button"
                   tabIndex={0}
-                  className={`rounded-[8px] py-[8px] px-[16px] text-[14px] font-medium group flex gap-[4px]  items-center hover:text-[#FF007A] cursor-pointer transition-colors ${
-                    isActive ? "bg-[#FFE6F2] text-[#FF007A]" : ""
+                  className={`rounded-[8px] py-[8px] px-[16px] text-[14px] font-medium group flex gap-[4px] items-center hover:text-[#FF007A] cursor-pointer transition-colors ${
+                    isActive ? "bg-[#FFE6F2] text-[#FF007A]" : isDark ? "text-white" : ""
                   }`}
                   aria-haspopup={item.title === "Trade" ? "menu" : undefined}
                   aria-expanded={
@@ -248,6 +250,8 @@ export const Navbar = (props: Navbar) => {
                           className={`transition-colors ${
                             isActive
                               ? "stroke-[#FF007A]"
+                              : isDark
+                              ? "stroke-white group-hover:stroke-[#FF007A]"
                               : "stroke-black group-hover:stroke-[#FF007A]"
                           }`}
                           strokeWidth="1.33333"
@@ -260,6 +264,8 @@ export const Navbar = (props: Navbar) => {
                           className={`transition-colors ${
                             isActive
                               ? "stroke-[#FF007A]"
+                              : isDark
+                              ? "stroke-white group-hover:stroke-[#FF007A]"
                               : "stroke-black group-hover:stroke-[#FF007A]"
                           }`}
                           strokeWidth="1.33333"
@@ -271,6 +277,8 @@ export const Navbar = (props: Navbar) => {
                           className={`transition-colors ${
                             isActive
                               ? "stroke-[#FF007A]"
+                              : isDark
+                              ? "stroke-white group-hover:stroke-[#FF007A]"
                               : "stroke-black group-hover:stroke-[#FF007A]"
                           }`}
                           strokeWidth="1.33333"
@@ -299,6 +307,8 @@ export const Navbar = (props: Navbar) => {
                           className={
                             isActive
                               ? "stroke-[#FF007A]"
+                              : isDark
+                              ? "stroke-white group-hover:stroke-[#FF007A]"
                               : "stroke-black group-hover:stroke-[#FF007A]"
                           }
                         />
@@ -321,8 +331,8 @@ export const Navbar = (props: Navbar) => {
                 onKeyDown={handleNavKeyDown(item)}
                 role="button"
                 tabIndex={0}
-                className={`rounded-[8px] py-[8px] px-[16px] text-[14px] font-medium group flex gap-[4px]  items-center hover:text-[#FF007A] cursor-pointer transition-colors ${
-                  isActive ? "bg-[#FFE6F2] text-[#FF007A]" : ""
+                className={`rounded-[8px] py-[8px] px-[16px] text-[14px] font-medium group flex gap-[4px] items-center hover:text-[#FF007A] cursor-pointer transition-colors ${
+                  isActive ? "bg-[#FFE6F2] text-[#FF007A]" : isDark ? "text-white" : ""
                 }`}
                 aria-label={`Navigate to ${item.title}`}
                 aria-current={isActive ? "page" : undefined}
@@ -367,7 +377,9 @@ export const Navbar = (props: Navbar) => {
           {/* Theme toggle button */}
           <button
             type="button"
-            className="flex flex-col justify-center items-center  rounded-[8px] py-[12px] px-[10px]  h-[44px] border-[1px] border-[#E2E2E2]  cursor-pointer"
+            className={`flex flex-col justify-center items-center rounded-[8px] py-[12px] px-[10px] h-[44px] border-[1px] cursor-pointer ${
+              isDark ? "border-[#333333]" : "border-[#E2E2E2]"
+            }`}
             onClick={toggleTheme}
             aria-label={
               isDark ? "Switch to light theme" : "Switch to dark theme"
@@ -441,7 +453,9 @@ export const Navbar = (props: Navbar) => {
               onClick={() => {
                 setUserAddress({ address: null });
               }}
-              className="cursor-pointer py-[12px] px-[24px] text-[16px] font-semibold bg-[#F4F4F4] rounded-[8px] h-full w-fit"
+              className={`cursor-pointer py-[12px] px-[24px] text-[16px] font-semibold rounded-[8px] h-full w-fit ${
+                isDark ? "bg-[#222222] text-white" : "bg-[#F4F4F4]"
+              }`}
             >
               {userAddress.slice(0, 6) + "..." + userAddress.slice(-4)}
             </div>
@@ -461,7 +475,11 @@ export const Navbar = (props: Navbar) => {
             transition={{ duration: 0.22, ease: "easeOut" }}
             onMouseEnter={handleDropdownMouseEnter}
             onMouseLeave={handleDropdownMouseLeave}
-            className="w-full absolute border-t-[1px] border-[#F4F4F4] border-b-[1px] border-[#F4F4F4] py-[8px] flex justify-center gap-[4px] "
+            className={`w-full absolute py-[8px] flex justify-center gap-[4px] ${
+              isDark 
+                ? "bg-[#111111] border-t-[1px] border-[#333333] border-b-[1px] border-[#333333]" 
+                : "border-t-[1px] border-[#F4F4F4] border-b-[1px] border-[#F4F4F4]"
+            }`}
           >
             {tradeItems.map((item, idx) => {
               const isActive = pathname === item.link;
@@ -475,8 +493,8 @@ export const Navbar = (props: Navbar) => {
                   }}
                   onKeyDown={handleNavKeyDown(item)}
                   className={`${
-                    isActive ? "bg-[#FFE6F2] text-[#FF007A]" : ""
-                  } cursor-pointer hover:text-[#FF007A] py-[8px] px-[16px] text-[14px] font-medium rounded-[8px] `}
+                    isActive ? "bg-[#FFE6F2] text-[#FF007A]" : isDark ? "text-white" : ""
+                  } cursor-pointer hover:text-[#FF007A] py-[8px] px-[16px] text-[14px] font-medium rounded-[8px]`}
                   initial={{ opacity: 0, y: -6 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -6 }}

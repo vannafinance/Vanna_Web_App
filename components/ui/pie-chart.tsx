@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useTheme } from "@/contexts/theme-context";
 
 interface PieChartProps {
   /**
@@ -55,8 +56,13 @@ export const PieChart = ({
   showPercentage = true,
   centerText,
   textSize = "text-[20px]",
-  textColor = "text-black",
+  textColor,
 }: PieChartProps) => {
+  const { isDark } = useTheme();
+  
+  // Default text color based on theme if not provided
+  const finalTextColor = textColor || (isDark ? "text-white" : "text-black");
+  
   // Clamp percentage between 0 and 100
   const clampedPercentage = Math.min(Math.max(percentage, 0), 100);
 
@@ -112,7 +118,7 @@ export const PieChart = ({
       {/* Center text */}
       {displayText && (
         <div
-          className={`absolute inset-0 flex items-center justify-center ${textSize} ${textColor} font-semibold`}
+          className={`absolute inset-0 flex items-center justify-center ${textSize} ${finalTextColor} font-semibold`}
         >
           {displayText}
         </div>

@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Chart } from "./chart"
 import { Table } from "./table"
+import { useTheme } from "@/contexts/theme-context";
 
 const tabs = [{id:"current-positions",label:"Current Positions"},{id:"positions-history",label:"Positions History"}]
 
 export const YourPositions = () => {
+  const { isDark } = useTheme();
   const [activeTab, setActiveTab] = useState<string>("current-positions");
   
   const handleTabChange = (tab: string) => {
@@ -13,7 +15,9 @@ export const YourPositions = () => {
   
   return (
     <section 
-      className="w-full h-full flex flex-col gap-[24px] rounded-[20px] border-[1px] border-[#E2E2E2] bg-[#F7F7F7] p-[24px]"
+      className={`w-full h-full flex flex-col gap-[24px] rounded-[20px] border-[1px] p-[24px] ${
+        isDark ? "bg-[#111111] border-[#333333]" : "bg-[#F7F7F7] border-[#E2E2E2]"
+      }`}
       aria-label="Your Positions Overview"
     >
       <figure className="w-full flex-1 min-h-0">

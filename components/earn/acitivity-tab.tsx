@@ -1,4 +1,5 @@
 import { Table } from "./table"
+import { useTheme } from "@/contexts/theme-context";
 
 const tableHeadings = [
     {
@@ -157,15 +158,19 @@ const tableHeadings = [
 
 
 export const ActivityTab = () => {
+  const { isDark } = useTheme();
+  
   return (
     <section 
-      className="w-full h-fit rounded-[20px] border-[1px] border-[#E2E2E2] bg-[#F7F7F7] p-[24px] flex flex-col gap-[24px]"
+      className={`w-full h-fit rounded-[20px] border-[1px] p-[24px] flex flex-col gap-[24px] ${
+        isDark ? "bg-[#111111] border-[#333333]" : "bg-[#F7F7F7] border-[#E2E2E2]"
+      }`}
       aria-label="Activity Overview"
     >
       <article aria-label="User Distribution">
         <Table 
           showPieChart={true} 
-          tableBodyBackground="bg-white" 
+          tableBodyBackground={isDark ? "bg-[#222222]" : "bg-white"} 
           heading={{heading: "User Distribution"}} 
           tableHeadings={tableHeadings} 
           tableBody={tableBody} 
@@ -173,11 +178,13 @@ export const ActivityTab = () => {
       </article>
       <article aria-label="All Transactions">
         <Table 
-          tableBodyBackground="bg-white" 
+          tableBodyBackground={isDark ? "bg-[#222222]" : "bg-white"} 
           heading={{heading: "All Transactions"}} 
           filters={{filters: ["All"], customizeDropdown: true}} 
           tableHeadings={transactionTableHeadings} 
           tableBody={transactionTableBody}
+          
+          
         />
       </article>
     </section>

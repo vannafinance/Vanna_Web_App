@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
+import { useTheme } from "@/contexts/theme-context";
 
 interface ExpandableModalProps {
   /**
@@ -50,6 +51,7 @@ export const ExpandableModal = ({
   scrollable = true,
   contentPosition = "top",
 }: ExpandableModalProps) => {
+  const { isDark } = useTheme();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -102,13 +104,19 @@ export const ExpandableModal = ({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.2 }}
-              className={`relative w-[90vw] max-w-[1200px] h-[85vh] max-h-[800px] rounded-[20px] bg-white p-[24px] shadow-2xl flex flex-col overflow-hidden ${modalClassName}`}
+              className={`relative w-[90vw] max-w-[1200px] h-[85vh] max-h-[800px] rounded-[20px] p-[24px] shadow-2xl flex flex-col overflow-hidden ${
+                isDark ? "bg-[#222222]" : "bg-white"
+              } ${modalClassName}`}
               onClick={(e) => e.stopPropagation()}
             >
               {/* Close Button */}
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="absolute mt-[6px] top-[24px] right-[24px] z-[100] w-[32px] h-[32px] flex items-center justify-center rounded-[8px] bg-white border-[1px] border-[#E2E2E2] hover:bg-gray-50 transition-colors"
+                className={`absolute mt-[6px] top-[24px] right-[24px] z-[100] w-[32px] h-[32px] flex items-center justify-center rounded-[8px] border-[1px] transition-colors ${
+                  isDark
+                    ? "bg-[#222222] border-[#333333] hover:bg-[#333333]"
+                    : "bg-white border-[#E2E2E2] hover:bg-gray-50"
+                }`}
               >
                 <svg
                   width="16"
@@ -119,7 +127,7 @@ export const ExpandableModal = ({
                 >
                   <path
                     d="M12 4L4 12M4 4L12 12"
-                    stroke="#19191A"
+                    stroke={isDark ? "#FFFFFF" : "#19191A"}
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"

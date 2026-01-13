@@ -32,6 +32,10 @@ interface ReusableChartProps {
    * Format function for Y-axis labels
    */
   formatYAxisLabel?: (value: number) => string;
+  /**
+   * Text color for labels and coordinates
+   */
+  textColor?: string;
 }
 
 export const ReusableChart = ({
@@ -41,6 +45,7 @@ export const ReusableChart = ({
   height = 300,
   showGrid = true,
   formatYAxisLabel,
+  textColor = "#181822",
 }: ReusableChartProps) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
@@ -53,7 +58,7 @@ export const ReusableChart = ({
     const chart = createChart(chartContainerRef.current, {
       layout: {
         background: { type: ColorType.Solid, color: "transparent" },
-        textColor: "#181822",
+        textColor: textColor,
         fontSize: 12,
       },
       grid: {
@@ -118,7 +123,7 @@ export const ReusableChart = ({
       window.removeEventListener("resize", handleResize);
       chart.remove();
     };
-  }, [gradientColors, lineColor, height, showGrid, formatYAxisLabel]);
+  }, [gradientColors, lineColor, height, showGrid, formatYAxisLabel, textColor]);
 
   // Update data when it changes
   useEffect(() => {

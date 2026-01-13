@@ -6,6 +6,7 @@ import { BorrowInfo } from "@/lib/types";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { MAX_LEVERAGE, MODE_CONFIG } from "@/lib/constants/margin";
+import { useTheme } from "@/contexts/theme-context";
 
 type Mode = "Deposit" | "Borrow";
 
@@ -24,6 +25,7 @@ export const BorrowBox = ({
   totalDeposit,
   onBorrowItemsChange,
 }: BorrowBoxProps) => {
+  const { isDark } = useTheme();
   const config = MODE_CONFIG[mode];
 
   // Form state
@@ -138,7 +140,9 @@ export const BorrowBox = ({
 
   return (
     <motion.section
-      className="flex flex-col gap-[20px] bg-white rounded-[16px] py-[24px] px-[16px] border-[1px] border-[#E2E2E2]"
+      className={`flex flex-col gap-[20px] rounded-[16px] py-[24px] px-[16px] border-[1px] ${
+        isDark ? "bg-[#111111] border-[#333333]" : "bg-white border-[#E2E2E2]"
+      }`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
@@ -181,14 +185,18 @@ export const BorrowBox = ({
                   className={`py-[8px] px-[16px] rounded-[8px] text-[14px] font-medium ${
                     leverage === MAX_LEVERAGE
                       ? "bg-gradient text-white"
-                      : "bg-white "
+                      : isDark
+                      ? "bg-[#111111] text-white"
+                      : "bg-white"
                   } `}
                 >
                   Max Value
                 </motion.div>
                 
               </motion.button>
-              <div className="text-[12px] font-medium text-neutral-400">18000 USDC</div> 
+              <div className={`text-[12px] font-medium ${
+                isDark ? "text-[#919191]" : "text-neutral-400"
+              }`}>18000 USDC</div> 
               </div>
               
             </motion.div>
@@ -201,7 +209,9 @@ export const BorrowBox = ({
               transition={{ duration: 0.3 }}
             >
               <div className="flex flex-col items-end gap-[12px]">
-                <div className="text-[14px] font-medium">Borrowed Amount:</div>
+                <div className={`text-[14px] font-medium ${
+                  isDark ? "text-white" : ""
+                }`}>Borrowed Amount:</div>
                 <div className="flex gap-[12px]">
                   {Array.from({ length: 1 }).map((_, idx) => {
                     const selectedOption =
@@ -226,12 +236,16 @@ export const BorrowBox = ({
                             />
                           </div>
 
-                          <div className="text-[12px] font-medium flex flex-col gap-[4px]">
+                          <div className={`text-[12px] font-medium flex flex-col gap-[4px] ${
+                            isDark ? "text-white" : ""
+                          }`}>
                             <div>
                               {inputValue > 0 ? inputValue : "0"}{" "}
                                 {selectedOption}
                             </div>
-                            <div className="text-[10px] text-[#111111]">
+                            <div className={`text-[10px] ${
+                              isDark ? "text-[#919191]" : "text-[#111111]"
+                            }`}>
                               {inputValue > 0 ? inputValue.toFixed(2) : "0.00"} USD
                             </div>
                           </div>
@@ -255,7 +269,9 @@ export const BorrowBox = ({
           >
             {/* Borrowed items list */}
             <div className="flex flex-col gap-[12px]">
-              <div className="text-[14px] font-medium">Borrowed Amount:</div>
+              <div className={`text-[14px] font-medium ${
+                isDark ? "text-white" : ""
+              }`}>Borrowed Amount:</div>
               <div className="flex gap-[12px]">
                 {Array.from({ length: config.maxItems }).map((_, idx) => {
                   const selectedOption =
@@ -280,19 +296,25 @@ export const BorrowBox = ({
                           />
                         </div>
 
-                        <div className="text-[12px] font-medium flex flex-col gap-[4px]">
+                        <div className={`text-[12px] font-medium flex flex-col gap-[4px] ${
+                          isDark ? "text-white" : ""
+                        }`}>
                           <div>
                             {inputValue > 0 ? inputValue : "0"}{" "}
                             {selectedOption}
                           </div>
-                          <div className="text-[10px] text-[#111111]">
+                          <div className={`text-[10px] ${
+                            isDark ? "text-[#919191]" : "text-[#111111]"
+                          }`}>
                             {inputValue > 0 ? inputValue.toFixed(2) : "0.00"} USD
                           </div>
                         </div>
                       </div>
                       {idx < config.maxItems - 1 && (
                         <motion.span
-                          className="text-[20px] font-bold"
+                          className={`text-[20px] font-bold ${
+                            isDark ? "text-white" : ""
+                          }`}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           transition={{
@@ -312,10 +334,14 @@ export const BorrowBox = ({
             {/* Total borrowed value */}
             {showTotal && (
               <div className="flex flex-col justify-end items-end gap-[12px]">
-                <div className="text-[14px] font-medium">
+                <div className={`text-[14px] font-medium ${
+                  isDark ? "text-white" : ""
+                }`}>
                   Total Borrowable Amount:
                 </div>
-                <div className="text-[14px] font-medium">
+                <div className={`text-[14px] font-medium ${
+                  isDark ? "text-white" : ""
+                }`}>
                   $
                   {totalBorrowedValue.toLocaleString("en-US", {
                     minimumFractionDigits: 2,
@@ -359,7 +385,9 @@ export const BorrowBox = ({
                   transition={{ duration: 0.3, delay: idx * 0.1 }}
                 >
                   <motion.div
-                    className="p-[16px] bg-[#F7F7F7] border-[1px] border-[#E2E2E2] rounded-[16px] flex justify-between items-center"
+                    className={`p-[16px] border-[1px] rounded-[16px] flex justify-between items-center ${
+                      isDark ? "bg-[#222222] border-[#333333]" : "bg-[#F7F7F7] border-[#E2E2E2]"
+                    }`}
                     whileHover={{ scale: 1.02 }}
                     transition={{ duration: 0.2 }}
                   >
@@ -386,14 +414,18 @@ export const BorrowBox = ({
                           <input
                             id={`borrow-amount-input-${idx}`}
                             onChange={handleInputChange(idx)}
-                            className="w-full text-[20px] focus:border-[0px] focus:outline-none font-medium"
+                            className={`w-full text-[20px] focus:border-[0px] focus:outline-none font-medium placeholder:text-[#C7C7C7] ${
+                              isDark ? "placeholder:text-[#A7A7A7] text-white bg-[#222222]" : "bg-[#F7F7F7]"
+                            }`}
                             type="text"
                             placeholder="0.0"
                             value={inputValues[idx]?.toString() || ""}
                           />
                         </div>
                         <div
-                          className="text-[12px] font-medium text-[#76737B]"
+                          className={`text-[12px] font-medium ${
+                            isDark ? "text-[#919191]" : "text-[#76737B]"
+                          }`}
                           aria-live="polite"
                         >
                           {inputValue > 0 ? inputValue.toFixed(2) : "0.00"} USD
@@ -405,8 +437,18 @@ export const BorrowBox = ({
                         <Dropdown dropdownClassname="text-[14px] gap-[10px] " items={["Amount in %","Amount in $"]}  selectedOption={selectedAmountType} setSelectedOption={setSelectedAmountType} classname="text-[16px] font-medium gap-[8px]" />
                       </div>
                       <div className="px-[10px] flex flex-col justify-end items-end gap-[4px]">
-                        <input type="text" placeholder="0.0" onChange={handlePercentageInputChange(idx)} className="focus:outline-none text-[20px] font-semibold w-full text-right" value={percentageInputValues[idx] || 0} />
-                        <div className="text-[12px] font-medium text-[#76737B]">
+                        <input 
+                          type="text" 
+                          placeholder="0.0" 
+                          onChange={handlePercentageInputChange(idx)} 
+                          className={`focus:outline-none text-[20px] font-semibold w-full text-right placeholder:text-[#C7C7C7] ${
+                            isDark ? "placeholder:text-[#A7A7A7] text-white bg-[#222222]" : "bg-[#F7F7F7]"
+                          }`}
+                          value={percentageInputValues[idx] || 0} 
+                        />
+                        <div className={`text-[12px] font-medium ${
+                          isDark ? "text-[#919191]" : "text-[#76737B]"
+                        }`}>
                           {item
                             ? `1${selectedOption} = $1.00` // 1:1 conversion
                             : "0.00 USD"}
@@ -416,7 +458,9 @@ export const BorrowBox = ({
                   </motion.div>
                   {idx < config.maxItems - 1 && (
                     <motion.div
-                      className="text-[20px] font-bold w-[36px] h-[36px] rounded-[48px] flex items-center justify-center"
+                      className={`text-[20px] font-bold w-[36px] h-[36px] rounded-[48px] flex items-center justify-center ${
+                        isDark ? "text-white" : ""
+                      }`}
                       initial={{ opacity: 0, scale: 0 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ duration: 0.3, delay: (idx + 1) * 0.1 }}
@@ -437,7 +481,9 @@ export const BorrowBox = ({
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4, delay: 0.2 }}
       >
-        <div className="flex gap-[2px] items-center bg-white rounded-[8px] border-[1px] border-[#E2E2E2] p-[2px]">
+        <div className={`flex gap-[2px] items-center rounded-[8px] border-[1px] p-[2px] ${
+          isDark ? "bg-[#111111] border-[#333333]" : "bg-white border-[#E2E2E2]"
+        }`}>
           {/* - Button */}
           <motion.button
             type="button"
@@ -447,7 +493,9 @@ export const BorrowBox = ({
               }
             }}
             disabled={leverage === 1}
-            className="w-[20px] h-[40px] flex items-center justify-center rounded-[6px] text-[16px] font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#F7F7F7] transition-colors"
+            className={`w-[20px] h-[40px] flex items-center justify-center rounded-[6px] text-[16px] font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
+              isDark ? "text-white hover:bg-[#222222]" : "hover:bg-[#F7F7F7]"
+            }`}
             whileHover={{ scale: leverage === 1 ? 1.05 : 1 }}
             whileTap={{ scale: leverage === 1 ? 0.95 : 1 }}
             aria-label="Increase leverage"
@@ -462,7 +510,9 @@ export const BorrowBox = ({
             min={1}
             max={MAX_LEVERAGE}
             onChange={handleLeverageChange}
-            className="w-[40px] h-[40px] focus:outline-none bg-transparent p-[10px] text-[16px] font-medium text-center border-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            className={`w-[40px] h-[40px] focus:outline-none bg-transparent p-[10px] text-[16px] font-medium text-center border-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+              isDark ? "text-white" : ""
+            }`}
           />
           
           {/* + Button */}
@@ -474,7 +524,9 @@ export const BorrowBox = ({
               }
             }}
             disabled={leverage >= MAX_LEVERAGE}
-            className="w-[20px] h-[40px] flex items-center justify-center rounded-[6px] text-[16px] font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#F7F7F7] transition-colors"
+            className={`w-[20px] h-[40px] flex items-center justify-center rounded-[6px] text-[16px] font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
+              isDark ? "text-white hover:bg-[#222222]" : "hover:bg-[#F7F7F7]"
+            }`}
             whileHover={{ scale: leverage >= MAX_LEVERAGE ? 1.05 : 1 }}
             whileTap={{ scale: leverage >= MAX_LEVERAGE ? 0.95 : 1 }}
             aria-label="Decrease leverage"

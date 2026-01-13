@@ -1,4 +1,5 @@
 import { Button } from "../ui/button";
+import { useTheme } from "@/contexts/theme-context";
 
 const rewardsHeading = [
   "Reward Name",
@@ -34,12 +35,20 @@ const rewardsData = [
   }
 ];
 export const RewardsTable = () => {
+  const { isDark } = useTheme();
+  
   return (
     <section 
-      className="w-full h-[330px] rounded-[16px] border-[1px] border-[#E2E2E2] bg-[#F7F7F7] p-[16px] flex flex-col gap-[16px]"
+      className={`w-full h-[330px] rounded-[16px] border-[1px] p-[16px] flex flex-col gap-[16px] ${
+        isDark
+          ? "bg-[#222222] border-[#333333]"
+          : "bg-[#F7F7F7] border-[#E2E2E2]"
+      }`}
       aria-label="Rewards Summary"
     >
-      <h2 className="w-full h-fit text-[14px] font-semibold text-black">
+      <h2 className={`w-full h-fit text-[14px] font-semibold ${
+        isDark ? "text-white" : "text-black"
+      }`}>
         Rewards
       </h2>
       <table className="w-full h-fit flex flex-col gap-[4px]" aria-label="Claimable Rewards">
@@ -48,7 +57,7 @@ export const RewardsTable = () => {
             {rewardsHeading.map((heading) => (
               <th
                 key={heading}
-                className={` w-full h-full p-[8px] flex items-center ${
+                className={`w-full h-full p-[8px] flex items-center ${
                   heading === "Claim all" ? "text-center justify-center" : "text-start justify-start"
                 } text-[10px] font-medium text-[#707070]`}
               >
@@ -61,18 +70,26 @@ export const RewardsTable = () => {
           {rewardsData.map((reward,idx) => (
             <tr
               key={idx}
-              className="cursor-pointer    w-full h-fit flex hover:bg-[#F1EBFD] rounded-[8px]  items-center"
+              className="cursor-pointer w-full h-fit flex hover:bg-[#F1EBFD] rounded-[8px] items-center group"
             >
-              <td className="w-full h-full py-[4px] px-[8px] text-[10px] font-medium text-[#090909] flex items-center">
+              <td className={`w-full h-full py-[4px] px-[8px] text-[10px] font-medium flex items-center ${
+                isDark ? "text-white group-hover:text-[#090909]" : "text-[#090909]"
+              }`}>
                 {reward.name}
               </td>
-              <td className="w-full h-full py-[4px] px-[8px] text-[10px] font-medium text-[#090909] flex items-center">
+              <td className={`w-full h-full py-[4px] px-[8px] text-[10px] font-medium flex items-center ${
+                isDark ? "text-white group-hover:text-[#090909]" : "text-[#090909]"
+              }`}>
                 {reward.points}
               </td>
-              <td className="w-full h-full py-[4px] px-[8px] text-[10px] font-medium text-[#090909] flex items-center">
+              <td className={`w-full h-full py-[4px] px-[8px] text-[10px] font-medium flex items-center ${
+                isDark ? "text-white group-hover:text-[#090909]" : "text-[#090909]"
+              }`}>
                 {reward.rewards}
               </td>
-              <td className="w-full h-full py-[4px] px-[8px] text-[10px] font-medium text-[#090909] flex items-center justify-end">
+              <td className={`w-full h-full py-[4px] px-[8px] text-[10px] font-medium flex items-center justify-end ${
+                isDark ? "text-white group-hover:text-[#090909]" : "text-[#090909]"
+              }`}>
                 <Button text="Claim" size="small" type="solid" disabled={false}  />
               </td>
             </tr>

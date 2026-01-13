@@ -5,6 +5,7 @@ import { InfoCard } from "../margin/info-card";
 import { Button } from "../ui/button";
 import { useUserStore } from "@/store/user";
 import Image from "next/image";
+import { useTheme } from "@/contexts/theme-context";
 
 const infoPropsData = {
   data: {
@@ -77,6 +78,7 @@ const infoPropsData = {
 };
 
 export const WithdrawLiquidity = () => {
+  const { isDark } = useTheme();
   const [selectedOption, setSelectedOption] = useState<string>("USDT");
   const [valueInUSD, setValueInUSD] = useState<number>(0);
   const [value, setValue] = useState<number>(0);
@@ -84,13 +86,17 @@ export const WithdrawLiquidity = () => {
 
   return (
     <>
-      <form className="flex gap-[16px] items-start w-full h-fit border-[1px] border-[#E2E2E2] rounded-[16px] bg-[#FFFFFF] p-[16px]">
+      <form className={`flex gap-[16px] items-start w-full h-fit border-[1px] rounded-[16px] p-[16px] ${
+        isDark ? "bg-[#111111] border-[#333333]" : "bg-[#FFFFFF] border-[#E2E2E2]"
+      }`}>
         <div className="w-full h-full flex flex-col gap-[44px] justify-between">
           <div className="w-fit h-fit flex items-center gap-[4px]">
             <span className="w-[20px] h-[20px]">
               <Image src={"/icons/eth-icon.png"} alt="vETH token icon" width={20} height={20} />
             </span>
-            <h3 className="text-[14px] font-semibold text-[#111111]">
+            <h3 className={`text-[14px] font-semibold ${
+              isDark ? "text-white" : "text-[#111111]"
+            }`}>
               vETH
             </h3>
           </div>
@@ -105,18 +111,24 @@ export const WithdrawLiquidity = () => {
                 value={value}
                 type="number"
                 placeholder="Enter amount"
-                className="w-full h-fit placeholder:text-[#CCCCCC] text-[16px] font-medium outline-none"
+                className={`w-fit h-fit placeholder:text-[#C7C7C7] text-[16px] font-medium outline-none ${
+                  isDark ? "text-white bg-[#111111]" : "bg-white"
+                }`}
                 aria-describedby="withdraw-usd-value"
               />
             </div>
-            <output id="withdraw-usd-value" className="w-full h-fit text-[10px] font-medium text-[#76737B]">
+            <output id="withdraw-usd-value" className={`w-full h-fit text-[10px] font-medium ${
+              isDark ? "text-[#919191]" : "text-[#76737B]"
+            }`}>
               {valueInUSD.toFixed(2)}
             </output>
           </div>
         </div>
         <div className="w-fit h-fit flex flex-col items-end self-end">
           <fieldset className="w-fit h-fit flex flex-col items-end gap-[4px]">
-            <legend className="text-[10px] font-semibold text-[#363636]">
+            <legend className={`text-[10px] font-semibold ${
+              isDark ? "text-[#919191]" : "text-[#363636]"
+            }`}>
               Transfer to:
             </legend>
 
@@ -127,9 +139,13 @@ export const WithdrawLiquidity = () => {
             >
               PB
             </span>
-            <output className="w-fit h-fit text-[10px] flex gap-[4px] font-semibold">
+            <output className={`w-fit h-fit text-[10px] flex gap-[4px] font-semibold ${
+              isDark ? "text-white" : ""
+            }`}>
               Balance:{" "}
-              <span className="text-[#363636] font-semibold text-[10px]">
+              <span className={`font-semibold text-[10px] ${
+                isDark ? "text-white" : "text-[#363636]"
+              }`}>
                 {value.toFixed(2)}
               </span>
             </output>

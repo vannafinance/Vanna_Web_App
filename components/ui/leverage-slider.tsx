@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useTheme } from "@/contexts/theme-context";
 
 interface LeverageSliderProps {
   min?: number;
@@ -20,6 +21,7 @@ export const LeverageSlider = ({
   onChange,
   markers = [0,  2, 4, 6, 8, 10],
 }: LeverageSliderProps) => {
+  const { isDark } = useTheme();
   const [isDragging, setIsDragging] = useState(false);
   const sliderRef = useRef<HTMLDivElement>(null);
 
@@ -83,7 +85,9 @@ export const LeverageSlider = ({
 
         {/* Track Background */}
         <motion.div
-          className="relative h-1 bg-[#F4F4F4] rounded-full cursor-pointer overflow-visible"
+          className={`relative h-1 rounded-full cursor-pointer overflow-visible ${
+            isDark ? "bg-[#333333]" : "bg-[#F4F4F4]"
+          }`}
           onMouseDown={handleMouseDown}
         >
           {/* Progress Fill */}
@@ -113,10 +117,10 @@ export const LeverageSlider = ({
                   height: isPassed ? "12px" : "8px",
                   backgroundColor: isPassed
                     ? "rgba(255, 255, 255, 0.95)"
-                    : "rgba(196, 181, 253, 0.4)",
+                    : isDark ? "#333333" : "rgba(196, 181, 253, 0.4)",
                   border: isPassed
                     ? "none"
-                    : "1px solid rgba(196, 181, 253, 0.6)",
+                    : isDark ? "none" : "1px solid rgba(196, 181, 253, 0.6)",
                   boxShadow: isPassed
                     ? "0 0 4px rgba(255, 255, 255, 0.5)"
                     : "0 1px 2px rgba(0, 0, 0, 0.1)",
@@ -205,7 +209,7 @@ export const LeverageSlider = ({
                   opacity: 1,
                   y: 0,
                   scale: isActive ? 1.2 : 1,
-                  color: isActive ? "#703AE6" : "#6B7280",
+                  color: isActive ? "#703AE6" : isDark ? "#FFFFFF" : "#6B7280",
                   fontWeight: isActive ? 600 : 500,
                 }}
                 transition={{ delay: 0.3 + index * 0.05, duration: 0.3 }}

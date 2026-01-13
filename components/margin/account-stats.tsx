@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
+import { useTheme } from "@/contexts/theme-context";
 
 export interface AccountStatItem {
   id: string;
@@ -18,11 +19,16 @@ export const AccountStats = ({
   items,
   values,
 }: AccountStatsProps) => {
+  const { isDark } = useTheme();
   // Use grid-rows-1 if 3 or fewer items, otherwise grid-rows-2
   const gridRows = items.length <= 3 ? "grid-rows-1" : "grid-rows-2";
   
   return (
-    <div className={`border-[1px] border-[#E2E2E2] bg-[#F7F7F7] rounded-[24px] w-full h-full grid grid-cols-3 ${gridRows} gap-x-[20px] gap-y-[0] place-items-center`}>
+    <div className={`border-[1px] rounded-[24px] w-full h-full grid grid-cols-3 ${gridRows} gap-x-[20px] gap-y-[0] place-items-center ${
+      isDark
+        ? "bg-[#222222] border-[#333333]"
+        : "bg-[#F7F7F7] border-[#E2E2E2]"
+    }`}>
       {/* Map through account stats items */}
       {items.map((item, idx) => {
         const displayValue = values[item.id] ?? "-";
@@ -42,7 +48,9 @@ export const AccountStats = ({
           >
             <div className="w-full h-fit flex items-start gap-[16px] ">
               <motion.div
-                className=" w-[52px] h-[52px] flex flex-col justify-center items-center p-[2.89px] bg-white rounded-[69.33px] flex-shrink-0"
+                className={`w-[52px] h-[52px] flex flex-col justify-center items-center p-[2.89px] rounded-[69.33px] flex-shrink-0 ${
+                  isDark ? "bg-black" : "bg-white"
+                }`}
                 initial={{ scale: 0 }}
                 whileInView={{ scale: 1 }}
                 viewport={{ once: true }}
@@ -61,11 +69,15 @@ export const AccountStats = ({
                 />
               </motion.div>
               <div className=" flex flex-col gap-[32px] w-full ">
-                <div className="w-[289.33px] text-[20px] font-semibold">
+                <div className={`w-[289.33px] text-[20px] font-medium ${
+                  isDark ? "text-white" : ""
+                }`}>
                   {item.name}
                 </div>
                 <motion.div
-                  className="text-[32px] font-bold text-neutral-600"
+                  className={`text-[32px] font-bold ${
+                    isDark ? "text-white" : "text-neutral-600"
+                  }`}
                   initial={{ opacity: 0 }}
                   whileInView={{ opacity: 1 }}
                   viewport={{ once: true }}

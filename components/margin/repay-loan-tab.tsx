@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
 import { DEPOSIT_PERCENTAGES, PERCENTAGE_COLORS } from "@/lib/constants/margin";
 import { Dropdown } from "../ui/dropdown";
 import { Popup } from "@/components/ui/popup";
+import { useTheme } from "@/contexts/theme-context";
 
 export const RepayLoanTab = () => {
+  const { isDark } = useTheme();
   // Repay form state
   // Repay loan statistics
   const [repayStats, setRepayStats] = useState({
@@ -86,13 +88,17 @@ export const RepayLoanTab = () => {
             return (
               <motion.article
                 key={key}
-                className="w-full flex flex-col justify-between h-[120px] rounded-[8px] border-[1px] border-[#E2E2E2] p-[16px] bg-white"
+                className={`w-full flex flex-col justify-between h-[120px] rounded-[8px] border-[1px] p-[16px] ${
+                  isDark ? "bg-[#111111] border-[#333333]" : "bg-white border-[#E2E2E2]"
+                }`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.1 + index * 0.1 }}
               >
                 <motion.div
-                  className="text-[14px] font-medium text-[#9F9F9F] max-w-[158.33px] "
+                  className={`text-[14px] font-medium max-w-[158.33px] ${
+                    isDark ? "text-[#919191]" : "text-[#9F9F9F]"
+                  }`}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{
@@ -108,7 +114,9 @@ export const RepayLoanTab = () => {
                     : "Frozen Balance"}
                 </motion.div>
                 <motion.div
-                  className="text-[24px] font-bold text-[#181822]"
+                  className={`text-[24px] font-bold ${
+                    isDark ? "text-white" : "text-[#181822]"
+                  }`}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{
@@ -126,7 +134,9 @@ export const RepayLoanTab = () => {
 
         {/* Repay form */}
         <motion.article
-          className="bg-white w-full border-[1px] border-[#E2E2E2] rounded-[16px] p-[20px]"
+          className={`w-full border-[1px] rounded-[16px] p-[20px] ${
+            isDark ? "bg-[#111111] border-[#333333]" : "bg-white border-[#E2E2E2]"
+          }`}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.3 }}
@@ -172,6 +182,8 @@ export const RepayLoanTab = () => {
                     className={`h-[44px] w-[95px] text-center text-[14px] text-medium cursor-pointer ${
                       selectedRepayPercentage === item
                         ? `${PERCENTAGE_COLORS[item]} text-white`
+                        : isDark
+                        ? "bg-[#222222] text-white"
                         : "bg-[#F4F4F4]"
                     } p-[10px] rounded-[12px]`}
                     whileHover={{ scale: 1.05 }}
@@ -206,7 +218,9 @@ export const RepayLoanTab = () => {
               <input
                 id="repay-amount-input"
                 onChange={handleInputChange}
-                className="w-full text-[20px] focus:border-[0px] focus:outline-none font-medium transition-transform duration-200 focus:scale-[1.01]"
+                className={`w-fit text-[20px] focus:border-[0px] focus:outline-none font-medium transition-transform duration-200 focus:scale-[1.01] placeholder:text-[#C7C7C7] ${
+                  isDark ? "placeholder:text-[#A7A7A7]  text-white bg-[#111111]" : "bg-white"
+                }`}
                 type="text"
                 placeholder="0.0"
                 value={repayAmount}
@@ -215,7 +229,9 @@ export const RepayLoanTab = () => {
 
             {/* USD value display */}
             <motion.p
-              className="text-[12px] font-medium text-[#76737B]"
+              className={`text-[12px] font-medium ${
+                isDark ? "text-[#919191]" : "text-[#76737B]"
+              }`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.3, delay: 0.65, ease: "easeOut" }}

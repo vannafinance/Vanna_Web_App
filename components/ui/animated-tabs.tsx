@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { useTheme } from "@/contexts/theme-context";
 
 export interface TabItem {
   id: string;
@@ -38,6 +39,7 @@ export const AnimatedTabs = ({
   indicatorClassName = "",
 }: AnimatedTabsProps) => {
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
+  const { isDark } = useTheme();
   const currentIndex = tabs.findIndex((tab) => tab.id === activeTab);
   const indicatorWidth = `calc((100% - 12px) / ${tabs.length})`;
 
@@ -47,8 +49,17 @@ export const AnimatedTabs = ({
     if (type === "ghost" && isActive) return "#703AE6";
     if (type === "underline") {
       if (isActive) return "#703AE6";
+      if (isDark) {
+        if (isHovered && !isActive) return "#C7C7C7";
+        return "#FFFFFF";
+      }
       if (isHovered) return "#000000";
       return "#A7A7A7";
+    }
+    if (type === "gradient" || type === "solid") {
+      if (isDark) return "#FFFFFF";
+      if (isActive || isHovered) return "#000000";
+      return "#64748b";
     }
     if (isActive || isHovered) return "#000000";
     return "#64748b";
@@ -109,7 +120,9 @@ export const AnimatedTabs = ({
   return (
     <div className={containerClassName}>
       <div
-        className={`border-[1px] border-[#E2E2E2] ${containerWidth} bg-white flex gap-[16px] ${containerPadding} rounded-[12px] h-fit relative overflow-hidden`}
+        className={`border-[1px] ${containerWidth} flex gap-[16px] ${containerPadding} rounded-[12px] h-fit relative overflow-hidden ${
+          isDark ? "border-[#333333] bg-[#111111]" : "border-[#E2E2E2] bg-white"
+        }`}
         onMouseLeave={() => setHoveredTab(null)}
       >
         {/* Gradient indicator */}
@@ -120,7 +133,7 @@ export const AnimatedTabs = ({
             animate={{ x: `${currentIndex * 100}%` }}
             transition={SPRING_CONFIG}
           >
-            <div className="bg-white rounded-[12px] h-full w-full" />
+            <div className={`rounded-[12px] h-full w-full ${isDark ? "bg-[#111111]" : "bg-white"}`} />
           </motion.div>
         )}
 

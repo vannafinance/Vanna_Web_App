@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { AnimatedTabs } from "../ui/animated-tabs";
+import { useTheme } from "@/contexts/theme-context";
 
 interface SupplyApyProps {
   supplyApy: {
@@ -15,6 +16,7 @@ interface SupplyApyProps {
 }
 
 export const SupplyApy = (props: SupplyApyProps) => {
+  const { isDark } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("less-than");
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -44,11 +46,17 @@ export const SupplyApy = (props: SupplyApyProps) => {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="cursor-pointer bg-white w-fit h-[48px] flex rounded-[8px] border-[1px] border-[#E2E2E2] py-[8px] px-[12px] items-center gap-[8px]"
+        className={`cursor-pointer w-fit h-[48px] flex rounded-[8px] border-[1px] py-[8px] px-[12px] items-center gap-[8px] ${
+          isDark
+            ? "bg-transparent border-[#333333]"
+            : "bg-white border-[#E2E2E2]"
+        }`}
         aria-expanded={isOpen}
         aria-haspopup="true"
       >
-        <span className="text-[14px] font-semibold text-[#111111]">
+        <span className={`text-[14px] font-semibold ${
+          isDark ? "text-white" : "text-[#111111]"
+        }`}>
           Supply APY is
         </span>
         <span className="w-fit h-fit rounded-[4px] p-[8px] bg-[#F1EBFD]">
@@ -67,7 +75,11 @@ export const SupplyApy = (props: SupplyApyProps) => {
       </button>
       {isOpen && (
         <section 
-          className="shadow-md w-[370px] h-fit top-14 right-0 absolute rounded-[16px] p-[16px] flex flex-col gap-[15px] bg-[#F4F4F4] z-50"
+          className={`shadow-md w-[370px] h-fit top-14 right-0 absolute rounded-[16px] p-[16px] flex flex-col gap-[15px] z-50 border-[1px] ${
+            isDark
+              ? "bg-[#222222] border-[#333333]"
+              : "bg-[#F4F4F4] border-[#E2E2E2]"
+          }`}
           aria-label="Supply APY Filter"
         >
           <button
@@ -78,7 +90,9 @@ export const SupplyApy = (props: SupplyApyProps) => {
                 percentage: 0,
               }))
             }
-            className="text-end w-full text-[14px] font-semibold underline cursor-pointer hover:text-[#703AE6] transition-colors"
+            className={`text-end w-full text-[14px] font-semibold underline cursor-pointer hover:text-[#703AE6] transition-colors ${
+              isDark ? "text-white" : ""
+            }`}
           >
             Reset
           </button>
@@ -107,7 +121,11 @@ export const SupplyApy = (props: SupplyApyProps) => {
               }}
             />
           </nav>
-          <div className="bg-white flex justify-between items-center w-full h-[36px] rounded-[8px] border-[1px] border-[#E2E2E2] p-[8px]">
+          <div className={`flex justify-between items-center w-full h-[36px] rounded-[8px] border-[1px] p-[8px] ${
+            isDark
+              ? "bg-[#111111] border-[#333333]"
+              : "bg-white border-[#E2E2E2]"
+          }`}>
             <label htmlFor="apy-percentage" className="sr-only">
               APY Percentage
             </label>
@@ -122,10 +140,16 @@ export const SupplyApy = (props: SupplyApyProps) => {
                   percentage: Number(e.target.value),
                 }));
               }}
-              className="bg-white outline-none placeholder:text-[#C6C6C6] p-[4px] rounded-[6px] w-full h-fit text-[12px] font-medium"
+              className={`outline-none placeholder:text-[#C6C6C6] p-[4px] rounded-[6px] w-full h-fit text-[12px] font-medium ${
+                isDark
+                  ? "bg-[#111111] text-white"
+                  : "bg-white"
+              }`}
               aria-label="APY Percentage Value"
             />
-            <span className="text-[12px] font-medium" aria-hidden="true">%</span>
+            <span className={`text-[12px] font-medium ${
+              isDark ? "text-white" : ""
+            }`} aria-hidden="true">%</span>
           </div>
         </section>
       )}

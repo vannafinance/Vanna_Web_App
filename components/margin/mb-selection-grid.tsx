@@ -6,6 +6,7 @@ import { Checkbox } from "../ui/checkbox";
 import { Radio } from "../ui/radio-button";
 import { iconPaths } from "@/lib/constants";
 import { Collaterals } from "@/lib/types";
+import { useTheme } from "@/contexts/theme-context";
 
 type Mode = "Deposit" | "Borrow";
 
@@ -24,8 +25,12 @@ const MBSelectionGridComponent = ({
   onToggle,
   onRadioSelect,
 }: MBSelectionGridProps) => {
+  const { isDark } = useTheme();
+  
   return (
-    <section className="p-[10px] rounded-[12px] bg-[#F4F4F4] grid grid-cols-2 gap-[15px]">
+    <section className={`p-[10px] rounded-[12px] grid grid-cols-2 gap-[15px] ${
+      isDark ? "bg-[#222222]" : "bg-[#F4F4F4]"
+    }`}>
       {items.map((item, index) => {
         const itemId = `${item.asset}-${item.amount}`;
         const isSelected = selectedIds.has(itemId);
@@ -51,10 +56,14 @@ const MBSelectionGridComponent = ({
               width={20}
               height={20}
             />
-            <div className="text-[16px] font-semibold">
+            <div className={`text-[16px] font-semibold ${
+              isDark ? "text-white" : ""
+            }`}>
               {item.amount} {item.asset}
             </div>
-            <div className="rounded-[4px] py-[2px] px-[4px] bg-[#FFFFFF] text-[10px] font-medium">
+            <div className={`rounded-[4px] py-[2px] px-[4px] text-[10px] font-medium ${
+              isDark ? "bg-[#111111] text-white" : "bg-[#FFFFFF]"
+            }`}>
               {item.amountInUsd} USD
             </div>
           </article>

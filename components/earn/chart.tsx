@@ -4,6 +4,7 @@ import { ReusableChart } from "../ui/reusable-chart";
 import { depositData, netApyData } from "@/lib/constants/earn";
 import { AnimatedTabs } from "../ui/animated-tabs";
 import { ExpandableModal } from "../ui/expandable-modal";
+import { useTheme } from "@/contexts/theme-context";
 
 interface ChartProps {
   type: "overall-deposit" | "net-apy" | "my-supply" | "deposit-apy";
@@ -87,6 +88,7 @@ const filterDataByDays = (
 };
 
 export const Chart = ({ type, currencyTab, height, containerWidth, containerHeight }: ChartProps) => {
+  const { isDark } = useTheme();
   const [selectedFilter, setSelectedFilter] = useState(filterOptions[0]);
   const [selectedCurrency, setSelectedCurrency] = useState<string>("usd");
   const [selectedDays, setSelectedDays] = useState<string>(dayOptions[3]);
@@ -180,15 +182,24 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
     return `${value.toFixed(0)}`;
   };
 
+  // Chart colors based on theme
+  const chartGradientColors: [string, string] = isDark
+    ? ["rgba(235, 252, 253, 0.3)", "rgba(235, 252, 253, 0.05)"]
+    : ["rgba(124, 53, 248, 0.3)", "rgba(124, 53, 248, 0.05)"];
+  const chartLineColor = isDark ? "#EBFCFD" : "#7C35F8";
+  const chartTextColor = isDark ? "#FFFFFF" : "#181822";
+
   return (
-    <article className={`flex flex-col gap-[24px] rounded-[16px] p-[16px] border-[1px] border-[#E2E2E2] bg-[#FFFFFF] ${containerWidth} ${containerHeight}`}>
+    <article className={`flex flex-col gap-[24px] rounded-[16px] p-[16px] border-[1px] ${
+      isDark ? "border-[#333333] bg-transparent" : "border-[#E2E2E2] bg-[#FFFFFF]"
+    } ${containerWidth} ${containerHeight}`}>
       <header className="w-full h-fit flex justify-between flex-shrink-0">
         <div
           className={`w-full h-fit flex flex-col ${
             type === "deposit-apy" ? "gap-[16px]" : ""
           }`}
         >
-          <h2 className="text-[12px] font-semibold">
+          <h2 className={`text-[12px] font-semibold ${isDark ? "text-white" : ""}`}>
             {type === "overall-deposit" ? (
               "Overall Deposit"
             ) : type === "net-apy" ? (
@@ -206,7 +217,7 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
             )}
           </h2>
           {type !== "deposit-apy" && (
-            <p className="w-full text-[20px] font-semibold">
+            <p className={`w-full text-[20px] font-semibold ${isDark ? "text-white" : ""}`}>
               $
               {totalValue.toLocaleString(undefined, {
                 minimumFractionDigits: 2,
@@ -216,8 +227,8 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
           )}
           {type === "deposit-apy" && (
             <div className="w-full h-fit flex flex-col gap-[4px]">
-              <p className="text-[16px] font-semibold">0%</p>
-              <time className="text-[12px] font-medium text-[#5C5B5B]" dateTime="2025-03-11T15:14:00">
+              <p className={`text-[16px] font-semibold ${isDark ? "text-white" : ""}`}>0%</p>
+              <time className={`text-[12px] font-medium ${isDark ? "text-gray-400" : "text-[#5C5B5B]"}`} dateTime="2025-03-11T15:14:00">
                 03/11/2025 15:14
               </time>
             </div>
@@ -240,7 +251,9 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
                 </div>
                 
               )}
-              <div className="p-[10px] h-fit rounded-[6px] border-[1px] border-[#E2E2E2]">
+              <div className={`p-[10px] h-fit rounded-[6px] border-[1px] ${
+                isDark ? "border-[#333333]" : "border-[#E2E2E2]"
+              }`}>
                 <Dropdown
                   dropdownClassname="text-[12px] font-semibold w-full"
                   classname="text-[12px] font-semibold gap-[4px]"
@@ -262,6 +275,8 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
                     className={`cursor-pointer flex flex-col items-center justify-center font-semibold text-[14px] w-[56px] py-[10px] px-[20px] rounded-[8px] ${
                       selectedDays === item
                         ? "text-white bg-[#703AE6]"
+                        : isDark
+                        ? "text-white bg-[#1A1A1A] border-[1px] border-[#333333]"
                         : "text-black bg-white border-[1px] border-[#E2E2E2]"
                     }`}
                     aria-pressed={selectedDays === item}
@@ -275,6 +290,11 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
           <ExpandableModal
             scrollable={true}
             contentPosition="bottom"
+            buttonClassName={`mt-[6px] cursor-pointer flex items-center justify-center w-[32px] h-[32px] rounded-[8px] border-[1px] ${
+              isDark
+                ? "bg-transparent border-[#333333] [&>img]:brightness-0 [&>img]:invert"
+                : "bg-white border-[#E2E2E2]"
+            }`}
             modalHeader={
               <header className="w-full h-fit flex justify-between">
                 <div
@@ -282,7 +302,7 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
                     type === "deposit-apy" ? "gap-[16px]" : ""
                   }`}
                 >
-                  <h2 className="text-[12px] font-semibold">
+                  <h2 className={`text-[12px] font-semibold ${isDark ? "text-white" : ""}`}>
                     {type === "overall-deposit" ? (
                       "Overall Deposit"
                     ) : type === "net-apy" ? (
@@ -302,7 +322,7 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
                     )}
                   </h2>
                   {type !== "deposit-apy" && (
-                    <p className="w-full text-[20px] font-semibold">
+                    <p className={`w-full text-[20px] font-semibold ${isDark ? "text-white" : ""}`}>
                       $
                       {totalValue.toLocaleString(undefined, {
                         minimumFractionDigits: 2,
@@ -312,8 +332,8 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
                   )}
                   {type === "deposit-apy" && (
                     <div className="w-full h-fit flex flex-col gap-[4px]">
-                      <p className="text-[16px] font-semibold">0%</p>
-                      <time className="text-[12px] font-medium text-[#5C5B5B]" dateTime="2025-03-11T15:14:00">
+                      <p className={`text-[16px] font-semibold ${isDark ? "text-white" : ""}`}>0%</p>
+                      <time className={`text-[12px] font-medium ${isDark ? "text-gray-400" : "text-[#5C5B5B]"}`} dateTime="2025-03-11T15:14:00">
                         03/11/2025 15:14
                       </time>
                     </div>
@@ -335,7 +355,9 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
                           }
                         />
                       )}
-                      <div className="p-[10px] h-fit rounded-[6px] border-[1px] border-[#E2E2E2]">
+                      <div className={`p-[10px] h-fit rounded-[6px] border-[1px] ${
+                        isDark ? "border-[#333333]" : "border-[#E2E2E2]"
+                      }`}>
                         <Dropdown
                           dropdownClassname="text-[12px] font-semibold w-full"
                           classname="text-[12px] font-semibold gap-[4px]"
@@ -357,6 +379,8 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
                             className={`cursor-pointer flex flex-col items-center justify-center font-semibold text-[14px] w-[56px] py-[10px] px-[20px] rounded-[8px] ${
                               selectedDays === item
                                 ? "text-white bg-[#703AE6]"
+                                : isDark
+                                ? "text-white bg-[#1A1A1A] border-[1px] border-[#333333]"
                                 : "text-black bg-white border-[1px] border-[#E2E2E2]"
                             }`}
                             aria-pressed={selectedDays === item}
@@ -375,17 +399,17 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
               {Object.keys(chartData).length > 0 ? (
                 <ReusableChart
                   data={chartData}
-                  gradientColors={[
-                    "rgba(124, 53, 248, 0.3)",
-                    "rgba(124, 53, 248, 0.05)",
-                  ]}
-                  lineColor="#7C35F8"
+                  gradientColors={chartGradientColors}
+                  lineColor={chartLineColor}
                   height={450}
                   showGrid={true}
                   formatYAxisLabel={formatYAxisLabel}
+                  textColor={chartTextColor}
                 />
               ) : (
-                <p className="w-full h-[450px] flex items-center justify-center text-gray-400 text-sm">
+                <p className={`w-full h-[450px] flex items-center justify-center text-sm ${
+                  isDark ? "text-gray-500" : "text-gray-400"
+                }`}>
                   No data available
                 </p>
               )}
@@ -401,17 +425,17 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
         {Object.keys(chartData).length > 0 ? (
           <ReusableChart
             data={chartData}
-            gradientColors={[
-              "rgba(124, 53, 248, 0.3)",
-              "rgba(124, 53, 248, 0.05)",
-            ]}
-            lineColor="#7C35F8"
+            gradientColors={chartGradientColors}
+            lineColor={chartLineColor}
             height={dynamicHeight}
             showGrid={true}
             formatYAxisLabel={formatYAxisLabel}
+            textColor={chartTextColor}
           />
         ) : (
-          <p className={`w-full ${dynamicHeight?`h-[${dynamicHeight}px]` : "h-[393px]"} flex items-center justify-center text-gray-400 text-sm`}>
+          <p className={`w-full ${dynamicHeight?`h-[${dynamicHeight}px]` : "h-[393px]"} flex items-center justify-center text-sm ${
+            isDark ? "text-gray-500" : "text-gray-400"
+          }`}>
             No data available
           </p>
         )}

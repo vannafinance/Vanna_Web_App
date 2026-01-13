@@ -1,3 +1,5 @@
+import { useTheme } from "@/contexts/theme-context";
+
 interface AccountStatsItem {
   id: string;
   name: string;
@@ -10,6 +12,7 @@ interface AccountStatsGhostProps {
 }
 
 export const AccountStatsGhost = ({ items }: AccountStatsGhostProps) => {
+  const { isDark } = useTheme();
   return (
     <section className="w-full h-full flex justify-between" aria-label="Statistics Overview">
       {items.map((items) => {
@@ -18,15 +21,21 @@ export const AccountStatsGhost = ({ items }: AccountStatsGhostProps) => {
             key={items.id}
             className="w-[240px] h-fit flex flex-col gap-[12px]"
           >
-            <h3 className="text-[12px] font-medium text-[#5C5B5B]">
+            <h3 className={`text-[12px] font-medium ${
+              isDark ? "text-[#919191]" : "text-[#5C5B5B]"
+            }`}>
               {items.name}
             </h3>
             <div className="w-full h-fit flex flex-col gap-[4px]">
-              <p className="text-[28px] font-bold">
+              <p className={`text-[28px] font-bold ${
+                isDark ? "text-white" : ""
+              }`}>
                 {items.amount}
               </p>
               {items.amountInToken && (
-                <p className="text-[12px] font-medium">
+                <p className={`text-[12px] font-medium ${
+                  isDark ? "text-white" : ""
+                }`}>
                   {items.amountInToken}
                 </p>
               )}
