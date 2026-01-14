@@ -94,7 +94,7 @@ export const Details = () => {
 
   return (
     <section className={`w-full h-fit flex flex-col gap-[16px] rounded-[20px] border-[1px] ${
-      isDark ? "bg-[#111111] border-[#333333]" : "bg-[#F4F4F4] border-[#E2E2E2]"
+      isDark ? "bg-[#111111]" : "bg-[#F4F4F4]"
     }`} aria-label="Vault Details">
       <div className="w-full h-fit rounded-[20px] pt-[24px] px-[24px] flex flex-col gap-[16px]">
         <h2 className={`w-full h-fit text-[20px] font-semibold ${

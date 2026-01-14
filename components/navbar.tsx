@@ -187,9 +187,7 @@ export const Navbar = (props: Navbar) => {
               </motion.div>
             );
           })}
-          <div className={`rounded-[8px] border-[1px] p-[8px] flex gap-[8px] ${
-            isDark ? "border-[#333333]" : "border-[#E2E2E2]"
-          }`}>
+          <div className="rounded-[8px] border-[1px] p-[8px] flex gap-[8px]">
             {groupedItems.bordered.map((item, idx) => {
               // For Trade button, check if current path matches Trade link or any trade dropdown item
               const isActive =
@@ -377,9 +375,7 @@ export const Navbar = (props: Navbar) => {
           {/* Theme toggle button */}
           <button
             type="button"
-            className={`flex flex-col justify-center items-center rounded-[8px] py-[12px] px-[10px] h-[44px] border-[1px] cursor-pointer ${
-              isDark ? "border-[#333333]" : "border-[#E2E2E2]"
-            }`}
+            className="flex flex-col justify-center items-center rounded-[8px] py-[12px] px-[10px] h-[44px] border-[1px] cursor-pointer"
             onClick={toggleTheme}
             aria-label={
               isDark ? "Switch to light theme" : "Switch to dark theme"
@@ -477,7 +473,7 @@ export const Navbar = (props: Navbar) => {
             onMouseLeave={handleDropdownMouseLeave}
             className={`w-full absolute py-[8px] flex justify-center gap-[4px] ${
               isDark 
-                ? "bg-[#111111] border-t-[1px] border-[#333333] border-b-[1px] border-[#333333]" 
+                ? "bg-[#111111] border-t-[1px] border-b-[1px]" 
                 : "border-t-[1px] border-[#F4F4F4] border-b-[1px] border-[#F4F4F4]"
             }`}
           >

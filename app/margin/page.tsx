@@ -212,7 +212,7 @@ const Margin = () => {
               {/* Vanna logo icon */}
               <motion.div
                 className={`border-[1px] flex flex-col justify-center items-center p-2 rounded-[11px] w-[62px] h-[62px] ${
-                  isDark ? "border-[#333333]" : "border-[#E2E2E2]"
+                  ""
                 }`}
                 initial={{ scale: 0, rotate: -180 }}
                 whileInView={{ scale: 1, rotate: 0 }}

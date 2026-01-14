@@ -16,7 +16,7 @@ export const YourPositions = () => {
   return (
     <section 
       className={`w-full h-full flex flex-col gap-[24px] rounded-[20px] border-[1px] p-[24px] ${
-        isDark ? "bg-[#111111] border-[#333333]" : "bg-[#F7F7F7] border-[#E2E2E2]"
+        isDark ? "bg-[#111111]" : "bg-[#F7F7F7]"
       }`}
       aria-label="Your Positions Overview"
     >

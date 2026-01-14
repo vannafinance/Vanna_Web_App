@@ -363,7 +363,7 @@ const TableRow = memo(
           isDark
             ? tableBodyBackground || "bg-[#222222]"
             : tableBodyBackground || "bg-[#F7F7F7]"
-        } border-[1px] ${isDark ? "border-[#333333]" : "border-[#E2E2E2]"}`}
+        } border-[1px]`}
       >
         {visibleCells.map((cell: any, idx: number) => (
           <td
@@ -772,7 +772,7 @@ export const Table = memo((props: TableProps) => {
         </table>
       ) : (
         <section className={`w-full h-[402px] border-[1px] rounded-[8px] flex flex-col items-center justify-center ${
-          isDark ? "bg-[#222222] border-[#333333]" : "bg-[#F7F7F7] border-[#E2E2E2]"
+          isDark ? "bg-[#222222]" : "bg-[#F7F7F7]"
         }`}>
           <p className={`text-[14px] font-medium ${
             isDark ? "text-[#919191]" : "text-[#76737B]"

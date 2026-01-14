@@ -141,7 +141,7 @@ export const BorrowBox = ({
   return (
     <motion.section
       className={`flex flex-col gap-[20px] rounded-[16px] py-[24px] px-[16px] border-[1px] ${
-        isDark ? "bg-[#111111] border-[#333333]" : "bg-white border-[#E2E2E2]"
+        isDark ? "bg-[#111111]" : "bg-white"
       }`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -386,7 +386,7 @@ export const BorrowBox = ({
                 >
                   <motion.div
                     className={`p-[16px] border-[1px] rounded-[16px] flex justify-between items-center ${
-                      isDark ? "bg-[#222222] border-[#333333]" : "bg-[#F7F7F7] border-[#E2E2E2]"
+                      isDark ? "bg-[#222222]" : "bg-[#F7F7F7]"
                     }`}
                     whileHover={{ scale: 1.02 }}
                     transition={{ duration: 0.2 }}
@@ -482,7 +482,7 @@ export const BorrowBox = ({
         transition={{ duration: 0.4, delay: 0.2 }}
       >
         <div className={`flex gap-[2px] items-center rounded-[8px] border-[1px] p-[2px] ${
-          isDark ? "bg-[#111111] border-[#333333]" : "bg-white border-[#E2E2E2]"
+          isDark ? "bg-[#111111]" : "bg-white"
         }`}>
           {/* - Button */}
           <motion.button

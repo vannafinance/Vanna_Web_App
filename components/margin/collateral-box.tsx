@@ -142,7 +142,7 @@ const CollateralComponent = (props: Collateral) => {
   return (
     <motion.article
       className={`relative flex justify-between gap-[20px] w-full p-[20px] rounded-[16px] border-[1px] ${
-        isDark ? "bg-[#111111] border-[#333333]" : "bg-white border-[#E2E2E2]"
+        isDark ? "bg-[#111111]" : "bg-white"
       }`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}

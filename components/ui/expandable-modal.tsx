@@ -43,7 +43,7 @@ interface ExpandableModalProps {
 
 export const ExpandableModal = ({
   children,
-  buttonClassName = "mt-[6px] cursor-pointer flex items-center justify-center w-[32px] h-[32px] rounded-[8px] text-black bg-white border-[1px] border-[#E2E2E2]",
+  buttonClassName = "mt-[6px] cursor-pointer flex items-center justify-center w-[32px] h-[32px] rounded-[8px] text-black bg-white border-[1px]",
   modalClassName = "",
   expandIcon = "/icons/expand-icon.png",
   showButton = true,
@@ -114,8 +114,8 @@ export const ExpandableModal = ({
                 onClick={() => setIsModalOpen(false)}
                 className={`absolute mt-[6px] top-[24px] right-[24px] z-[100] w-[32px] h-[32px] flex items-center justify-center rounded-[8px] border-[1px] transition-colors ${
                   isDark
-                    ? "bg-[#222222] border-[#333333] hover:bg-[#333333]"
-                    : "bg-white border-[#E2E2E2] hover:bg-gray-50"
+                    ? "bg-[#222222] hover:bg-[#333333]"
+                    : "bg-white hover:bg-gray-50"
                 }`}
               >
                 <svg

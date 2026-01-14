@@ -100,7 +100,7 @@
   --spacing-14: 120px;
 }
 
-/* Global page background for dark theme */
+/* Global page background and border colors */
 body {
   background-color: #FFFFFF;
 }
@@ -108,6 +108,17 @@ body {
 html.dark body {
   background-color: #111111;
 }
+
+/* Global border colors for light and dark themes */
+* {
+  border-color: #E2E2E2;
+}
+
+html.dark * {
+  border-color: #333333;
+}
+
+
 
 @layer utilities {
   

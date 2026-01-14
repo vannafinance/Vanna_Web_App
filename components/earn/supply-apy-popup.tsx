@@ -26,7 +26,7 @@ export const SupplyApyPopup = ({ onClose }: SupplyApyPopupProps) => {
       aria-label="Supply APY Breakdown"
     >
       <section className="w-full h-fit flex flex-col gap-[12px]">
-        <header className="w-full h-fit flex justify-between items-center border-[1px] border-[#E2E2E2] bg-[#F7F7F7] p-[12px] rounded-[8px]">
+        <header className="w-full h-fit flex justify-between items-center border-[1px] bg-[#F7F7F7] p-[12px] rounded-[8px]">
           <h2 className="text-[10px] font-medium w-full">APY TYPE</h2>
           <div className="w-[137.5px] h-fit flex justify-between items-center">
             <h3 className="text-[10px] font-medium w-full">1D</h3>

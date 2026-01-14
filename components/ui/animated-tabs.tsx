@@ -121,7 +121,7 @@ export const AnimatedTabs = ({
     <div className={containerClassName}>
       <div
         className={`border-[1px] ${containerWidth} flex gap-[16px] ${containerPadding} rounded-[12px] h-fit relative overflow-hidden ${
-          isDark ? "border-[#333333] bg-[#111111]" : "border-[#E2E2E2] bg-white"
+          isDark ? "bg-[#111111]" : "bg-white"
         }`}
         onMouseLeave={() => setHoveredTab(null)}
       >

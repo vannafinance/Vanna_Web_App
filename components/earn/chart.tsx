@@ -191,7 +191,7 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
 
   return (
     <article className={`flex flex-col gap-[24px] rounded-[16px] p-[16px] border-[1px] ${
-      isDark ? "border-[#333333] bg-transparent" : "border-[#E2E2E2] bg-[#FFFFFF]"
+      isDark ? "bg-transparent" : "bg-[#FFFFFF]"
     } ${containerWidth} ${containerHeight}`}>
       <header className="w-full h-fit flex justify-between flex-shrink-0">
         <div
@@ -251,9 +251,7 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
                 </div>
                 
               )}
-              <div className={`p-[10px] h-fit rounded-[6px] border-[1px] ${
-                isDark ? "border-[#333333]" : "border-[#E2E2E2]"
-              }`}>
+              <div className="p-[10px] h-fit rounded-[6px] border-[1px]">
                 <Dropdown
                   dropdownClassname="text-[12px] font-semibold w-full"
                   classname="text-[12px] font-semibold gap-[4px]"
@@ -276,8 +274,8 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
                       selectedDays === item
                         ? "text-white bg-[#703AE6]"
                         : isDark
-                        ? "text-white bg-[#1A1A1A] border-[1px] border-[#333333]"
-                        : "text-black bg-white border-[1px] border-[#E2E2E2]"
+                        ? "text-white bg-[#1A1A1A] border-[1px]"
+                        : "text-black bg-white border-[1px]"
                     }`}
                     aria-pressed={selectedDays === item}
                   >
@@ -292,8 +290,8 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
             contentPosition="bottom"
             buttonClassName={`mt-[6px] cursor-pointer flex items-center justify-center w-[32px] h-[32px] rounded-[8px] border-[1px] ${
               isDark
-                ? "bg-transparent border-[#333333] [&>img]:brightness-0 [&>img]:invert"
-                : "bg-white border-[#E2E2E2]"
+                ? "bg-transparent [&>img]:brightness-0 [&>img]:invert"
+                : "bg-white"
             }`}
             modalHeader={
               <header className="w-full h-fit flex justify-between">
@@ -355,9 +353,7 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
                           }
                         />
                       )}
-                      <div className={`p-[10px] h-fit rounded-[6px] border-[1px] ${
-                        isDark ? "border-[#333333]" : "border-[#E2E2E2]"
-                      }`}>
+                      <div className="p-[10px] h-fit rounded-[6px] border-[1px]">
                         <Dropdown
                           dropdownClassname="text-[12px] font-semibold w-full"
                           classname="text-[12px] font-semibold gap-[4px]"
@@ -380,8 +376,8 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
                               selectedDays === item
                                 ? "text-white bg-[#703AE6]"
                                 : isDark
-                                ? "text-white bg-[#1A1A1A] border-[1px] border-[#333333]"
-                                : "text-black bg-white border-[1px] border-[#E2E2E2]"
+                                ? "text-white bg-[#1A1A1A] border-[1px]"
+                                : "text-black bg-white border-[1px]"
                             }`}
                             aria-pressed={selectedDays === item}
                           >

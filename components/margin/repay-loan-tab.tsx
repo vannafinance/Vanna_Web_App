@@ -89,7 +89,7 @@ export const RepayLoanTab = () => {
               <motion.article
                 key={key}
                 className={`w-full flex flex-col justify-between h-[120px] rounded-[8px] border-[1px] p-[16px] ${
-                  isDark ? "bg-[#111111] border-[#333333]" : "bg-white border-[#E2E2E2]"
+                  isDark ? "bg-[#111111]" : "bg-white"
                 }`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -135,7 +135,7 @@ export const RepayLoanTab = () => {
         {/* Repay form */}
         <motion.article
           className={`w-full border-[1px] rounded-[16px] p-[20px] ${
-            isDark ? "bg-[#111111] border-[#333333]" : "bg-white border-[#E2E2E2]"
+            isDark ? "bg-[#111111]" : "bg-white"
           }`}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

@@ -42,7 +42,7 @@ export const TransferCollateral = () => {
     >
       <motion.article 
         className={`flex flex-col gap-[24px] rounded-[16px] p-[20px] border-[1px] ${
-          isDark ? "bg-[#111111] border-[#333333]" : "bg-[#FFFFFF] border-[#E2E2E2]"
+          isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"
         }`}
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}

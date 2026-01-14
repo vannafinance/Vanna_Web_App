@@ -14,8 +14,8 @@ export const SearchBar = ({
   return (
     <div className={`border-[1px] w-full h-[48px] flex items-center gap-[9px] pr-[24px] py-[8px] pl-[16px] rounded-[8px] ${
       isDark
-        ? "border-[#333333] bg-[#111111]"
-        : "border-[#E2E2E2] bg-white"
+        ? "bg-[#111111]"
+        : "bg-white"
     }`}>
       <div className="w-[24px] h-[24px] flex flex-col items-center justify-center">
         <svg

@@ -114,7 +114,7 @@ export const Positionstable = ({ onRepayClick, onOpenPositionClick }: Positionst
               <motion.article
                 key={item.positionId}
                 className={`flex border-[1px] rounded-[12px] w-full ${
-                  isDark ? "bg-[#222222] border-[#333333]" : "bg-[#F7F7F7] border-[#E2E2E2]"
+                  isDark ? "bg-[#222222]" : "bg-[#F7F7F7]"
                 }`}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -384,7 +384,7 @@ export const Positionstable = ({ onRepayClick, onOpenPositionClick }: Positionst
           </motion.div>
         )}
       </section>:<section className={`w-full h-[402px] border-[1px] rounded-[8px] flex flex-col items-center justify-center ${
-        isDark ? "bg-[#222222] border-[#333333]" : "bg-[#F7F7F7] border-[#E2E2E2]"
+        isDark ? "bg-[#222222]" : "bg-[#F7F7F7]"
       }`}>
         <div className="w-fit h-fit">
           {activeTab === "currentPositions" ? (

@@ -41,8 +41,8 @@ export const RewardsTable = () => {
     <section 
       className={`w-full h-[330px] rounded-[16px] border-[1px] p-[16px] flex flex-col gap-[16px] ${
         isDark
-          ? "bg-[#222222] border-[#333333]"
-          : "bg-[#F7F7F7] border-[#E2E2E2]"
+          ? "bg-[#222222]"
+          : "bg-[#F7F7F7]"
       }`}
       aria-label="Rewards Summary"
     >

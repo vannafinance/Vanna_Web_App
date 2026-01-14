@@ -48,8 +48,8 @@ export const SupplyApy = (props: SupplyApyProps) => {
         onClick={() => setIsOpen(!isOpen)}
         className={`cursor-pointer w-fit h-[48px] flex rounded-[8px] border-[1px] py-[8px] px-[12px] items-center gap-[8px] ${
           isDark
-            ? "bg-transparent border-[#333333]"
-            : "bg-white border-[#E2E2E2]"
+            ? "bg-transparent"
+            : "bg-white"
         }`}
         aria-expanded={isOpen}
         aria-haspopup="true"
@@ -77,8 +77,8 @@ export const SupplyApy = (props: SupplyApyProps) => {
         <section 
           className={`shadow-md w-[370px] h-fit top-14 right-0 absolute rounded-[16px] p-[16px] flex flex-col gap-[15px] z-50 border-[1px] ${
             isDark
-              ? "bg-[#222222] border-[#333333]"
-              : "bg-[#F4F4F4] border-[#E2E2E2]"
+              ? "bg-[#222222]"
+              : "bg-[#F4F4F4]"
           }`}
           aria-label="Supply APY Filter"
         >
@@ -123,8 +123,8 @@ export const SupplyApy = (props: SupplyApyProps) => {
           </nav>
           <div className={`flex justify-between items-center w-full h-[36px] rounded-[8px] border-[1px] p-[8px] ${
             isDark
-              ? "bg-[#111111] border-[#333333]"
-              : "bg-white border-[#E2E2E2]"
+              ? "bg-[#111111]"
+              : "bg-white"
           }`}>
             <label htmlFor="apy-percentage" className="sr-only">
               APY Percentage

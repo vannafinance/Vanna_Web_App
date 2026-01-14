@@ -56,7 +56,7 @@ export const LeverageCollateral = ({
   return (
     <motion.section
       className={`flex flex-col justify-between rounded-[26px] border-[1px] py-[36px] px-[16px] min-w-[691px] h-full ${
-        isDark ? "bg-[#222222] border-[#333333]" : "bg-[#F7F7F7] border-[#E2E2E2]"
+        isDark ? "bg-[#222222]" : "bg-[#F7F7F7]"
       }`}
       initial={{ opacity: 0, scale: 0.95 }}
       whileInView={{ opacity: 1, scale: 1 }}

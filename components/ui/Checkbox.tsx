@@ -32,7 +32,7 @@ export const Checkbox = ({
     : borderColor 
     ? "" 
     : isDark 
-    ? "border-[#333333]" 
+    ? "" 
     : "border-gray-300";
 
   return (

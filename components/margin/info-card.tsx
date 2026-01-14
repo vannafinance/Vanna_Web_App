@@ -101,7 +101,7 @@ export const InfoCard = ({
       {items && items.length > 0 && (
         <motion.article
           className={`flex flex-col gap-[24px] w-full h-full p-[24px] border-[1px] rounded-[16px] ${
-            isDark ? "bg-[#222222] border-[#333333]" : "bg-[#F7F7F7] border-[#E2E2E2]"
+            isDark ? "bg-[#222222]" : "bg-[#F7F7F7]"
           }`}
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -118,7 +118,7 @@ export const InfoCard = ({
           <motion.article
             key={section.title}
             className={`flex flex-col gap-[24px] w-full h-full p-[24px] border-[1px] rounded-[16px] ${
-              isDark ? "bg-[#222222] border-[#333333]" : "bg-[#F7F7F7] border-[#E2E2E2]"
+              isDark ? "bg-[#222222]" : "bg-[#F7F7F7]"
             }`}
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}

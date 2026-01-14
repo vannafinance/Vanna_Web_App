@@ -26,8 +26,8 @@ export const AccountStats = ({
   return (
     <div className={`border-[1px] rounded-[24px] w-full h-full grid grid-cols-3 ${gridRows} gap-x-[20px] gap-y-[0] place-items-center ${
       isDark
-        ? "bg-[#222222] border-[#333333]"
-        : "bg-[#F7F7F7] border-[#E2E2E2]"
+        ? "bg-[#222222]"
+        : "bg-[#F7F7F7]"
     }`}>
       {/* Map through account stats items */}
       {items.map((item, idx) => {

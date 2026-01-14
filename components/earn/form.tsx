@@ -15,7 +15,7 @@ export const Form = () => {
   return (
     <section 
       className={`w-[480px] h-fit rounded-[20px] border-[1px] p-[20px] flex flex-col gap-[20px] ${
-        isDark ? "bg-[#222222] border-[#333333]" : "bg-[#F4F4F4] border-[#E2E2E2]"
+        isDark ? "bg-[#222222]" : "bg-[#F4F4F4]"
       }`}
       aria-label="Liquidity Management"
     >

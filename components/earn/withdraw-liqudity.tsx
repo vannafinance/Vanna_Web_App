@@ -87,7 +87,7 @@ export const WithdrawLiquidity = () => {
   return (
     <>
       <form className={`flex gap-[16px] items-start w-full h-fit border-[1px] rounded-[16px] p-[16px] ${
-        isDark ? "bg-[#111111] border-[#333333]" : "bg-[#FFFFFF] border-[#E2E2E2]"
+        isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"
       }`}>
         <div className="w-full h-full flex flex-col gap-[44px] justify-between">
           <div className="w-fit h-fit flex items-center gap-[4px]">

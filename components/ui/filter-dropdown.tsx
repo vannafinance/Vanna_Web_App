@@ -218,7 +218,7 @@ export const FilterDropdown = memo((props: FilterDropdownProps) => {
       {(props.dropDownType === "all-chains" || props.dropDownType === "customize") && (
         <div
           onClick={toggleDropdown}
-          className={`cursor-pointer h-[48px] ${isDark ? "border border-[#333333] bg-[#222222]" : "border border-[#E2E2E2] bg-white"} rounded-[8px] py-[12px] px-[16px] flex items-center gap-[4px] max-w-full min-w-0`}
+          className={`cursor-pointer h-[48px] ${isDark ? "border bg-[#222222]" : "border bg-white"} rounded-[8px] py-[12px] px-[16px] flex items-center gap-[4px] max-w-full min-w-0`}
         >
           {props.dropDownType === "all-chains" && (
             <>
@@ -312,7 +312,7 @@ export const FilterDropdown = memo((props: FilterDropdownProps) => {
           ) : (
             <div
               onClick={toggleDropdown}
-              className="h-fit rounded-[8px] border-[1px] border-[#E2E2E2] flex items-center justify-center py-[8px] px-[16px] gap-[4px] max-w-full"
+              className="h-fit rounded-[8px] border-[1px] flex items-center justify-center py-[8px] px-[16px] gap-[4px] max-w-full"
             >
               <div className={`text-[14px] font-medium ${isDark ? "text-white" : "text-black"} whitespace-nowrap flex-shrink-0`}>
                 {displayText}
@@ -343,7 +343,7 @@ export const FilterDropdown = memo((props: FilterDropdownProps) => {
             props.currentDropdownItem.length > 0 ? "top-12" : "top-6"
           } w-[368px] h-fit rounded-[16px] p-[16px] flex flex-col gap-[15px] shadow-md ${
             props.dropDownType === "all-chains" ? "left-0 top-14" : "right-0"
-          } ${isDark ? "bg-[#222222] border-[1px] border-[#333333]" : "bg-[#F4F4F4]"}`}
+          } ${isDark ? "bg-[#222222] border-[1px]" : "bg-[#F4F4F4]"}`}
         >
           <SearchBar
             value={searchValue}

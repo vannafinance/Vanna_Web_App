@@ -108,7 +108,7 @@ export const Dropdown = (props: Dropdown) => {
             onMouseLeave={handleDropdownMouseLeave}
             className={`min-w-[144px] absolute z-[100] p-2 top-8 -left-4 shadow-lg rounded-[6px] thin-scrollbar ${
               isDark
-                ? "bg-[#222222] border-[1px] border-[#333333]"
+                ? "bg-[#222222] border-[1px]"
                 : "bg-white"
             } ${props.items.length > 4 ? "max-h-48 overflow-y-auto" : ""}`}
             role="listbox"
