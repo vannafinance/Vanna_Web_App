@@ -63,6 +63,7 @@ export const LeverageAssetsTab = () => {
 
   const [walletBalanceByAsset, setWalletBalanceByAsset] = useState<Record<string, number>>({});
 
+
   // Wagmi hooks
   const { chainId } = useAccount();
 
@@ -82,7 +83,7 @@ export const LeverageAssetsTab = () => {
 
     return null;
   };
-
+  
 
   // Margin account creation Flow  
   const handlecreateAccount = async () => {
@@ -302,7 +303,13 @@ export const LeverageAssetsTab = () => {
 }, [address, publicClient, chainId]);
 
 
-  //Fecth-Collatral state 
+  // Fecth-Collatral state 
+  // How much Your margin acc in Total 
+  // Your margin acc has ETH,USDC,USDT but collatral value 
+  // 1.2 ETH
+  // 5000 USDC
+  // collateralState = $8,540 otal collateral value
+
   const fetchCollateralState = useCallback(async (acc: `0x${string}`) => {
     if (!publicClient || !chainId) return [];
 
@@ -362,6 +369,7 @@ export const LeverageAssetsTab = () => {
   }, [publicClient, chainId])
 
 
+
   //////////////////////////////////////////
 
   // Later i will placed in  a Lib file 
@@ -395,6 +403,8 @@ export const LeverageAssetsTab = () => {
     if (debtUsd <= 0) return collUsd;
     return Math.max(0, collUsd - debtUsd / LTV_LIMIT);
   };
+
+
 
 
   // Fetch-WithdrawBalance 
@@ -530,7 +540,10 @@ export const LeverageAssetsTab = () => {
 };
 
 
- 
+//  =>  Suppose you have 10 usdc then Our protocol will check the balance 1st in WB then MB 
+//  IF MB or wb balance  > The amount you are putting in dual Borrow Mode and single Borrow mode we will allow them to borrow the usdc or corresponding token 
+//  10 * leverage = 10 * 10 (We will calculate from MAX_Borrow )
+// 
 
   
 
@@ -556,6 +569,7 @@ export const LeverageAssetsTab = () => {
 
     const cUsd = calcCollateralUsd(col);
     const bUsd = calcBorrowUsd(bor);
+
 
     const state = {
       collateral: col,
@@ -709,7 +723,6 @@ export const LeverageAssetsTab = () => {
     setMode((prev) => (prev === "Borrow" ? "Deposit" : "Borrow"));
   };
 
-
   // This will  make a changes On Balance 
   const handleBalanceTypeChange = (index: number) => {
     return async (balanceType: string | ((prev: string) => string)) => {
@@ -858,6 +871,7 @@ export const LeverageAssetsTab = () => {
 
   // 🧪 Test here 
   const handleTest = async () => {
+
     // -----------------
     // deposit test 
     //------------------
