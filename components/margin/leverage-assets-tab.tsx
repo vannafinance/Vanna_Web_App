@@ -37,7 +37,13 @@ import { erc20Abi, formatUnits, parseEther, parseUnits } from "viem";
 import { iconPaths } from "@/lib/constants";
 import { constants } from "node:buffer";
 import { getEnsAddressQueryOptions } from "wagmi/query";
-import { withdraw } from "viem/zksync";
+
+///lib/utils/margim/calculation iumport 
+import marginCalc from "@/lib/utils/margin/calculations"
+import { depositTx, withdrawTx } from "@/lib/utils/margin/transactions";
+import { useMarginStore } from "@/store/margin-account-state";
+import { getAddressList } from "@/lib/utils/web3/addressList";
+
 
 type Modes = "Deposit" | "Borrow";
 type AddressList = typeof baseAddressList;
@@ -45,8 +51,6 @@ type AddressList = typeof baseAddressList;
 export const LeverageAssetsTab = () => {
   // Component state
   const hasMarginAccount = useMarginAccountInfoStore((state) => state.hasMarginAccount);
-
-
   const setHasMarginAccount = useMarginAccountInfoStore((state) => state.set);
 
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -55,18 +59,12 @@ export const LeverageAssetsTab = () => {
   const [leverage, setLeverage] = useState(2);
   const [depositAmount, setDepositAmount] = useState<number | undefined>(0);
   const address = useUserStore((state) => state.address);
-  const [marginState, setMarginState] = useState<MarginState | null>(null);
-
-
+  const marginState = useMarginStore((s) => s.marginState);
   const [depositCurrency, setDepositCurrency] = useState(TOKEN_OPTIONS[0])
-
-
   const [walletBalanceByAsset, setWalletBalanceByAsset] = useState<Record<string, number>>({});
-
 
   // Wagmi hooks
   const { chainId } = useAccount();
-
   const { data: walletClient } = useWalletClient();
   const publicClient = usePublicClient();
 
@@ -74,26 +72,50 @@ export const LeverageAssetsTab = () => {
   const [loading, setLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState("");
 
-  const getAddressList = (): AddressList | null => {
-    if (!chainId) return null;
+  // zustand state 
 
-    if (chainId === 42161) return arbAddressList;
-    if (chainId === 10) return opAddressList;
-    if (chainId === 8453) return baseAddressList;
-
-    return null;
-  };
+  const { reloadMarginState } = useMarginStore();
 
 
+  // Bind deposit and withdrae as of now because we have moved this 2 fucntion as of now 
+  //////////////////////////////////////////////////////////////////////////////////////////
+  // we shift this  to @/lib/utils/web3
+  // const getAddressList = (): AddressList | null => {
+  //   if (!chainId) return null;
+  //   if (chainId === 42161) return arbAddressList;
+  //   if (chainId === 10) return opAddressList;
+  //   if (chainId === 8453) return baseAddressList;
+  //   return null;
+  // };
 
+  // const addressList=getAddressList(chainId!)
 
+  const deposit = (asset: string, amount: string) => depositTx({
+    walletClient,
+    publicClient,
+    chainId,
+    fetchAccountCheck,
+    asset,
+    amount
+  })
+
+  const withdraw = (asset: string, amount: string) =>
+    withdrawTx({
+      walletClient,
+      publicClient,
+      chainId,
+      fetchAccountCheck,
+      asset,
+      amount,
+    });
+
+  // Later we will bind all the functionality in transaction.ts file 
+  ////////////////////////////////////////////////////////////////////////////////////
   // Margin account creation Flow  
   const handlecreateAccount = async () => {
-
-    const addressList = getAddressList();
+    const addressList = getAddressList(chainId!);
     if (!addressList) {
       toast("Unsupported network")
-
       setLoadingMessage("Unsupported network");
       setTimeout(() => setLoadingMessage(""), 2000);
       return;
@@ -103,7 +125,6 @@ export const LeverageAssetsTab = () => {
       toast("Wallet not ready");
       return;
     }
-
 
     try {
       setLoading(true);
@@ -134,19 +155,14 @@ export const LeverageAssetsTab = () => {
       });
 
       setLoadingMessage("Please confirm transaction in your wallet...");
-
       const txHash = await walletClient.writeContract(request);
 
       setLoadingMessage("Transaction submitted. Waiting for confirmation...");
-
-      await publicClient.waitForTransactionReceipt({
-        hash: txHash,
-      });
+      await publicClient.waitForTransactionReceipt({ hash: txHash });
 
       setLoadingMessage("Success! Account created.");
       setHasMarginAccount({ hasMarginAccount: true });
 
-      // Small delay to show success message
       setTimeout(() => {
         setActiveDialogue("deposit-earn");
         toast("Margin account Created")
@@ -155,7 +171,6 @@ export const LeverageAssetsTab = () => {
     } catch (err: any) {
       toast("Margin account creation failed", err);
 
-      // User rejected transaction
       if (err?.code === 4001) {
         setLoadingMessage("Transaction rejected");
         setTimeout(() => {
@@ -164,18 +179,14 @@ export const LeverageAssetsTab = () => {
         }, 1500);
       } else {
         setLoadingMessage("Transaction failed. Please try again.");
-        setTimeout(() => {
-          setLoadingMessage("");
-        }, 3000);
+        setTimeout(() => setLoadingMessage(""), 3000);
       }
     } finally {
       setLoading(false);
     }
   };
 
-
-
-  //fetchWalletBalance 
+  // fetchWalletBalance 
   const fetchWalletBalance = async (asset: string) => {
     if (!chainId || !publicClient || !address) return;
 
@@ -183,9 +194,7 @@ export const LeverageAssetsTab = () => {
     if (asset === "ETH") {
       const raw = await publicClient.getBalance({ address });
       const formated = Number(formatUnits(raw, 18))
-
       return formated;
-
     }
 
     const raw = await publicClient.readContract({
@@ -193,14 +202,11 @@ export const LeverageAssetsTab = () => {
       abi: erc20Abi,
       functionName: "balanceOf",
       args: [address]
-
     })
 
     const decimals = TOKEN_DECIMALS[asset];
     const formated = Number(formatUnits(raw, decimals))
     return formated;
-
-
   }
 
   // fetchMarginBalance
@@ -211,11 +217,10 @@ export const LeverageAssetsTab = () => {
     if (!addressList) return [];
 
     try {
-      // 1. Resolve margin account
       const accounts = await fetchAccountCheck();
 
       if (!accounts || accounts.length === 0) {
-        return []; // no margin account → no MB
+        return [];
       }
 
       const marginAccount = accounts[0];
@@ -224,14 +229,10 @@ export const LeverageAssetsTab = () => {
       for (const asset of TOKEN_OPTIONS) {
         let balance = 0;
 
-        // 2. Native ETH path
         if (asset === "ETH") {
-          const raw = await publicClient.getBalance({
-            address: marginAccount
-          });
+          const raw = await publicClient.getBalance({ address: marginAccount });
           balance = Number(formatUnits(raw, 18));
         } else {
-          // 3. ERC20 token path
           const token = tokenAddressByChain[chainId]?.[asset];
 
           if (!token) {
@@ -255,12 +256,11 @@ export const LeverageAssetsTab = () => {
           }
         }
 
-        // 4. Skip empty zero assets
         if (balance > 0) {
           results.push({
             asset,
             amount: balance,
-            amountInUsd: balance,     // mock 1:1
+            amountInUsd: balance,
             balanceType: "mb",
             unifiedBalance: balance,
           });
@@ -287,7 +287,6 @@ export const LeverageAssetsTab = () => {
         if (!asset) return 0;
         return asset && fetchWalletBalance(asset)
     }
-
   };
 
   const fetchAccountCheck = useCallback(async (): Promise<`0x${string}`[]> => {
@@ -304,17 +303,6 @@ export const LeverageAssetsTab = () => {
     return accounts;
   }, [address, publicClient, chainId]);
 
-
-  // Fecth-Collatral state 
-  // How much Your margin acc in Total 
-  // Your margin acc has ETH,USDC,USDT but collatral value 
-  // 1.2 ETH
-  // 5000 USDC
-  // collateralState = $8,540 otal collateral value
-
-
-
-
   const fetchCollateralState = useCallback(async (acc: `0x${string}`) => {
     if (!publicClient || !chainId) return [];
 
@@ -328,7 +316,6 @@ export const LeverageAssetsTab = () => {
       args: [acc]
     }) as bigint[];
 
-
     const collatralUsd = Number(raw) / 1e16;
 
     return [
@@ -338,13 +325,7 @@ export const LeverageAssetsTab = () => {
         usd: collatralUsd
       }
     ]
-
-
-
   }, [publicClient, chainId])
-
-
-  // Fetch-Borrow (from Risk-Engine Contract )
 
   const fetchBorrowState = useCallback(async (acc: `0x${string}`) => {
     if (!publicClient || !chainId) return []
@@ -368,536 +349,478 @@ export const LeverageAssetsTab = () => {
         usd: borrowUsd
       }
     ];
-
-
-
   }, [publicClient, chainId])
 
-  //////////////////////////////////////////
 
-  // Later i will placed in  a Lib file 
-
-  //////////////////////////////////////////
-
-  const calcCollateralUsd = (c: { usd: number }[]) =>
-    c.reduce((s, x) => s + x.usd, 0);
-
-  const calcBorrowUsd = (b: { usd: number }[]) =>
-    b.reduce((s, x) => s + x.usd, 0);
-
-  const calcHF = (collUsd: number, debtUsd: number) => {
-    if (debtUsd <= 0) return Infinity;
-    const CF = 0.9;
-    return (collUsd * CF) / debtUsd;
+  // New: Simulation functions for preview (without mutating state)
+  const simulateBorrow = (state: MarginState | null, additionalBorrowUsd: number) => {
+    if (!state) return { newHF: Infinity, newLTV: 0 };
+    const newDebtUsd = state.borrowUsd + additionalBorrowUsd;
+    const newHF = marginCalc.calcHF(state.collateralUsd, newDebtUsd);
+    const newLTV = marginCalc.calcLTV(state.collateralUsd, newDebtUsd);
+    return { newHF, newLTV };
   };
 
-  const calcLTV = (collUsd: number, debtUsd: number) => {
-    if (collUsd <= 0) return 0;
-    return debtUsd / collUsd;
+  const simulateWithdraw = (state: MarginState | null, withdrawUsd: number) => {
+    if (!state) return { newHF: Infinity, newLTV: 0 };
+    const newCollUsd = state.collateralUsd - withdrawUsd;
+    const newHF = marginCalc.calcHF(newCollUsd, state.borrowUsd);
+    const newLTV = marginCalc.calcLTV(newCollUsd, state.borrowUsd);
+    return { newHF, newLTV };
   };
 
-  const calcMaxBorrow = (collUsd: number, debtUsd: number) => {
-    const LTV_LIMIT = 0.9;
-    return Math.max(0, collUsd * LTV_LIMIT - debtUsd);
+  const simulateRepay = (state: MarginState | null, repayUsd: number) => {
+    if (!state) return { newHF: Infinity, newLTV: 0 };
+    const newDebtUsd = Math.max(0, state.borrowUsd - repayUsd);
+    const newHF = marginCalc.calcHF(state.collateralUsd, newDebtUsd);
+    const newLTV = marginCalc.calcLTV(state.collateralUsd, newDebtUsd);
+    return { newHF, newLTV };
   };
 
-  const calcMaxWithdraw = (collUsd: number, debtUsd: number) => {
-    const LTV_LIMIT = 0.9;
-    if (debtUsd <= 0) return collUsd;
-    return Math.max(0, collUsd - debtUsd / LTV_LIMIT);
+  // New: HF signals (colors and warnings)
+  const getHFColor = (hf: number) => {
+    if (hf > 1.5) return 'green';
+    if (hf > 1.3) return 'yellow';
+    if (hf > 1.1) return 'orange';
+    return 'red';
   };
 
+  const getHFWarning = (hf: number) => {
+    if (hf <= 1.0) return "Will liquidate";
+    if (hf < 1.1) return "High Liquidation Risk";
+    if (hf < 1.3) return "Low HF";
+    return null;
+  };
 
+  // const reloadMarginState = useCallback(async () => {
+  //   const accounts = await fetchAccountCheck();
 
-  const reloadMarginState = useCallback(async () => {
-    const accounts = await fetchAccountCheck();
+  //   if (!accounts.length) {
+  //     setMarginState(null)
+  //     return null
+  //   }
 
-    if (!accounts.length) {
-      setMarginState(null)
-      return null
-    }
+  //   const acc = accounts[0];
 
-    const acc = accounts[0];
+  //   const [col, bor] = await Promise.all([
+  //     fetchCollateralState(acc),
+  //     fetchBorrowState(acc)
+  //   ]);
 
-    const [col, bor] = await Promise.all([
-      fetchCollateralState(acc),
-      fetchBorrowState(acc)
-    ]);
+  //   const cUsd = marginCalc.calcCollateralUsd(col);
+  //   const bUsd = marginCalc.calcBorrowUsd(bor);
 
-    const cUsd = calcCollateralUsd(col);
-    const bUsd = calcBorrowUsd(bor);
-
-
-    const state = {
-      collateral: col,
-      borrow: bor,
-      collateralUsd: cUsd,
-      borrowUsd: bUsd,
-      hf: calcHF(cUsd, bUsd),
-      ltv: calcLTV(cUsd, bUsd),
-      maxBorrow: calcMaxBorrow(cUsd, bUsd),
-      maxWithdraw: calcMaxWithdraw(cUsd, bUsd),
-
-    }
-    setMarginState(state)
-    return state;
-
-
-  }, [
-    fetchAccountCheck,
-    fetchCollateralState,
-    fetchBorrowState
-  ]);
-
-
-
-
-  // Fetch-WithdrawBalance 
-
-  // 
-
+  //   const state = {
+  //     collateral: col,
+  //     borrow: bor,
+  //     collateralUsd: cUsd,
+  //     borrowUsd: bUsd,
+  //     hf: marginCalc.calcHF(cUsd, bUsd),
+  //     ltv: marginCalc.calcLTV(cUsd, bUsd),
+  //     maxBorrow: marginCalc.calcMaxBorrow(cUsd, bUsd),
+  //     maxWithdraw: marginCalc.calcMaxWithdraw(cUsd, bUsd),
+  //   }
+  //   setMarginState(state)
+  //   return state;
+  // }, [
+  //   fetchAccountCheck,
+  //   fetchCollateralState,
+  //   fetchBorrowState
+  // ]);
 
   // Get Approval for ERC-20 token 
-  const getapproved = async (token: `0x${string}`, parsed: bigint, spender: string) => {
-    if (!publicClient || !walletClient || !address) return;
+  // const getapproved = async (token: `0x${string}`, parsed: bigint, spender: string) => {
+  //   if (!publicClient || !walletClient || !address) return;
 
-    // Read Current allowance 
+  //   const allowance = await publicClient.readContract({
+  //     address: token,
+  //     abi: erc20Abi,
+  //     functionName: 'allowance',
+  //     args: [address, spender]
+  //   }) as bigint
 
-    const allowance = await publicClient.readContract({
-      address: token,
-      abi: erc20Abi,
-      functionName: 'allowance',
-      args: [address, spender]
+  //   if (allowance >= parsed) return;
 
-    }) as bigint
+  //   const MAX_UINT256 = BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
 
-    if (allowance >= parsed) return;
-
-    const MAX_UINT256 = BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-
-
-    // 3. Approve required amount
-    return walletClient.writeContract({
-      address: token,
-      abi: erc20Abi,
-      functionName: 'approve',
-      args: [spender, MAX_UINT256],
-    });
-
-
-  }
-
-  //   | Mode | Collateral Origin   | Required Actions    | #TX  |
-  // | ---- | ------------------- | ------------------- | ---- |
-  // | MB   | Already in protocol | Borrow              | 1 TX |
-  // | WB   | Wallet → Protocol   | Deposit then Borrow | 2 TX |
-
-
+  //   return walletClient.writeContract({
+  //     address: token,
+  //     abi: erc20Abi,
+  //     functionName: 'approve',
+  //     args: [spender, MAX_UINT256],
+  //   });
+  // }
 
   // Deposit into Margin Account 
-  const deposit = async (
-    asset: string,
-    amount: string,
-    marginAccount: string,
-    opts?: {
-      onStart?: () => void;
-      onApproved?: () => void;
-      onTxSubmitted?: (hash: string) => void;
-      onSuccess?: (hash: string) => void;
-      onError?: (err: any) => void;
-      onFinally?: () => void;
-    }
-  ) => {
-    if (!walletClient || !publicClient || !chainId || !amount) return;
+  // const deposit = async (
+  //   asset: string,
+  //   amount: string,
+  //   marginAccount: string,
+  //   opts?: {
+  //     onStart?: () => void;
+  //     onApproved?: () => void;
+  //     onTxSubmitted?: (hash: string) => void;
+  //     onSuccess?: (hash: string) => void;
+  //     onError?: (err: any) => void;
+  //     onFinally?: () => void;
+  //   }
+  // ) => {
+  //   if (!walletClient || !publicClient || !chainId || !amount) return;
 
-    try {
-      opts?.onStart?.();
+  //   try {
+  //     opts?.onStart?.();
 
-      const addresses = getAddressList();
-      if (!addresses) throw new Error("Unsupported network");
+  //     const addresses = getAddressList();
+  //     if (!addresses) throw new Error("Unsupported network");
 
-      const token = tokenAddressByChain[chainId]?.[asset];
-      const decimals = TOKEN_DECIMALS[asset];
-      const parsed = parseUnits(amount, decimals);
+  //     const token = tokenAddressByChain[chainId]?.[asset];
+  //     const decimals = TOKEN_DECIMALS[asset];
+  //     const parsed = parseUnits(amount, decimals);
 
-      // APPROVAL Needes 
-      opts?.onApproved?.();
-      await getapproved(token, parsed, addresses.accountManagerContractAddress);
+  //     opts?.onApproved?.();
+  //     await getapproved(token, parsed, addresses.accountManagerContractAddress);
 
-      // TX
-      const txHash = await walletClient.writeContract({
-        address: addresses.accountManagerContractAddress,
-        abi: AccountManager.abi,
-        functionName: "deposit",
-        args: [marginAccount, token, parsed],
-      });
+  //     const txHash = await walletClient.writeContract({
+  //       address: addresses.accountManagerContractAddress,
+  //       abi: AccountManager.abi,
+  //       functionName: "deposit",
+  //       args: [marginAccount, token, parsed],
+  //     });
 
-      opts?.onTxSubmitted?.(txHash);
+  //     opts?.onTxSubmitted?.(txHash);
 
-      // RECEIPT
-      await publicClient.waitForTransactionReceipt({
-        hash: txHash,
-      });
+  //     await publicClient.waitForTransactionReceipt({ hash: txHash });
 
-      await reloadMarginState();
+  //     await reloadMarginState();
 
-      opts?.onSuccess?.(txHash);
-      return txHash;
-    } catch (err: any) {
-      if (err?.code === 4001) {
-        // USER REJECTED
-        opts?.onError?.({ type: "REJECTED", err });
-        return;
-      }
+  //     opts?.onSuccess?.(txHash);
+  //     return txHash;
+  //   } catch (err: any) {
+  //     if (err?.code === 4001) {
+  //       opts?.onError?.({ type: "REJECTED", err });
+  //       return;
+  //     }
 
-      opts?.onError?.({ type: "FAILED", err });
-      throw err;
-    } finally {
-      opts?.onFinally?.();
-    }
-  };
+  //     opts?.onError?.({ type: "FAILED", err });
+  //     throw err;
+  //   } finally {
+  //     opts?.onFinally?.();
+  //   }
+  // };
 
   // Withdraw to WB  
-  const withdraw = async (asset: string, amount: string) => {
-    if (!publicClient || !walletClient || !address) return;
+  // we already have executeTransferToWallet ! 
+  // const withdraw = async (asset: string, amount: string) => {
+  //   if (!publicClient || !walletClient || !address) return;
 
-    const token = tokenAddressByChain[chainId!]?.[asset] as `0x${string}`;
-    const decimals = TOKEN_DECIMALS[asset];
-    const parsed = parseUnits(amount, decimals);
+  //   const token = tokenAddressByChain[chainId!]?.[asset] as `0x${string}`;
+  //   const decimals = TOKEN_DECIMALS[asset];
+  //   const parsed = parseUnits(amount, decimals);
 
-    const addressList = getAddressList();
-    const acc = await fetchAccountCheck();
-    const marginaccount = acc[0];
+  //   const addressList = getAddressList();
+  //   const acc = await fetchAccountCheck();
+  //   const marginaccount = acc[0];
 
-    let withdraw_hash;
+  //   let withdraw_hash;
 
-    // Native/Wrapped logic by asset name, NOT token address
-    if (asset === "WETH") {
-      withdraw_hash = await walletClient.writeContract({
-        address: addressList!.accountManagerContractAddress,
-        abi: AccountManager.abi,
-        functionName: "withdrawEth",
-        args: [marginaccount, parsed]
-      });
-    } else {
-      withdraw_hash = await walletClient.writeContract({
-        address: addressList!.accountManagerContractAddress,
-        abi: AccountManager.abi,
-        functionName: "withdraw",
-        args: [marginaccount, token, parsed]
-      });
-    }
+  //   if (asset === "WETH") {
+  //     withdraw_hash = await walletClient.writeContract({
+  //       address: addressList!.accountManagerContractAddress,
+  //       abi: AccountManager.abi,
+  //       functionName: "withdrawEth",
+  //       args: [marginaccount, parsed]
+  //     });
+  //   } else {
+  //     withdraw_hash = await walletClient.writeContract({
+  //       address: addressList!.accountManagerContractAddress,
+  //       abi: AccountManager.abi,
+  //       functionName: "withdraw",
+  //       args: [marginaccount, token, parsed]
+  //     });
+  //   }
 
-    return withdraw_hash;
-  };
-
-  // const borrow={we will write Borrow logic here }
-
-  // sanity checks before implementing borrrow 
-
-  // wallets is connected 
-  // supported chain 
-  // margin acc exit 
-  // chain is the same as margin acc 
-  // wallet has enough gas token for (eth ) for fees 
-
-
-
-
-  // Our Ui need a single function which tells wat is the current state of Margin acc \
-
+  //   return withdraw_hash;
+  // };
 
   const normalizeBorrowUsd = (asset: string, amount: string): number => {
-  // TODO: integrate oracle later
-  return Number(amount); // mock 1:1 for testing
-};
+    return Number(amount);
+  };
 
-const validateBorrowRisk = (state: MarginState, totalUsd: number): boolean => {
-  const HF_after = calcHF(state.collateralUsd, state.borrowUsd + totalUsd);
-  const LTV_after = calcLTV(state.collateralUsd, state.borrowUsd + totalUsd);
+  const validateBorrowRisk = (state: MarginState, totalUsd: number): boolean => {
+    const { newHF, newLTV } = simulateBorrow(state, totalUsd);
+    if (newHF <= 1.0) {
+      toast.error("Borrow would put account into liquidation");
+      return false;
+    }
 
-  if (HF_after <= 1.0) {
-    toast.error("Borrow would put account into liquidation");
-    return false;
-  }
+    if (newLTV > 0.9) {
+      toast.error("Borrow exceeds 90% LTV");
+      return false;
+    }
 
-  if (LTV_after > 0.9) {
-    toast.error("Borrow exceeds 90% LTV");
-    return false;
-  }
+    return true;
+  };
 
-  return true;
-};
+  const borrowTx = async (
+    marginAccount: string,
+    asset: string,
+    amount: string
+  ) => {
+    const addressList = getAddressList();
+    if (!addressList) throw new Error("Unsupported chain");
 
-const borrowTx = async (
-  marginAccount: string,
-  asset: string,
-  amount: string
-) => {
-  const addressList = getAddressList();
-  if (!addressList) throw new Error("Unsupported chain");
+    const decimals = TOKEN_DECIMALS[asset] ?? 18;
+    const parsed = parseUnits(amount, decimals);
 
-  const decimals = TOKEN_DECIMALS[asset] ?? 18;
-  const parsed = parseUnits(amount, decimals);
+    if (asset === "ETH" || asset === "WETH") {
+      return walletClient!.writeContract({
+        address: addressList.accountManagerContractAddress as `0x${string}`,
+        abi: AccountManager.abi,
+        functionName: "borrowEth",
+        args: [marginAccount, parsed],
+      });
+    }
 
-  if (asset === "ETH" || asset === "WETH") {
+    const token = tokenAddressByChain[chainId!]?.[asset];
+    if (!token) throw new Error(`Token mapping not found for ${asset}`);
+
     return walletClient!.writeContract({
       address: addressList.accountManagerContractAddress as `0x${string}`,
       abi: AccountManager.abi,
-      functionName: "borrowEth",
-      args: [marginAccount, parsed],
+      functionName: "borrow",
+      args: [marginAccount, token, parsed],
     });
-  }
+  };
 
-  const token = tokenAddressByChain[chainId!]?.[asset];
-  if (!token) throw new Error(`Token mapping not found for ${asset}`);
-
-  return walletClient!.writeContract({
-    address: addressList.accountManagerContractAddress as `0x${string}`,
-    abi: AccountManager.abi,
-    functionName: "borrow",
-    args: [marginAccount, token, parsed],
-  });
-};
-
-const executeBorrow = async ({
-  collateralAsset,
-  collateralAmount,
-  borrowAsset,
-  borrowAmount,
-  mode,
-}: {
-  collateralAsset: string;
-  collateralAmount: string;
-  borrowAsset: string;
-  borrowAmount: string;
-  mode: "MB" | "WB";
-}) => {
-  if (!walletClient || !publicClient || !chainId || !address) {
-    return toast.error("Wallet not ready");
-  }
-
-  const addressList = getAddressList();
-  if (!addressList) return toast.error("Unsupported network");
-
-  const accounts = await fetchAccountCheck();
-  if (!accounts.length) return toast.error("No Margin Account found");
-
-  const marginAccount = accounts[0];
-  let state = marginState || (await reloadMarginState());
-  if (!state) return toast.error("Margin state missing");
-
-  const amountUsd = normalizeBorrowUsd(borrowAsset, borrowAmount);
-
-  // --- MB Path ---
-  if (mode === "MB") {
-    if (state.collateralUsd <= 0) {
-      return toast.error("Insufficient collateral in Margin Account");
+  const executeBorrow = async ({
+    collateralAsset,
+    collateralAmount,
+    borrowAsset,
+    borrowAmount,
+    mode,
+  }: {
+    collateralAsset: string;
+    collateralAmount: string;
+    borrowAsset: string;
+    borrowAmount: string;
+    mode: "MB" | "WB";
+  }) => {
+    if (!walletClient || !publicClient || !chainId || !address) {
+      return toast.error("Wallet not ready");
     }
 
-    if (amountUsd > state.maxBorrow) {
-      return toast.error("Borrow exceeds leverage limit");
+    const addressList = getAddressList();
+    if (!addressList) return toast.error("Unsupported network");
+
+    const accounts = await fetchAccountCheck();
+    if (!accounts.length) return toast.error("No Margin Account found");
+
+    const marginAccount = accounts[0];
+    let state = marginState || (await reloadMarginState());
+    if (!state) return toast.error("Margin state missing");
+
+    const amountUsd = normalizeBorrowUsd(borrowAsset, borrowAmount);
+
+    if (mode === "MB") {
+      if (state.collateralUsd <= 0) {
+        return toast.error("Insufficient collateral in Margin Account");
+      }
+
+      if (amountUsd > state.maxBorrow) {
+        return toast.error("Borrow exceeds leverage limit");
+      }
+
+      if (!validateBorrowRisk(state, amountUsd)) return;
+
+      toast("Borrowing...");
+      await borrowTx(marginAccount, borrowAsset, borrowAmount);
+      await reloadMarginState();
+      return toast.success("Borrow successful!");
     }
 
-    if (!validateBorrowRisk(state, amountUsd)) return;
+    if (mode === "WB") {
+      if (!collateralAmount || Number(collateralAmount) <= 0) {
+        return toast.error("Deposit amount required in WB mode");
+      }
 
-    toast("Borrowing...");
-    await borrowTx(marginAccount, borrowAsset, borrowAmount);
+      toast("Depositing collateral...");
+      await deposit(collateralAsset, collateralAmount);
+
+      state = await reloadMarginState();
+      if (!state) return toast.error("State refresh failed");
+
+      if (amountUsd > state.maxBorrow) {
+        return toast.error("Borrow exceeds leverage limit after deposit");
+      }
+
+      if (!validateBorrowRisk(state, amountUsd)) return;
+
+      toast("Borrowing...");
+      await borrowTx(marginAccount, borrowAsset, borrowAmount);
+
+      await reloadMarginState();
+      return toast.success("Deposit + Borrow completed!");
+    }
+  };
+
+  const executeDualBorrow = async ({
+    items,
+    collateralAsset,
+    collateralAmount,
+    mode,
+  }: {
+    items: { asset: string; amount: string }[];
+    collateralAsset: string;
+    collateralAmount: string;
+    mode: "MB" | "WB";
+  }) => {
+    if (!walletClient || !publicClient || !chainId || !address) {
+      return toast.error("Wallet not ready");
+    }
+
+    const addressList = getAddressList();
+    if (!addressList) return toast.error("Unsupported network");
+
+    const accounts = await fetchAccountCheck();
+    if (!accounts.length) return toast.error("No Margin Account found");
+
+    const marginAccount = accounts[0];
+    let state = marginState || (await reloadMarginState());
+    if (!state) return toast.error("Margin state missing");
+
+    const totalUsd = items
+      .map(i => normalizeBorrowUsd(i.asset, i.amount))
+      .reduce((a, b) => a + b, 0);
+
+    if (totalUsd <= 0) return toast.error("Invalid borrow amounts");
+
+    if (mode === "WB") {
+      if (!collateralAmount || Number(collateralAmount) <= 0) {
+        return toast.error("Deposit required in WB mode");
+      }
+
+      toast("Depositing collateral...");
+      await deposit(collateralAsset, collateralAmount, marginAccount);
+
+      state = await reloadMarginState();
+      if (!state) return toast.error("State refresh failed");
+    }
+
+    if (totalUsd > state.maxBorrow) {
+      return toast.error("Dual borrow exceeds leverage");
+    }
+
+    if (!validateBorrowRisk(state, totalUsd)) return;
+
+    toast("Borrowing multiple assets...");
+
+    for (const i of items) {
+      await borrowTx(marginAccount, i.asset, i.amount);
+    }
+
     await reloadMarginState();
-    return toast.success("Borrow successful!");
-  }
+    return toast.success("Dual Borrow completed!");
+  };
 
-  // --- WB Path (deposit → refresh → borrow) ---
-  if (mode === "WB") {
-    if (!collateralAmount || Number(collateralAmount) <= 0) {
-      return toast.error("Deposit amount required in WB mode");
+  const repayTx = async (marginAccount: string, asset: string, amount: string) => {
+    const addressList = getAddressList();
+    if (!addressList) throw new Error("Unsupported chain");
+
+    const decimals = TOKEN_DECIMALS[asset] ?? 18;
+    const parsed = parseUnits(amount, decimals);
+
+    if (asset === "ETH" || asset === "WETH") {
+      return walletClient!.writeContract({
+        address: addressList.accountManagerContractAddress as `0x${string}`,
+        abi: AccountManager.abi,
+        functionName: "repayEth",
+        args: [marginAccount, parsed],
+      });
     }
 
-    toast("Depositing collateral...");
-    await deposit(collateralAsset, collateralAmount, marginAccount);
+    const token = tokenAddressByChain[chainId!]?.[asset];
+    if (!token) throw new Error(`Unknown token ${asset}`);
 
-    state = await reloadMarginState();
-    if (!state) return toast.error("State refresh failed");
-
-    if (amountUsd > state.maxBorrow) {
-      return toast.error("Borrow exceeds leverage limit after deposit");
-    }
-
-    if (!validateBorrowRisk(state, amountUsd)) return;
-
-    toast("Borrowing...");
-    await borrowTx(marginAccount, borrowAsset, borrowAmount);
-
-    await reloadMarginState();
-    return toast.success("Deposit + Borrow completed!");
-  }
-};
-
-
-const executeDualBorrow = async ({
-  items,
-  collateralAsset,
-  collateralAmount,
-  mode,
-}: {
-  items: { asset: string; amount: string }[];
-  collateralAsset: string;
-  collateralAmount: string;
-  mode: "MB" | "WB";
-}) => {
-
-  if (!walletClient || !publicClient || !chainId || !address) {
-    return toast.error("Wallet not ready");
-  }
-
-  const addressList = getAddressList();
-  if (!addressList) return toast.error("Unsupported network");
-
-  const accounts = await fetchAccountCheck();
-  if (!accounts.length) return toast.error("No Margin Account found");
-
-  const marginAccount = accounts[0];
-  let state = marginState || (await reloadMarginState());
-  if (!state) return toast.error("Margin state missing");
-
-  const totalUsd = items
-    .map(i => normalizeBorrowUsd(i.asset, i.amount))
-    .reduce((a, b) => a + b, 0);
-
-  if (totalUsd <= 0) return toast.error("Invalid borrow amounts");
-
-  if (mode === "WB") {
-    if (!collateralAmount || Number(collateralAmount) <= 0) {
-      return toast.error("Deposit required in WB mode");
-    }
-
-    toast("Depositing collateral...");
-    await deposit(collateralAsset, collateralAmount, marginAccount);
-
-    state = await reloadMarginState();
-    if (!state) return toast.error("State refresh failed");
-  }
-
-  if (totalUsd > state.maxBorrow) {
-    return toast.error("Dual borrow exceeds leverage");
-  }
-
-  if (!validateBorrowRisk(state, totalUsd)) return;
-
-  toast("Borrowing multiple assets...");
-
-  for (const i of items) {
-    await borrowTx(marginAccount, i.asset, i.amount);
-  }
-
-  await reloadMarginState();
-  return toast.success("Dual Borrow completed!");
-};
-
-const repayTx = async (marginAccount: string, asset: string, amount: string) => {
-  const addressList = getAddressList();
-  if (!addressList) throw new Error("Unsupported chain");
-
-  const decimals = TOKEN_DECIMALS[asset] ?? 18;
-  const parsed = parseUnits(amount, decimals);
-
-  if (asset === "ETH" || asset === "WETH") {
     return walletClient!.writeContract({
       address: addressList.accountManagerContractAddress as `0x${string}`,
       abi: AccountManager.abi,
-      functionName: "repayEth",
-      args: [marginAccount, parsed],
+      functionName: "repay",
+      args: [marginAccount, token, parsed],
     });
-  }
+  };
 
-  const token = tokenAddressByChain[chainId!]?.[asset];
-  if (!token) throw new Error(`Unknown token ${asset}`);
+  const repayFull = async () => {
+    const state = await reloadMarginState();
+    if (!state || state.borrowUsd <= 0) return;
 
-  return walletClient!.writeContract({
-    address: addressList.accountManagerContractAddress as `0x${string}`,
-    abi: AccountManager.abi,
-    functionName: "repay",
-    args: [marginAccount, token, parsed],
-  });
-};
+    await executeRepay({
+      asset: "USDC",
+      amount: String(state.borrowUsd),
+      mode: "WB",
+    });
+  };
 
-const repayFull = async () => {
-  const state = await reloadMarginState();
-  if (!state || state.borrowUsd <= 0) return;
-
-  await executeRepay({
-    asset: "USDC", // or detect borrowed token
-    amount: String(state.borrowUsd),
-    mode: "WB",
-  });
-};
-
-
-const executeRepay = async ({
-  asset,
-  amount,
-  mode,
-}: {
-  asset: string;
-  amount: string;
-  mode: "MB" | "WB";
-}) => {
-  if (!walletClient || !publicClient || !chainId || !address) {
-    return toast.error("Wallet not ready");
-  }
-
-  const addressList = getAddressList();
-  if (!addressList) return toast.error("Unsupported network");
-
-  const accounts = await fetchAccountCheck();
-  if (!accounts.length) return toast.error("No Margin Account found");
-
-  const marginAccount = accounts[0];
-  let state = marginState || (await reloadMarginState());
-  if (!state) return toast.error("State missing");
-
-  const amountUsd = Number(amount);
-
-  // --- MB path ---
-  if (mode === "MB") {
-    if (state.borrowUsd <= 0) {
-      return toast.error("No borrowed debt to repay");
+  const executeRepay = async ({
+    asset,
+    amount,
+    mode,
+  }: {
+    asset: string;
+    amount: string;
+    mode: "MB" | "WB";
+  }) => {
+    if (!walletClient || !publicClient || !chainId || !address) {
+      return toast.error("Wallet not ready");
     }
 
-    toast("Repaying...");
-    await repayTx(marginAccount, asset, amount);
+    const addressList = getAddressList();
+    if (!addressList) return toast.error("Unsupported network");
+
+    const accounts = await fetchAccountCheck();
+    if (!accounts.length) return toast.error("No Margin Account found");
+
+    const marginAccount = accounts[0];
+    let state = marginState || (await reloadMarginState());
+    if (!state) return toast.error("State missing");
+
+    const amountUsd = Number(amount);
+
+    if (mode === "MB") {
+      if (state.borrowUsd <= 0) {
+        return toast.error("No borrowed debt to repay");
+      }
+
+      toast("Repaying...");
+      await repayTx(marginAccount, asset, amount);
+      await reloadMarginState();
+      return toast.success("Repay completed!");
+    }
+
+    if (mode === "WB") {
+      toast("Paying from wallet → depositing into margin...");
+      await deposit(asset, amount, marginAccount);
+
+      toast("Repaying...");
+      await repayTx(marginAccount, asset, amount);
+
+      await reloadMarginState();
+      return toast.success("Wallet repay completed!");
+    }
+  };
+
+  const executeTransferToWallet = async (asset: string, amount: string) => {
+    const state = await reloadMarginState();
+    if (!state) return;
+
+    if (Number(amount) > state.maxWithdraw) {
+      return toast.error("Withdrawal would liquidate account");
+    }
+
+    toast("Withdrawing collateral...");
+    await withdraw(asset, amount);
     await reloadMarginState();
-    return toast.success("Repay completed!");
-  }
-
-  // --- WB path ---
-  if (mode === "WB") {
-    toast("Paying from wallet → depositing into margin...");
-    await deposit(asset, amount, marginAccount);
-
-    toast("Repaying...");
-    await repayTx(marginAccount, asset, amount);
-
-    await reloadMarginState();
-    return toast.success("Wallet repay completed!");
-  }
-};
-
-const executeTransferToWallet = async (asset:string, amount:string) => {
-  const state = await reloadMarginState();
-  if (!state) return;
-
-  if (Number(amount) > state.maxWithdraw) {
-    return toast.error("Withdrawal would liquidate account");
-  }
-
-  toast("Withdrawing collateral...");
-  await withdraw(asset, amount);
-  await reloadMarginState();
-  toast.success("Transferred to wallet!");
-};
-
-
+    toast.success("Transferred to wallet!");
+  };
 
   // Dialogue state
   type DialogueState = "none" | "create-margin" | "sign-agreement" | "deposit-borrow" | "deposit-earn";
@@ -910,15 +833,12 @@ const executeTransferToWallet = async (asset:string, amount:string) => {
   const [selectedMBCollaterals, setSelectedMBCollaterals] = useState<Collaterals[]>([]);
   const [mbAvailableCollaterals, setMbAvailableCollaterals] = useState<Collaterals[]>([]);
 
-  // Get collateral mock data from store
   const collateralMock = useCollateralBorrowStore((state) => state.collaterals);
 
-  // Single source of truth for MB mode
   const isMBMode =
     currentCollaterals.length === 1 &&
     currentCollaterals[0]?.balanceType.toLowerCase() === "mb";
 
-  // Initialize with one empty collateral if none exist
   useEffect(() => {
     if (currentCollaterals.length === 0) {
       const newCollateral: Collaterals = {
@@ -933,7 +853,6 @@ const executeTransferToWallet = async (asset:string, amount:string) => {
     }
   }, [currentCollaterals.length]);
 
-  // Limit to 1 collateral in Borrow mode
   useEffect(() => {
     if (mode === "Borrow" && currentCollaterals.length > 1) {
       setCurrentCollaterals([currentCollaterals[0]]);
@@ -943,8 +862,6 @@ const executeTransferToWallet = async (asset:string, amount:string) => {
     }
   }, [mode, currentCollaterals.length, editingIndex]);
 
-
-  // Calculate total deposit value from all collaterals
   const totalDepositValue = useMemo(
     () =>
       currentCollaterals.reduce(
@@ -956,17 +873,35 @@ const executeTransferToWallet = async (asset:string, amount:string) => {
 
   const mbTotalUsd = isMBMode ? totalDepositValue : 0;
 
-  // Simple calculations
+  // Calculate info card values based on margin state
   const fees = totalDepositValue > 0 ? totalDepositValue * 0.000234 : 0;
   const totalDeposit = totalDepositValue + fees;
   const platformPoints = Number((leverage * 0.575).toFixed(1));
-  const updatedCollateral = Math.round(depositAmount! * leverage * 0.6);
-  const netHealthFactor = Number((2.0 - leverage * 0.0875).toFixed(2));
 
-  // Update deposit amount and currency when collaterals change
+  // Updated collateral calculation using margin state
+  const updatedCollateral = useMemo(() => {
+    if (!marginState) return Math.round(depositAmount! * leverage * 0.6);
 
+    const newCollateralUsd = marginState.collateralUsd + totalDepositValue;
+    return Math.round(newCollateralUsd);
+  }, [marginState, totalDepositValue, depositAmount, leverage]);
 
-  // Collateral handlers
+  // Updated health factor calculation (using simulation)
+  const netHealthFactor = useMemo(() => {
+    const totalBorrowUsd = borrowItems.reduce((sum, item) =>
+      sum + (item.amount * item.leverage), 0);
+    const sim = simulateBorrow(marginState, totalBorrowUsd);
+    return Number(sim.newHF.toFixed(2));
+  }, [marginState, borrowItems, leverage]);
+
+  // New: Derived LTV using simulation
+  const netLTV = useMemo(() => {
+    const totalBorrowUsd = borrowItems.reduce((sum, item) =>
+      sum + (item.amount * item.leverage), 0);
+    const sim = simulateBorrow(marginState, totalBorrowUsd);
+    return Number(sim.newLTV.toFixed(2));
+  }, [marginState, borrowItems, leverage]);
+
   const handleAddCollateral = () => {
     if (editingIndex !== null) return;
     if (mode === "Borrow" && currentCollaterals.length >= 1) return;
@@ -1029,7 +964,6 @@ const executeTransferToWallet = async (asset:string, amount:string) => {
     setMode((prev) => (prev === "Borrow" ? "Deposit" : "Borrow"));
   };
 
-  // This will  make a changes On Balance 
   const handleBalanceTypeChange = (index: number) => {
     return async (balanceType: string | ((prev: string) => string)) => {
       let value = typeof balanceType === "function"
@@ -1038,12 +972,10 @@ const executeTransferToWallet = async (asset:string, amount:string) => {
 
       const normalized = value.toLowerCase();
 
-      // No change → ignore
       if (normalized === selectedBalanceType.toLowerCase()) return;
 
       if (!chainId || !address || !publicClient) return;
 
-      // === MB MODE ===
       if (normalized === "mb") {
         setLoading(true);
         const available = await fetchMarginBalances();
@@ -1051,14 +983,10 @@ const executeTransferToWallet = async (asset:string, amount:string) => {
 
         setMbAvailableCollaterals(available);
 
-        // Deposit mode → auto select all
-        // Borrow mode → select none
-        const initialSelected =
-          mode === "Deposit" ? available : [];
+        const initialSelected = mode === "Deposit" ? available : [];
 
         setSelectedMBCollaterals(initialSelected);
 
-        // Compute unified sum
         const sumUsd = initialSelected.reduce(
           (acc, c) => acc + c.amountInUsd,
           0
@@ -1086,7 +1014,6 @@ const executeTransferToWallet = async (asset:string, amount:string) => {
         return;
       }
 
-      // === WB MODE === (default)
       const prev = currentCollaterals[index] ?? {
         amount: 0,
         amountInUsd: 0,
@@ -1104,13 +1031,12 @@ const executeTransferToWallet = async (asset:string, amount:string) => {
         ...prev,
         balanceType: "wb",
         unifiedBalance: unified,
-        amountInUsd: unified, // mock 1:1 USD
+        amountInUsd: unified,
       };
 
       let next = [...currentCollaterals];
       next[index] = updated;
 
-      // Drop MB artifacts when leaving MB mode
       next = next.filter((c) => c.balanceType.toLowerCase() !== "mb");
 
       setCurrentCollaterals(next);
@@ -1121,7 +1047,6 @@ const executeTransferToWallet = async (asset:string, amount:string) => {
       setSelectedMBCollaterals([]);
     };
   };
-
 
   useEffect(() => {
     if (
@@ -1158,7 +1083,6 @@ const executeTransferToWallet = async (asset:string, amount:string) => {
     }
   }, [selectedMBCollaterals, isMBMode, currentCollaterals]);
 
-
   const handleButtonClick = () => {
     if (hasMarginAccount) {
       setActiveDialogue("deposit-earn");
@@ -1167,165 +1091,88 @@ const executeTransferToWallet = async (asset:string, amount:string) => {
     }
   };
 
+  // only loads once wallet , chain are ready
+  // no unnecessary console logs
+
+  const fetchers = useMemo(() => ({
+    fetchAccountCheck,
+    fetchCollateralState,
+    fetchBorrowState,
+  }), [fetchAccountCheck, fetchCollateralState, fetchBorrowState]);
+
+  // 1) Register fetchers into zustand when they change
   useEffect(() => {
-    (async () => {
-      if (!publicClient || !chainId || !address) return;
-      const state = await reloadMarginState();
-      console.log("initial margin-state:", state);
-    })();
-  }, [chainId, address, publicClient, reloadMarginState]);
+    useMarginStore.getState().setFetchers(fetchers);
+  }, [fetchers]);
+
+  // 2) Trigger initial load once wallet/network is ready
+  useEffect(() => {
+    if (!publicClient || !chainId || !address) return;
+    reloadMarginState();
+  }, [publicClient, chainId, address, reloadMarginState]);
+
+
 
   const handleTest = async () => {
-  console.log("===== TEST SUITE START =====");
 
-  // Helper to print section separators
-  const print = (msg: string) => console.log(`\n--- ${msg} ---`);
+    const t = toast.loading("Depositing...");
+    console.log(`Margin state before deposit ${marginState}`)
 
-  try {
-    // ===========================================
-    // 0. Sanity / Environment Check
-    // ===========================================
-    print("ENVIRONMENT CHECK");
-    if (!publicClient || !walletClient || !chainId || !address) {
-      console.error("Wallet not ready for testing");
-      return;
+    try {
+      const tx = await deposit("USDC", "5");
+
+      if (!tx) throw new Error("insufficient");
+
+      console.log("Margin state after deposit", {
+        collateralUsd: marginState!.collateralUsd,
+        borrowUsd: marginState!.borrowUsd,
+        hf: marginState!.hf,
+        ltv: marginState!.ltv,
+        maxBorrow: marginState!.maxBorrow,
+        maxWithdraw: marginState!.maxWithdraw,
+      })
+      toast.success("Deposit Successful", { id: t });
+
+    } catch (err) {
+      toast.dismiss(t);
+      toast.error("Tx declined");
     }
 
-    const accounts = await fetchAccountCheck();
-    if (!accounts.length) {
-      console.error("NO MARGIN ACCOUNT — create one first");
-      return;
-    }
-    const marginAccount = accounts[0];
-    console.log("Margin Account:", marginAccount);
+  // const t = toast.loading("Withdrawing...");
+  // console.log(`Margin state before withdraw ${marginState}`);
 
-    // ===========================================
-    // 1. MB Single Borrow (Requires existing collateral in MA)
-    // ===========================================
-    print("TEST 1: MB SINGLE BORROW");
+  // try {
+  //   const tx = await withdraw("USDC", "1");
 
-    await executeBorrow({
-      collateralAsset: "USDC",   // irrelevant for MB path
-      collateralAmount: "0",     // ignored
-      borrowAsset: "USDC",
-      borrowAmount: "0.02",     // borrow 0.02 USDC
-      mode: "MB",
-    });
+  //   if (!tx) throw new Error("insufficient");
 
-    console.log("MB SINGLE Borrow ✓");
+  //   console.log("Margin state after withdraw", {
+  //     collateralUsd: marginState!.collateralUsd,
+  //     borrowUsd: marginState!.borrowUsd,
+  //     hf: marginState!.hf,
+  //     ltv: marginState!.ltv,
+  //     maxBorrow: marginState!.maxBorrow,
+  //     maxWithdraw: marginState!.maxWithdraw,
+  //   });
+  //   toast.success("Withdraw Successful", { id: t });
 
-    // ===========================================
-    // 2. WB Single Borrow (Deposit → Borrow)
-    // ===========================================
-    print("TEST 2: WB SINGLE DEPOSIT → BORROW");
+  // } catch (err) {
+  //   toast.dismiss(t);
+  //   toast.error("Tx declined");
+  // }
 
-    await executeBorrow({
-      collateralAsset: "USDC",
-      collateralAmount: "0.1",   // deposit 0.1 USDC
-      borrowAsset: "USDC",
-      borrowAmount: "0.03",      // borrow 0.03 USDC
-      mode: "WB",
-    });
 
-    console.log("WB SINGLE Borrow ✓");
 
-    // ===========================================
-    // 3. MB Dual Borrow (Borrow 2 tokens using margin collateral)
-    // ===========================================
-    print("TEST 3: MB DUAL BORROW");
 
-    await executeDualBorrow({
-      items: [
-        { asset: "USDC", amount: "0.02" },
-        { asset: "USDT", amount: "0.03" },
-      ],
-      collateralAsset: "USDC",  // ignored
-      collateralAmount: "0",    // ignored
-      mode: "MB",
-    });
-
-    console.log("MB DUAL Borrow ✓");
-
-    // ===========================================
-    // 4. WB Dual Borrow (Deposit → Borrow 2 tokens)
-    // ===========================================
-    print("TEST 4: WB DUAL DEPOSIT → BORROW");
-
-    await executeDualBorrow({
-      items: [
-        { asset: "USDC", amount: "0.01" },
-        { asset: "USDT", amount: "0.02" },
-      ],
-      collateralAsset: "USDC",
-      collateralAmount: "0.05",   // deposit first
-      mode: "WB",
-    });
-
-    console.log("WB DUAL Borrow ✓");
-
-    // ===========================================
-    // 5. Risk Guard: EXCEED MAX BORROW
-    // Should trigger: exceeds leverage
-    // ===========================================
-    print("TEST 5: RISK GUARD — OVER BORROW");
-
-    await executeBorrow({
-      collateralAsset: "USDC",
-      collateralAmount: "0",    // MB
-      borrowAsset: "USDC",
-      borrowAmount: "9999",     // absurd amount triggers failure
-      mode: "MB",
-    });
-
-    console.log("Risk Guard MaxBorrow TEST ✓");
-
-    // ===========================================
-    // 6. Risk Guard: HF/LTV Liquidation Scenario
-    // Should trigger liquidation guard
-    // ===========================================
-    print("TEST 6: RISK GUARD — LIQUIDATION BREACH");
-
-    await executeBorrow({
-      collateralAsset: "USDC",
-      collateralAmount: "0.01",  // deposit tiny
-      borrowAsset: "USDT",
-      borrowAmount: "1",         // borrow too large vs collateral
-      mode: "WB",
-    });
-
-    console.log("Risk Guard HF/LTV TEST ✓");
-
-    console.log("\n===== TEST SUITE COMPLETE =====");
-  } catch (err) {
-    console.error("TEST FAILURE:", err);
   }
-};
-
 
 
   return (
     <>
 
-      {/* //This is  only for test Purpose  */}
-      <button
-        onClick={handleTest}
-        className="
-                px-5 py-2
-                rounded-lg
-                text-white
-                font-medium
-                bg-gradient-to-r from-purple-600 to-indigo-600
-                shadow-md
-                hover:shadow-lg
-                hover:scale-[1.03]
-                active:scale-[0.97]
-                transition-all
-                duration-200
-              "
-      >
-        TestDeposit
+      <button onClick={handleTest} className="bg-red-500 w-14 rounded-2xl cursor-pointer ">
+        Click
       </button>
-
 
 
       <motion.div
@@ -1364,7 +1211,6 @@ const executeTransferToWallet = async (asset:string, amount:string) => {
             {isMBMode ? "Select Your Collateral" : "Deposit"}
           </motion.div>
           <div className="flex flex-col gap-[12px]">
-            {/* Render MB UI if MB is selected, otherwise render collaterals */}
             {isMBMode ? (
               <motion.div
                 className="flex flex-col gap-[24px] bg-white p-[20px] rounded-[16px] border-[1px] border-[#E2E2E2]"
@@ -1504,11 +1350,6 @@ const executeTransferToWallet = async (asset:string, amount:string) => {
                       onCancel={handleCancelEdit}
                       onBalanceTypeChange={handleBalanceTypeChange(0)}
                       index={0}
-
-
-
-
-
                     />
                   </motion.div>
                 )}
@@ -1605,6 +1446,15 @@ const executeTransferToWallet = async (asset:string, amount:string) => {
               totalDeposit: totalDeposit,
               updatedCollateral: updatedCollateral,
               netHealthFactor: netHealthFactor,
+              // New derived fields from analysis
+              netLTV: netLTV,
+              hfColor: getHFColor(netHealthFactor),
+              hfWarning: getHFWarning(netHealthFactor),
+              ltv: marginState?.ltv ?? 0,
+              maxBorrow: marginState?.maxBorrow ?? 0,
+              liqThreshold: 0.9,
+              minDebt: 100, // Placeholder; fetch from config
+              liqFee: 0.05, // Placeholder; fetch from config
             }}
             showExpandable={true}
             expandableSections={[
@@ -1832,4 +1682,4 @@ const executeTransferToWallet = async (asset:string, amount:string) => {
       </AnimatePresence>
     </>
   );
-};
+}

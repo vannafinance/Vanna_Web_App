@@ -9,6 +9,7 @@ import {
 } from "@/lib/constants";
 import Image from "next/image";
 import { AmountBreakdownDialogue } from "../ui/amount-breakdown-dialogue";
+
 import {
   DEPOSIT_PERCENTAGES,
   PERCENTAGE_COLORS,
@@ -16,12 +17,11 @@ import {
   UNIFIED_BALANCE_BREAKDOWN_DATA,
   BALANCE_TYPE_OPTIONS,
 } from "@/lib/constants/margin";
-import { TOKEN_OPTIONS, TOKEN_DECIMALS, tokenAddressByChain, vTokenAddressByChain } from "@/lib/utils/web3/token";
+import { TOKEN_OPTIONS, TOKEN_DECIMALS, tokenAddressByChain } from "@/lib/utils/web3/token";
 
 import { usePublicClient, useAccount } from "wagmi";
 import { useUserStore } from "@/store/user";
 import { formatUnits } from "viem";
-import ERC20 from "../../abi/vanna/out/out/ERC20.sol/ERC20.json";
 import { erc20Abi } from "viem";
 
 interface CollateralProps {
@@ -147,11 +147,6 @@ export const Collateral = (props: CollateralProps) => {
   userAddress,
   publicClient
 ]);
-
-
-
-  // Fetch unified balance when in editing mode (triggers on asset/type change)
-  // Here we will check with parent function not maintain a differend function here 
 
 
   // Calculate USD value from input (1:1 conversion)

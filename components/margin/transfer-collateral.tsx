@@ -28,7 +28,7 @@ export const TransferCollateral = () => {
   };
 
   const handleTransferClick = () => {
-    console.log("Transfer clicked");
+    alert("Transfer clicked");
   };
 
   return (
