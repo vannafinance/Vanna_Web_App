@@ -11,6 +11,7 @@ interface Button {
   disabled: boolean;
   icon?: Element;
   ariaLabel?: string;
+  width?: string; // Custom width class (e.g., "w-full", "w-[200px]", etc.)
 }
 
 export const Button = (props: Button) => {
@@ -29,7 +30,7 @@ export const Button = (props: Button) => {
       disabled={props.disabled}
       onClick={props.onClick}
       aria-label={props.ariaLabel || props.text}
-      className={`w-full h-fit ${
+      className={`${props.width || "w-full"} h-fit ${
         props.size == "medium"
           ? "py-[16px] px-[12px] text-[16px] rounded-[12px]"
           : props.size == "large"

@@ -5,9 +5,10 @@ import { depositData, netApyData } from "@/lib/constants/earn";
 import { AnimatedTabs } from "../ui/animated-tabs";
 import { ExpandableModal } from "../ui/expandable-modal";
 import { useTheme } from "@/contexts/theme-context";
+import { netVolumeData , netEarningsData } from "@/lib/constants/portfolio";
 
 interface ChartProps {
-  type: "overall-deposit" | "net-apy" | "my-supply" | "deposit-apy";
+  type: "overall-deposit" | "net-apy" | "my-supply" | "deposit-apy" | "net-volume" | "net-profit-loss";
   currencyTab?: boolean;
   height?: number;
   containerWidth?: string;
@@ -108,6 +109,10 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
         return depositData;
       case "deposit-apy":
         return netApyData;
+      case "net-volume":
+        return netVolumeData;
+      case "net-profit-loss":
+        return netEarningsData;
       default:
         return [];
     }
@@ -206,6 +211,10 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
               "Net APY"
             ) : type === "my-supply" ? (
               "My Supply"
+            ) : type === "net-volume" ? (
+              "Net Volume"
+            ) : type === "net-profit-loss" ? (
+              "Net Profit & Loss"
             ) : (
               <Dropdown
                 classname="text-[12px] font-semibold gap-[4px] w-[100px]"

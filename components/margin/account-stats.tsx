@@ -13,18 +13,20 @@ export interface AccountStatItem {
 interface AccountStatsProps {
   items: readonly AccountStatItem[];
   values: Record<string, string | number | null | undefined>;
+  gridCols?: string; // e.g., "grid-cols-3", "grid-cols-2", etc.
 }
 
 export const AccountStats = ({
   items,
   values,
+  gridCols = "grid-cols-3",
 }: AccountStatsProps) => {
   const { isDark } = useTheme();
   // Use grid-rows-1 if 3 or fewer items, otherwise grid-rows-2
   const gridRows = items.length <= 3 ? "grid-rows-1" : "grid-rows-2";
   
   return (
-    <div className={`border-[1px] rounded-[24px] w-full h-full grid grid-cols-3 ${gridRows} gap-x-[20px] gap-y-[0] place-items-center ${
+    <div className={`border-[1px] rounded-[24px] w-full h-full grid ${gridCols} ${gridRows} gap-x-[20px] gap-y-[0] place-items-center ${
       isDark
         ? "bg-[#222222]"
         : "bg-[#F7F7F7]"
@@ -69,7 +71,7 @@ export const AccountStats = ({
                 />
               </motion.div>
               <div className=" flex flex-col gap-[32px] w-full ">
-                <div className={`w-[289.33px] text-[20px] font-medium ${
+                <div className={`w-full text-[20px] font-medium ${
                   isDark ? "text-white" : ""
                 }`}>
                   {item.name}
