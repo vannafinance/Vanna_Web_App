@@ -3,6 +3,34 @@ import { arbAddressList, arbTokensAddress, baseAddressList, baseTokensAddress, o
 
 export const TOKEN_OPTIONS = poolsPlaceholder.map(p=>p.name)  //["WETH", "WBTC", "USDC", "USDT", "DAI"]
 
+
+
+// BASE (8453)
+// Token	Support	Notes
+// WETH	✔	canonical
+// WBTC	❌	no native WBTC
+// USDC	✔	native USDC on Base
+// USDT	❌	not deployed yet
+// DAI	❌	not canonical
+
+
+// ARBITRUM (42161)
+// Token	Support
+// WETH	✔
+// WBTC	✔
+// USDC	✔ (bridged / new native USDC.e depends)
+// USDT	✔
+// DAI	✔
+
+
+// OPTIMISM (10)
+// Token	Support
+// WETH	✔
+// WBTC	✔
+// USDC	✔
+// USDT	✔
+// DAI	✔
+
 export type TokenSymbol = (typeof TOKEN_OPTIONS)[number];
 
 
@@ -23,6 +51,12 @@ export const tokenAddressByChain: Record<number, Record<string, `0x${string}`>> 
   8453: baseTokensAddress as Record<string, `0x${string}`>,
 };
 
+
+export const SUPPORTED_TOKENS_BY_CHAIN: Record<number, TokenSymbol[]> = {
+  42161: ["WETH", "WBTC", "USDC", "USDT", "DAI"],
+  10:    ["WETH", "WBTC", "USDC", "USDT", "DAI"],
+  8453:  ["WETH", "USDC"],
+};
 
 
 //MB + leveraged flow

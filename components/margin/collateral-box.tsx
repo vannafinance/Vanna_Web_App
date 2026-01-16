@@ -1,7 +1,7 @@
 "use client";
 
 import { Collaterals } from "@/lib/types";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Dropdown } from "../ui/dropdown";
 import {
@@ -17,7 +17,6 @@ import {
   UNIFIED_BALANCE_BREAKDOWN_DATA,
   BALANCE_TYPE_OPTIONS,
 } from "@/lib/constants/margin";
-import { TOKEN_OPTIONS, TOKEN_DECIMALS, tokenAddressByChain } from "@/lib/utils/web3/token";
 
 import { usePublicClient, useAccount } from "wagmi";
 import { useUserStore } from "@/store/user";
@@ -40,6 +39,7 @@ interface CollateralProps {
   onDelete?: () => void;
   onBalanceTypeChange?: (balanceType: string) => void;
   index?: number;
+  supportedTokens:string[]
 }
 
 export const Collateral = (props: CollateralProps) => {
@@ -53,13 +53,16 @@ export const Collateral = (props: CollateralProps) => {
   const userAddress = useUserStore((state) => state.address);
 
   // Form state
-  const [selectedCurrency, setSelectedCurrency] = useState<string>(TOKEN_OPTIONS[0]);
+  const tokens = props.supportedTokens ?? [];
+
+  const [selectedCurrency, setSelectedCurrency] = useState<string>(tokens[0]);
   const [valueInput, setValueInput] = useState<string>("0.0");
   const [valueInUsd, setValueInUsd] = useState<string>("0.0");
   const [percentage, setPercentage] = useState(10);
   const [selectedBalanceType, setSelectedBalanceType] = useState<string>(
     BALANCE_TYPE_OPTIONS[0]
   );
+
 
   // Dialogue visibility states
   const [isViewSourcesOpen, setIsViewSourcesOpen] = useState(false);
@@ -69,7 +72,7 @@ export const Collateral = (props: CollateralProps) => {
   const collateral = props.collaterals;
   const hasCollateral = collateral !== null;
   const showStandardRight = isStandard && hasCollateral;
-  const showDeleteButton = isStandard && hasCollateral && props.index !== 0;
+  const showDeleteButton = isStandard && hasCollateral;
   const isWBSelected = selectedBalanceType === "WB";
 
   // Sync form with props when entering editing mode from standard view
@@ -88,66 +91,11 @@ export const Collateral = (props: CollateralProps) => {
   }, [props.collaterals])
 
   // Add new state for live unified balance
-  const [liveUnifiedBalance, setLiveUnifiedBalance] = useState<number>(0);
 
   // Fetch function
-  const fetchLiveBalance = async () => {
-    if (!chainId || !publicClient || !userAddress || selectedBalanceType !== "WB") {
-      setLiveUnifiedBalance(0);
-      return;
-    }
+ 
 
-    let balance = 0;
-
-    if (selectedCurrency === "ETH") {
-      const raw = await publicClient.getBalance({ address: userAddress });
-      balance = Number(formatUnits(raw, 18));
-    } else {
-      const tokenAddress = tokenAddressByChain[chainId]?.[selectedCurrency];
-      if (!tokenAddress) {
-        setLiveUnifiedBalance(0);
-        return;
-      }
-
-      try {
-        const raw = await publicClient.readContract({
-          address: tokenAddress as `0x${string}`,
-          abi: erc20Abi,
-          functionName: "balanceOf",
-          args: [userAddress],
-        }) as bigint;
-        const decimals = TOKEN_DECIMALS[selectedCurrency];
-        balance = Number(formatUnits(raw, decimals));
-      } catch (err) {
-        console.error("Balance fetch error:", err);
-        balance = 0;
-      }
-    }
-
-    setLiveUnifiedBalance(balance);
-  };
-
-  // Run fetch when relevant things change
-  useEffect(() => {
-  if (!(isEditing && selectedBalanceType === "WB")) {
-    setLiveUnifiedBalance(0);
-    return;
-  }
-
-  const id = setTimeout(() => {
-    fetchLiveBalance();
-  }, 300);
-
-  return () => clearTimeout(id);
-}, [
-  isEditing,
-  selectedBalanceType,
-  selectedCurrency,
-  chainId,
-  userAddress,
-  publicClient
-]);
-
+  const liveUnifiedBalance=10;
 
   // Calculate USD value from input (1:1 conversion)
   useEffect(() => {
@@ -251,7 +199,7 @@ export const Collateral = (props: CollateralProps) => {
                 classname="text-[16px] font-medium gap-[8px]"
                 selectedOption={selectedCurrency}
                 setSelectedOption={setSelectedCurrency}
-                items={TOKEN_OPTIONS}
+                items={props.supportedTokens }
               />
             </div>
 

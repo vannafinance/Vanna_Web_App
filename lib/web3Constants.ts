@@ -221,10 +221,10 @@ const networkOptions = [
 
 
 // =============== ARBITRUM ============================================
-const arbTokensAddress: { [key: string]: string } = {
+const arbTokensAddress: Record<string, `0x${string}`> = {
   USDC: "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",
   USDT: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
-  DAI: "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+  DAI:  "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
   WETH: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
   WBTC: "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f",
 };
@@ -255,13 +255,14 @@ const arbAddressList = {
 };
 
 // =============== OP ============================================
-const opTokensAddress: { [key: string]: string } = {
+const opTokensAddress: Record<string, `0x${string}`> = {
   USDC: "0x7F5c764cBc14f9669B88837ca1490cCa17c31607",
   USDT: "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58",
-  DAI: "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+  DAI:  "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
   WETH: "0x4200000000000000000000000000000000000006",
   WBTC: "0x68f180fcCe6836688e9084f035309E29Bf0A2095",
 };
+
 
 const opAddressList = {
   daiTokenAddress: "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
@@ -304,12 +305,10 @@ const opAddressList = {
 };
 
 // =============== BASE ============================================
-const baseTokensAddress: { [key: string]: string } = {
+export const baseTokensAddress: Record<string, `0x${string}`> = {
   USDC: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-  USDT: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
-  DAI: "0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb",
   WETH: "0x4200000000000000000000000000000000000006",
-  WBTC: "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f",
+  // removed: USDT, DAI, WBTC (not canonical / not supported)
 };
 
 const baseAddressList = {
