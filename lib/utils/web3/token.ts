@@ -53,9 +53,9 @@ export const tokenAddressByChain: Record<number, Record<string, `0x${string}`>> 
 
 
 export const SUPPORTED_TOKENS_BY_CHAIN: Record<number, TokenSymbol[]> = {
-  42161: ["WETH", "WBTC", "USDC", "USDT", "DAI"],
-  10:    ["WETH", "WBTC", "USDC", "USDT", "DAI"],
-  8453:  ["WETH", "USDC"],
+  42161: ["ETH","WETH", "WBTC", "USDC", "USDT", "DAI"],
+  10:    ["ETH","WETH", "WBTC", "USDC", "USDT", "DAI"],
+  8453:  ["ETH","WETH", "WBTC", "USDC", "USDT", "DAI"],
 };
 
 

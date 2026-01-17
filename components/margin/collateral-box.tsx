@@ -40,6 +40,8 @@ interface CollateralProps {
   onBalanceTypeChange?: (balanceType: string) => void;
   index?: number;
   supportedTokens:string[]
+  getBalance?: (asset: string, type: "WB" | "MB") => number;
+  price?: number;
 }
 
 export const Collateral = (props: CollateralProps) => {
@@ -92,18 +94,26 @@ export const Collateral = (props: CollateralProps) => {
 
   // Add new state for live unified balance
 
-  // Fetch function
- 
+  // Fetch live unified balance dynamically
+  const liveUnifiedBalance = useMemo(() => {
+    if (props.getBalance && selectedCurrency) {
+      const type = selectedBalanceType.toUpperCase() === "MB" ? "MB" : "WB";
+      return props.getBalance(selectedCurrency, type);
+    }
+    return 0;
+  }, [props.getBalance, selectedCurrency, selectedBalanceType]);
 
-  const liveUnifiedBalance=10;
-
+  // Calculate USD value from input using price
   // Calculate USD value from input (1:1 conversion)
   useEffect(() => {
     if (isEditing && valueInput) {
       const amount = parseFloat(valueInput) || 0;
+      const price = props.price ?? 1;
+      setValueInUsd((amount * price).toFixed(2));
       setValueInUsd(amount.toString());
     }
-  }, [valueInput, isEditing]);
+  }, [valueInput, isEditing, props.price]);
+
 
   // Save edited collateral (use locally fetched unified balance)
   const handleSave = () => {

@@ -1,17 +1,29 @@
 "use client";
 
 import { networkOptions } from "@/lib/web3Constants";
+import { useBalanceStore } from "@/store/balance-store";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { useSwitchChain,  useChainId} from "wagmi";
+import { useSwitchChain, useChainId, useAccount, usePublicClient } from "wagmi";
+import { PublicClient } from 'viem';
+import { useFetchAccountCheck } from "@/lib/utils/margin/marginFetchers";
 
 export const NetworkDropdown = () => {
   // Dropdown visibility state
   const [isHover, setIsHover] = useState(false);
-  const chainId=useChainId();
+  const chainId = useChainId();
 
-  const {switchChain } =useSwitchChain()
+  const { switchChain } = useSwitchChain()
+
+  const { reset, refreshBalances } = useBalanceStore();
+
+
+  const { address, isConnected } = useAccount()
+
+  const publicClient = usePublicClient()
+
+  const fetchAccountCheck = useFetchAccountCheck(chainId, address, publicClient);
 
 
   // Handler for mouse enter
@@ -26,38 +38,65 @@ export const NetworkDropdown = () => {
 
   // Handler for network select
   const handleNetworkSelect = (item: typeof networkOptions[0]) => {
-  
-
-    return async ()=>{
 
 
-      if(item.chainId!==chainId){
-        try{
-          await switchChain({chainId:item.chainId})
+    return async () => {
+
+
+      if (item.chainId !== chainId) {
+        try {
+          await switchChain({ chainId: item.chainId })
         }
-        catch(err){
-                console.warn("Chain switch rejected or failed", err);
-            
+        catch (err) {
+          console.warn("Chain switch rejected or failed", err);
+
         }
       }
 
 
     }
-    
-   
+
+
   };
 
+  useEffect(() => {
+    if (!chainId || !address || !publicClient) return;
 
-  useEffect(()=>{
-      console.log(chainId)
-  },[chainId])
+    let cancelled = false;
+
+    (async () => {
+      // 1. fetch margin account(s) for current network
+      const accs = await fetchAccountCheck();
+      const marginAccount = accs?.[0];
+
+      // 2. clear stale balances
+      reset();
+
+      // 3. refresh balances one-shot
+      await refreshBalances({
+        chainId,
+        publicClient,
+        address,
+        marginAccount,
+      });
+
+      if (cancelled) return;
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [chainId, address, publicClient]);
 
 
   //If the user directly opens with wallet6 already on base/Arbitrum it will show wrtong selection 
   // handle that selection from derive state 
 
-  const selectedNetwork = networkOptions.find((n) => n.chainId === chainId) 
-  ?? networkOptions[0];
+
+
+
+  const selectedNetwork = networkOptions.find((n) => n.chainId === chainId)
+    ?? networkOptions[0];
 
 
 
@@ -76,7 +115,7 @@ export const NetworkDropdown = () => {
         aria-expanded={isHover}
         aria-haspopup="listbox"
       >
-        Network <Image src={selectedNetwork.icon} alt={selectedNetwork.id} width={20} height={20}/>
+        Network <Image src={selectedNetwork.icon} alt={selectedNetwork.id} width={20} height={20} />
 
         {/* Dropdown arrow icon */}
         <motion.svg
@@ -124,7 +163,7 @@ export const NetworkDropdown = () => {
                   onClick={handleNetworkSelect(item)}
                   aria-label={`Select ${item.name} network`}
                 >
-                  <Image src={item.icon} width={20} height={20} alt="" aria-hidden="true"/>
+                  <Image src={item.icon} width={20} height={20} alt="" aria-hidden="true" />
                   {item.name}
                 </motion.button>
               );

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dropdown } from "../ui/dropdown";
 import { AnimatePresence, motion } from "framer-motion";
 import { DropdownOptions } from "@/lib/constants";
@@ -10,6 +10,8 @@ import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import { useFetchAccountCheck } from "@/lib/utils/margin/marginFetchers";
 import { useMarginStore } from "@/store/margin-account-state";
 import { toast } from "sonner";
+import { useBalanceStore } from "@/store/balance-store";
+import { TOKEN_DECIMALS } from "@/lib/utils/web3/token";
 
 export const TransferCollateral = () => {
   const [selectedCurrency, setSelectedCurrency] = useState<string>("USDC");
@@ -27,8 +29,18 @@ export const TransferCollateral = () => {
 
   const fetchAccountCheck = useFetchAccountCheck(chainId, address as `0x${string}`, publicClient);
 
-  // Get max balance from marginState.collateralUsd
-  const maxBalance = marginState?.collateralUsd || 0;
+  // Get balance from store
+  const getBalance = useBalanceStore((s) => s.getBalance);
+
+  // Get max balance from margin account for selected asset
+  const maxBalance = getBalance(selectedCurrency, "MB");
+
+  // Update when currency changes
+  useEffect(() => {
+    setValueInput("");
+    setPercentage(0);
+    setValueInUsd(0);
+  }, [selectedCurrency]);
 
   const handlePercentageClick = (item: number) => {
     setPercentage(item);
@@ -66,9 +78,10 @@ export const TransferCollateral = () => {
         throw new Error("Public client not available");
       }
 
-      // Validate amount doesn't exceed max balance
-      if (Number(amount) > maxBalance) {
-        throw new Error(`Amount exceeds available balance. Max: ${maxBalance} ${asset}`);
+      // Validate amount doesn't exceed asset-specific max balance
+      const assetBalance = getBalance(asset, "MB");
+      if (Number(amount) > assetBalance) {
+        throw new Error(`Amount exceeds available balance. Max: ${assetBalance} ${asset}`);
       }
 
       console.log("✓ All validations passed");
@@ -349,7 +362,7 @@ export const TransferCollateral = () => {
             <div className=" text-[10px] font-medium ">
               Transfer To: <span className="font-semibold">WB</span>
             </div>
-            <div className="text-[20px] font-medium ">{maxBalance.toFixed(2)} USD</div>
+            <div className="text-[20px] font-medium ">{maxBalance.toFixed(2)} {selectedCurrency}</div>
 
             <motion.button
               onClick={handleMaxValueClick}

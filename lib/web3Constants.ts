@@ -162,11 +162,6 @@ const chains: readonly Chain[] = [
 
 
 
-
-
-
-
-
   
 const networkOptions = [
   {
@@ -305,11 +300,14 @@ const opAddressList = {
 };
 
 // =============== BASE ============================================
-export const baseTokensAddress: Record<string, `0x${string}`> = {
+const baseTokensAddress: Record<string, `0x${string}`> = {
   USDC: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  USDT: "0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2",
+  DAI:  "0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb",
   WETH: "0x4200000000000000000000000000000000000006",
-  // removed: USDT, DAI, WBTC (not canonical / not supported)
+  WBTC: "0x0555E30da8f98308EdB960aa94C0Db47230d2B9c",
 };
+
 
 const baseAddressList = {
   daiTokenAddress: "0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb",
@@ -367,5 +365,4 @@ const CollateralAssetCode: { [key: string]: string } = {
 };
 
 
-
-export {chains,networkOptions,arbTokensAddress,arbAddressList,opTokensAddress,opAddressList,baseTokensAddress,baseAddressList,OptionType,codeToAsset,CollateralAssetCode}
+export {chains,networkOptions,arbTokensAddress,arbAddressList,baseTokensAddress,opTokensAddress,opAddressList,baseAddressList,OptionType,codeToAsset,CollateralAssetCode}

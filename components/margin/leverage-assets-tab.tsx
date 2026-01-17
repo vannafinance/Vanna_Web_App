@@ -21,17 +21,12 @@ import { Radio } from "../ui/radio-button";
 import { useMarginAccountInfoStore } from "@/store/margin-account-info-store";
 import { useUserStore } from "@/store/user";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
-
-
 import AccountManager from "../../abi/vanna/out/out/AccountManager.sol/AccountManager.json";
 import Registry from "../../abi/vanna/out/out/Registry.sol/Registry.json";
 import ERC20 from "../../abi/vanna/out/out/ERC20.sol/ERC20.json"
 import RiskEngine from "../../abi/vanna/out/out/RiskEngine.sol/RiskEngine.json"
-
-
 import { toast } from "sonner"
 import { PoolTable } from "@/lib/utils/margin/types";
-
 import { baseAddressList, arbAddressList, opAddressList } from "@/lib/web3Constants";
 import { erc20Abi, formatUnits, parseEther, parseUnits } from "viem";
 import { iconPaths } from "@/lib/constants";
@@ -43,6 +38,7 @@ import { useMarginStore } from "@/store/margin-account-state";
 import { getAddressList } from "@/lib/utils/web3/addressList";
 import { useFetchAccountCheck, useFetchBorrowState, useFetchCollateralState } from "@/lib/utils/margin/marginFetchers";
 import { useBalanceStore } from "@/store/balance-store";
+
 
 
 type Modes = "Deposit" | "Borrow";
@@ -60,6 +56,7 @@ export const LeverageAssetsTab = () => {
   const [depositAmount, setDepositAmount] = useState<number | undefined>(0);
   const address = useUserStore((state) => state.address);
   const marginState = useMarginStore((s) => s.marginState);
+  const [marginAccountAddress, setMarginAccountAddress] = useState<`0x${string}` | undefined>(undefined);
 
   // Wagmi hooks
   const { chainId } = useAccount();
@@ -78,9 +75,10 @@ export const LeverageAssetsTab = () => {
 
   const walletBalances = useBalanceStore(s => s.walletBalances);
   const marginBalances = useBalanceStore(s => s.marginBalances);
+  const getBalance = useBalanceStore(s => s.getBalance);
 
   useEffect(() => {
-    
+
   }, [chainId, publicClient, walletClient, address])
 
 
@@ -308,9 +306,6 @@ export const LeverageAssetsTab = () => {
   //         return asset && fetchWalletBalance(asset)
   //     }
   //   };
-
-
-
 
   const fetchAccountCheck = useFetchAccountCheck(chainId, address as `0x${string}`, publicClient);
   const fetchCollateralState = useFetchCollateralState(chainId, publicClient);
@@ -871,18 +866,20 @@ export const LeverageAssetsTab = () => {
 
 
   useEffect(() => {
-    if (currentCollaterals.length === 0) {
+    if (currentCollaterals.length === 0 && supportedTokens.length > 0) {
+      const defaultAsset = supportedTokens[0];
+      const defaultBalance = getBalance(defaultAsset, "WB");
       const newCollateral: Collaterals = {
         amount: 0,
         amountInUsd: 0,
-        asset: supportedTokens[0],
+        asset: defaultAsset,
         balanceType: "wb",
-        unifiedBalance: 0,
+        unifiedBalance: defaultBalance,
       };
       setCurrentCollaterals([newCollateral]);
       setEditingIndex(0);
     }
-  }, [currentCollaterals.length]);
+  }, [currentCollaterals.length, supportedTokens, getBalance]);
 
   useEffect(() => {
     if (mode === "Borrow" && currentCollaterals.length > 1) {
@@ -937,12 +934,15 @@ export const LeverageAssetsTab = () => {
     if (editingIndex !== null) return;
     if (mode === "Borrow" && currentCollaterals.length >= 1) return;
 
+    const defaultAsset = supportedTokens[0] || "ETH";
+    const defaultBalance = getBalance(defaultAsset, "WB");
+
     const newCollateral: Collaterals = {
       amount: 0,
       amountInUsd: 0,
-      asset: supportedTokens[0],
+      asset: defaultAsset,
       balanceType: "wb",
-      unifiedBalance: 0,
+      unifiedBalance: defaultBalance,
     };
     const newIndex = currentCollaterals.length;
     setCurrentCollaterals([...currentCollaterals, newCollateral]);
@@ -955,12 +955,21 @@ export const LeverageAssetsTab = () => {
   };
 
   const handleSaveCollateral = (index: number, updatedCollateral: Collaterals) => {
+    // Ensure unifiedBalance is up to date with the store for the selected token
+    const type = updatedCollateral.balanceType.toUpperCase() as "WB" | "MB";
+    const freshBalance = getBalance(updatedCollateral.asset, type);
+
+    const collateralWithFreshBalance = {
+      ...updatedCollateral,
+      unifiedBalance: freshBalance,
+    };
+
     if (updatedCollateral.balanceType.toLowerCase() === "mb") {
-      setCurrentCollaterals([updatedCollateral]);
+      setCurrentCollaterals([collateralWithFreshBalance]);
       setEditingIndex(null);
     } else {
       const newCollaterals = [...currentCollaterals];
-      newCollaterals[index] = updatedCollateral;
+      newCollaterals[index] = collateralWithFreshBalance;
       const filteredCollaterals = newCollaterals.filter(
         (c) => c.balanceType.toLowerCase() !== "mb"
       );
@@ -1009,7 +1018,16 @@ export const LeverageAssetsTab = () => {
 
       if (normalized === "mb") {
         setLoading(true);
-        const available = await fetchMarginBalances();
+        // Use store marginBalances instead of fetchMarginBalances
+        const available: Collaterals[] = marginBalances
+          .filter((b) => b.amount > 0)
+          .map((b) => ({
+            asset: b.asset,
+            amount: b.amount,
+            amountInUsd: b.amount,
+            unifiedBalance: b.amount,
+            balanceType: "mb",
+          }));
         setLoading(false);
 
         setMbAvailableCollaterals(available);
@@ -1055,17 +1073,18 @@ export const LeverageAssetsTab = () => {
 
       const asset = prev.asset;
 
-      const fetched = await fetchBalance(asset, "WB");
+      const fetched = getBalance(asset, "WB");
       const unified = typeof fetched === "number" ? fetched : 0;
 
       const updated: Collaterals = {
         ...prev,
         balanceType: "wb",
         unifiedBalance: unified,
-        amountInUsd: unified,
+        amountInUsd: prev.amount,
       };
 
       let next = [...currentCollaterals];
+      
       next[index] = updated;
 
       next = next.filter((c) => c.balanceType.toLowerCase() !== "mb");
@@ -1145,6 +1164,34 @@ export const LeverageAssetsTab = () => {
     reloadMarginState();
   }, [publicClient, chainId, address, reloadMarginState]);
 
+  // Fetch margin account address once
+  useEffect(() => {
+    if (!address || !publicClient || !chainId) {
+      setMarginAccountAddress(undefined);
+      return;
+    }
+
+    let active = true;
+    const fetchAddr = async () => {
+      try {
+        const accounts = await fetchAccountCheck();
+        if (active && accounts && accounts.length > 0) {
+          setMarginAccountAddress(accounts[0] as `0x${string}`);
+          if (!hasMarginAccount) {
+            setHasMarginAccount({ hasMarginAccount: true });
+          }
+        } else if (active) {
+          setMarginAccountAddress(undefined);
+        }
+      } catch (e) {
+        console.error("Error fetching margin account:", e);
+      }
+    };
+    fetchAddr();
+    return () => { active = false; };
+  }, [address, publicClient, chainId, fetchAccountCheck, hasMarginAccount, setHasMarginAccount]);
+
+  // Poll balances using stored address
   useEffect(() => {
     if (!chainId || !address || !publicClient) return;
 
@@ -1153,16 +1200,11 @@ export const LeverageAssetsTab = () => {
     const poll = async () => {
       if (cancelled) return;
 
-      const accounts = await fetchAccountCheck();
-      if (!accounts?.length) return;
-
-      const marginAccount = accounts[0] as `0x${string}`;
-
       await useBalanceStore.getState().refreshBalances({
         chainId,
         address: address as `0x${string}`,
         publicClient,
-        marginAccount,
+        marginAccount: marginAccountAddress,
       });
     };
 
@@ -1173,40 +1215,46 @@ export const LeverageAssetsTab = () => {
       cancelled = true;
       clearInterval(id);
     };
-  }, [chainId, address, publicClient]);
+  }, [chainId, address, publicClient, marginAccountAddress]);
+
+  // Sync Collateral UI with updated balances
+  useEffect(() => {
+    setCurrentCollaterals(prev => {
+      let hasChanges = false;
+      const next = prev.map(c => {
+        const type = c.balanceType.toUpperCase() as "WB" | "MB";
+        const bal = getBalance(c.asset, type);
+        if (bal !== c.unifiedBalance) {
+          hasChanges = true;
+          return { ...c, unifiedBalance: bal };
+        }
+        return c;
+      });
+      return hasChanges ? next : prev;
+    });
+  }, [walletBalances, marginBalances, getBalance]);
 
 
 
   const handleTest = async () => {
+    const t = toast.loading("Depositing USDT...");
 
-    // console.log("--------------------allBalances-------------------------------")
-    // console.log(allBalances)
-    // console.log("--------------------walletBalances-------------------------------")
-    // console.log(walletBalances)
-    // console.log("--------------------marginBalances-------------------------------")
-    // console.log(marginBalances)
+    try {
+      const tx_hash = await deposit("WETH", "0.00001073");
 
-  }
+      toast.success("Deposit successful!", { id: t });
+      console.log("tx:", tx_hash);
+    } catch (err) {
+      toast.error("Deposit failed", { id: t });
+      console.error(err);
+    }
+  };
 
 
+  
 
   return (
     <>
-
-      <button onClick={handleTest} className="bg-red-500 w-14 rounded-2xl cursor-pointer ">
-        Click
-      </button>
-
-      {/* {supportedTokens.map(t => {
-        const bal = marginBalances.find(b => b.asset === t)?.amount ?? 0;
-        return <div key={t}>{t}: {bal}</div>
-      })} */}
-
-      {supportedTokens.map(t => {
-        const bal = walletBalances.find(b => b.asset === t)?.amount ?? 0;
-        return <div key={t}>{t}: {bal}</div>
-      })}
-
 
       <motion.div
         className="w-full flex flex-col gap-[24px] pt-6"
@@ -1362,7 +1410,7 @@ export const LeverageAssetsTab = () => {
                         onBalanceTypeChange={handleBalanceTypeChange(index)}
                         index={index}
                         supportedTokens={supportedTokens}
-
+                        getBalance={getBalance}
                       />
                     </motion.div>
                   ))
@@ -1386,6 +1434,7 @@ export const LeverageAssetsTab = () => {
                       onBalanceTypeChange={handleBalanceTypeChange(0)}
                       index={0}
                       supportedTokens={supportedTokens}
+                      getBalance={getBalance}
                     />
                   </motion.div>
                 )}
