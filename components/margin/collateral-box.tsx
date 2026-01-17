@@ -41,7 +41,7 @@ interface CollateralProps {
   index?: number;
   supportedTokens:string[]
   getBalance?: (asset: string, type: "WB" | "MB") => number;
-  price?: number;
+  prices?: Record<string, number>;
 }
 
 export const Collateral = (props: CollateralProps) => {
@@ -103,16 +103,14 @@ export const Collateral = (props: CollateralProps) => {
     return 0;
   }, [props.getBalance, selectedCurrency, selectedBalanceType]);
 
-  // Calculate USD value from input using price
-  // Calculate USD value from input (1:1 conversion)
+  // Calculate USD value from input using prices map
   useEffect(() => {
     if (isEditing && valueInput) {
       const amount = parseFloat(valueInput) || 0;
-      const price = props.price ?? 1;
+      const price = props.prices?.[selectedCurrency] ?? 0;
       setValueInUsd((amount * price).toFixed(2));
-      setValueInUsd(amount.toString());
     }
-  }, [valueInput, isEditing, props.price]);
+  }, [valueInput, isEditing, props.prices, selectedCurrency]);
 
 
   // Save edited collateral (use locally fetched unified balance)

@@ -57,6 +57,7 @@ export const LeverageAssetsTab = () => {
   const address = useUserStore((state) => state.address);
   const marginState = useMarginStore((s) => s.marginState);
   const [marginAccountAddress, setMarginAccountAddress] = useState<`0x${string}` | undefined>(undefined);
+  const [prices, setPrices] = useState<Record<string, number>>({});
 
   // Wagmi hooks
   const { chainId } = useAccount();
@@ -78,9 +79,17 @@ export const LeverageAssetsTab = () => {
   const getBalance = useBalanceStore(s => s.getBalance);
 
   useEffect(() => {
-
-  }, [chainId, publicClient, walletClient, address])
-
+    const fetchPrices = async () => {
+      try {
+        const res = await fetch("/api/prices");
+        const data = await res.json();
+        setPrices(data);
+      } catch (e) {
+        console.error("Error fetching prices:", e);
+      }
+    };
+    fetchPrices();
+  }, []);
 
   const supportedTokens = useMemo(() => {
     return SUPPORTED_TOKENS_BY_CHAIN[chainId ?? 0] ?? [];
@@ -1411,6 +1420,7 @@ export const LeverageAssetsTab = () => {
                         index={index}
                         supportedTokens={supportedTokens}
                         getBalance={getBalance}
+                        prices={prices}
                       />
                     </motion.div>
                   ))
@@ -1435,6 +1445,7 @@ export const LeverageAssetsTab = () => {
                       index={0}
                       supportedTokens={supportedTokens}
                       getBalance={getBalance}
+                      prices={prices}
                     />
                   </motion.div>
                 )}

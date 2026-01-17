@@ -148,11 +148,6 @@ const chains: readonly Chain[] = [
     }
   ] as const
 
-
-
-
-
-  
   
 
 /* 
@@ -161,8 +156,6 @@ const chains: readonly Chain[] = [
 */
 
 
-
-  
 const networkOptions = [
   {
     id: "base",
@@ -198,8 +191,6 @@ const networkOptions = [
   },
 ] as const;
 
-
-
    const BASE_NETWORK = "base";
   const ARBITRUM_NETWORK = "arbitrum";
   const OPTIMISM_NETWORK = "optimism";
@@ -211,9 +202,6 @@ const networkOptions = [
     "0x0000000000000000000000000000000000000000000000000000000000000000";
   const percentageClickValues = [10, 25, 50, 100]
   
-
-
-
 
 // =============== ARBITRUM ============================================
 const arbTokensAddress: Record<string, `0x${string}`> = {
@@ -257,7 +245,6 @@ const opTokensAddress: Record<string, `0x${string}`> = {
   WETH: "0x4200000000000000000000000000000000000006",
   WBTC: "0x68f180fcCe6836688e9084f035309E29Bf0A2095",
 };
-
 
 const opAddressList = {
   daiTokenAddress: "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Dropdown } from "../ui/dropdown";
 import { AnimatePresence, motion } from "framer-motion";
 import { DropdownOptions } from "@/lib/constants";
@@ -11,7 +11,7 @@ import { useFetchAccountCheck } from "@/lib/utils/margin/marginFetchers";
 import { useMarginStore } from "@/store/margin-account-state";
 import { toast } from "sonner";
 import { useBalanceStore } from "@/store/balance-store";
-import { TOKEN_DECIMALS } from "@/lib/utils/web3/token";
+import { SUPPORTED_TOKENS_BY_CHAIN, TOKEN_DECIMALS } from "@/lib/utils/web3/token";
 
 export const TransferCollateral = () => {
   const [selectedCurrency, setSelectedCurrency] = useState<string>("USDC");
@@ -19,10 +19,10 @@ export const TransferCollateral = () => {
   const [valueInUsd, setValueInUsd] = useState<number>(0.0);
   const [percentage, setPercentage] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // Get margin state from Zustand
   const marginState = useMarginStore((s) => s.marginState);
-  
+
   const walletClient = useWalletClient();
   const publicClient = usePublicClient();
   const { chainId, address } = useAccount();
@@ -34,6 +34,14 @@ export const TransferCollateral = () => {
 
   // Get max balance from margin account for selected asset
   const maxBalance = getBalance(selectedCurrency, "MB");
+
+  const { reset, refreshBalances } = useBalanceStore();
+
+  const supportedTokens = useMemo(() => {
+    return SUPPORTED_TOKENS_BY_CHAIN[chainId ?? 0] ?? [];
+  }, [chainId]);
+
+
 
   // Update when currency changes
   useEffect(() => {
@@ -48,6 +56,53 @@ export const TransferCollateral = () => {
     setValueInput(calculatedAmount);
     setValueInUsd(Number(calculatedAmount));
   };
+
+  const handleFlashClose = async () => {
+
+    // Here we will implement the Logic like Close all open margin positions (spot + perps + borrow)
+    // Settle funding / borrowing fees
+    // Pay flash / unwind fee if protocol has one
+    // Withdraw all remaining collateral to WB
+    // Reset margin account to 0
+    // Exit margin mode instantly, settle everything, return net collateral to wallet.
+
+
+    const asset = selectedCurrency;
+    const amount = maxBalance.toString(); // withdraw full MB balance
+
+    if (!maxBalance || maxBalance <= 0) {
+      toast.error(`No ${asset} available to close.`, { duration: 3000 });
+      return;
+    }
+
+    setIsLoading(true);
+    const toastId = toast.loading(`💨 Closing ${asset} position...`, { duration: Infinity });
+
+    try {
+      const { tx_hash, marginAccount } = await transfer_collateral(asset, amount);
+
+      await refreshBalances({
+        chainId,
+        publicClient,
+        address,
+        marginAccount,
+      });
+
+      toast.success(`Flash close complete: ${maxBalance} ${asset} withdrawn.`, {
+        id: toastId,
+        duration: 5000,
+      });
+
+    } catch (err: any) {
+      toast.error(err?.message ?? "Flash Close failed.", {
+        duration: 5000,
+        id: toastId,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
 
   const transfer_collateral = async (asset: string, amount: string) => {
 
@@ -115,7 +170,7 @@ export const TransferCollateral = () => {
       });
 
       console.log("✓ Transaction successful:", tx_hash);
-      return tx_hash;
+      return { tx_hash, marginAccount };
 
     } catch (error: any) {
       console.error("✗ Transfer failed:", {
@@ -192,7 +247,15 @@ export const TransferCollateral = () => {
     });
 
     try {
-      const tx_hash = await transfer_collateral(asset, amount);
+      const { tx_hash, marginAccount } = await transfer_collateral(asset, amount);
+
+      await refreshBalances({
+        chainId,
+        publicClient,
+        address,
+        marginAccount,
+      });
+
 
       console.log("✓ Transaction confirmed:", tx_hash);
 
@@ -216,7 +279,7 @@ export const TransferCollateral = () => {
       });
 
       const errorMessage = err?.message || "Transaction failed. Please try again.";
-      
+
       toast.error(errorMessage, {
         id: toastId,
         duration: 5000,
@@ -240,13 +303,13 @@ export const TransferCollateral = () => {
   };
 
   return (
-    <motion.div 
+    <motion.div
       className="flex flex-col justify-between gap-[24px] pt-8"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
     >
-      <motion.div 
+      <motion.div
         className="flex flex-col gap-[24px] rounded-[16px] p-[20px] bg-[#FFFFFF] border-[1px] border-[#E2E2E2]"
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -269,7 +332,7 @@ export const TransferCollateral = () => {
                 classname="text-[16px] font-medium gap-[8px]"
                 selectedOption={selectedCurrency}
                 setSelectedOption={setSelectedCurrency}
-                items={DropdownOptions}
+                items={supportedTokens}
                 dropdownClassname="text-[14px] font-medium gap-[8px]"
               />
             </div>
@@ -296,11 +359,10 @@ export const TransferCollateral = () => {
                         type="button"
                         key={item}
                         onClick={() => handlePercentageClick(item)}
-                        className={`h-[44px] w-[95px] text-center text-[14px] text-medium cursor-pointer ${
-                          percentage === item
+                        className={`h-[44px] w-[95px] text-center text-[14px] text-medium cursor-pointer ${percentage === item
                             ? `${PERCENTAGE_COLORS[item]} text-white`
                             : "bg-[#F4F4F4]"
-                        } p-[10px] rounded-[12px]`}
+                          } p-[10px] rounded-[12px]`}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         transition={{ duration: 0.1 }}
@@ -316,13 +378,13 @@ export const TransferCollateral = () => {
             </AnimatePresence>
           </motion.div>
         </div>
-        <motion.div 
+        <motion.div
           className="flex justify-between gap-[10px] items-center"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.2 }}
         >
-          <motion.div 
+          <motion.div
             className="px-[10px] flex flex-col gap-[8px]"
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
@@ -353,7 +415,7 @@ export const TransferCollateral = () => {
               {valueInUsd} USD
             </motion.div>
           </motion.div>
-          <motion.div 
+          <motion.div
             className="flex flex-col gap-[8px] items-end"
             initial={{ opacity: 0, x: 10 }}
             animate={{ opacity: 1, x: 0 }}
@@ -386,7 +448,7 @@ export const TransferCollateral = () => {
           items={[{ title: "Transfer Collateral", value: `${maxBalance.toFixed(2)} USD` }]}
         />
       </motion.div>
-      <motion.div 
+      <motion.div
         className="flex flex-col gap-[16px]"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -414,8 +476,8 @@ export const TransferCollateral = () => {
             text="Flash Close"
             size="large"
             type="ghost"
-            disabled={!Number(valueInput) || isLoading}
-            onClick={handleTransferClick}
+            onClick={handleFlashClose}
+            disabled={!maxBalance || isLoading}
           />
         </motion.div>
       </motion.div>
