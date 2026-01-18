@@ -7,7 +7,7 @@ import { Collaterals, BorrowInfo, MarginState } from "@/lib/types";
 
 import { SUPPORTED_TOKENS_BY_CHAIN, TOKEN_DECIMALS, tokenAddressByChain, vTokenAddressByChain } from "@/lib/utils/web3/token";
 
-import { BALANCE_TYPE_OPTIONS } from "@/lib/constants/margin";
+import { BALANCE_TYPE_OPTIONS, MAX_LEVERAGE } from "@/lib/constants/margin";
 import { Button } from "@/components/ui/button";
 import { Collateral } from "./collateral-box";
 import { BorrowBox } from "./borrow-box";
@@ -52,8 +52,8 @@ export const LeverageAssetsTab = () => {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [mode, setMode] = useState<Modes>("Deposit");
   const [borrowItems, setBorrowItems] = useState<BorrowInfo[]>([]);
+  const [borrowAsset, setBorrowAsset] = useState<string>("USDC");
   const [leverage, setLeverage] = useState(2);
-  const [depositAmount, setDepositAmount] = useState<number | undefined>(0);
   const address = useUserStore((state) => state.address);
   const marginState = useMarginStore((s) => s.marginState);
   const [marginAccountAddress, setMarginAccountAddress] = useState<`0x${string}` | undefined>(undefined);
@@ -122,15 +122,15 @@ export const LeverageAssetsTab = () => {
   // This is just a wrapper Our main logic has written  in lib/utils/margin/transaction.ts we have mentioned there 
   // to make it modular ! 
 
-  const withdraw = (asset: string, amount: string) =>
-    withdrawTx({
-      walletClient,
-      publicClient,
-      chainId,
-      fetchAccountCheck,
-      asset,
-      amount,
-    });
+  // const withdraw = (asset: string, amount: string) =>
+  //   withdrawTx({
+  //     walletClient,
+  //     publicClient,
+  //     chainId,
+  //     fetchAccountCheck,
+  //     asset,
+  //     amount,
+  //   });
 
   // Later we will bind all the functionality in transaction.ts file 
   ////////////////////////////////////////////////////////////////////////////////////
@@ -301,20 +301,7 @@ export const LeverageAssetsTab = () => {
 
 
 
-  //   // Main function To handle the fetchBalance Mode(MB OR WB)
-  //   const fetchBalance = async (asset: string | null, balanceType: "WB" | "MB") => {
-  //     if (!chainId || !publicClient || !address) return;
 
-  //     switch (balanceType) {
-  //       case "MB":
-  //         if (!asset) return 0;
-  //         return fetchMarginBalances();
-
-  //       case "WB":
-  //         if (!asset) return 0;
-  //         return asset && fetchWalletBalance(asset)
-  //     }
-  //   };
 
   const fetchAccountCheck = useFetchAccountCheck(chainId, address as `0x${string}`, publicClient);
   const fetchCollateralState = useFetchCollateralState(chainId, publicClient);
@@ -387,29 +374,24 @@ export const LeverageAssetsTab = () => {
   // New: Simulation functions for preview (without mutating state)
 
 
-  const simulateBorrow = (state: MarginState | null, additionalBorrowUsd: number) => {
-    if (!state) return { newHF: Infinity, newLTV: 0 };
-    const newDebtUsd = state.borrowUsd + additionalBorrowUsd;
-    const newHF = marginCalc.calcHF(state.collateralUsd, newDebtUsd);
-    const newLTV = marginCalc.calcLTV(state.collateralUsd, newDebtUsd);
-    return { newHF, newLTV };
-  };
+  const simulateStrategy = useCallback((
+    state: MarginState | null,
+    additionalCollateralUsd: number,
+    additionalBorrowUsd: number
+  ) => {
+    const currentCollateral = state?.collateralUsd || 0;
+    const currentDebt = state?.borrowUsd || 0;
 
-  const simulateWithdraw = (state: MarginState | null, withdrawUsd: number) => {
-    if (!state) return { newHF: Infinity, newLTV: 0 };
-    const newCollUsd = state.collateralUsd - withdrawUsd;
-    const newHF = marginCalc.calcHF(newCollUsd, state.borrowUsd);
-    const newLTV = marginCalc.calcLTV(newCollUsd, state.borrowUsd);
-    return { newHF, newLTV };
-  };
+    // Risk Engine logic: Borrowed funds are added to collateral balance for the check
+    const newCollateralUsd = currentCollateral + additionalCollateralUsd;
+    const newDebtUsd = currentDebt + additionalBorrowUsd;
 
-  const simulateRepay = (state: MarginState | null, repayUsd: number) => {
-    if (!state) return { newHF: Infinity, newLTV: 0 };
-    const newDebtUsd = Math.max(0, state.borrowUsd - repayUsd);
-    const newHF = marginCalc.calcHF(state.collateralUsd, newDebtUsd);
-    const newLTV = marginCalc.calcLTV(state.collateralUsd, newDebtUsd);
-    return { newHF, newLTV };
-  };
+    const newHF = marginCalc.calcHF(newCollateralUsd, newDebtUsd);
+    const newLTV = marginCalc.calcLTV(newCollateralUsd, newDebtUsd);
+    const projectedMaxBorrow = marginCalc.calcMaxBorrow(newCollateralUsd, newDebtUsd);
+
+    return { newHF, newLTV, projectedMaxBorrow, newCollateralUsd, newDebtUsd };
+  }, []);
 
   // New: HF signals (colors and warnings)
   const getHFColor = (hf: number) => {
@@ -842,20 +824,6 @@ export const LeverageAssetsTab = () => {
     }
   };
 
-  const executeTransferToWallet = async (asset: string, amount: string) => {
-    const state = await reloadMarginState();
-    if (!state) return;
-
-    if (Number(amount) > state.maxWithdraw) {
-      return toast.error("Withdrawal would liquidate account");
-    }
-
-    toast("Withdrawing collateral...");
-    await withdraw(asset, amount);
-    await reloadMarginState();
-    toast.success("Transferred to wallet!");
-  };
-
   // Dialogue state
   type DialogueState = "none" | "create-margin" | "sign-agreement" | "deposit-borrow" | "deposit-earn";
   const [activeDialogue, setActiveDialogue] = useState<DialogueState>("none");
@@ -915,29 +883,87 @@ export const LeverageAssetsTab = () => {
   const totalDeposit = totalDepositValue + fees;
   const platformPoints = Number((leverage * 0.575).toFixed(1));
 
+  const calculatedBorrowAmount = useMemo(() => {
+    if (mode === "Deposit" && leverage > 1 && totalDepositValue > 0) {
+      const borrowUsd = totalDepositValue * (leverage - 1);
+      const price = prices[borrowAsset] || 0;
+      if (price > 0) {
+        return borrowUsd / price;
+      }
+    }
+    return 0;
+  }, [mode, leverage, totalDepositValue, borrowAsset, prices]);
+
+  const maxBorrowAmount = useMemo(() => {
+    if (mode === "Deposit" && totalDepositValue > 0) {
+      const maxBorrowUsd = totalDepositValue * (MAX_LEVERAGE - 1);
+      const price = prices[borrowAsset] || 0;
+      if (price > 0) {
+        return maxBorrowUsd / price;
+      }
+    }
+    else if (mode === "Borrow") {
+        // Calculate effective equity (Collateral - Debt)
+        let equity = marginState?.collateralUsd || 0;
+        // If depositing new collateral in WB mode, add it to equity
+        if (!isMBMode) {
+            equity += totalDepositValue;
+        }
+        
+        // Calculate max borrowing power based on selected leverage
+        // Target Debt = Equity * (Leverage - 1)
+        const targetDebt = equity * (leverage - 1);
+        
+        // Available to borrow = Target Debt - Existing Debt
+        const existingDebt = marginState?.borrowUsd || 0;
+        return Math.max(0, targetDebt - existingDebt);
+    }
+    return 0;
+  }, [mode, totalDepositValue, borrowAsset, prices, leverage, marginState, isMBMode]);
+
   // Updated collateral calculation using margin state
+  // Calculate derived metrics
+  const { netHealthFactor, netLTV, projectedMaxBorrow, newCollateralUsd } = useMemo(() => {
+    let additionalCollateralUsd = 0;
+    let additionalBorrowUsd = 0;
+
+    // Calculate Borrow Amount
+    if (mode === "Deposit") {
+       if (leverage > 1) {
+         additionalBorrowUsd = totalDepositValue * (leverage - 1);
+       }
+    } else {
+       additionalBorrowUsd = borrowItems.reduce((sum, item) => sum + (item.usdValue || 0), 0);
+    }
+
+    // Calculate Collateral Increase
+    if (mode === "Deposit") {
+        if (isMBMode) {
+            additionalCollateralUsd = additionalBorrowUsd;
+        } else {
+            additionalCollateralUsd = totalDepositValue + additionalBorrowUsd;
+        }
+    } else {
+        if (isMBMode) {
+            additionalCollateralUsd = additionalBorrowUsd;
+        } else {
+            additionalCollateralUsd = totalDepositValue + additionalBorrowUsd;
+        }
+    }
+
+    const sim = simulateStrategy(marginState, additionalCollateralUsd, additionalBorrowUsd);
+    
+    return {
+        netHealthFactor: Number(sim.newHF.toFixed(2)),
+        netLTV: Number(sim.newLTV.toFixed(2)),
+        projectedMaxBorrow: sim.projectedMaxBorrow,
+        newCollateralUsd: sim.newCollateralUsd
+    };
+  }, [marginState, isMBMode, totalDepositValue, mode, leverage, borrowItems, simulateStrategy]);
+
   const updatedCollateral = useMemo(() => {
-    if (!marginState) return Math.round(depositAmount! * leverage * 0.6);
-
-    const newCollateralUsd = marginState.collateralUsd + totalDepositValue;
     return Math.round(newCollateralUsd);
-  }, [marginState, totalDepositValue, depositAmount, leverage]);
-
-  // Updated health factor calculation (using simulation)
-  const netHealthFactor = useMemo(() => {
-    const totalBorrowUsd = borrowItems.reduce((sum, item) =>
-      sum + (item.amount * item.leverage), 0);
-    const sim = simulateBorrow(marginState, totalBorrowUsd);
-    return Number(sim.newHF.toFixed(2));
-  }, [marginState, borrowItems, leverage]);
-
-  // New: Derived LTV using simulation
-  const netLTV = useMemo(() => {
-    const totalBorrowUsd = borrowItems.reduce((sum, item) =>
-      sum + (item.amount * item.leverage), 0);
-    const sim = simulateBorrow(marginState, totalBorrowUsd);
-    return Number(sim.newLTV.toFixed(2));
-  }, [marginState, borrowItems, leverage]);
+  }, [newCollateralUsd]);
 
   const handleAddCollateral = () => {
     if (editingIndex !== null) return;
@@ -1027,13 +1053,12 @@ export const LeverageAssetsTab = () => {
 
       if (normalized === "mb") {
         setLoading(true);
-        // Use store marginBalances instead of fetchMarginBalances
         const available: Collaterals[] = marginBalances
           .filter((b) => b.amount > 0)
           .map((b) => ({
             asset: b.asset,
             amount: b.amount,
-            amountInUsd: b.amount,
+            amountInUsd: Number((b.amount * (prices[b.asset] ?? 0)).toFixed(2)),
             unifiedBalance: b.amount,
             balanceType: "mb",
           }));
@@ -1080,13 +1105,17 @@ export const LeverageAssetsTab = () => {
         unifiedBalance: 0,
       };
 
-      const asset = prev.asset;
+      let asset = prev.asset;
+      if (asset === "Various" || !supportedTokens.includes(asset)) {
+        asset = supportedTokens.find((t) => t !== "Various") || "";
+      }
 
       const fetched = getBalance(asset, "WB");
       const unified = typeof fetched === "number" ? fetched : 0;
 
       const updated: Collaterals = {
         ...prev,
+        asset: asset,
         balanceType: "wb",
         unifiedBalance: unified,
         amountInUsd: prev.amount,
@@ -1245,22 +1274,208 @@ export const LeverageAssetsTab = () => {
 
 
 
-  const handleTest = async () => {
-    const t = toast.loading("Depositing USDT...");
+  const handleExecuteStrategy = async () => {
+    if (!walletClient || !publicClient || !chainId || !address) {
+      toast.error("Wallet not connected");
+      return;
+    }
+
+    const addressList = getAddressList(chainId);
+    if (!addressList) {
+      toast.error("Unsupported network");
+      return;
+    }
+
+    // Filter for Wallet Balance items that have an amount > 0
+    // 1. Identify Deposits
+    const deposits = currentCollaterals.filter(
+      (c) => c.amount > 0 && c.balanceType.toLowerCase() === "wb"
+    );
+
+    // 2. Identify Borrows
+    let borrowsToExecute: { asset: string; amount: string }[] = [];
+
+    if (mode === "Deposit" && leverage > 1) {
+      // Leverage mode: Calculate borrow amount based on leverage
+      // Borrow Amount = Total Deposit Value * (Leverage - 1)
+      const borrowAmountUsd = totalDepositValue * (leverage - 1);
+
+      if (borrowAmountUsd > 0) {
+        const price = prices[borrowAsset] || 1; // Default to 1 if price missing (risky, but prevents NaN)
+        const tokenAmount = borrowAmountUsd / price;
+
+        // Format to string with limited decimals to avoid precision errors
+        borrowsToExecute.push({
+          asset: borrowAsset,
+          amount: tokenAmount.toFixed(6)
+        });
+      }
+    } else if (mode === "Borrow") {
+      // Dual Borrow mode: Use items from BorrowBox
+      borrowsToExecute = borrowItems.map(item => ({
+        asset: item.assetData.asset,
+        amount: item.assetData.amount
+      }));
+    }
+
+    if (deposits.length === 0 && borrowsToExecute.length === 0) {
+      setActiveDialogue("none");
+      return;
+    }
+
+    setLoading(true);
 
     try {
-      const tx_hash = await deposit("WETH", "0.00001073");
+      // Ensure we have the margin account address
+      let targetAccount = marginAccountAddress;
+      if (!targetAccount) {
+        setLoadingMessage("Fetching margin account...");
+        const accounts = await fetchAccountCheck();
+        if (accounts && accounts.length > 0) {
+          targetAccount = accounts[0] as `0x${string}`;
+          setMarginAccountAddress(targetAccount);
+          setHasMarginAccount({ hasMarginAccount: true });
+        } else {
+          throw new Error("No margin account found. Please create one first.");
+        }
+      }
 
-      toast.success("Deposit successful!", { id: t });
-      console.log("tx:", tx_hash);
-    } catch (err) {
-      toast.error("Deposit failed", { id: t });
-      console.error(err);
+      // --- EXECUTE DEPOSITS ---
+      for (const item of deposits) {
+        const tokenAddress = tokenAddressByChain[chainId]?.[item.asset];
+        if (!tokenAddress) {
+          console.warn(`Token address not found for ${item.asset}`);
+          continue;
+        }
+
+        const decimals = TOKEN_DECIMALS[item.asset] ?? 18;
+        const amountBigInt = parseUnits(item.amount.toString(), decimals);
+
+        if (item.asset === "ETH") {
+          setLoadingMessage(`Depositing ${item.amount} ETH...`);
+          const txHash = await walletClient.writeContract({
+            address: addressList.accountManagerContractAddress as `0x${string}`,
+            abi: AccountManager.abi,
+            functionName: "depositEth",
+            args: [targetAccount],
+            value: amountBigInt
+          });
+          await publicClient.waitForTransactionReceipt({ hash: txHash });
+          toast.success(`Deposited ${item.amount} ETH`);
+        } else {
+          // ERC20 Deposit
+          setLoadingMessage(`Checking allowance for ${item.asset}...`);
+          const allowance = await publicClient.readContract({
+            address: tokenAddress as `0x${string}`,
+            abi: erc20Abi,
+            functionName: "allowance",
+            args: [address as `0x${string}`, addressList.accountManagerContractAddress as `0x${string}`]
+          }) as bigint;
+
+          if (allowance < amountBigInt) {
+            setLoadingMessage(`Approving ${item.asset}...`);
+            const approveHash = await walletClient.writeContract({
+              address: tokenAddress as `0x${string}`,
+              abi: erc20Abi,
+              functionName: "approve",
+              args: [addressList.accountManagerContractAddress as `0x${string}`, amountBigInt]
+            });
+            await publicClient.waitForTransactionReceipt({ hash: approveHash });
+            toast.success(`Approved ${item.asset}`);
+          }
+
+          setLoadingMessage(`Depositing ${item.amount} ${item.asset}...`);
+          const txHash = await walletClient.writeContract({
+            address: addressList.accountManagerContractAddress as `0x${string}`,
+            abi: AccountManager.abi,
+            functionName: "deposit",
+            args: [targetAccount, tokenAddress, amountBigInt]
+          });
+          await publicClient.waitForTransactionReceipt({ hash: txHash });
+          toast.success(`Deposited ${item.amount} ${item.asset}`);
+        }
+      }
+
+      // --- EXECUTE BORROWS ---
+      if (borrowsToExecute.length > 0) {
+        // Refresh state before borrowing to ensure we have latest collateral data
+        await reloadMarginState();
+
+        for (const item of borrowsToExecute) {
+          const tokenAddress = tokenAddressByChain[chainId]?.[item.asset];
+          if (!tokenAddress) {
+            console.warn(`Token address not found for ${item.asset}`);
+            continue;
+          }
+
+          const decimals = TOKEN_DECIMALS[item.asset] ?? 18;
+          const amountBigInt = parseUnits(item.amount, decimals);
+
+          setLoadingMessage(`Borrowing ${item.amount} ${item.asset}...`);
+
+          const txHash = await walletClient.writeContract({
+            address: addressList.accountManagerContractAddress as `0x${string}`,
+            abi: AccountManager.abi,
+            functionName: "borrow",
+            args: [targetAccount, tokenAddress, amountBigInt]
+          });
+
+          await publicClient.waitForTransactionReceipt({ hash: txHash });
+          toast.success(`Borrowed ${item.amount} ${item.asset}`);
+        }
+      }
+
+      // Refresh all stores
+      setLoadingMessage("Updating balances...");
+
+      await Promise.all([
+        reloadMarginState(),
+        useBalanceStore.getState().refreshBalances({
+          chainId,
+          address: address as `0x${string}`,
+          publicClient,
+          marginAccount: targetAccount
+        })
+      ]);
+
+      // --- UPDATE POSITIONS HISTORY ---
+      // TODO: Fill this later - Update the CollateralBorrowStore with the new position
+      // We need to construct a Position object and add it to the store.
+      /*
+      const newPosition = {
+        positionId: `pos-${Date.now()}`,
+        isOpen: true,
+        collateral: deposits.map(d => ({ asset: d.asset, amount: d.amount })),
+        borrowed: borrowsToExecute.map(b => ({ asset: b.asset, amount: b.amount })),
+        leverage: leverage,
+        collateralUsdValue: totalDepositValue,
+        borrowUsdValue: borrowsToExecute.reduce((acc, b) => acc + normalizeBorrowUsd(b.asset, b.amount), 0),
+        timestamp: Date.now(),
+        txHash: txHash // Use the last hash or array of hashes
+      };
+      useCollateralBorrowStore.getState().addPosition(newPosition);
+      */
+      console.log("Strategy executed. Position data ready for store update.");
+
+      setHasMarginAccount({ hasMarginAccount: true });
+
+      toast.success("Strategy executed successfully!");
+      setActiveDialogue("none");
+
+      // Reset form
+      setCurrentCollaterals([]);
+      setLeverage(1);
+
+    } catch (error: any) {
+      console.error("Strategy execution error:", error);
+      toast.error(error.message || "Failed to execute strategy");
+    } finally {
+      setLoading(false);
+      setLoadingMessage("");
     }
   };
 
 
-  
 
   return (
     <>
@@ -1522,6 +1737,10 @@ export const LeverageAssetsTab = () => {
               setLeverage={setLeverage}
               totalDeposit={totalDeposit}
               onBorrowItemsChange={setBorrowItems}
+              onAssetChange={setBorrowAsset}
+              borrowAmount={calculatedBorrowAmount}
+              maxBorrowAmount={maxBorrowAmount}
+              assetPrice={prices[borrowAsset] || 0}
             />
           </div>
         </motion.div>
@@ -1537,7 +1756,7 @@ export const LeverageAssetsTab = () => {
             data={{
               platformPoints: platformPoints,
               leverage: leverage,
-              depositAmount: depositAmount,
+              depositAmount: totalDepositValue,
               fees: fees,
               totalDeposit: totalDeposit,
               updatedCollateral: updatedCollateral,
@@ -1546,16 +1765,26 @@ export const LeverageAssetsTab = () => {
               netLTV: netLTV,
               hfColor: getHFColor(netHealthFactor),
               hfWarning: getHFWarning(netHealthFactor),
-              ltv: marginState?.ltv ?? 0,
-              maxBorrow: marginState?.maxBorrow ?? 0,
-              liqThreshold: 0.9,
-              minDebt: 100, // Placeholder; fetch from config
-              liqFee: 0.05, // Placeholder; fetch from config
+              ltv: netLTV,
+              maxBorrow: projectedMaxBorrow,
+              
+              // Current Margin State (Already available)
+              currentHealthFactor: marginState?.hf ?? 0,
+              currentLTV: marginState?.ltv ?? 0,
+              currentCollateral: marginState?.collateralUsd ?? 0,
+              currentDebt: marginState?.borrowUsd ?? 0,
+              currentMaxBorrow: marginState?.maxBorrow ?? 0,
+
+              // Protocol Constants (TODO: Fill later from config/contract)
+              liqThreshold: 0.9, // TODO: Fetch from RiskEngine (balanceToBorrowThreshold inverse)
+              minDebt: 100, // TODO: Fetch from AccountManager or Config
+              liqFee: 0.05, // TODO: Fetch from Config
             }}
             showExpandable={true}
             expandableSections={[
+            
               {
-                title: "More Details",
+                title: "Transaction Details",
                 items: [
                   {
                     id: "platformPoints",
@@ -1585,9 +1814,22 @@ export const LeverageAssetsTab = () => {
                     id: "netHealthFactor",
                     name: "Updated Net Health Factor",
                   },
+                  {
+                    id: "netLTV",
+                    name: "Updated LTV",
+                  },
+                  {
+                    id: "maxBorrow",
+                    name: "Projected Max Borrow",
+                  },
+                  // Protocol Info
+                  {
+                    id: "liqThreshold",
+                    name: "Liquidation Threshold", // TODO: Fill later
+                  },
                 ],
                 defaultExpanded: false,
-                delay: 0.1,
+                delay: 0.2,
               },
             ]}
           />
@@ -1679,7 +1921,7 @@ export const LeverageAssetsTab = () => {
               <Dialogue
                 description="Before you proceed, please review and accept the terms of borrowing on VANNA. This agreement ensures you understand the risks, responsibilities, and conditions associated with using the platform."
                 buttonOnClick={async () => {
-                  await handlecreateAccount();
+                  await handleExecuteStrategy(); // Updated function call
                 }}
                 buttonText={loading ? "Processing..." : "Sign Agreement"}
                 buttonDisabled={loading}
@@ -1756,9 +1998,8 @@ export const LeverageAssetsTab = () => {
               onClick={(e) => e.stopPropagation()}
             >
               <Dialogue
-                buttonOnClick={() => {
-                  // TODO: Implement deposit and earn logic
-                  setActiveDialogue("none");
+                buttonOnClick={async() => {
+                  await handleExecuteStrategy()
                 }}
                 buttonText="Proceed to Deposit & Earn"
                 content={[

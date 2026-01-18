@@ -26,6 +26,10 @@ export const TransferCollateral = () => {
   const walletClient = useWalletClient();
   const publicClient = usePublicClient();
   const { chainId, address } = useAccount();
+   const supportedTokens = useMemo(() => {
+    return SUPPORTED_TOKENS_BY_CHAIN[chainId ?? 0] ?? [];
+  }, [chainId]);
+
 
   const fetchAccountCheck = useFetchAccountCheck(chainId, address as `0x${string}`, publicClient);
 
@@ -37,10 +41,7 @@ export const TransferCollateral = () => {
 
   const { reset, refreshBalances } = useBalanceStore();
 
-  const supportedTokens = useMemo(() => {
-    return SUPPORTED_TOKENS_BY_CHAIN[chainId ?? 0] ?? [];
-  }, [chainId]);
-
+ 
 
 
   // Update when currency changes

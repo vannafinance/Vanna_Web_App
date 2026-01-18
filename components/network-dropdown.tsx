@@ -93,8 +93,6 @@ export const NetworkDropdown = () => {
   // handle that selection from derive state 
 
 
-
-
   const selectedNetwork = networkOptions.find((n) => n.chainId === chainId)
     ?? networkOptions[0];
 

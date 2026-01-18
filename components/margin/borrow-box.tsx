@@ -15,6 +15,10 @@ interface BorrowBoxProps {
   setLeverage: (value: number) => void;
   totalDeposit: number;
   onBorrowItemsChange?: (items: BorrowInfo[]) => void;
+  onAssetChange?: (asset: string) => void;
+  borrowAmount?: number;
+  maxBorrowAmount?: number;
+  assetPrice?: number;
 }
 
 export const BorrowBox = ({
@@ -23,6 +27,10 @@ export const BorrowBox = ({
   setLeverage,
   totalDeposit,
   onBorrowItemsChange,
+  onAssetChange,
+  borrowAmount,
+  maxBorrowAmount,
+  assetPrice = 0,
 }: BorrowBoxProps) => {
   const config = MODE_CONFIG[mode];
 
@@ -34,6 +42,16 @@ export const BorrowBox = ({
   const [inputValues, setInputValues] = useState<Record<number, number>>({});
   const [percentageInputValues, setPercentageInputValues] = useState<Record<number, number>>({});
   const [usdInputValues, setUsdInputValues] = useState<Record<number, number>>({});
+
+  // Update input values when borrowAmount prop changes (for Deposit mode)
+  useEffect(() => {
+    if (mode === "Deposit" && borrowAmount !== undefined) {
+      setInputValues((prev) => ({
+        ...prev,
+        0: borrowAmount,
+      }));
+    }
+  }, [mode, borrowAmount]);
 
   // Combined useEffect: Create BorrowInfo items and notify parent
   useEffect(() => {
@@ -50,7 +68,7 @@ export const BorrowBox = ({
 
         newBorrowItems.push({
           assetData: {
-            asset: `0x${selectedOption}`,
+            asset: selectedOption,
             amount: inputValue.toString(),
           },
           percentage: Number(percentage.toFixed(2)),
@@ -63,7 +81,12 @@ export const BorrowBox = ({
     if (onBorrowItemsChange) {
       onBorrowItemsChange(newBorrowItems);
     }
-  }, [selectedOptions, inputValues, config.maxItems, totalDeposit, onBorrowItemsChange]);
+
+    // Initial asset notification for Deposit mode if not set
+    if (mode === "Deposit" && onAssetChange && !selectedOptions[0]) {
+      onAssetChange(DropdownOptions[0]);
+    }
+  }, [selectedOptions, inputValues, config.maxItems, totalDeposit, onBorrowItemsChange, mode, onAssetChange]);
 
   // Calculate total borrowed value inline (simple calculation)
   const totalBorrowedValue = mode === "Borrow" 
@@ -92,18 +115,34 @@ export const BorrowBox = ({
           typeof option === "function"
             ? option(currentValue || DropdownOptions[0])
             : option;
+
+        // Notify parent about asset change (useful for Deposit mode)
+        if (idx === 0 && onAssetChange) {
+          onAssetChange(selected);
+        }
+
         return {
           ...prev,
           [idx]: selected,
         };
       });
     };
-  }, []);
+  }, [onAssetChange]);
 
   // Handler for input change - memoized to prevent re-renders
   const handleInputChange = useCallback((idx: number) => {
     return (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = Number(e.target.value) || 0;
+      
+      // Validation: Check if new total exceeds maxBorrowAmount
+      if (mode === "Borrow" && maxBorrowAmount && maxBorrowAmount > 0) {
+        const otherValue = idx === 0 ? (inputValues[1] || 0) : (inputValues[0] || 0);
+        if (value + otherValue > maxBorrowAmount) {
+           // Don't update if exceeding limit
+           return;
+        }
+      }
+
       setInputValues((prev) => ({
         ...prev,
         [idx]: value,
@@ -188,7 +227,11 @@ export const BorrowBox = ({
                 </motion.div>
                 
               </motion.button>
-              <div className="text-[12px] font-medium text-neutral-400">18000 USDC</div> 
+              <div className="text-[12px] font-medium text-neutral-400">
+                {maxBorrowAmount && maxBorrowAmount > 0 
+                  ? `${maxBorrowAmount.toFixed(2)} ${selectedOptions[0] || ''}`
+                  : "0.00"}
+              </div> 
               </div>
               
             </motion.div>
@@ -232,7 +275,7 @@ export const BorrowBox = ({
                                 {selectedOption}
                             </div>
                             <div className="text-[10px] text-[#111111]">
-                              {inputValue > 0 ? inputValue.toFixed(2) : "0.00"} USD
+                              {inputValue > 0 ? (inputValue * (assetPrice || 1)).toFixed(2) : "0.00"} USD
                             </div>
                           </div>
                         </div>
@@ -313,7 +356,7 @@ export const BorrowBox = ({
             {showTotal && (
               <div className="flex flex-col justify-end items-end gap-[12px]">
                 <div className="text-[14px] font-medium">
-                  Total Borrowable Amount:
+                  Total Borrow Amount:
                 </div>
                 <div className="text-[14px] font-medium">
                   $
@@ -321,6 +364,12 @@ export const BorrowBox = ({
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
                   })}
+                </div>
+                <div className="text-[12px] font-medium text-[#76737B]">
+                    Max Borrowable: ${maxBorrowAmount?.toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    }) || "0.00"}
                 </div>
               </div>
             )}
@@ -344,7 +393,7 @@ export const BorrowBox = ({
               // Calculate item data inline (no need for displayItems)
               const item: BorrowInfo | null = selectedOption && inputValue > 0 ? {
                 assetData: {
-                  asset: `0x${selectedOption}`,
+                  asset: selectedOption,
                   amount: inputValue.toString(),
                 },
                 percentage: totalDeposit > 0 ? Number(((inputValue / totalDeposit) * 100).toFixed(2)) : 0,
@@ -438,33 +487,6 @@ export const BorrowBox = ({
         transition={{ duration: 0.4, delay: 0.2 }}
       >
         <div className="flex gap-[2px] items-center bg-white rounded-[8px] border-[1px] border-[#E2E2E2] p-[2px]">
-          {/* + Button */}
-          <motion.button
-            type="button"
-            onClick={() => {
-              if (leverage < MAX_LEVERAGE) {
-                setLeverage(leverage + 1);
-              }
-            }}
-            disabled={leverage >= MAX_LEVERAGE}
-            className="w-[20px] h-[40px] flex items-center justify-center rounded-[6px] text-[16px] font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#F7F7F7] transition-colors"
-            whileHover={{ scale: leverage < MAX_LEVERAGE ? 1.05 : 1 }}
-            whileTap={{ scale: leverage < MAX_LEVERAGE ? 0.95 : 1 }}
-            aria-label="Increase leverage"
-          >
-            +
-          </motion.button>
-          
-          {/* Input */}
-          <input
-            value={leverage}
-            type="number"
-            min={1}
-            max={MAX_LEVERAGE}
-            onChange={handleLeverageChange}
-            className="w-[40px] h-[40px] focus:outline-none bg-transparent p-[10px] text-[16px] font-medium text-center border-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-          />
-          
           {/* - Button */}
           <motion.button
             type="button"
@@ -480,6 +502,33 @@ export const BorrowBox = ({
             aria-label="Decrease leverage"
           >
             −
+          </motion.button>
+          
+          {/* Input */}
+          <input
+            value={leverage}
+            type="number"
+            min={1}
+            max={MAX_LEVERAGE}
+            onChange={handleLeverageChange}
+            className="w-[40px] h-[40px] focus:outline-none bg-transparent p-[10px] text-[16px] font-medium text-center border-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          />
+          
+          {/* + Button */}
+          <motion.button
+            type="button"
+            onClick={() => {
+              if (leverage < MAX_LEVERAGE) {
+                setLeverage(leverage + 1);
+              }
+            }}
+            disabled={leverage >= MAX_LEVERAGE}
+            className="w-[20px] h-[40px] flex items-center justify-center rounded-[6px] text-[16px] font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#F7F7F7] transition-colors"
+            whileHover={{ scale: leverage < MAX_LEVERAGE ? 1.05 : 1 }}
+            whileTap={{ scale: leverage < MAX_LEVERAGE ? 0.95 : 1 }}
+            aria-label="Increase leverage"
+          >
+            +
           </motion.button>
         </div>
         <div className="w-[500px] px-[5px]">

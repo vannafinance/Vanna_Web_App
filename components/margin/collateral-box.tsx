@@ -57,7 +57,9 @@ export const Collateral = (props: CollateralProps) => {
   // Form state
   const tokens = props.supportedTokens ?? [];
 
-  const [selectedCurrency, setSelectedCurrency] = useState<string>(tokens[0]);
+  const [selectedCurrency, setSelectedCurrency] = useState<string>(
+    props.collaterals ? props.collaterals.asset : (tokens[0] || "")
+  );
   const [valueInput, setValueInput] = useState<string>("0.0");
   const [valueInUsd, setValueInUsd] = useState<string>("0.0");
   const [percentage, setPercentage] = useState(10);
@@ -91,6 +93,13 @@ export const Collateral = (props: CollateralProps) => {
     }
 
   }, [props.collaterals])
+
+  // Update selectedCurrency when tokens load if it was empty
+  useEffect(() => {
+    if (tokens.length > 0 && !selectedCurrency) {
+      setSelectedCurrency(tokens[0]);
+    }
+  }, [tokens, selectedCurrency]);
 
   // Add new state for live unified balance
 

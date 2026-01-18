@@ -23,7 +23,27 @@ export const LeverageSlider = ({
   const [isDragging, setIsDragging] = useState(false);
   const sliderRef = useRef<HTMLDivElement>(null);
 
-  const percentage = ((value - min) / (max - min)) * 100;
+  // Logarithmic scale helpers
+  // Ensure we don't take log of <= 0. For leverage, min is usually 1.
+  const safeMin = Math.max(min, 1);
+
+  const toPercentage = (val: number) => {
+    if (max <= safeMin) return 0;
+    const minLog = Math.log(safeMin);
+    const maxLog = Math.log(max);
+    const valLog = Math.log(Math.max(val, safeMin));
+    return ((valLog - minLog) / (maxLog - minLog)) * 100;
+  };
+
+  const toValue = (percent: number) => {
+    if (max <= safeMin) return safeMin;
+    const minLog = Math.log(safeMin);
+    const maxLog = Math.log(max);
+    const valLog = (percent / 100) * (maxLog - minLog) + minLog;
+    return Math.exp(valLog);
+  };
+
+  const percentage = toPercentage(value);
 
   // Generate all dividers from min to max (all integers)
   const allDividers = Array.from({ length: max - min + 1 }, (_, i) => min + i);
@@ -37,8 +57,15 @@ export const LeverageSlider = ({
       0,
       Math.min(100, (offsetX / rect.width) * 100)
     );
-    const newValue = (newPercentage / 100) * (max - min) + min;
-    const steppedValue = Math.round(newValue / step) * step;
+    const newValue = toValue(newPercentage);
+    
+    let steppedValue = Math.round(newValue / step) * step;
+    
+    // Fix floating point precision
+    if (step < 1) {
+      const decimals = step.toString().split(".")[1]?.length || 0;
+      steppedValue = Number(steppedValue.toFixed(decimals));
+    }
 
     onChange(Math.max(min, Math.min(max, steppedValue)));
   };
@@ -101,7 +128,7 @@ export const LeverageSlider = ({
 
           {/* Dividers on track - all integers from min to max */}
           {allDividers.map((divider, index) => {
-            const dividerPercentage = ((divider - min) / (max - min)) * 100;
+            const dividerPercentage = toPercentage(divider);
             const isPassed = percentage >= dividerPercentage;
             return (
               <motion.div
@@ -184,7 +211,7 @@ export const LeverageSlider = ({
         {/* Marker Labels */}
         <div className="relative mt-6">
           {markers.map((marker, index) => {
-            const markerPercentage = ((marker - min) / (max - min)) * 100;
+            const markerPercentage = toPercentage(marker);
             const isActive = Math.abs(value - marker) < 0.5;
             const isFirst = index === 0;
             const isLast = index === markers.length - 1;
