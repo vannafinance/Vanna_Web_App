@@ -31,7 +31,8 @@ export const YourPositions = () => {
       </figure>
       
       <article aria-label="Your Transactions">
-        <Table 
+        <Table
+          filterDropdownPosition="right"
           heading={{
             heading: "Your Transactions",
             tabsItems: tabs,

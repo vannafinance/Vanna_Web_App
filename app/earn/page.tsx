@@ -106,6 +106,7 @@ export default function Earn() {
 
       <section className="p-[40px] w-full h-fit" aria-label="Vaults and Positions">
         <Table
+          filterDropdownPosition="right"
           filters={{
             filters: ["Deposit", "Collateral"],
             allChainDropdown: true,

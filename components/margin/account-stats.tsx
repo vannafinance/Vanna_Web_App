@@ -14,12 +14,16 @@ interface AccountStatsProps {
   items: readonly AccountStatItem[];
   values: Record<string, string | number | null | undefined>;
   gridCols?: string; // e.g., "grid-cols-3", "grid-cols-2", etc.
+  backgroundColor?: string;
+  darkBackgroundColor?: string;
 }
 
 export const AccountStats = ({
   items,
   values,
   gridCols = "grid-cols-3",
+  backgroundColor = "#F7F7F7",
+  darkBackgroundColor = "#222222",
 }: AccountStatsProps) => {
   const { isDark } = useTheme();
   // Use grid-rows-1 if 3 or fewer items, otherwise grid-rows-2
@@ -28,8 +32,8 @@ export const AccountStats = ({
   return (
     <div className={`border-[1px] rounded-[24px] w-full h-full grid ${gridCols} ${gridRows} gap-x-[20px] gap-y-[0] place-items-center ${
       isDark
-        ? "bg-[#222222]"
-        : "bg-[#F7F7F7]"
+        ? darkBackgroundColor ? `bg-[${darkBackgroundColor}]` : "bg-[#222222]"
+        : backgroundColor ? `bg-[${backgroundColor}]` : "bg-[#F7F7F7]"
     }`}>
       {/* Map through account stats items */}
       {items.map((item, idx) => {

@@ -33,6 +33,7 @@ export const iconPaths: Record<string, string> = {
   USDT: "/icons/usdt-icon.svg",
   USDC: "/icons/usdc-icon.svg",
   ETH: "/icons/eth-icon.png",
+  BNB: "/icons/bnb-icon.png",
   SCROLL: "/icons/scroll-icon.png",
   AVALANCHE: "/icons/avalanche-icon.png",
   OPTIMISM: "/icons/optimism-icon.svg",

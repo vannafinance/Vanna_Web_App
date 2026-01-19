@@ -19,6 +19,7 @@ interface AnimatedTabsProps {
   containerClassName?: string;
   tabClassName?: string;
   indicatorClassName?: string;
+  customTabWidth?: string; // Custom width for tabs (e.g., "w-[200px]")
 }
 
 const HOVER_GRADIENT = "linear-gradient(135deg, rgba(112, 58, 230, 0.08) 0%, rgba(112, 58, 230, 0.04) 100%)";
@@ -37,6 +38,7 @@ export const AnimatedTabs = ({
   containerClassName = "",
   tabClassName = "",
   indicatorClassName = "",
+  customTabWidth,
 }: AnimatedTabsProps) => {
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
   const { isDark } = useTheme();
@@ -46,7 +48,13 @@ export const AnimatedTabs = ({
   // Helper to get text color
   const getTextColor = (isActive: boolean, isHovered: boolean) => {
     if (type === "solid" && isActive) return "#FFFFFF";
-    if (type === "ghost" && isActive) return "#703AE6";
+    if (type === "ghost") {
+      if (isActive) return "#703AE6";
+      if (isDark) {
+        return "#FFFFFF"; // Inactive ghost tabs: white in dark mode
+      }
+      return "#64748b"; // Inactive ghost tabs: gray in light mode
+    }
     if (type === "underline") {
       if (isActive) return "#703AE6";
       if (isDark) {
@@ -112,7 +120,9 @@ export const AnimatedTabs = ({
   // Render gradient/solid/ghost types
   const containerPadding = (type === "solid" || type === "ghost") ? "p-[4px] w-fit h-fit" : "p-[6px]";
   const containerWidth = (type === "solid" || type === "ghost") ? "w-full" : "w-full";
-  const tabWidth = (type === "solid" ) ? "w-[160px]" : type === "ghost" ? "w-[180px]" : "";
+  const tabWidth = customTabWidth 
+    ? customTabWidth 
+    : (type === "solid" ) ? "w-[160px]" : type === "ghost" ? "w-[180px]" : "";
   const tabPadding = (type === "solid" || type === "ghost") ? "py-[12px] px-[8px]" : "";
   const tabHeight = (type === "solid") ? "h-fit" :  (type === "ghost") ? "h-[38px]" : "h-[64px]";
   const useFlex1 = (type !== "solid" && type !== "ghost");

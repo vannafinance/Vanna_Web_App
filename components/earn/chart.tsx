@@ -8,11 +8,14 @@ import { useTheme } from "@/contexts/theme-context";
 import { netVolumeData , netEarningsData } from "@/lib/constants/portfolio";
 
 interface ChartProps {
-  type: "overall-deposit" | "net-apy" | "my-supply" | "deposit-apy" | "net-volume" | "net-profit-loss";
+  type: "overall-deposit" | "net-apy" | "my-supply" | "deposit-apy" | "net-volume" | "net-profit-loss" | "farm";
   currencyTab?: boolean;
   height?: number;
   containerWidth?: string;
   containerHeight?: string;
+  heading?: string; // Custom heading for farm type
+  downtrend?: string; // Downtrend value (e.g., "0.07%") for farm type
+  uptrend?: string; // Uptrend value (e.g., "0.07%") for farm type
 }
 
 const filterOptions = ["3 Months", "6 Months", "1 Year", "All Time"];
@@ -88,7 +91,7 @@ const filterDataByDays = (
   });
 };
 
-export const Chart = ({ type, currencyTab, height, containerWidth, containerHeight }: ChartProps) => {
+export const Chart = ({ type, currencyTab, height, containerWidth, containerHeight, heading, downtrend, uptrend }: ChartProps) => {
   const { isDark } = useTheme();
   const [selectedFilter, setSelectedFilter] = useState(filterOptions[0]);
   const [selectedCurrency, setSelectedCurrency] = useState<string>("usd");
@@ -105,6 +108,8 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
         return depositData;
       case "net-apy":
         return netApyData;
+      case "farm":
+        return depositData;
       case "my-supply":
         return depositData;
       case "deposit-apy":
@@ -201,11 +206,13 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
       <header className="w-full h-fit flex justify-between flex-shrink-0">
         <div
           className={`w-full h-fit flex flex-col ${
-            type === "deposit-apy" ? "gap-[16px]" : ""
+            type === "deposit-apy" || type === "farm" ? "gap-[16px]" : ""
           }`}
         >
           <h2 className={`text-[12px] font-semibold ${isDark ? "text-white" : ""}`}>
-            {type === "overall-deposit" ? (
+            {type === "farm" ? (
+              heading || "Farm"
+            ) : type === "overall-deposit" ? (
               "Overall Deposit"
             ) : type === "net-apy" ? (
               "Net APY"
@@ -225,7 +232,45 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
               />
             )}
           </h2>
-          {type !== "deposit-apy" && (
+          {type === "farm" && uptrend && (
+            <div className="w-full h-fit flex items-center gap-[4px]">
+              <svg
+                width="8"
+                height="8"
+                viewBox="0 0 8 8"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M4 0L7.4641 6H0.535898L4 0Z"
+                  fill="#10B981"
+                />
+              </svg>
+              <p className={`text-[12px] font-medium text-[#10B981]`}>
+                {uptrend}
+              </p>
+            </div>
+          )}
+          {type === "farm" && downtrend && (
+            <div className="w-full h-fit flex items-center gap-[4px]">
+              <svg
+                width="8"
+                height="8"
+                viewBox="0 0 8 8"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M4 8L0.535898 2H7.4641L4 8Z"
+                  fill="#FC5457"
+                />
+              </svg>
+              <p className={`text-[12px] font-medium text-[#FC5457]`}>
+                {downtrend}
+              </p>
+            </div>
+          )}
+          {type !== "deposit-apy" && type !== "farm" && (
             <p className={`w-full text-[20px] font-semibold ${isDark ? "text-white" : ""}`}>
               $
               {totalValue.toLocaleString(undefined, {
@@ -306,11 +351,13 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
               <header className="w-full h-fit flex justify-between">
                 <div
                   className={`w-full h-fit flex flex-col ${
-                    type === "deposit-apy" ? "gap-[16px]" : ""
+                    type === "deposit-apy" || type === "farm" ? "gap-[16px]" : ""
                   }`}
                 >
                   <h2 className={`text-[12px] font-semibold ${isDark ? "text-white" : ""}`}>
-                    {type === "overall-deposit" ? (
+                    {type === "farm" ? (
+                      heading || "Farm"
+                    ) : type === "overall-deposit" ? (
                       "Overall Deposit"
                     ) : type === "net-apy" ? (
                       "Net APY"
@@ -328,7 +375,45 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
                       />
                     )}
                   </h2>
-                  {type !== "deposit-apy" && (
+                  {type === "farm" && uptrend && (
+                    <div className="w-full h-fit flex items-center gap-[4px]">
+                      <svg
+                        width="8"
+                        height="8"
+                        viewBox="0 0 8 8"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M4 0L7.4641 6H0.535898L4 0Z"
+                          fill="#10B981"
+                        />
+                      </svg>
+                      <p className={`text-[12px] font-medium text-[#10B981]`}>
+                        {uptrend}
+                      </p>
+                    </div>
+                  )}
+                  {type === "farm" && downtrend && (
+                    <div className="w-full h-fit flex items-center gap-[4px]">
+                      <svg
+                        width="8"
+                        height="8"
+                        viewBox="0 0 8 8"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M4 8L0.535898 2H7.4641L4 8Z"
+                          fill="#FC5457"
+                        />
+                      </svg>
+                      <p className={`text-[12px] font-medium text-[#FC5457]`}>
+                        {downtrend}
+                      </p>
+                    </div>
+                  )}
+                  {type !== "deposit-apy" && type !== "farm" && (
                     <p className={`w-full text-[20px] font-semibold ${isDark ? "text-white" : ""}`}>
                       $
                       {totalValue.toLocaleString(undefined, {

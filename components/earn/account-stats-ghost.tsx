@@ -9,7 +9,7 @@ interface AccountStatsItem {
 
 interface AccountStatsGhostProps {
   items: AccountStatsItem[];
-  type?: "standard" | "background";
+  type?: "standard" | "background" | "background-light";
   gridCols?: string; // e.g., "grid-cols-3", "grid-cols-2", etc.
   gridRows?: string; // e.g., "grid-rows-1", "grid-rows-2", etc.
 }
@@ -17,8 +17,8 @@ interface AccountStatsGhostProps {
 export const AccountStatsGhost = ({ items, type = "standard", gridCols = "grid-cols-3", gridRows = "grid-rows-1" }: AccountStatsGhostProps) => {
   const { isDark } = useTheme();
   
-  const containerClass = type === "background"
-    ? `w-full h-full grid ${gridCols} ${gridRows} gap-[20px] place-items-center px-[10px] py-[20px] rounded-[24px] border-[1px] ${isDark ? "bg-[#222222]" : "bg-[#F7F7F7]"}`
+  const containerClass = type === "background" || type === "background-light"
+    ? `w-full h-full grid ${gridCols} ${gridRows} gap-[20px] place-items-center px-[10px] py-[20px] rounded-[24px] border-[1px] ${isDark ? "bg-[#222222]" : type === "background-light" ? "bg-[#FFFFFF]" : "bg-[#F7F7F7]"}`
     : "w-full h-full flex justify-between";
   
   return (

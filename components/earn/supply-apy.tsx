@@ -13,6 +13,8 @@ interface SupplyApyProps {
       greaterThan: boolean;
     }>
   >;
+  anythingLabel?: string;  // Custom label when percentage is 0
+  supplyApyLabel?: string;
 }
 
 export const SupplyApy = (props: SupplyApyProps) => {
@@ -57,18 +59,18 @@ export const SupplyApy = (props: SupplyApyProps) => {
         <span className={`text-[14px] font-semibold ${
           isDark ? "text-white" : "text-[#111111]"
         }`}>
-          Supply APY is
+          {props.supplyApyLabel || "Supply APY is"}
         </span>
         <span className="w-fit h-fit rounded-[4px] p-[8px] bg-[#F1EBFD]">
           {props.supplyApy.percentage > 0 ? (
             <span className="text-[12px] font-semibold text-[#703AE6]">
               {props.supplyApy.greaterThan
-                ? `>${props.supplyApy.percentage}%`
-                : `<${props.supplyApy.percentage}%`}
+                ? `>${props.supplyApy.percentage}`
+                : `<${props.supplyApy.percentage}`}
             </span>
           ) : (
             <span className="text-[12px] font-semibold text-[#703AE6]">
-              Anything
+              {props.anythingLabel || "Anything"}
             </span>
           )}
         </span>
@@ -147,9 +149,6 @@ export const SupplyApy = (props: SupplyApyProps) => {
               }`}
               aria-label="APY Percentage Value"
             />
-            <span className={`text-[12px] font-medium ${
-              isDark ? "text-white" : ""
-            }`} aria-hidden="true">%</span>
           </div>
         </section>
       )}

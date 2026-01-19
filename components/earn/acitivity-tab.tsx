@@ -72,7 +72,7 @@ const tableHeadings = [
     ],
   }
 
-  const transactionTableHeadings = [
+  export const transactionTableHeadings = [
     {
       label: "Date",
       id: "date",
@@ -91,7 +91,7 @@ const tableHeadings = [
     },
   ]
 
-  const transactionTableBody =  {
+  export const transactionTableBody =  {
     rows: [
       {
         cell: [
@@ -178,6 +178,7 @@ export const ActivityTab = () => {
       </article>
       <article aria-label="All Transactions">
         <Table 
+          filterDropdownPosition="right"
           tableBodyBackground={isDark ? "bg-[#222222]" : "bg-white"} 
           heading={{heading: "All Transactions"}} 
           filters={{filters: ["All"], customizeDropdown: true}} 
