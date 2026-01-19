@@ -559,7 +559,8 @@ export const LeverageAssetsTab = () => {
   // };
 
   const normalizeBorrowUsd = (asset: string, amount: string): number => {
-    return Number(amount);
+    const price = prices[asset] || 0;
+    return Number(amount) * price;
   };
 
   const validateBorrowRisk = (state: MarginState, totalUsd: number): boolean => {
@@ -716,7 +717,7 @@ export const LeverageAssetsTab = () => {
       }
 
       toast("Depositing collateral...");
-      await deposit(collateralAsset, collateralAmount, marginAccount);
+      await deposit(collateralAsset, collateralAmount);
 
       state = await reloadMarginState();
       if (!state) return toast.error("State refresh failed");
@@ -771,7 +772,7 @@ export const LeverageAssetsTab = () => {
 
     await executeRepay({
       asset: "USDC",
-      amount: String(state.borrowUsd),
+      amount: state.borrowUsd.toFixed(6),
       mode: "WB",
     });
   };
@@ -814,7 +815,7 @@ export const LeverageAssetsTab = () => {
 
     if (mode === "WB") {
       toast("Paying from wallet → depositing into margin...");
-      await deposit(asset, amount, marginAccount);
+      await deposit(asset, amount);
 
       toast("Repaying...");
       await repayTx(marginAccount, asset, amount);
@@ -1855,7 +1856,7 @@ export const LeverageAssetsTab = () => {
                     : "Create your Margin Account"
             }
             type="gradient"
-            onClick={handleButtonClick}
+            onClick={handlecreateAccount}
           />
         </motion.div>
       </motion.div>

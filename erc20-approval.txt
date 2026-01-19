@@ -1,0 +1,6 @@
+is-it-possible-to-batch-approve-transfer-an-erc-20-token  ??
+
+
+Read This stack exchnage :- https://ethereum.stackexchange.com/questions/79653/is-it-possible-to-batch-approve-transfer-an-erc-20-token 
+
+Efficient way to Handle ethereum tx :- https://medium.com/coinmonks/on-efficient-ethereum-transactions-introducing-homework-6ae4f21801ed
