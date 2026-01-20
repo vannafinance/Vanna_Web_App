@@ -40,7 +40,7 @@ const addresses = [
   },
 ];
 
-const items = [
+export const items = [
   {
     heading: "Available Liquidity",
     mainInfo: "102.24k ETH",
