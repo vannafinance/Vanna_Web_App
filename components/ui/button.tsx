@@ -10,6 +10,7 @@ interface Button {
   disabled: boolean;
   icon?: Element;
   ariaLabel?: string;
+  customBgColor?: string; // Optional custom background color for solid type
 }
 
 export const Button = (props: Button) => {
@@ -25,9 +26,11 @@ export const Button = (props: Button) => {
           : props.size == "large"
           ? "rounded-[16px] text-[20px] py-[20px] px-[16px]"
           : "text-[12px] py-[12px] px-[24px]"
-      } disabled:cursor-not-allowed transition  cursor-pointer rounded-[8px] font-semibold ${
+      } disabled:cursor-not-allowed transition cursor-pointer rounded-[8px] font-semibold ${
         props.type == "solid"
-          ? "bg-[#703AE6] disabled:bg-[#A7A7A7]  hover:bg-[#6635D1] active:bg-[#6635D1] text-white"
+          ? props.customBgColor
+            ? `bg-[${props.customBgColor}] disabled:bg-[#A7A7A7] text-white`
+            : "bg-[#703AE6] disabled:bg-[#A7A7A7] hover:bg-[#6635D1] active:bg-[#6635D1] text-white"
           : props.type == "gradient"
           ? props.disabled
             ? "bg-[#A7A7A7] text-white"

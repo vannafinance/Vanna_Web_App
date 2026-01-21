@@ -32,7 +32,7 @@ export const Modal = ({ open, onClose, children }: ModalProps) => {
     <div className="fixed inset-0 z-1000 flex items-center justify-center">
       {/* Overlay */}
       <div
-        className="absolute inset-0 bg-black/30  backdrop-blur-[15px]"
+        className="absolute inset-0 bg-black/40"
         onClick={onClose}
       />
 

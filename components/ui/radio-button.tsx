@@ -3,9 +3,8 @@
 import React, { useRef, forwardRef } from "react";
 
 // ============================================
-// Radio Component For indiviusal component 
+// Radio Component For indiviusal component
 // ============================================
-
 
 export interface RadioProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -29,22 +28,16 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(
 
     return (
       <label
-        className={`flex items-center gap-3 select-none ${
+        className={`flex items-center gap-1 select-none ${
           isDisabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"
         }`}
         onClick={handleFocusForward}
-
       >
-
-
-
-          {/* 
+        {/* 
           /* //////////////////////////////
              Invisible but interactive input
            /////////////////////////////////
             */}
-
-
 
         <input
           ref={inputRef}
@@ -55,10 +48,7 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(
 
         {/* //////////////////////
             Visual radio button
-           ////////////////////// */
-        }
-
-
+           ////////////////////// */}
 
         <span
           className={`
@@ -68,9 +58,7 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(
             ${error ? "border-[#FC5457]" : "border-gray-300"}
             peer-hover:border-[#703AE6]
             peer-focus:border-[#F845FC]
-            peer-focus:ring-4 peer-focus:ring-[#F845FC]/30
             peer-checked:border-[#703AE6]
-            peer-checked:ring-4 peer-checked:ring-[#703AE6]/40
             ${className}
           `}
         >
@@ -86,20 +74,11 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(
   }
 );
 
-
-
 Radio.displayName = "Radio";
 
-
-
-
-
 // ========================================================================
-// RadioGroup Component :- No need to write Logic for indivisual radio button 
+// RadioGroup Component :- No need to write Logic for indivisual radio button
 // ============================================================================
-
-
-
 
 export interface RadioGroupProps {
   name: string;
@@ -109,8 +88,6 @@ export interface RadioGroupProps {
   error?: boolean;
   className?: string;
 }
-
-
 
 export const RadioGroup = ({
   name,
@@ -127,7 +104,7 @@ export const RadioGroup = ({
   };
 
   return (
-    <div className={`space-y-3 ${className}`}>
+    <div className={`space-y-0 ${className}`}>
       {React.Children.map(children, (child) => {
         if (React.isValidElement<RadioProps>(child)) {
           return React.cloneElement(child, {

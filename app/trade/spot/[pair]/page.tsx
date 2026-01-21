@@ -3,15 +3,31 @@
 import OrderBook from "@/components/spot/OrderBook";
 import OrderPlacementForm from "@/components/spot/OrderPlacementForm";
 import PositionTables from "@/components/spot/PositionTables";
-import TradingPairInfo from "@/components/spot/TradingPairInfo";
-import TradingPairSearch from "@/components/spot/TradingPairSearch";
 import { Dropdown } from "@/components/ui/dropdown";
 import TradingViewChart from "@/components/ui/trading-view-chart";
 import { useEffect, useRef, useState } from "react";
+import TradingPairInfo from "@/components/ui/TradingPairInfo";
+import TradingPairSearch from "@/components/spot/TradingPairSearch";
+import { useParams, useRouter } from "next/navigation";
 
 const PROTCOL_OPTIONS = ["Aster", "Avantis"];
 
+const spotStats = [
+  { label: "24h High", value: "3,377.55" },
+  { label: "24h Low", value: "3,210.10" },
+  { label: "24h Change", value: "951.99k" },
+  { label: "24h Volume", value: "3.21B" },
+  { label: "Market Cap", value: "3.21B" },
+];
+
 const Spot = () => {
+  const params = useParams<{ pair: string }>();
+  const rawPair = params.pair;
+  const base = rawPair.replace("usdc", "").toUpperCase();
+  const pair = `${base}USDC`;
+  const icon = `/coins/${base.toLowerCase()}.svg`;
+
+  const router = useRouter();
   const [isTradingPairSelectorOpen, setIsTradingPairSelectorOpen] =
     useState(false);
   const tradingPairSelectorRef = useRef<HTMLDivElement>(null);
@@ -57,10 +73,23 @@ const Spot = () => {
                 onOpenPairSelector={() =>
                   setIsTradingPairSelectorOpen((prev) => !prev)
                 }
+                pair={pair}
+                market="spot"
+                icon={icon}
+                stats={spotStats}
               />
               {isTradingPairSelectorOpen && (
                 <div className="absolute top-[60px] left-2  z-150 ">
-                  <TradingPairSearch />
+                  <TradingPairSearch
+                    onSelectPair={(pair) => {
+                      const market =
+                        pair.marketType === "spot" ? "spot" : "perps";
+                      router.push(
+                        `/trade/${market}/${pair.base.toLowerCase()}usdc`
+                      );
+                      setIsTradingPairSelectorOpen(false);
+                    }}
+                  />
                 </div>
               )}
             </div>

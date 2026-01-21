@@ -4,8 +4,6 @@ import { useEffect, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 
 import ToggleButton from "../ui/toggle";
-import OrderTypeTabs from "../ui/OrderTypeTabs";
-import BuySellToggle from "../ui/BuySellToggle";
 import { Button } from "../ui/button";
 import {
   OrderPlacementFormValues,
@@ -224,9 +222,11 @@ export default function OrderPlacementForm({
       )}
 
       {mode === "create" && (
-        <BuySellToggle
-          value={orderSide}
-          onChange={(val) => setValue("orderSide", val)}
+        <AnimatedTabs
+          type="segment"
+          tabs={buySellTabs}
+          activeTab={orderSide}
+          onTabChange={(val) => setValue("orderSide", val as OrderSide)}
         />
       )}
 
@@ -306,7 +306,6 @@ export default function OrderPlacementForm({
       {orderType === "trigger" && (
         <InputWithUnit
           label="Trigger Price"
-          unit="USDT"
           placeholder="Trigger Price"
           name="triggerPrice"
           register={register}
@@ -315,6 +314,8 @@ export default function OrderPlacementForm({
             min: { value: 0, message: "Must be positive" },
             valueAsNumber: true,
           }}
+          suffixMode="static"
+          selectedSuffix="USDT"
         />
       )}
 
@@ -337,7 +338,6 @@ export default function OrderPlacementForm({
             <div className="flex-1 min-w-0">
               <InputWithUnit
                 label="Entry Price"
-                unit="USDT"
                 placeholder="Enter Price"
                 name="entryPrice"
                 register={register}
@@ -346,6 +346,8 @@ export default function OrderPlacementForm({
                   min: { value: 0, message: "Must be positive" },
                   valueAsNumber: true,
                 }}
+                suffixMode="static"
+                selectedSuffix="USDT"
               />
             </div>
           ) : (
@@ -365,7 +367,6 @@ export default function OrderPlacementForm({
           <div className="flex-1 min-w-0">
             <InputWithUnit
               label="Total Units"
-              unit="BTC"
               placeholder="Enter Unit"
               name="totalUnits"
               register={register}
@@ -374,6 +375,8 @@ export default function OrderPlacementForm({
                 min: { value: 0, message: "Must be positive" },
                 valueAsNumber: true,
               }}
+              suffixMode="static"
+              selectedSuffix="USDT"
             />
           </div>
         </div>
@@ -520,33 +523,36 @@ export default function OrderPlacementForm({
               <div className="flex-1 min-w-0">
                 <InputWithUnit
                   label="SL Trigger Price"
-                  unit="USDT"
                   placeholder="00.00"
                   name="stopLoss.triggerPrice"
                   register={register}
                   rules={{ min: 0 }}
+                  suffixMode="static"
+                  selectedSuffix="USDT"
                 />
               </div>
 
               <div className="flex-1 min-w-0">
                 <InputWithUnit
                   label="SL Limit (optional)"
-                  unit="USDT"
                   placeholder="00.00"
                   name="stopLoss.limitPrice"
                   register={register}
                   rules={{ min: 0 }}
+                  suffixMode="static"
+                  selectedSuffix="USDT"
                 />
               </div>
 
               <div className="flex-1 min-w-0">
                 <InputWithUnit
                   label="Trail Variance"
-                  unit="USDT"
                   placeholder="00.00"
                   name="stopLoss.trailVariance"
                   register={register}
                   rules={{ min: 0 }}
+                  suffixMode="static"
+                  selectedSuffix="USDT"
                 />
               </div>
             </div>
@@ -609,7 +615,7 @@ export default function OrderPlacementForm({
           </div>
           <Dropdown
             items={TIME_IN_FORCE_OPTIONS}
-            selectedOption={timeInForce}
+            selectedOption={timeInForce ?? "GTC"}
             setSelectedOption={(val) =>
               setValue("timeInForce", val as TimeInForce)
             }
@@ -633,7 +639,7 @@ export default function OrderPlacementForm({
 
       {!userAddress ? (
         <Button
-          text="Connect Wallet to Trade"
+          text="Connect Wallet To Trade"
           size="small"
           type="solid"
           disabled={true}

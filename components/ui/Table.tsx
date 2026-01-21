@@ -1,12 +1,13 @@
 "use client";
 
 import cn from "classnames";
+import React from "react";
 
 export type Align = "left" | "center" | "right";
 
 export type Column<T> = {
   // header label
-  header: string;
+  header: React.ReactNode;
   // unique id for each column
   id: string;
   // which field to show (optional if you use render)

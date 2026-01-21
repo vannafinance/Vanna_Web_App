@@ -8,8 +8,8 @@ export const navbarItems = [
 ];
 
 export const tradeItems = [
-  { title: "Spot", link: "/trade/spot" },
-  { title: "Perps", link: "/trade/perps" },
+  { title: "Spot", link: "/trade/spot/btcusdc" },
+  { title: "Perps", link: "/trade/perps/btcusdc" },
   { title: "Options", link: "/trade/options" },
   { title: "Defi Greeks", link: "/trade/defi-greeks" },
 ];

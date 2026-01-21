@@ -8,7 +8,7 @@ export interface TabItem {
   label: string;
 }
 
-type TabType = "gradient" | "solid" | "underline";
+type TabType = "gradient" | "solid" | "underline" | "segment";
 
 interface AnimatedTabsProps {
   tabs: TabItem[];
@@ -61,6 +61,36 @@ export const AnimatedTabs = ({
     return "transparent";
   };
 
+  // render segment type for orderPlacement form
+  if (type === "segment") {
+    return (
+      <div
+        className={`flex gap-4 rounded-xl border border-[#E2E2E2] p-1.5 bg-white ${containerClassName}`}
+      >
+        {tabs.map((tab) => {
+          const isActive = activeTab === tab.id;
+
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => onTabChange(tab.id)}
+              className={`cursor-pointer flex-1 rounded-lg p-0.5 text-[12px] font-semibold transition-colors ${
+                isActive
+                  ? "bg-linear-to-r from-[#FC5457] to-[#703AE6]"
+                  : "bg-transparent"
+              }`}
+            >
+              <div className="rounded-lg bg-white p-3 text-black">
+                {tab.label}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
+
   // Render underline type
   if (type === "underline") {
     return (
@@ -94,8 +124,6 @@ export const AnimatedTabs = ({
       </div>
     );
   }
-
-  
 
   // Render gradient/solid types
   const containerPadding = type === "solid" ? "p-[4px] w-fit h-fit" : "p-[6px]";

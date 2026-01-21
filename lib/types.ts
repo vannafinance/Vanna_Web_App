@@ -190,3 +190,96 @@ export interface OrderPlacementFormValues {
   gainAmount?: number;
   gainPercent?: number;
 }
+
+export type PerpsOrderAction = "open" | "close";
+export type PerpsOrderSide = "long" | "short";
+export type PerpsOrderType =
+  | "limit"
+  | "market"
+  | "trigger"
+  | "trailing-entry"
+  | "scaled-order"
+  | "iceberg"
+  | "twap";
+export type QuantityUnit = "USDT" | "BTC";
+export type TakeProfitType = "price" | "roi" | "pnl" | "change";
+export type StopLossType = "price" | "roi" | "pnl" | "change";
+export type TriggerPriceType = "last" | "mark" | "index";
+export type ExecutionPriceType = "limit" | "market";
+export type SizeDistributionType =
+  | "equal"
+  | "increasing"
+  | "descending"
+  | "random";
+export type TwapFrequencyType = "5s" | "10s" | "20s" | "30s" | "60s";
+export type AssetMode = "single" | "multi";
+export type MarginMode = "isolated" | "cross";
+export type PositionMode = "one-way" | "hedge";
+export type SplitSettingsType = "qty-per-order" | "no-of-split-orders";
+export type OrderPreferenceType = "faster-execution" | "fixed-distance" | "fixed-price";
+
+export type PerpsModalType = "leverage" | "assetMode" | "marginMode" | "positionMode" | "splitSettings" | "orderPreference" | "advanceTpSl" | null;
+
+export interface PerpsOrderPlacementFormValues {
+
+  leverage?: number;
+  assetMode?: AssetMode;
+  marginMode?: MarginMode;
+  positionMode?: PositionMode;
+  perpsOrderAction: PerpsOrderAction;
+  perpsOrderType: PerpsOrderType;
+  loopEnabled?: boolean;
+  noOfLoops?: number | null;
+  quantity?: number;
+  quantityUnit?: QuantityUnit;
+
+  price?: number;
+
+  // Trigger Price
+  triggerPriceType?: TriggerPriceType;
+  triggerPrice?: number;
+  executionPriceType?: ExecutionPriceType;
+  executionPrice?: number;
+
+  // trailing entry
+  trailingTriggerPriceEnabled?: boolean;
+  trailingTriggerPrice?: number;
+  trailVarianceValue?: number;
+
+  // scaled order
+  lowestPrice?: number;
+  highestPrice?: number;
+  orderQuantity?: number;
+  sizeDistribution?: SizeDistributionType;
+  averagePrice?: number; // read-only
+
+  // iceberg
+  qtyPerOrder?: number;
+  fasterExecution?: number;
+  splitSettings?: SplitSettingsType;
+  orderPreference?: OrderPreferenceType;
+  priceLimitEnabled?: boolean;
+  priceLimitValue?: number;
+
+  // twap order
+  twapHours?: number;
+  twapMinutes?: number;
+  twapFrequency?: TwapFrequencyType;
+
+  // take profit
+  takeProfitEnabled?: boolean;
+  takeProfitValue?: number;
+  takeProfitType?: TakeProfitType;
+
+  // stop loss
+  stopLossEnabled?: boolean;
+  stopLossValue?: number;
+  stopLossType?: StopLossType;
+
+  // time in force
+  timeInForce?: TimeInForce;
+}
+export interface TradingPairInfoStats {
+  label: string;
+  value: string;
+}

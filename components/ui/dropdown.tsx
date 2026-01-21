@@ -9,8 +9,8 @@ interface Dropdown {
   items: string[];
   setSelectedOption: React.Dispatch<React.SetStateAction<string>>;
   selectedOption: string;
-  classname:string
-  dropdownClassname:string
+  classname: string;
+  dropdownClassname: string;
 }
 
 export const Dropdown = (props: Dropdown) => {
@@ -55,9 +55,7 @@ export const Dropdown = (props: Dropdown) => {
   };
 
   return (
-    <div
-      className="relative inline-block z-[100] w-full"
-    >
+    <div className="relative inline-block z-[100] w-full">
       <button
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}

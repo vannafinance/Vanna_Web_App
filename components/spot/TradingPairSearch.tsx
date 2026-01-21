@@ -39,6 +39,10 @@ type Pair = {
   timeline?: string;
 };
 
+interface TradingPairSearchProps {
+  onSelectPair?: (pair: Pair) => void;
+}
+
 const MOCK_DATA: Pair[] = [
   {
     id: "btc-perp",
@@ -68,6 +72,18 @@ const MOCK_DATA: Pair[] = [
     volume24h: 6.59e6,
   },
   {
+    id: "btc-spot",
+    pair: "BTC/USDC",
+    base: "BTC",
+    icon: "/coins/btc.svg",
+    marketType: "spot",
+    category: "crypto",
+    subCategory: "majors",
+    lastPrice: 3003.6,
+    change24h: 0.48,
+    volume24h: 6.59e6,
+  },
+  {
     id: "ada-spot",
     pair: "ADA/USDC",
     base: "ADA",
@@ -80,10 +96,10 @@ const MOCK_DATA: Pair[] = [
     volume24h: 10.9e6,
   },
   {
-    id: "pltr-rwa",
-    pair: "PLTR",
-    base: "PLTR",
-    icon: "/coins/btc.svg",
+    id: "hood-rwa",
+    pair: "HOOD/USDC",
+    base: "HOOD",
+    icon: "/coins/hood.svg",
     marketType: "perps",
     category: "rwa",
     subCategory: "stocks",
@@ -144,7 +160,9 @@ const getSubTabs = (market: MarketType, category: CategoryTab): SubTab[] => {
   ];
 };
 
-export default function TradingPairSearch() {
+export default function TradingPairSearch({
+  onSelectPair,
+}: TradingPairSearchProps) {
   const [marketType, setMarketType] = useState<MarketType>("all");
   const [search, setSearch] = useState("");
   const [categoryTab, setCategoryTab] = useState<CategoryTab>("all");
@@ -341,7 +359,8 @@ export default function TradingPairSearch() {
             {rows.map((row) => (
               <div
                 key={row.id}
-                className={`grid text-[12px] text-[#111111] leading-[18px] font-medium items-center ${
+                onClick={() => onSelectPair?.(row)}
+                className={`cursor-pointer grid text-[12px] text-[#111111] leading-[18px] font-medium items-center hover:bg-[#F1EBFD] transition-colors duration-150 ${
                   showPerpCols
                     ? "grid-cols-[2.5fr_1fr_1fr_1.2fr_1.2fr_1fr]"
                     : "grid-cols-[2.5fr_1fr_1fr_1.2fr]"
@@ -350,7 +369,10 @@ export default function TradingPairSearch() {
                 <div className="flex items-center gap-1">
                   <button
                     className="cursor-pointer"
-                    onClick={() => toggleFavorite(row.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleFavorite(row.id);
+                    }}
                   >
                     <Image
                       src={
