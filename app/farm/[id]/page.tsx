@@ -312,67 +312,71 @@ export default function FarmDetailPage() {
           </div>
         </div>
       </header>
-      {!isMultiAsset && <section className="w-full h-fit ">
-        <AccountStatsGhost items={LEVERAGE_HEALTH_STATS_ITEMS} />
-      </section>}
-      <section className="w-full h-fit flex gap-[20px] ">
-        
-        <div className="w-full h-fit flex flex-col gap-[10px]">
-          <div className="w-full h-fit">
-            <AnimatedTabs containerClassName="w-full h-fit" tabClassName="w-full h-fit" type="solid" tabs={UI_TABS} activeTab={activeUiTab} onTabChange={handleUiTabChange} />
-          </div>
-          {activeUiTab === "all-transactions" ? (
-            <div className={`w-full h-fit flex flex-col gap-[24px] rounded-[20px] border-[1px] p-[24px] ${
-              isDark ? "bg-[#111111]" : "bg-[#F7F7F7]"
-            }`}>
-              <Chart  type="farm" heading="1 WISE = <0.001 WETH ($0.159)" downtrend="0.07%" />
-              <Table
-                filterDropdownPosition="right"
-                tableBodyBackground={isDark ? "bg-[#222222]" : "bg-white"}
-                heading={{
-                  heading: "All Transactions",
-                  tabsItems: [
-                    { id: "current-position", label: "Current Position" },
-                    { id: "position-history", label: "Position History" }
-                  ],
-                  tabType: "solid"
-                }}
-                activeTab={activeTab}
-                onTabChange={handleTabChange}
-                filters={{ filters: ["All"], customizeDropdown: true }}
-                tableHeadings={transactionTableHeadings}
-                tableBody={tableBodyData}
-              />
-            </div>
-          ) : (
-            <div className={`w-full h-fit flex flex-col gap-[24px] rounded-[20px] border-[1px] p-[24px] ${
-              isDark ? "bg-[#111111]" : "bg-[#F7F7F7]"
-            }`}>
-              <h2 className={`w-full h-fit text-[20px] font-semibold ${
-                isDark ? "text-white" : ""
-              }`}>Statistics</h2>
-              <article className="w-full h-full grid grid-cols-3 grid-rows-3 gap-x-[15px]" aria-label="Vault Statistics">
-          {items.map((item, idx) => {
-            return (
-              <StatsCard
-                key={idx}
-                heading={item.heading}
-                mainInfo={item.mainInfo}
-                subInfo={item.subInfo}
-                tooltip={item.tooltip}
-              />
-            );
-          })}
-        </article>
-            </div>
+      {!isMultiAsset && (
+        <>
+          <section className="w-full h-fit ">
+            <AccountStatsGhost items={LEVERAGE_HEALTH_STATS_ITEMS} />
+          </section>
+          <section className="w-full h-fit flex gap-[20px] ">
             
-          )}
-        </div>
-        <div className="w-[480px] h-fit flex flex-col gap-[20px]">
-          <Form />
-                  </div>
+            <div className="w-full h-fit flex flex-col gap-[10px]">
+              <div className="w-full h-fit">
+                <AnimatedTabs containerClassName="w-full h-fit" tabClassName="w-full h-fit" type="solid" tabs={UI_TABS} activeTab={activeUiTab} onTabChange={handleUiTabChange} />
+              </div>
+              {activeUiTab === "all-transactions" ? (
+                <div className={`w-full h-fit flex flex-col gap-[24px] rounded-[20px] border-[1px] p-[24px] ${
+                  isDark ? "bg-[#111111]" : "bg-[#F7F7F7]"
+                }`}>
+                  <Chart  type="farm" heading="1 WISE = <0.001 WETH ($0.159)" downtrend="0.07%" />
+                  <Table
+                    filterDropdownPosition="right"
+                    tableBodyBackground={isDark ? "bg-[#222222]" : "bg-white"}
+                    heading={{
+                      heading: "All Transactions",
+                      tabsItems: [
+                        { id: "current-position", label: "Current Position" },
+                        { id: "position-history", label: "Position History" }
+                      ],
+                      tabType: "solid"
+                    }}
+                    activeTab={activeTab}
+                    onTabChange={handleTabChange}
+                    filters={{ filters: ["All"], customizeDropdown: true }}
+                    tableHeadings={transactionTableHeadings}
+                    tableBody={tableBodyData}
+                  />
+                </div>
+              ) : (
+                <div className={`w-full h-fit flex flex-col gap-[24px] rounded-[20px] border-[1px] p-[24px] ${
+                  isDark ? "bg-[#111111]" : "bg-[#F7F7F7]"
+                }`}>
+                  <h2 className={`w-full h-fit text-[20px] font-semibold ${
+                    isDark ? "text-white" : ""
+                  }`}>Statistics</h2>
+                  <article className="w-full h-full grid grid-cols-3 grid-rows-3 gap-x-[15px]" aria-label="Vault Statistics">
+            {items.map((item, idx) => {
+              return (
+                <StatsCard
+                  key={idx}
+                  heading={item.heading}
+                  mainInfo={item.mainInfo}
+                  subInfo={item.subInfo}
+                  tooltip={item.tooltip}
+                />
+              );
+            })}
+          </article>
+                </div>
+                
+              )}
+            </div>
+            <div className="w-[480px] h-fit flex flex-col gap-[20px]">
+              <Form />
+                      </div>
 
-      </section>
+          </section>
+        </>
+      )}
     </main>
   );
 }

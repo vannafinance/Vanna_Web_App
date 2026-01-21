@@ -2,7 +2,7 @@ import { iconPaths } from "@/lib/constants";
 import Image from "next/image";
 import { useEffect, useState, useRef, useMemo, useCallback, memo } from "react";
 import { SearchBar } from "./search-bar";
-import { Checkbox } from "./checkbox";
+import { Checkbox } from "./Checkbox";
 import { useTheme } from "@/contexts/theme-context";
 
 interface FilterDropdownProps {
