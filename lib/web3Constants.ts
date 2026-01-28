@@ -205,11 +205,8 @@ const networkOptions = [
 
 // =============== ARBITRUM ============================================
 const arbTokensAddress: Record<string, `0x${string}`> = {
-  USDC: "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",
-  USDT: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
-  DAI:  "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
-  WETH: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
-  WBTC: "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f",
+  USDC: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",  // Native USDC (Circle)
+  USDT: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",  // USDT
 };
 
 const arbAddressList = {
@@ -239,11 +236,8 @@ const arbAddressList = {
 
 // =============== OP ============================================
 const opTokensAddress: Record<string, `0x${string}`> = {
-  USDC: "0x7F5c764cBc14f9669B88837ca1490cCa17c31607",
-  USDT: "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58",
-  DAI:  "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
-  WETH: "0x4200000000000000000000000000000000000006",
-  WBTC: "0x68f180fcCe6836688e9084f035309E29Bf0A2095",
+  USDC: "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85",  // Native USDC (Circle) on OP Mainnet
+  USDT: "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58",  // USDT bridged from Ethereum
 };
 
 const opAddressList = {
@@ -288,13 +282,9 @@ const opAddressList = {
 
 // =============== BASE ============================================
 const baseTokensAddress: Record<string, `0x${string}`> = {
-  USDC: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-  USDT: "0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2",
-  DAI:  "0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb",
-  WETH: "0x4200000000000000000000000000000000000006",
-  WBTC: "0x0555E30da8f98308EdB960aa94C0Db47230d2B9c",
+  USDC: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",  // Native USDC on Base (Circle)
+  USDT: "0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2",  // USDT bridged to Base
 };
-
 
 const baseAddressList = {
   daiTokenAddress: "0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb",
@@ -336,19 +326,13 @@ const OptionType = {
 const codeToAsset: { [key: string]: string } = {
   "00": "USDC",
   "01": "USDT",
-  "02": "DAI",
   "03": "ETH",
-  "04": "BTC",
 };
 
 const CollateralAssetCode: { [key: string]: string } = {
   USDC: "00",
   USDT: "01",
-  DAI: "02",
-  WETH: "03",
-  WBTC: "04",
   ETH: "03",
-  BTC: "04",
 };
 
 

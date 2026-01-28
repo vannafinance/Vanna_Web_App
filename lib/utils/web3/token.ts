@@ -34,13 +34,11 @@ export const TOKEN_OPTIONS = poolsPlaceholder.map(p=>p.name)  //["WETH", "WBTC",
 export type TokenSymbol = (typeof TOKEN_OPTIONS)[number];
 
 
-// This is for ERC-20 token 
+// This is for ERC-20 token
 export const TOKEN_DECIMALS: Record<TokenSymbol, number> = {
-  WETH: 18,
-  WBTC: 8,
+  ETH: 18,
   USDC: 6,
   USDT: 6,
-  DAI: 18,
 };
 
 
@@ -53,9 +51,9 @@ export const tokenAddressByChain: Record<number, Record<string, `0x${string}`>> 
 
 
 export const SUPPORTED_TOKENS_BY_CHAIN: Record<number, TokenSymbol[]> = {
-  42161: ["ETH","WETH", "WBTC", "USDC", "USDT", "DAI"],
-  10:    ["ETH","WETH", "WBTC", "USDC", "USDT", "DAI"],
-  8453:  ["ETH","WETH", "WBTC", "USDC", "USDT", "DAI"],
+  42161: ["ETH", "USDC", "USDT"],
+  10:    ["ETH", "USDC", "USDT"],
+  8453:  ["ETH", "USDC", "USDT"],
 };
 
 
@@ -63,25 +61,19 @@ export const SUPPORTED_TOKENS_BY_CHAIN: Record<number, TokenSymbol[]> = {
 export const vTokenAddressByChain: Record<number, Record<string, `0x${string}`>> = {
   42161: {
     USDC: arbAddressList.vUSDCContractAddress as `0x${string}`,
-    USDT: arbAddressList.vUSDTContractAddress  as `0x${string}`,
-    DAI:  arbAddressList.vDaiContractAddress  as `0x${string}`,
-    WETH: arbAddressList.vEtherContractAddress  as `0x${string}`,
-    WBTC: arbAddressList.vWBTCContractAddress  as `0x${string}`,
+    USDT: arbAddressList.vUSDTContractAddress as `0x${string}`,
+    ETH: arbAddressList.vEtherContractAddress as `0x${string}`,
   },
 
   10: {
-    USDC: opAddressList.vUSDCContractAddress  as `0x${string}`,
-    USDT: opAddressList.vUSDTContractAddress  as `0x${string}`,
-    DAI:  opAddressList.vDaiContractAddress  as `0x${string}`,
-    WETH: opAddressList.vEtherContractAddress  as `0x${string}`,
-    WBTC: opAddressList.vWBTCContractAddress  as `0x${string}`,
+    USDC: opAddressList.vUSDCContractAddress as `0x${string}`,
+    USDT: opAddressList.vUSDTContractAddress as `0x${string}`,
+    ETH: opAddressList.vEtherContractAddress as `0x${string}`,
   },
 
   8453: {
-    USDC: baseAddressList.vUSDCContractAddress  as `0x${string}`,
-    USDT: baseAddressList.vUSDTContractAddress  as `0x${string}`,
-    DAI:  baseAddressList.vDaiContractAddress  as `0x${string}`,
-    WETH: baseAddressList.vEtherContractAddress  as `0x${string}`,
-    WBTC: baseAddressList.vWBTCContractAddress  as `0x${string}`,
+    USDC: baseAddressList.vUSDCContractAddress as `0x${string}`,
+    USDT: baseAddressList.vUSDTContractAddress as `0x${string}`,
+    ETH: baseAddressList.vEtherContractAddress as `0x${string}`,
   },
 };

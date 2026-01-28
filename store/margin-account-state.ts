@@ -8,8 +8,10 @@ export interface MarginState {
   borrowUsd: number;
   hf: number;
   ltv: number;
+  leverage: number;
   maxBorrow: number;
   maxWithdraw: number;
+  hfStatus: 'safe' | 'caution' | 'warning' | 'danger' | 'liquidatable';
 }
 
 interface MarginStore {
@@ -54,15 +56,19 @@ export const useMarginStore = create<MarginStore>((set, get) => ({
     const cUsd = marginCalc.calcCollateralUsd(col);
     const bUsd = marginCalc.calcBorrowUsd(bor);
 
+    const hf = marginCalc.calcHF(cUsd, bUsd);
+
     const state: MarginState = {
       collateral: col,
       borrow: bor,
       collateralUsd: cUsd,
       borrowUsd: bUsd,
-      hf: marginCalc.calcHF(cUsd, bUsd),
+      hf,
       ltv: marginCalc.calcLTV(cUsd, bUsd),
+      leverage: marginCalc.calcLeverage(cUsd, bUsd),
       maxBorrow: marginCalc.calcMaxBorrow(cUsd, bUsd),
       maxWithdraw: marginCalc.calcMaxWithdraw(cUsd, bUsd),
+      hfStatus: marginCalc.getHFStatus(hf),
     };
 
     set({ marginState: state });

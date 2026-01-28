@@ -147,11 +147,11 @@ export const RepayLoanTab = () => {
 
     try {
       // 1. Deposit to Margin Account first (assuming paying from wallet)
-      // Check allowance
+      // Check allowance for ERC20 tokens (ETH is native and doesn't need allowance)
       const tokenAddress = tokenAddressByChain[chainId]?.[selectedRepayCurrency];
-      if (!tokenAddress) throw new Error("Token address not found");
 
       if (selectedRepayCurrency !== "ETH") {
+        if (!tokenAddress) throw new Error("Token address not found");
         const allowance = await publicClient.readContract({
           address: tokenAddress as `0x${string}`,
           abi: erc20Abi,

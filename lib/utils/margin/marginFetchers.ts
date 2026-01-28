@@ -42,7 +42,8 @@ export const useFetchCollateralState = (chainId?: number, publicClient?: any) =>
       args: [acc],
     }) as bigint[];
 
-    const collateralUsd = Number(raw) / 1e16;
+    // RiskEngine returns values in 18 decimals (1e18)
+    const collateralUsd = Number(raw) / 1e18;
     return [{ token: "USD", amount: collateralUsd, usd: collateralUsd }];
   }, [publicClient, chainId]);
 };
@@ -62,7 +63,8 @@ export const useFetchBorrowState = (chainId?: number, publicClient?: any) => {
       args: [acc],
     }) as bigint[];
 
-    const borrowUsd = Number(raw) / 1e16;
+    // RiskEngine returns values in 18 decimals (1e18)
+    const borrowUsd = Number(raw) / 1e18;
     return [{ token: "USD", amount: borrowUsd, usd: borrowUsd }];
   }, [publicClient, chainId]);
 };

@@ -1,4 +1,4 @@
-import { DropdownOptions, iconPaths } from "@/lib/constants";
+import { iconPaths } from "@/lib/constants";
 import { Dropdown } from "../ui/dropdown";
 import { useState, useEffect, useCallback } from "react";
 import { LeverageSlider } from "../ui/leverage-slider";
@@ -19,6 +19,7 @@ interface BorrowBoxProps {
   borrowAmount?: number;
   maxBorrowAmount?: number;
   assetPrice?: number;
+  supportedTokens?: string[];
 }
 
 export const BorrowBox = ({
@@ -31,7 +32,10 @@ export const BorrowBox = ({
   borrowAmount,
   maxBorrowAmount,
   assetPrice = 0,
+  supportedTokens = [],
 }: BorrowBoxProps) => {
+  // Use supportedTokens for dropdown, fallback to empty array
+  const tokenOptions = supportedTokens.length > 0 ? supportedTokens : ["USDC"];
   const config = MODE_CONFIG[mode];
 
   // Form state
@@ -84,7 +88,7 @@ export const BorrowBox = ({
 
     // Initial asset notification for Deposit mode if not set
     if (mode === "Deposit" && onAssetChange && !selectedOptions[0]) {
-      onAssetChange(DropdownOptions[0]);
+      onAssetChange(tokenOptions[0]);
     }
   }, [selectedOptions, inputValues, config.maxItems, totalDeposit, onBorrowItemsChange, mode, onAssetChange]);
 
@@ -113,7 +117,7 @@ export const BorrowBox = ({
         const currentValue = prev[idx];
         const selected =
           typeof option === "function"
-            ? option(currentValue || DropdownOptions[0])
+            ? option(currentValue || tokenOptions[0])
             : option;
 
         // Notify parent about asset change (useful for Deposit mode)
@@ -164,13 +168,13 @@ export const BorrowBox = ({
     const inputValue = e.target.value;
     // Allow empty string for better UX while typing
     if (inputValue === "") {
-      setLeverage(0);
+      setLeverage(1);
       return;
     }
     const value = Number(inputValue);
-    // Validate: must be a number, between 0 and MAX_LEVERAGE
+    // Validate: must be a number, between 1 and MAX_LEVERAGE (minimum leverage is 1x)
     if (!isNaN(value)) {
-      const clampedValue = Math.max(0, Math.min(MAX_LEVERAGE, value));
+      const clampedValue = Math.max(1, Math.min(MAX_LEVERAGE, value));
       setLeverage(clampedValue);
     }
   }, [setLeverage, MAX_LEVERAGE]);
@@ -198,8 +202,8 @@ export const BorrowBox = ({
                 <Dropdown
 
                   dropdownClassname="text-[14px] gap-[10px] "
-                  items={DropdownOptions}
-                  selectedOption={selectedOptions[0] || DropdownOptions[0]}
+                  items={tokenOptions}
+                  selectedOption={selectedOptions[0] || tokenOptions[0]}
                   setSelectedOption={handleSetSelectedOption(0)}
                   classname="text-[16px] font-medium gap-[8px]"
                 />
@@ -248,7 +252,7 @@ export const BorrowBox = ({
                 <div className="flex gap-[12px]">
                   {Array.from({ length: 1 }).map((_, idx) => {
                     const selectedOption =
-                      selectedOptions[0] || DropdownOptions[0];
+                      selectedOptions[0] || tokenOptions[0];
                     const inputValue = inputValues[0] || 0;
 
                     return (
@@ -264,18 +268,18 @@ export const BorrowBox = ({
                             <Image
                               src={iconPaths[selectedOption]}
                               alt={selectedOption}
-                              width={16}
-                              height={16}
+                              width={26}
+                              height={26}
                             />
                           </div>
 
                           <div className="text-[12px] font-medium flex flex-col gap-[4px]">
                             <div>
-                              {inputValue > 0 ? inputValue : "0"}{" "}
+                              {inputValue > 0 ? inputValue.toFixed(4) : "0"}{" "}
                                 {selectedOption}
                             </div>
                             <div className="text-[10px] text-[#111111]">
-                              {inputValue > 0 ? (inputValue * (assetPrice || 1)).toFixed(2) : "0.00"} USD
+                              {inputValue > 0 ? (inputValue * (assetPrice || 1)).toFixed(4) : "0.00"} USD
                             </div>
                           </div>
                         </div>
@@ -302,7 +306,7 @@ export const BorrowBox = ({
               <div className="flex gap-[12px]">
                 {Array.from({ length: config.maxItems }).map((_, idx) => {
                   const selectedOption =
-                    selectedOptions[idx] || DropdownOptions[0];
+                    selectedOptions[idx] || tokenOptions[0];
                   const inputValue = inputValues[idx] || 0;
 
                   return (
@@ -387,7 +391,7 @@ export const BorrowBox = ({
         >
           {/* Map through max items */}
           {Array.from({ length: config.maxItems }).map((_, idx) => {
-              const selectedOption = selectedOptions[idx] || DropdownOptions[0];
+              const selectedOption = selectedOptions[idx] || tokenOptions[0];
               const inputValue = inputValues[idx] || 0;
               
               // Calculate item data inline (no need for displayItems)
@@ -416,9 +420,9 @@ export const BorrowBox = ({
                       <div>
                         <Dropdown
                           dropdownClassname="text-[14px] gap-[10px] "
-                          items={DropdownOptions}
+                          items={tokenOptions}
                           selectedOption={
-                            selectedOptions[idx] || DropdownOptions[0]
+                            selectedOptions[idx] || tokenOptions[0]
                           }
                           setSelectedOption={handleSetSelectedOption(idx)}
                           classname="text-[16px] font-medium gap-[8px]"
@@ -491,14 +495,14 @@ export const BorrowBox = ({
           <motion.button
             type="button"
             onClick={() => {
-              if (leverage > 0) {
+              if (leverage > 1) {
                 setLeverage(leverage - 1);
               }
             }}
-            disabled={leverage <= 0}
+            disabled={leverage <= 1}
             className="w-[20px] h-[40px] flex items-center justify-center rounded-[6px] text-[16px] font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#F7F7F7] transition-colors"
-            whileHover={{ scale: leverage > 0 ? 1.05 : 1 }}
-            whileTap={{ scale: leverage > 0 ? 0.95 : 1 }}
+            whileHover={{ scale: leverage > 1 ? 1.05 : 1 }}
+            whileTap={{ scale: leverage > 1 ? 0.95 : 1 }}
             aria-label="Decrease leverage"
           >
             −

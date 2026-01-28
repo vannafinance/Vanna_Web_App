@@ -10,7 +10,6 @@ const TTL = 10_000; // 10s
 
 const normalize = (s: string): string => {
   if (s === "WETH") return "ETH";
-  if (s === "WBTC") return "BTC";
   return s;
 };
 
@@ -48,12 +47,8 @@ export async function GET() {
     // --- canonical exposure for our margin app ---
     const result = {
       ETH: out["ETH"],
-      WETH: out["ETH"], // mirror
-      BTC: out["BTC"],
-      WBTC: out["BTC"], // mirror
       USDC: 1,
       USDT: 1,
-      DAI: 1,
       timestamp: now,
       cached: false,
     };

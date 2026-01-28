@@ -1339,15 +1339,10 @@ export const LeverageAssetsTab = () => {
 
       // --- EXECUTE DEPOSITS ---
       for (const item of deposits) {
-        const tokenAddress = tokenAddressByChain[chainId]?.[item.asset];
-        if (!tokenAddress) {
-          console.warn(`Token address not found for ${item.asset}`);
-          continue;
-        }
-
         const decimals = TOKEN_DECIMALS[item.asset] ?? 18;
         const amountBigInt = parseUnits(item.amount.toString(), decimals);
 
+        // Handle native ETH deposit first (no token address needed)
         if (item.asset === "ETH") {
           setLoadingMessage(`Depositing ${item.amount} ETH...`);
           const txHash = await walletClient.writeContract({
@@ -1360,7 +1355,12 @@ export const LeverageAssetsTab = () => {
           await publicClient.waitForTransactionReceipt({ hash: txHash });
           toast.success(`Deposited ${item.amount} ETH`);
         } else {
-          // ERC20 Deposit
+          // ERC20 Deposit - check token address exists
+          const tokenAddress = tokenAddressByChain[chainId]?.[item.asset];
+          if (!tokenAddress) {
+            console.warn(`Token address not found for ${item.asset}`);
+            continue;
+          }
           setLoadingMessage(`Checking allowance for ${item.asset}...`);
           const allowance = await publicClient.readContract({
             address: tokenAddress as `0x${string}`,
@@ -1399,23 +1399,36 @@ export const LeverageAssetsTab = () => {
         await reloadMarginState();
 
         for (const item of borrowsToExecute) {
-          const tokenAddress = tokenAddressByChain[chainId]?.[item.asset];
-          if (!tokenAddress) {
-            console.warn(`Token address not found for ${item.asset}`);
-            continue;
-          }
-
           const decimals = TOKEN_DECIMALS[item.asset] ?? 18;
           const amountBigInt = parseUnits(item.amount, decimals);
 
           setLoadingMessage(`Borrowing ${item.amount} ${item.asset}...`);
 
-          const txHash = await walletClient.writeContract({
-            address: addressList.accountManagerContractAddress as `0x${string}`,
-            abi: AccountManager.abi,
-            functionName: "borrow",
-            args: [targetAccount, tokenAddress, amountBigInt]
-          });
+          let txHash: `0x${string}`;
+
+          if (item.asset === "ETH") {
+            // Borrow native ETH
+            txHash = await walletClient.writeContract({
+              address: addressList.accountManagerContractAddress as `0x${string}`,
+              abi: AccountManager.abi,
+              functionName: "borrowEth",
+              args: [targetAccount, amountBigInt]
+            });
+          } else {
+            // Borrow ERC20 token
+            const tokenAddress = tokenAddressByChain[chainId]?.[item.asset];
+            if (!tokenAddress) {
+              console.warn(`Token address not found for ${item.asset}`);
+              continue;
+            }
+
+            txHash = await walletClient.writeContract({
+              address: addressList.accountManagerContractAddress as `0x${string}`,
+              abi: AccountManager.abi,
+              functionName: "borrow",
+              args: [targetAccount, tokenAddress, amountBigInt]
+            });
+          }
 
           await publicClient.waitForTransactionReceipt({ hash: txHash });
           toast.success(`Borrowed ${item.amount} ${item.asset}`);
@@ -1738,6 +1751,7 @@ export const LeverageAssetsTab = () => {
               borrowAmount={calculatedBorrowAmount}
               maxBorrowAmount={maxBorrowAmount}
               assetPrice={prices[borrowAsset] || 0}
+              supportedTokens={supportedTokens}
             />
           </div>
         </motion.div>
