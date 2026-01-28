@@ -14,7 +14,12 @@ import { useBalanceStore } from "@/store/balance-store";
 import { SUPPORTED_TOKENS_BY_CHAIN, TOKEN_DECIMALS } from "@/lib/utils/web3/token";
 
 export const TransferCollateral = () => {
-  const [selectedCurrency, setSelectedCurrency] = useState<string>("USDC");
+  const { chainId, address } = useAccount();
+  const supportedTokens = useMemo(() => {
+    return SUPPORTED_TOKENS_BY_CHAIN[chainId ?? 0] ?? [];
+  }, [chainId]);
+
+  const [selectedCurrency, setSelectedCurrency] = useState<string>(supportedTokens[0] || "");
   const [valueInput, setValueInput] = useState<string>("");
   const [valueInUsd, setValueInUsd] = useState<number>(0.0);
   const [percentage, setPercentage] = useState<number>(0);
@@ -25,10 +30,6 @@ export const TransferCollateral = () => {
 
   const walletClient = useWalletClient();
   const publicClient = usePublicClient();
-  const { chainId, address } = useAccount();
-   const supportedTokens = useMemo(() => {
-    return SUPPORTED_TOKENS_BY_CHAIN[chainId ?? 0] ?? [];
-  }, [chainId]);
 
 
   const fetchAccountCheck = useFetchAccountCheck(chainId, address as `0x${string}`, publicClient);
@@ -37,7 +38,8 @@ export const TransferCollateral = () => {
   const getBalance = useBalanceStore((s) => s.getBalance);
 
   // Get max balance from margin account for selected asset
-  const maxBalance = getBalance(selectedCurrency, "MB");
+  const balanceAsset = selectedCurrency === "ETH" ? "WETH" : selectedCurrency;
+  const maxBalance = getBalance(balanceAsset, "MB");
 
   const { reset, refreshBalances } = useBalanceStore();
 
@@ -50,6 +52,12 @@ export const TransferCollateral = () => {
     setPercentage(0);
     setValueInUsd(0);
   }, [selectedCurrency]);
+
+  useEffect(() => {
+    if (supportedTokens.length > 0 && !supportedTokens.includes(selectedCurrency)) {
+      setSelectedCurrency(supportedTokens[0]);
+    }
+  }, [supportedTokens, selectedCurrency]);
 
   const handlePercentageClick = (item: number) => {
     setPercentage(item);
@@ -135,7 +143,8 @@ export const TransferCollateral = () => {
       }
 
       // Validate amount doesn't exceed asset-specific max balance
-      const assetBalance = getBalance(asset, "MB");
+      const checkAsset = asset === "ETH" ? "WETH" : asset;
+      const assetBalance = getBalance(checkAsset, "MB");
       if (Number(amount) > assetBalance) {
         throw new Error(`Amount exceeds available balance. Max: ${assetBalance} ${asset}`);
       }

@@ -1,33 +1,33 @@
-import { create } from "zustand";
+import { create } from "zustand"
 import {
   TOKEN_DECIMALS,
   tokenAddressByChain,
   SUPPORTED_TOKENS_BY_CHAIN,
-} from "@/lib/utils/web3/token";
-import { erc20Abi, formatUnits, PublicClient } from "viem";
+} from "@/lib/utils/web3/token"
+import { erc20Abi, formatUnits, PublicClient } from "viem"
 
-type BalanceType = "WB" | "MB";
+type BalanceType = "WB" | "MB"
 
 export interface AssetBalance {
-  asset: string;
-  type: BalanceType;
-  amount: number;
+  asset: string
+  type: BalanceType
+  amount: number
 }
 
 interface BalanceStore {
-  balances: AssetBalance[];
+  balances: AssetBalance[]
+  walletBalances: AssetBalance[]
+  marginBalances: AssetBalance[]
 
   refreshBalances: (params: {
-    chainId: number;
-    address: `0x${string}`;
-    publicClient: PublicClient;
-    marginAccount?: `0x${string}`;
-  }) => Promise<void>;
+    chainId: number
+    address: `0x${string}`
+    publicClient: PublicClient
+    marginAccount?: `0x${string}`
+  }) => Promise<void>
 
-  /** Access helpers */
-  getBalance: (asset: string, type: BalanceType) => number;
-  walletBalances: AssetBalance[];
-  marginBalances: AssetBalance[];
+  getBalance: (asset: string, type: BalanceType) => number
+  reset: () => void
 }
 
 export const useBalanceStore = create<BalanceStore>((set, get) => ({
@@ -36,59 +36,123 @@ export const useBalanceStore = create<BalanceStore>((set, get) => ({
   marginBalances: [],
 
   refreshBalances: async ({ chainId, address, publicClient, marginAccount }) => {
-    const supported = SUPPORTED_TOKENS_BY_CHAIN[chainId] ?? [];
-    const addrMap = tokenAddressByChain[chainId] ?? {};
+    const supported = SUPPORTED_TOKENS_BY_CHAIN[chainId] ?? []
+    const addrMap = tokenAddressByChain[chainId] ?? {}
 
-    // ---- fetch WB ----
-    const wbCalls = supported.map(async (token) => {
-      if (token === "WETH" && !addrMap[token]) {
-        const raw = await publicClient.getBalance({ address });
-        return { asset: "WETH", type: "WB" as const, amount: Number(formatUnits(raw, 18)) };
-      }
+    const wbTokens: string[] = []
+    const wbContracts: any[] = []
 
-      const contract = addrMap[token];
-      if (!contract) return { asset: token, type: "WB" as const, amount: 0 };
+    const mbTokens: string[] = []
+    const mbContracts: any[] = []
 
-      const decimals = TOKEN_DECIMALS[token] ?? 18;
-      const raw = await publicClient.readContract({
+    // ETH is native, skip from ERC20 calls
+    for (const token of supported) {
+      if (token === "ETH") continue
+      const contract = addrMap[token]
+      if (!contract) continue
+
+      wbTokens.push(token)
+      wbContracts.push({
         address: contract,
         abi: erc20Abi,
         functionName: "balanceOf",
         args: [address],
-      });
-      return { asset: token, type: "WB" as const, amount: Number(formatUnits(raw, decimals)) };
-    });
+      })
 
-    const walletArr = await Promise.all(wbCalls);
-
-    // ---- fetch MB ----
-    let marginArr: AssetBalance[] = [];
-    if (marginAccount) {
-      const mbCalls = supported.map(async (token) => {
-        const contract = addrMap[token];
-        if (!contract) return { asset: token, type: "MB" as const, amount: 0 };
-
-        const decimals = TOKEN_DECIMALS[token] ?? 18;
-        const raw = await publicClient.readContract({
+      if (marginAccount) {
+        mbTokens.push(token)
+        mbContracts.push({
           address: contract,
           abi: erc20Abi,
           functionName: "balanceOf",
           args: [marginAccount],
-        });
-        return { asset: token, type: "MB" as const, amount: Number(formatUnits(raw, decimals)) };
-      });
-      marginArr = await Promise.all(mbCalls);
+        })
+      }
     }
 
+    const allContracts = [...wbContracts, ...mbContracts]
+
+    const [wbEthRaw, mbEthRaw, multicallResults] = await Promise.all([
+      publicClient.getBalance({ address }), // Base ETH native
+      marginAccount ? publicClient.getBalance({ address: marginAccount }) : Promise.resolve(0n),
+      allContracts.length > 0 ? publicClient.multicall({ contracts: allContracts }) : Promise.resolve([]),
+    ])
+
+    const wbResults = multicallResults.slice(0, wbContracts.length)
+    const mbResults = multicallResults.slice(wbContracts.length)
+
+    const walletArr: AssetBalance[] = []
+
+    // ETH wallet
+    walletArr.push({
+      asset: "ETH",
+      type: "WB",
+      amount: Number(formatUnits(wbEthRaw, 18)),
+    })
+
+    for (let i = 0; i < supported.length; i++) {
+      const token = supported[i]
+      if (token === "ETH") continue
+
+      const index = wbTokens.indexOf(token)
+      if (index !== -1 && wbResults[index]?.status === "success") {
+        const decimals = TOKEN_DECIMALS[token] ?? 18
+        walletArr.push({
+          asset: token,
+          type: "WB",
+          amount: Number(formatUnits(wbResults[index].result as bigint, decimals)),
+        })
+      } else {
+        walletArr.push({ asset: token, type: "WB", amount: 0 })
+      }
+    }
+
+    const marginArr: AssetBalance[] = []
+
+    if (marginAccount) {
+      marginArr.push({
+        asset: "ETH",
+        type: "MB",
+        amount: Number(formatUnits(mbEthRaw, 18)),
+      })
+
+      for (let i = 0; i < supported.length; i++) {
+        const token = supported[i]
+        if (token === "ETH") continue
+
+        const index = mbTokens.indexOf(token)
+        if (index !== -1 && mbResults[index]?.status === "success") {
+          const decimals = TOKEN_DECIMALS[token] ?? 18
+          marginArr.push({
+            asset: token,
+            type: "MB",
+            amount: Number(formatUnits(mbResults[index].result as bigint, decimals)),
+          })
+        } else {
+          marginArr.push({ asset: token, type: "MB", amount: 0 })
+        }
+      }
+    }
+
+    const balances = [...walletArr, ...marginArr]
+
     set({
-      balances: [...walletArr, ...marginArr],
+      balances,
       walletBalances: walletArr,
       marginBalances: marginArr,
-    });
+    })
   },
 
   getBalance: (asset, type) => {
-    const b = get().balances.find((b) => b.asset === asset && b.type === type);
-    return b?.amount ?? 0;
+    const b = get().balances.find((b) => b.asset === asset && b.type === type)
+    return b?.amount ?? 0
   },
-}));
+
+  reset: () => {
+    set({
+      balances: [],
+      walletBalances: [],
+      marginBalances: [],
+    })
+  },
+}))

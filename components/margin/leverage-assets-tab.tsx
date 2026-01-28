@@ -939,18 +939,14 @@ export const LeverageAssetsTab = () => {
 
     // Calculate Collateral Increase
     if (mode === "Deposit") {
-        if (isMBMode) {
-            additionalCollateralUsd = additionalBorrowUsd;
-        } else {
-            additionalCollateralUsd = totalDepositValue + additionalBorrowUsd;
-        }
+    if (isMBMode) {
+        // MB mode: No new collateral deposit, only using existing
+        additionalCollateralUsd = 0;
     } else {
-        if (isMBMode) {
-            additionalCollateralUsd = additionalBorrowUsd;
-        } else {
-            additionalCollateralUsd = totalDepositValue + additionalBorrowUsd;
-        }
+        // WB mode: Only the deposit adds to collateral, NOT the borrow
+        additionalCollateralUsd = totalDepositValue;
     }
+}
 
     const sim = simulateStrategy(marginState, additionalCollateralUsd, additionalBorrowUsd);
     

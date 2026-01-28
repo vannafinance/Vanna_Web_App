@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { useSwitchChain, useChainId, useAccount, usePublicClient } from "wagmi";
 import { PublicClient } from 'viem';
 import { useFetchAccountCheck } from "@/lib/utils/margin/marginFetchers";
+import { useMarginAccountInfoStore } from "@/store/margin-account-info-store";
 
 export const NetworkDropdown = () => {
   // Dropdown visibility state
@@ -17,6 +18,7 @@ export const NetworkDropdown = () => {
   const { switchChain } = useSwitchChain()
 
   const { reset, refreshBalances } = useBalanceStore();
+  const setHasMarginAccount = useMarginAccountInfoStore((state) => state.set);
 
 
   const { address, isConnected } = useAccount()
@@ -68,11 +70,17 @@ export const NetworkDropdown = () => {
       // 1. fetch margin account(s) for current network
       const accs = await fetchAccountCheck();
       const marginAccount = accs?.[0];
+      
+      if (marginAccount) {
+        setHasMarginAccount({ hasMarginAccount: true });
+      } else {
+        setHasMarginAccount({ hasMarginAccount: false });
+      }
 
       // 2. clear stale balances
       reset();
 
-      // 3. refresh balances one-shot
+      // 3. refresh balances 
       await refreshBalances({
         chainId,
         publicClient,
@@ -95,8 +103,6 @@ export const NetworkDropdown = () => {
 
   const selectedNetwork = networkOptions.find((n) => n.chainId === chainId)
     ?? networkOptions[0];
-
-
 
 
   return (

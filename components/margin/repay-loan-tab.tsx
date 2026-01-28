@@ -1,36 +1,103 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
-import { DropdownOptionsType } from "@/lib/types";
-import { DropdownOptions } from "@/lib/constants";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { DEPOSIT_PERCENTAGES, PERCENTAGE_COLORS } from "@/lib/constants/margin";
 import { Dropdown } from "../ui/dropdown";
 import { Popup } from "@/components/ui/popup";
+import { useMarginStore } from "@/store/margin-account-state";
+import { useAccount, usePublicClient } from "wagmi";
+import { useBalanceStore } from "@/store/balance-store";
+import { SUPPORTED_TOKENS_BY_CHAIN } from "@/lib/utils/web3/token";
+import { useWalletClient } from "wagmi";
+import { toast } from "sonner";
+import { getAddressList } from "@/lib/utils/web3/addressList";
+import { tokenAddressByChain, TOKEN_DECIMALS } from "@/lib/utils/web3/token";
+import AccountManager from "../../abi/vanna/out/out/AccountManager.sol/AccountManager.json";
+import { erc20Abi, parseUnits } from "viem";
+import { useFetchAccountCheck } from "@/lib/utils/margin/marginFetchers";
 
 export const RepayLoanTab = () => {
   // Repay form state
   // Repay loan statistics
+
+   const { chainId, address } = useAccount();
+
+
+   const supportedTokens = useMemo(() => {
+    return SUPPORTED_TOKENS_BY_CHAIN[chainId ?? 0] ?? [];
+  }, [chainId]);
+
+  const { data: walletClient } = useWalletClient();
+  
   const [repayStats, setRepayStats] = useState({
     netOutstandingAmountToPay: 0,
     availableBalance: 0,
     frozenBalance: 0,
   });
+
+
   const [selectedRepayCurrency, setSelectedRepayCurrency] =
-    useState<string>(DropdownOptions[0]);
+    useState<string>(supportedTokens[0] || "");
   const [selectedRepayPercentage, setSelectedRepayPercentage] =
     useState<number>(10);
   const [repayAmount, setRepayAmount] = useState<number>(0);
-  const [repayAmountInUsd] = useState<number>(0);
+  const [repayAmountInUsd, setRepayAmountInUsd] = useState<number>(0);
+  const [prices, setPrices] = useState<Record<string, number>>({});
+  
+  const publicClient = usePublicClient();
+  const { marginState, reloadMarginState } = useMarginStore((s) => s);
+  const getBalance = useBalanceStore((s) => s.getBalance);
+  const fetchAccountCheck = useFetchAccountCheck(chainId, address as `0x${string}`, publicClient);
+  const [loading, setLoading] = useState(false);
 
   // Popup visibility states
   const [isPayNowPopupOpen, setIsPayNowPopupOpen] = useState(false);
   const [isFlashClosePopupOpen, setIsFlashClosePopupOpen] = useState(false);
 
+  useEffect(() => {
+    if (supportedTokens.length > 0 && !supportedTokens.includes(selectedRepayCurrency)) {
+      setSelectedRepayCurrency(supportedTokens[0]);
+    }
+  }, [supportedTokens, selectedRepayCurrency]);
+
+  useEffect(() => {
+    const fetchPrices = async () => {
+      try {
+        const res = await fetch("/api/prices");
+        const data = await res.json();
+        setPrices(data);
+      } catch (e) {
+        console.error("Error fetching prices:", e);
+      }
+    };
+    fetchPrices();
+  }, []);
+
+  useEffect(() => {
+    if (marginState) {
+      setRepayStats({
+        netOutstandingAmountToPay: marginState.borrowUsd,
+        availableBalance: getBalance(selectedRepayCurrency, "WB"),
+        frozenBalance: marginState.collateralUsd,
+      });
+    }
+  }, [marginState, getBalance, selectedRepayCurrency]);
+
+  useEffect(() => {
+    const price = prices[selectedRepayCurrency] || 0;
+    setRepayAmountInUsd(repayAmount * price);
+  }, [repayAmount, selectedRepayCurrency, prices]);
+
   // Handler for percentage click
   const handlePercentageClick = (item: number) => {
     setSelectedRepayPercentage(item);
+    const debt = marginState?.borrowUsd || 0;
+    const targetUsd = (debt * item) / 100;
+    const price = prices[selectedRepayCurrency] || 1;
+    const amount = targetUsd / price;
+    setRepayAmount(Number(amount.toFixed(6)));
   };
 
   // Handler for input change
@@ -47,6 +114,7 @@ export const RepayLoanTab = () => {
   const handleFlashCloseClick = () => {
     setIsFlashClosePopupOpen(true);
   };
+  
 
   // Handler for closing pay now popup
   const handleClosePayNowPopup = () => {
@@ -57,6 +125,110 @@ export const RepayLoanTab = () => {
   const handleCloseFlashClosePopup = () => {
     setIsFlashClosePopupOpen(false);
   };
+
+  const executeRepay = async () => {
+    if (!walletClient || !publicClient || !chainId || !address) {
+      return toast.error("Wallet not ready");
+    }
+
+    const addressList = getAddressList(chainId);
+    if (!addressList) return toast.error("Unsupported network");
+
+    const accounts = await fetchAccountCheck();
+    if (!accounts.length) return toast.error("No Margin Account found");
+
+    const marginAccount = accounts[0];
+    const amountStr = repayAmount.toString();
+    const decimals = TOKEN_DECIMALS[selectedRepayCurrency] ?? 18;
+    const parsedAmount = parseUnits(amountStr, decimals);
+
+    setLoading(true);
+    const toastId = toast.loading("Processing Repayment...");
+
+    try {
+      // 1. Deposit to Margin Account first (assuming paying from wallet)
+      // Check allowance
+      const tokenAddress = tokenAddressByChain[chainId]?.[selectedRepayCurrency];
+      if (!tokenAddress) throw new Error("Token address not found");
+
+      if (selectedRepayCurrency !== "ETH") {
+        const allowance = await publicClient.readContract({
+          address: tokenAddress as `0x${string}`,
+          abi: erc20Abi,
+          functionName: "allowance",
+          args: [address, addressList.accountManagerContractAddress as `0x${string}`],
+        }) as bigint;
+
+        if (allowance < parsedAmount) {
+          toast.loading("Approving token...", { id: toastId });
+          const approveHash = await walletClient.writeContract({
+            address: tokenAddress as `0x${string}`,
+            abi: erc20Abi,
+            functionName: "approve",
+            args: [addressList.accountManagerContractAddress as `0x${string}`, parsedAmount],
+          });
+          await publicClient.waitForTransactionReceipt({ hash: approveHash });
+        }
+      }
+
+      // 2. Repay (Deposit + Repay logic handled by AccountManager if we use repay? No, usually separate)
+      // Actually, AccountManager might have a function to repay from wallet?
+      // Looking at LeverageAssetsTab, executeRepay with mode "WB" does: deposit -> repay.
+      
+      toast.loading("Depositing for repayment...", { id: toastId });
+      // Deposit
+      if (selectedRepayCurrency === "ETH") {
+         const tx = await walletClient.writeContract({
+            address: addressList.accountManagerContractAddress as `0x${string}`,
+            abi: AccountManager.abi,
+            functionName: "depositEth",
+            args: [marginAccount],
+            value: parsedAmount
+         });
+         await publicClient.waitForTransactionReceipt({ hash: tx });
+      } else {
+         const tx = await walletClient.writeContract({
+            address: addressList.accountManagerContractAddress as `0x${string}`,
+            abi: AccountManager.abi,
+            functionName: "deposit",
+            args: [marginAccount, tokenAddress, parsedAmount]
+         });
+         await publicClient.waitForTransactionReceipt({ hash: tx });
+      }
+
+      toast.loading("Repaying loan...", { id: toastId });
+      // Repay
+      if (selectedRepayCurrency === "ETH") {
+         const tx = await walletClient.writeContract({
+            address: addressList.accountManagerContractAddress as `0x${string}`,
+            abi: AccountManager.abi,
+            functionName: "repayEth",
+            args: [marginAccount, parsedAmount]
+         });
+         await publicClient.waitForTransactionReceipt({ hash: tx });
+      } else {
+         const tx = await walletClient.writeContract({
+            address: addressList.accountManagerContractAddress as `0x${string}`,
+            abi: AccountManager.abi,
+            functionName: "repay",
+            args: [marginAccount, tokenAddress, parsedAmount]
+         });
+         await publicClient.waitForTransactionReceipt({ hash: tx });
+      }
+
+      await reloadMarginState();
+      toast.success("Repayment successful!", { id: toastId });
+      setRepayAmount(0);
+      setIsPayNowPopupOpen(false);
+
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.message || "Repayment failed", { id: toastId });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
 
   // Check if buttons should be disabled (when input is 0 or empty)
   const isInputEmpty = repayAmount === 0 || repayAmount === null || repayAmount === undefined;
@@ -117,7 +289,7 @@ export const RepayLoanTab = () => {
                     ease: "easeOut",
                   }}
                 >
-                  {value}
+                  {typeof value === 'number' ? value.toFixed(4) : value}
                 </motion.div>
               </motion.div>
             );
@@ -147,7 +319,7 @@ export const RepayLoanTab = () => {
             >
               <Dropdown
               classname="text-[16px] font-medium gap-[8px]"
-                items={DropdownOptions}
+                items={supportedTokens}
                 selectedOption={selectedRepayCurrency}
                 setSelectedOption={setSelectedRepayCurrency}
                 dropdownClassname="text-[14px] font-medium gap-[8px]"
@@ -220,7 +392,7 @@ export const RepayLoanTab = () => {
               transition={{ duration: 0.3, delay: 0.65, ease: "easeOut" }}
               aria-live="polite"
             >
-              {repayAmountInUsd} USD
+              {repayAmountInUsd.toFixed(2)} USD
             </motion.div>
           </motion.div>
         </motion.div>
@@ -300,7 +472,7 @@ export const RepayLoanTab = () => {
                 icon="/assets/exclamation.png"
                 description="Are you sure you want to close this position? This action will lock in your current P&L and cannot be undone."
                 buttonText="Close Position"
-                buttonOnClick={handleClosePayNowPopup}
+                buttonOnClick={executeRepay}
                 closeButtonText="Cancel"
                 closeButtonOnClick={handleClosePayNowPopup}
               />
