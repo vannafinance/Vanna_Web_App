@@ -3,7 +3,6 @@
 import { Carousel } from "@/components/ui/carousel";
 import { NetworkDropdown } from "@/components/network-dropdown";
 import {
-  ACCOUNT_STATS_ITEMS,
   CAROUSEL_ITEMS,
   MARGIN_ACCOUNT_INFO_ITEMS,
   MARGIN_ACCOUNT_MORE_DETAILS_ITEMS,
@@ -14,13 +13,17 @@ import Image from "next/image";
 import { InfoCard } from "@/components/margin/info-card";
 import { LeverageCollateral } from "@/components/margin/leverage-collateral";
 import { Positionstable } from "@/components/margin/positions-table";
+import { AccountStats } from "@/components/margin/account-stats";
 import { Position } from "@/lib/types";
 import { useMarginAccountInfoStore } from "@/store/margin-account-info-store";
 import { useCollateralBorrowStore } from "@/store/collateral-borrow-store";
 import { useUserStore } from "@/store/user";
 import { formatValue } from "@/lib/utils/format-value";
+import { ACCOUNT_STATS_ITEMS } from "@/lib/constants/margin";
+import { useTheme } from "@/contexts/theme-context";
 
 const Margin = () => {
+  const { isDark } = useTheme();
   // State to trigger tab switch to Repay Loan
   const [switchToRepayTab, setSwitchToRepayTab] = useState(false);
 
@@ -48,6 +51,8 @@ const Margin = () => {
   }, [switchToRepayTab]);
 
   const userAddress = useUserStore((state) => state.address);
+
+  
 
   // Account statistics state
   const [accountStats, setAccountStats] = useState({
@@ -86,16 +91,6 @@ const Margin = () => {
     (state) => state.hasMarginAccount
   );
 
-  // Format account stats value - defined outside rendering
-  const formatAccountStatValue = (itemId: string, value: number) => {
-    if (itemId === "netHealthFactor") {
-      return formatValue(value, { type: "health-factor" });
-    }
-    return formatValue(value, { 
-      type: "number",
-      useLargeFormat: true,
-    });
-  };
 
   // Format data for InfoCard component
   const marginAccountInfo = {
@@ -111,6 +106,35 @@ const Margin = () => {
     minDebt,
     maxDebt,
   };
+
+  // Format account stats value - defined outside rendering
+  const formatAccountStatValue = (itemId: string, value: number) => {
+    if (itemId === "netHealthFactor") {
+      return formatValue(value, { type: "health-factor" });
+    }
+    return formatValue(value, {
+      type: "number",
+      useLargeFormat: true,
+    });
+  };
+
+  // Prepare account stats values for AccountStats component
+  const accountStatsValues = ACCOUNT_STATS_ITEMS.reduce((acc, item) => {
+    if (!hasMarginAccount) {
+      acc[item.id] = "-";
+      return acc;
+    }
+
+    const value = accountStats[item.id as keyof typeof accountStats] || 0;
+    
+    if (value === 0) {
+      acc[item.id] = "-";
+    } else {
+      acc[item.id] = formatAccountStatValue(item.id, value);
+    }
+    
+    return acc;
+  }, {} as Record<string, string>);
 
   return (
     <main className="w-full">
@@ -136,173 +160,106 @@ const Margin = () => {
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.5, ease: "easeOut" }}
         >
-            <div className=" border-[1px]   border-[#E2E2E2] bg-[#F7F7F7] rounded-[24px] w-full h-full grid grid-cols-3 grid-rows-2 gap-x-[20px] gap-y-[0] place-items-center ">
-              {/* Map through account stats items */}
-              {ACCOUNT_STATS_ITEMS.map((item, idx) => {
-                return (
-                  <motion.article
-                    className="px-[20px]  flex flex-col justify-center   w-[397.33px] h-[168.5px] rounded-[10px]  col-span-1 row-span-1 "
-                    key={idx}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: "-50px" }}
-                    transition={{
-                      duration: 0.4,
-                      delay: idx * 0.1,
-                      ease: "easeOut",
-                    }}
-                  >
-                    <div className="w-full h-fit flex items-start gap-[16px] ">
-                      <motion.div
-                        className=" w-[52px] h-[52px] flex flex-col justify-center items-center p-[2.89px] bg-white rounded-[69.33px] flex-shrink-0"
-                        initial={{ scale: 0 }}
-                        whileInView={{ scale: 1 }}
-                        viewport={{ once: true }}
-                        transition={{
-                          duration: 0.3,
-                          delay: idx * 0.1 + 0.2,
-                          type: "spring",
-                          stiffness: 200,
-                        }}
-                      >
-                        <Image
-                          width={23.11}
-                          height={23.11}
-                          alt={item.id}
-                          src={item.icon}
-                        />
-                      </motion.div>
-                      <div className=" flex flex-col gap-[32px] w-full ">
-                        <div className="flex flex-col justify-center  w-[289.33px]  text-[20px]  font-semibold">
-                          {item.name}
-                        </div>
-                        <motion.div
-                          className="text-[32px] font-bold text-neutral-600"
-                          initial={{ opacity: 0 }}
-                          whileInView={{ opacity: 1 }}
-                          viewport={{ once: true }}
-                          transition={{ duration: 0.4, delay: idx * 0.1 + 0.3 }}
-                        >
-                          {(() => {
-                            const value = hasMarginAccount
-                              ? accountStats[item.id as keyof typeof accountStats] || 0
-                              : 0;
-                            
-                            if (!hasMarginAccount || value === 0) {
-                              return "-";
-                            }
-                            
-                            return formatAccountStatValue(item.id, value);
-                          })()}
-                        </motion.div>
-                      </div>
-                    </div>
-                  </motion.article>
-                );
-              })}
-            </div>
+          <AccountStats
+            items={ACCOUNT_STATS_ITEMS}
+            values={accountStatsValues}
+          />
         </motion.section>
       )}
 
       {/* Main leverage section */}
       <section className=" w-full p-[80px]  flex flex-col gap-[48px]">
-        <motion.section
-          className="w-full h-fit  flex flex-col gap-[48px]"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
+        {/* Section header with network dropdown */}
+        <motion.header
+          className="w-full flex gap-[20px] items-center"
+          initial={{ opacity: 0, x: -20 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
         >
-          {/* Section header with network dropdown */}
-          <motion.header
-            className="w-full flex gap-[20px] items-center"
-            initial={{ opacity: 0, x: -20 }}
+          <h1 className={`text-[34px] font-semibold ${isDark ? "text-white" : ""}`}>
+            Leverage your Collateral
+          </h1>
+          <div className="flex-shrink-0">
+            <NetworkDropdown />
+          </div>
+        </motion.header>
+
+        {/* Two column layout: Leverage form and Info card */}
+        <div className="flex gap-[36px] relative" ref={leverageCollateralRef}>
+          {/* Left: Leverage collateral form */}
+          <LeverageCollateral
+            switchToRepayTab={switchToRepayTab}
+            onTabSwitched={() => setSwitchToRepayTab(false)}
+          />
+
+          {/* Right: Margin account info card - sticky */}
+          <motion.aside
+            className="flex flex-col gap-[20px] w-full h-fit sticky top-[80px] self-start"
+            initial={{ opacity: 0, x: 20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.4, ease: "easeOut" }}
           >
-            <h1 className="text-[34px] font-semibold">
-              Leverage your Collateral
-            </h1>
-            <div className="flex-shrink-0">
-              <NetworkDropdown />
-            </div>
-          </motion.header>
-
-          {/* Two column layout: Leverage form and Info card */}
-          <div className="flex gap-[36px] relative" ref={leverageCollateralRef}>
-            {/* Left: Leverage collateral form */}
-            <LeverageCollateral
-              switchToRepayTab={switchToRepayTab}
-              onTabSwitched={() => setSwitchToRepayTab(false)}
-            />
-
-            {/* Right: Margin account info card - sticky */}
-            <motion.aside
-              className="flex flex-col gap-[20px] w-full h-fit sticky top-[80px] self-start"
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
+            {/* Info card header */}
+            <motion.header
+              className="flex gap-[10px]"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, ease: "easeOut" }}
             >
-              {/* Info card header */}
-              <motion.header
-                className="flex gap-[10px]"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
+              {/* Vanna logo icon */}
+              <motion.div
+                className={`border-[1px] flex flex-col justify-center items-center p-2 rounded-[11px] w-[62px] h-[62px] ${
+                  ""
+                }`}
+                initial={{ scale: 0, rotate: -180 }}
+                whileInView={{ scale: 1, rotate: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.4, ease: "easeOut" }}
+                transition={{ duration: 0.4, type: "spring", stiffness: 200 }}
               >
-                {/* Vanna logo icon */}
-                <motion.div
-                  className="border-[1px] border-[#E2E2E2] flex flex-col justify-center items-center p-2 rounded-[11px] w-[62px] h-[62px]"
-                  initial={{ scale: 0, rotate: -180 }}
-                  whileInView={{ scale: 1, rotate: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.4, type: "spring", stiffness: 200 }}
-                >
-                  <Image
-                    alt={"vanna"}
-                    src={"/logos/vanna-icon.png"}
-                    width={34.82}
-                    height={31.28}
-                  />
-                </motion.div>
-                <div>
-                  <h2 className="w-full text-[24px] font-bold ">
-                    Margin Account Info
-                  </h2>
-                  <p className="w-full text-[16px] font-medium text-[#A3A3A3]">
-                    Stay updated details and status.
-                  </p>
-                </div>
-              </motion.header>
+                <Image
+                  alt={"vanna"}
+                  src={"/logos/vanna-icon.png"}
+                  width={34.82}
+                  height={31.28}
+                />
+              </motion.div>
+              <div className="flex flex-col">
+                <h2 className={`w-full text-[24px] font-bold ${isDark ? "text-white" : ""}`}>
+                  Margin Account Info
+                </h2>
+                <p className={`w-full text-[16px] font-medium text-[#A3A3A3]`}>
+                  Stay updated details and status.
+                </p>
+              </div>
+            </motion.header>
 
-              {/* Info card with expandable sections */}
-              <InfoCard
-                data={marginAccountInfo}
-                items={[...MARGIN_ACCOUNT_INFO_ITEMS]}
-                showExpandable={true}
-                expandableSections={[
-                  {
-                    title: "MORE DETAILS",
-                    headingBold: true,
-                    items: [...MARGIN_ACCOUNT_MORE_DETAILS_ITEMS],
-                    defaultExpanded: true,
-                    delay: 0.1,
-                  },
-                  {
-                    title: "ORACLES AND LTS",
-                    headingBold: true,
-                    items: [...MARGIN_ACCOUNT_MORE_DETAILS_ITEMS],
-                    defaultExpanded: false,
-                    delay: 0.2,
-                  },
-                ]}
-              />
-            </motion.aside>
-          </div>
-        </motion.section>
+            {/* Info card with expandable sections */}
+            <InfoCard
+              data={marginAccountInfo}
+              items={[...MARGIN_ACCOUNT_INFO_ITEMS]}
+              showExpandable={true}
+              expandableSections={[
+                {
+                  title: "MORE DETAILS",
+                  headingBold: true,
+                  items: [...MARGIN_ACCOUNT_MORE_DETAILS_ITEMS],
+                  defaultExpanded: true,
+                  delay: 0.1,
+                },
+                {
+                  title: "ORACLES AND LTS",
+                  headingBold: true,
+                  items: [...MARGIN_ACCOUNT_MORE_DETAILS_ITEMS],
+                  defaultExpanded: false,
+                  delay: 0.2,
+                },
+              ]}
+            />
+          </motion.aside>
+        </div>
 
         {/* Positions table section */}
         {userAddress && (

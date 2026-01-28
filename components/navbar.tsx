@@ -19,6 +19,7 @@ import {
   opAddressList,
 } from ".././lib/web3Constants";
 import { useMarginAccountInfoStore } from "@/store/margin-account-info-store";
+import { toast } from "sonner";
 
 
 interface Navbar {
@@ -57,7 +58,7 @@ export const Navbar = (props: Navbar) => {
 
 
   const { data: ensAvatar } = useEnsAvatar({
-    name: ensName,
+    name: ensName ?? undefined,
     query: { enabled: !!ensName },
   });
 
@@ -65,7 +66,7 @@ export const Navbar = (props: Navbar) => {
     if (isConnected && address) {
       setUserAddress({ address });
     } else {
-      setUserAddress(null);
+      setUserAddress({ address: null });
     }
   }, [isConnected, address, setUserAddress]);
 

@@ -38,6 +38,7 @@ export interface Position {
 export type PositionsArray = Position[];
 
 export interface Collaterals {
+  id?: string; // Optional for backward compatibility, will be generated if not provided
   asset: string;
   amount: number;
   amountInUsd: number;

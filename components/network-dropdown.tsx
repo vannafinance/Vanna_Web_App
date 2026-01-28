@@ -9,8 +9,10 @@ import { useSwitchChain, useChainId, useAccount, usePublicClient } from "wagmi";
 import { PublicClient } from 'viem';
 import { useFetchAccountCheck } from "@/lib/utils/margin/marginFetchers";
 import { useMarginAccountInfoStore } from "@/store/margin-account-info-store";
+import { useTheme } from "@/contexts/theme-context";
 
 export const NetworkDropdown = () => {
+  const { isDark } = useTheme();
   // Dropdown visibility state
   const [isHover, setIsHover] = useState(false);
   const chainId = useChainId();
@@ -39,7 +41,7 @@ export const NetworkDropdown = () => {
   };
 
   // Handler for network select
-  const handleNetworkSelect = (item: typeof networkOptions[0]) => {
+  const handleNetworkSelect = (item: typeof networkOptions[number]) => {
 
 
     return async () => {
@@ -114,7 +116,9 @@ export const NetworkDropdown = () => {
       {/* Dropdown trigger button */}
       <button
         type="button"
-        className="bg-[#F5F5F5] rounded-[8px] py-[12px] pr-[12px] pl-[20px] font-semibold text-[14px] cursor-pointer flex gap-2 justify-center items-center "
+        className={`rounded-[8px] py-[12px] pr-[12px] pl-[20px] font-semibold text-[14px] cursor-pointer flex gap-2 justify-center items-center ${
+          isDark ? "bg-[#222222] text-white" : "bg-[#F5F5F5]"
+        }`}
         aria-label={`Selected network: ${selectedNetwork.name}. Click to change network`}
         aria-expanded={isHover}
         aria-haspopup="listbox"
@@ -149,7 +153,9 @@ export const NetworkDropdown = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className=" absolute left-0 z-50 bg-white p-2 top-full mt-2 shadow-lg rounded-[6px]"
+            className={`absolute left-0 z-50 p-2 top-full mt-2 shadow-lg rounded-[6px] ${
+              isDark ? "bg-[#222222]" : "bg-white"
+            }`}
             style={{ width: 'max-content', minWidth: '100%' }}
             role="listbox"
             aria-label="Network selection"
@@ -160,7 +166,11 @@ export const NetworkDropdown = () => {
                 <motion.button
                   type="button"
                   whileTap={{ scale: 0.85 }}
-                  className=" flex gap-[10px] items-center font-medium rounded-[6px] text-[14px] cursor-pointer p-[12px] hover:bg-[#F2EBFE] w-full text-left"
+                  className={`flex gap-[10px] items-center font-medium rounded-[6px] text-[14px] cursor-pointer p-[12px] w-full text-left ${
+                    isDark 
+                      ? "text-white hover:bg-[#333333]" 
+                      : "hover:bg-[#F2EBFE]"
+                  }`}
                   key={item.id}
                   role="option"
                   aria-selected={selectedNetwork.id === item.id}

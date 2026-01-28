@@ -15,9 +15,10 @@ import { Dialogue } from "@/components/ui/dialogue";
 import { InfoCard } from "./info-card";
 import { Dropdown } from "../ui/dropdown";
 import { Checkbox } from "../ui/Checkbox";
+import { Radio } from "../ui/radio-button";
 import Image from "next/image";
 import { useCollateralBorrowStore } from "@/store/collateral-borrow-store";
-import { Radio } from "../ui/radio-button";
+import { MBSelectionGrid } from "./mb-selection-grid";
 import { useMarginAccountInfoStore } from "@/store/margin-account-info-store";
 import { useUserStore } from "@/store/user";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
@@ -38,6 +39,7 @@ import { useMarginStore } from "@/store/margin-account-state";
 import { getAddressList } from "@/lib/utils/web3/addressList";
 import { useFetchAccountCheck, useFetchBorrowState, useFetchCollateralState } from "@/lib/utils/margin/marginFetchers";
 import { useBalanceStore } from "@/store/balance-store";
+import { useTheme } from "@/contexts/theme-context";
 
 
 
@@ -45,6 +47,8 @@ type Modes = "Deposit" | "Borrow";
 type AddressList = typeof baseAddressList;
 
 export const LeverageAssetsTab = () => {
+  const { isDark } = useTheme();
+
   // Component state
   const hasMarginAccount = useMarginAccountInfoStore((state) => state.hasMarginAccount);
   const setHasMarginAccount = useMarginAccountInfoStore((state) => state.set);
@@ -564,7 +568,7 @@ export const LeverageAssetsTab = () => {
   };
 
   const validateBorrowRisk = (state: MarginState, totalUsd: number): boolean => {
-    const { newHF, newLTV } = simulateBorrow(state, totalUsd);
+    const { newHF, newLTV } = simulateStrategy(state, 0, totalUsd);
     if (newHF <= 1.0) {
       toast.error("Borrow would put account into liquidation");
       return false;
@@ -836,8 +840,6 @@ export const LeverageAssetsTab = () => {
   const [selectedMBCollaterals, setSelectedMBCollaterals] = useState<Collaterals[]>([]);
   const [mbAvailableCollaterals, setMbAvailableCollaterals] = useState<Collaterals[]>([]);
 
-  const collateralMock = useCollateralBorrowStore((state) => state.collaterals);
-
   const isMBMode =
     currentCollaterals.length === 1 &&
     currentCollaterals[0]?.balanceType.toLowerCase() === "mb";
@@ -847,7 +849,9 @@ export const LeverageAssetsTab = () => {
     if (currentCollaterals.length === 0 && supportedTokens.length > 0) {
       const defaultAsset = supportedTokens[0];
       const defaultBalance = getBalance(defaultAsset, "WB");
+      const newId = Math.random().toString(36).substring(7);
       const newCollateral: Collaterals = {
+        id: newId,
         amount: 0,
         amountInUsd: 0,
         asset: defaultAsset,
@@ -866,7 +870,7 @@ export const LeverageAssetsTab = () => {
         setEditingIndex(null);
       }
     }
-  }, [mode, currentCollaterals.length, editingIndex, currentCollaterals]);
+  }, [mode, currentCollaterals.length, editingIndex]);
 
   const totalDepositValue = useMemo(
     () =>
@@ -962,24 +966,25 @@ export const LeverageAssetsTab = () => {
     return Math.round(newCollateralUsd);
   }, [newCollateralUsd]);
 
-  const handleAddCollateral = () => {
+  const handleAddCollateral = useCallback(() => {
     if (editingIndex !== null) return;
     if (mode === "Borrow" && currentCollaterals.length >= 1) return;
 
     const defaultAsset = supportedTokens[0] || "ETH";
     const defaultBalance = getBalance(defaultAsset, "WB");
+    const newId = Math.random().toString(36).substring(7);
 
     const newCollateral: Collaterals = {
+      id: newId,
       amount: 0,
       amountInUsd: 0,
       asset: defaultAsset,
       balanceType: "wb",
       unifiedBalance: defaultBalance,
     };
-    const newIndex = currentCollaterals.length;
-    setCurrentCollaterals([...currentCollaterals, newCollateral]);
-    setEditingIndex(newIndex);
-  };
+    setCurrentCollaterals((prev) => [...prev, newCollateral]);
+    setEditingIndex(currentCollaterals.length);
+  }, [editingIndex, mode, currentCollaterals.length, supportedTokens, getBalance]);
 
   const handleEditCollateral = (index: number) => {
     if (editingIndex !== null && editingIndex !== index) return;
@@ -1033,7 +1038,22 @@ export const LeverageAssetsTab = () => {
   };
 
   const handleModeToggle = () => {
-    setMode((prev) => (prev === "Borrow" ? "Deposit" : "Borrow"));
+    setMode((prev) => {
+      const newMode = prev === "Borrow" ? "Deposit" : "Borrow";
+      
+      // When switching to Borrow mode, limit to 1 collateral
+      if (newMode === "Borrow") {
+        setCurrentCollaterals((prev) => {
+          if (prev.length > 1) {
+            setEditingIndex(null);
+            return [prev[0]];
+          }
+          return prev;
+        });
+      }
+      
+      return newMode;
+    });
   };
 
   const handleBalanceTypeChange = (index: number) => {
@@ -1497,8 +1517,10 @@ export const LeverageAssetsTab = () => {
         transition={{ duration: 0.4, delay: 0.1 }}
       >
         {/* Mode toggle: Deposit / Borrow */}
-        <motion.div
-          className="w-full flex justify-end text-[14px] font-medium gap-2 items-center"
+        <motion.header
+          className={`w-full flex justify-end text-[14px] font-medium gap-2 items-center ${
+            isDark ? "text-white" : ""
+          }`}
           initial={{ opacity: 0, x: 20 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
@@ -1506,25 +1528,25 @@ export const LeverageAssetsTab = () => {
         >
           Multi Deposit{" "}
           <ToggleButton size="small" onToggle={handleModeToggle} /> Dual Borrow
-        </motion.div>
+        </motion.header>
 
         {/* Deposit section */}
-        <motion.div
+        <motion.section
           className="w-full flex flex-col gap-[8px]"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.4, ease: "easeOut" }}
         >
-          <motion.div
-            className="w-full text-[16px] font-medium"
+          <motion.h2
+            className={`w-full text-[16px] font-medium ${isDark ? "text-white" : ""}`}
             initial={{ opacity: 0, x: -10 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.3 }}
           >
             {isMBMode ? "Select Your Collateral" : "Deposit"}
-          </motion.div>
+          </motion.h2>
           <div className="flex flex-col gap-[12px]">
             {isMBMode ? (
               <motion.div
@@ -1534,11 +1556,13 @@ export const LeverageAssetsTab = () => {
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
               >
-                <div className="flex justify-between items-center">
-                  <div className="text-[20px] font-medium py-[10px]">
+                <header className="flex justify-between items-center">
+                  <h3 className={`text-[20px] font-medium py-[10px] ${isDark ? "text-white" : ""}`}>
                     {mbTotalUsd} USD
-                  </div>
-                  <div className="py-[4px] pr-[4px] pl-[8px] bg-[#F2EBFE] rounded-[8px]">
+                  </h3>
+                  <div className={`py-[4px] pr-[4px] pl-[8px] rounded-[8px] ${
+                    isDark ? "bg-[#222222] " : "bg-[#F2EBFE]"
+                  }`}>
                     <Dropdown
                       classname="text-[16px] font-medium gap-[8px]"
                       items={[...BALANCE_TYPE_OPTIONS]}
@@ -1547,7 +1571,7 @@ export const LeverageAssetsTab = () => {
                       dropdownClassname="text-[14px] gap-[10px]"
                     />
                   </div>
-                </div>
+                </header>
                 <div className="p-[10px] rounded-[12px] bg-[#F4F4F4] grid grid-cols-2 gap-[15px]">
                   {mbAvailableCollaterals.length === 0 && (
                     <div className="col-span-2 text-center text-[14px] text-[#757575] py-2">
@@ -1616,65 +1640,72 @@ export const LeverageAssetsTab = () => {
                 </div>
               </motion.div>
             ) : (
-              <AnimatePresence mode="popLayout">
-                {currentCollaterals.length > 0 ? (
-                  currentCollaterals.map((collateral, index) => (
+              <section className={`${currentCollaterals.length > 2 ? "max-h-[364px] overflow-y-auto overflow-x-visible pr-[4px]" : ""} thin-scrollbar`}>
+                <AnimatePresence mode="popLayout">
+                  {currentCollaterals.length > 0 ? (
+                    <ul className="flex flex-col gap-[12px]" role="list">
+                      {currentCollaterals.map((collateral, index) => {
+                        return (
+                          <motion.div
+                            key={collateral.id || index}
+                            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                            transition={{
+                              duration: 0.3,
+                              ease: "easeOut",
+                              delay: index * 0.05,
+                            }}
+                            layout
+                          >
+                            <li>
+                              <Collateral
+                                id={collateral.id}
+                                collaterals={collateral}
+                                isEditing={editingIndex === index}
+                                isAnyOtherEditing={editingIndex !== null && editingIndex !== index}
+                                onEdit={() => handleEditCollateral(index)}
+                                onSave={(_id: string, data: Collaterals) => handleSaveCollateral(index, data)}
+                                onCancel={handleCancelEdit}
+                                onDelete={() => handleDeleteCollateral(index)}
+                                onBalanceTypeChange={handleBalanceTypeChange(index)}
+                                index={index}
+                                supportedTokens={supportedTokens}
+                                getBalance={getBalance}
+                                prices={prices}
+                              />
+                            </li>
+                          </motion.div>
+                        );
+                      })}
+                    </ul>
+                  ) : (
                     <motion.div
-                      key={index}
-                      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                      transition={{
-                        duration: 0.3,
-                        ease: "easeOut",
-                        delay: index * 0.05,
-                      }}
-                      layout
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ duration: 0.3 }}
                     >
                       <Collateral
-                        collaterals={collateral}
-                        isEditing={editingIndex === index}
-                        isAnyOtherEditing={
-                          editingIndex !== null && editingIndex !== index
-                        }
-                        onEdit={() => handleEditCollateral(index)}
-                        onSave={(data) => handleSaveCollateral(index, data)}
+                        collaterals={null}
+                        isEditing={true}
+                        isAnyOtherEditing={false}
+                        onEdit={() => { }}
+                        onSave={(_id: string, data: Collaterals) => {
+                          setCurrentCollaterals([data]);
+                          setEditingIndex(null);
+                        }}
                         onCancel={handleCancelEdit}
-                        onDelete={() => handleDeleteCollateral(index)}
-                        onBalanceTypeChange={handleBalanceTypeChange(index)}
-                        index={index}
+                        onBalanceTypeChange={handleBalanceTypeChange(0)}
+                        index={0}
                         supportedTokens={supportedTokens}
                         getBalance={getBalance}
                         prices={prices}
                       />
                     </motion.div>
-                  ))
-                ) : (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <Collateral
-                      collaterals={null}
-                      isEditing={true}
-                      isAnyOtherEditing={false}
-                      onEdit={() => { }}
-                      onSave={(data) => {
-                        setCurrentCollaterals([data]);
-                        setEditingIndex(null);
-                      }}
-                      onCancel={handleCancelEdit}
-                      onBalanceTypeChange={handleBalanceTypeChange(0)}
-                      index={0}
-                      supportedTokens={supportedTokens}
-                      getBalance={getBalance}
-                      prices={prices}
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                  )}
+                </AnimatePresence>
+              </section>
             )}
           </div>
 
@@ -1721,25 +1752,25 @@ export const LeverageAssetsTab = () => {
             </svg>
             Add Collateral
           </motion.button>
-        </motion.div>
+        </motion.section>
 
         {/* Borrow section */}
-        <motion.div
+        <motion.section
           className="w-full flex flex-col gap-[8px]"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.4, delay: 0.1, ease: "easeOut" }}
         >
-          <motion.div
-            className="w-full text-[16px] font-medium"
+          <motion.h2
+            className={`w-full text-[16px] font-medium ${isDark ? "text-white" : ""}`}
             initial={{ opacity: 0, x: -10 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.3 }}
           >
             Borrow
-          </motion.div>
+          </motion.h2>
           <div>
             <BorrowBox
               mode={mode}
@@ -1754,7 +1785,7 @@ export const LeverageAssetsTab = () => {
               supportedTokens={supportedTokens}
             />
           </div>
-        </motion.div>
+        </motion.section>
 
         {/* Details panel */}
         <motion.div
@@ -1847,7 +1878,7 @@ export const LeverageAssetsTab = () => {
         </motion.div>
 
         {/* Create Margin Account button */}
-        <motion.div
+        <motion.section
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -1868,7 +1899,7 @@ export const LeverageAssetsTab = () => {
             type="gradient"
             onClick={handlecreateAccount}
           />
-        </motion.div>
+        </motion.section>
       </motion.div>
 
       {/* First dialogue: Create Margin Account */}

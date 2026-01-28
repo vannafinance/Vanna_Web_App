@@ -73,6 +73,7 @@ export default function createNewStore<S>(
       | {
           name: string;
           version: number;
+          migrate?: (persistedState: any, version: number) => S;
         };
   }
 ) {
@@ -85,7 +86,7 @@ export default function createNewStore<S>(
 
   if (options) {
     if (options.persist) {
-      const persistOptions = {
+      const persistOptions: any = {
         name: "",
         version: 1,
       };
@@ -94,6 +95,9 @@ export default function createNewStore<S>(
       } else {
         persistOptions.name = options.persist.name;
         persistOptions.version = options.persist.version;
+        if (options.persist.migrate) {
+          persistOptions.migrate = options.persist.migrate;
+        }
       }
       input = persist(input, persistOptions);
     }

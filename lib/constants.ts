@@ -35,6 +35,7 @@ export const iconPaths: Record<string, string> = {
   USDT: "/icons/usdt-icon.svg",
   USDC: "/icons/usdc-icon.svg",
   ETH: "/icons/eth-icon.png",
+  BNB: "/icons/bnb-icon.png",
   SCROLL: "/icons/scroll-icon.png",
   AVALANCHE: "/icons/avalanche-icon.png",
   OPTIMISM: "/icons/optimism-icon.svg",
@@ -43,6 +44,7 @@ export const iconPaths: Record<string, string> = {
   KATANA: "/icons/katana.jpg",
   ARBITRUM: "/icons/arbitrum-icon.svg",
   BASE: "/icons/base-icon.svg",
+  WBTC: "/icons/wbtc-icon.png",
 };
 
 export const poolsPlaceholder: PoolTable[] = [

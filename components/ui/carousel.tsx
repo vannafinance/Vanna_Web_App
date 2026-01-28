@@ -91,7 +91,7 @@ export const Carousel = (props: Carousel) => {
           </AnimatePresence>
         </div>
 
-        <div className="h-[84px] border-[1px] border-[#E2E2E2] rotate-[-90]" />
+        <div className="h-[84px] border-[1px] rotate-[-90]" />
         
         <AnimatePresence mode="wait">
           <motion.div

@@ -286,6 +286,135 @@ export const POSITION = [
     isOpen: true,
     user: "0x123",
   },
+
+  {
+    positionId: 5,
+    collateral: { asset: "0xUSDC", amount: "5000" }, // 5000 USDC
+    collateralUsdValue: 5000,
+
+    borrowed: [
+      {
+        assetData: { asset: "0xETH", amount: "15000" }, // 0.15 ETH
+        percentage: 50,
+        usdValue: 2750,
+      },
+      {
+        assetData: { asset: "0xUSDT", amount: "25000" }, // 2500 USDT
+        percentage: 50,
+        usdValue: 2500,
+      },
+    ],
+
+    leverage: 7,
+    interestAccrued: 125,
+    isOpen: true,
+    user: "0x123",
+  },
+
+  {
+    positionId: 6,
+    collateral: { asset: "0xETH", amount: "500" }, // 0.50 ETH
+    collateralUsdValue: 1100,
+
+    borrowed: [
+      {
+        assetData: { asset: "0xUSDC", amount: "5500" }, // 5500 USDC
+        percentage: 100,
+        usdValue: 5500,
+      },
+    ],
+
+    leverage: 2,
+    interestAccrued: 45,
+    isOpen: false,
+    user: "0x123",
+  },
+
+  {
+    positionId: 7,
+    collateral: { asset: "0xUSDT", amount: "2000" }, // 2000 USDT
+    collateralUsdValue: 2000,
+
+    borrowed: [
+      {
+        assetData: { asset: "0xUSDC", amount: "8000" }, // 8000 USDC
+        percentage: 70,
+        usdValue: 8000,
+      },
+      {
+        assetData: { asset: "0xETH", amount: "30000" }, // 0.30 ETH
+        percentage: 30,
+        usdValue: 5500,
+      },
+    ],
+
+    leverage: 10,
+    interestAccrued: 200,
+    isOpen: true,
+    user: "0x123",
+  },
+
+  {
+    positionId: 8,
+    collateral: { asset: "0xUSDC", amount: "10000" }, // 10000 USDC
+    collateralUsdValue: 10000,
+
+    borrowed: [
+      {
+        assetData: { asset: "0xUSDT", amount: "50000" }, // 5000 USDT
+        percentage: 100,
+        usdValue: 5000,
+      },
+    ],
+
+    leverage: 4,
+    interestAccrued: 85,
+    isOpen: true,
+    user: "0x123",
+  },
+
+  {
+    positionId: 9,
+    collateral: { asset: "0xETH", amount: "1000" }, // 1.00 ETH
+    collateralUsdValue: 2200,
+
+    borrowed: [
+      {
+        assetData: { asset: "0xUSDC", amount: "11000" }, // 11000 USDC
+        percentage: 55,
+        usdValue: 11000,
+      },
+      {
+        assetData: { asset: "0xUSDT", amount: "9000" }, // 900 USDT
+        percentage: 45,
+        usdValue: 9000,
+      },
+    ],
+
+    leverage: 6,
+    interestAccrued: 150,
+    isOpen: false,
+    user: "0x123",
+  },
+
+  {
+    positionId: 10,
+    collateral: { asset: "0xUSDT", amount: "3000" }, // 3000 USDT
+    collateralUsdValue: 3000,
+
+    borrowed: [
+      {
+        assetData: { asset: "0xETH", amount: "45000" }, // 0.45 ETH
+        percentage: 100,
+        usdValue: 9900,
+      },
+    ],
+
+    leverage: 8,
+    interestAccrued: 175,
+    isOpen: true,
+    user: "0x123",
+  },
 ] as const;
 
 // ============================================

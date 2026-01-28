@@ -12,8 +12,10 @@ import { useMarginStore } from "@/store/margin-account-state";
 import { toast } from "sonner";
 import { useBalanceStore } from "@/store/balance-store";
 import { SUPPORTED_TOKENS_BY_CHAIN, TOKEN_DECIMALS } from "@/lib/utils/web3/token";
+import { useTheme } from "@/contexts/theme-context";
 
 export const TransferCollateral = () => {
+  const { isDark } = useTheme();
   const { chainId, address } = useAccount();
   const supportedTokens = useMemo(() => {
     return SUPPORTED_TOKENS_BY_CHAIN[chainId ?? 0] ?? [];
@@ -91,9 +93,9 @@ export const TransferCollateral = () => {
       const { tx_hash, marginAccount } = await transfer_collateral(asset, amount);
 
       await refreshBalances({
-        chainId,
+        chainId: chainId!,
         publicClient,
-        address,
+        address: address as `0x${string}`,
         marginAccount,
       });
 
@@ -260,9 +262,9 @@ export const TransferCollateral = () => {
       const { tx_hash, marginAccount } = await transfer_collateral(asset, amount);
 
       await refreshBalances({
-        chainId,
+        chainId: chainId!,
         publicClient,
-        address,
+        address: address as `0x${string}`,
         marginAccount,
       });
 
@@ -349,7 +351,9 @@ export const TransferCollateral = () => {
             <AnimatePresence mode="wait">
               <motion.div
                 key="editing-middle"
-                className="flex flex-col justify-between"
+                className="flex gap-[8px]"
+                role="group"
+                aria-label="Deposit percentage"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
@@ -431,9 +435,9 @@ export const TransferCollateral = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3, delay: 0.25 }}
           >
-            <div className=" text-[10px] font-medium ">
+            <p className={`text-[10px] font-medium ${isDark ? "text-white" : ""}`}>
               Transfer To: <span className="font-semibold">WB</span>
-            </div>
+            </p>
             <div className="text-[20px] font-medium ">{maxBalance.toFixed(2)} {selectedCurrency}</div>
 
             <motion.button
@@ -449,7 +453,7 @@ export const TransferCollateral = () => {
           </motion.div>
         </motion.div>
       </motion.div>
-      <motion.div
+      <motion.aside
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.3 }}
@@ -457,7 +461,7 @@ export const TransferCollateral = () => {
         <DetailsPanel
           items={[{ title: "Transfer Collateral", value: `${maxBalance.toFixed(2)} USD` }]}
         />
-      </motion.div>
+      </motion.aside>
       <motion.div
         className="flex flex-col gap-[16px]"
         initial={{ opacity: 0, y: 20 }}

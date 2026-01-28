@@ -17,8 +17,10 @@ import { tokenAddressByChain, TOKEN_DECIMALS } from "@/lib/utils/web3/token";
 import AccountManager from "../../abi/vanna/out/out/AccountManager.sol/AccountManager.json";
 import { erc20Abi, parseUnits } from "viem";
 import { useFetchAccountCheck } from "@/lib/utils/margin/marginFetchers";
+import { useTheme } from "@/contexts/theme-context";
 
 export const RepayLoanTab = () => {
+  const { isDark } = useTheme();
   // Repay form state
   // Repay loan statistics
 
@@ -234,20 +236,20 @@ export const RepayLoanTab = () => {
   const isInputEmpty = repayAmount === 0 || repayAmount === null || repayAmount === undefined;
 
   return (
-    <motion.div
+    <motion.section
       className="w-full flex flex-col gap-[24px] pt-8"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4, delay: 0.1 }}
     >
-      <motion.div
+      <motion.section
         className="flex flex-col gap-[43px] h-full"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3, delay: 0.2 }}
       >
         {/* Repay stats cards */}
-        <motion.div
+        <motion.section
           className="flex justify-between gap-[12px]"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -256,15 +258,19 @@ export const RepayLoanTab = () => {
           {/* Map through repay stats */}
           {Object.entries(repayStats).map(([key, value], index) => {
             return (
-              <motion.div
+              <motion.article
                 key={key}
-                className="w-full flex flex-col justify-between h-[120px] rounded-[8px] border-[1px] border-[#E2E2E2] p-[16px] bg-white"
+                className={`w-full flex flex-col justify-between h-[120px] rounded-[8px] border-[1px] p-[16px] ${
+                  isDark ? "bg-[#111111]" : "bg-white"
+                }`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.1 + index * 0.1 }}
               >
                 <motion.div
-                  className="text-[14px] font-medium text-[#9F9F9F] max-w-[158.33px] "
+                  className={`text-[14px] font-medium max-w-[158.33px] ${
+                    isDark ? "text-[#919191]" : "text-[#9F9F9F]"
+                  }`}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{
@@ -280,7 +286,9 @@ export const RepayLoanTab = () => {
                     : "Frozen Balance"}
                 </motion.div>
                 <motion.div
-                  className="text-[24px] font-bold text-[#181822]"
+                  className={`text-[24px] font-bold ${
+                    isDark ? "text-white" : "text-[#181822]"
+                  }`}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{
@@ -291,20 +299,22 @@ export const RepayLoanTab = () => {
                 >
                   {typeof value === 'number' ? value.toFixed(4) : value}
                 </motion.div>
-              </motion.div>
+              </motion.article>
             );
           })}
-        </motion.div>
+        </motion.section>
 
         {/* Repay form */}
-        <motion.div
-          className="bg-white w-full border-[1px] border-[#E2E2E2] rounded-[16px] p-[20px]"
+        <motion.article
+          className={`w-full border-[1px] rounded-[16px] p-[20px] ${
+            isDark ? "bg-[#111111]" : "bg-white"
+          }`}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.3 }}
         >
           {/* Currency dropdown and percentage buttons */}
-          <motion.div
+          <motion.header
             className="flex justify-between items-center"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -328,38 +338,41 @@ export const RepayLoanTab = () => {
 
             {/* Percentage buttons */}
             <motion.div
+              className="flex gap-[8px]"
+              role="group"
+              aria-label="Repay percentage"
               initial={{ opacity: 0, x: 10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.3, delay: 0.4, ease: "easeOut" }}
             >
-              <div className="flex gap-[8px]" role="group" aria-label="Repay percentage">
-                {DEPOSIT_PERCENTAGES.map((item: number, idx: number) => {
-                  return (
-                    <motion.button
-                      type="button"
-                      key={item}
-                      onClick={() => handlePercentageClick(item)}
-                      className={`h-[44px] w-[95px] text-center text-[14px] text-medium cursor-pointer ${
-                        selectedRepayPercentage === item
-                          ? `${PERCENTAGE_COLORS[item]} text-white`
-                          : "bg-[#F4F4F4]"
-                      } p-[10px] rounded-[12px]`}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      transition={{ duration: 0.1 }}
-                      aria-label={`Repay ${item} percent`}
-                      aria-pressed={selectedRepayPercentage === item}
-                    >
-                      {item}%
-                    </motion.button>
-                  );
-                })}
-              </div>
+              {DEPOSIT_PERCENTAGES.map((item: number, idx: number) => {
+                return (
+                  <motion.button
+                    type="button"
+                    key={item}
+                    onClick={() => handlePercentageClick(item)}
+                    className={`h-[44px] w-[95px] text-center text-[14px] text-medium cursor-pointer ${
+                      selectedRepayPercentage === item
+                        ? `${PERCENTAGE_COLORS[item]} text-white`
+                        : isDark
+                        ? "bg-[#222222] text-white"
+                        : "bg-[#F4F4F4]"
+                    } p-[10px] rounded-[12px]`}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ duration: 0.1 }}
+                    aria-label={`Repay ${item} percent`}
+                    aria-pressed={selectedRepayPercentage === item}
+                  >
+                    {item}%
+                  </motion.button>
+                );
+              })}
             </motion.div>
-          </motion.div>
+          </motion.header>
 
           {/* Amount input section */}
-          <motion.div
+          <motion.section
             className="px-[10px] flex flex-col gap-[8px]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -377,7 +390,9 @@ export const RepayLoanTab = () => {
               <input
                 id="repay-amount-input"
                 onChange={handleInputChange}
-                className="w-full text-[20px] focus:border-[0px] focus:outline-none font-medium transition-transform duration-200 focus:scale-[1.01]"
+                className={`w-fit text-[20px] focus:border-[0px] focus:outline-none font-medium transition-transform duration-200 focus:scale-[1.01] placeholder:text-[#C7C7C7] ${
+                  isDark ? "placeholder:text-[#A7A7A7]  text-white bg-[#111111]" : "bg-white"
+                }`}
                 type="text"
                 placeholder="0.0"
                 value={repayAmount}
@@ -385,20 +400,22 @@ export const RepayLoanTab = () => {
             </motion.div>
 
             {/* USD value display */}
-            <motion.div
-              className="text-[12px] font-medium text-[#76737B]"
+            <motion.p
+              className={`text-[12px] font-medium ${
+                isDark ? "text-[#919191]" : "text-[#76737B]"
+              }`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.3, delay: 0.65, ease: "easeOut" }}
               aria-live="polite"
             >
               {repayAmountInUsd.toFixed(2)} USD
-            </motion.div>
-          </motion.div>
-        </motion.div>
+            </motion.p>
+          </motion.section>
+        </motion.article>
 
         {/* Action buttons */}
-        <motion.div
+        <motion.section
           className="flex flex-col gap-[16px]"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -447,8 +464,8 @@ export const RepayLoanTab = () => {
               disabled={isInputEmpty}
             />
           </motion.div>
-        </motion.div>
-      </motion.div>
+        </motion.section>
+      </motion.section>
 
       {/* Pay Now popup */}
       <AnimatePresence>
@@ -512,6 +529,6 @@ export const RepayLoanTab = () => {
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </motion.section>
   );
 };

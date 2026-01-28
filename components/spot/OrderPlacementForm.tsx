@@ -634,8 +634,8 @@ export default function OrderPlacementForm() {
 
             {/*Risk Reward */}
             <RiskRewardSelector
-              value={rrRatio}
-              customValue={customRR}
+              value={rrRatio ?? "NA"}
+              customValue={customRR ?? null}
               onChange={(v) => setValue("stopLoss.rrRatio", v)}
               onCustomChange={(v) => setValue("stopLoss.customRR", v)}
             />
@@ -690,7 +690,7 @@ export default function OrderPlacementForm() {
           </div>
           <Dropdown
             items={TIME_IN_FORCE_OPTIONS}
-            selectedOption={timeInForce}
+            selectedOption={timeInForce ?? "GTC"}
             setSelectedOption={(val) =>
               setValue("timeInForce", val as TimeInForce)
             }
