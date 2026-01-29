@@ -582,6 +582,59 @@ export const LeverageAssetsTab = () => {
     return true;
   };
 
+  /**
+   * Preflight check: calls RiskEngine.isBorrowAllowed() to verify borrow won't revert
+   * This prevents MetaMask from showing absurd gas fees when tx would revert
+   */
+  const canBorrow = async (
+    marginAccount: string,
+    asset: string,
+    amount: string
+  ): Promise<{ allowed: boolean; error?: string }> => {
+    const addressList = getAddressList(chainId);
+    if (!addressList) return { allowed: false, error: "Unsupported chain" };
+
+    const decimals = TOKEN_DECIMALS[asset] ?? 18;
+    const parsed = parseUnits(amount, decimals);
+
+    // Get token address (for ETH, use WETH address or special handling)
+    let tokenAddress: `0x${string}`;
+    if (asset === "ETH" || asset === "WETH") {
+      tokenAddress = addressList.wethTokenAddress as `0x${string}`;
+    } else {
+      const token = tokenAddressByChain[chainId!]?.[asset];
+      if (!token) return { allowed: false, error: `Token ${asset} not supported` };
+      tokenAddress = token;
+    }
+
+    try {
+      // Call RiskEngine.isBorrowAllowed() - this is a view function that simulates the borrow
+      const isAllowed = await publicClient!.readContract({
+        address: addressList.riskEngineContractAddress as `0x${string}`,
+        abi: RiskEngine.abi,
+        functionName: "isBorrowAllowed",
+        args: [marginAccount, tokenAddress, parsed],
+      });
+
+      if (!isAllowed) {
+        return { allowed: false, error: "Borrow would violate health factor" };
+      }
+
+      return { allowed: true };
+    } catch (err: any) {
+      console.error("canBorrow preflight check failed:", err);
+      // Parse common revert reasons
+      const msg = err?.message || "";
+      if (msg.includes("insufficient liquidity")) {
+        return { allowed: false, error: "Insufficient liquidity in lending pool" };
+      }
+      if (msg.includes("oracle") || msg.includes("price")) {
+        return { allowed: false, error: "Oracle price unavailable for this asset" };
+      }
+      return { allowed: false, error: "Borrow check failed - transaction would revert" };
+    }
+  };
+
   const borrowTx = async (
     marginAccount: string,
     asset: string,
@@ -589,6 +642,12 @@ export const LeverageAssetsTab = () => {
   ) => {
     const addressList = getAddressList(chainId);
     if (!addressList) throw new Error("Unsupported chain");
+
+    // Preflight check to prevent MetaMask gas estimation failure
+    const preflightResult = await canBorrow(marginAccount, asset, amount);
+    if (!preflightResult.allowed) {
+      throw new Error(preflightResult.error || "Borrow not allowed");
+    }
 
     const decimals = TOKEN_DECIMALS[asset] ?? 18;
     const parsed = parseUnits(amount, decimals);
@@ -653,10 +712,25 @@ export const LeverageAssetsTab = () => {
 
       if (!validateBorrowRisk(state, amountUsd)) return;
 
-      toast("Borrowing...");
-      await borrowTx(marginAccount, borrowAsset, borrowAmount);
-      await reloadMarginState();
-      return toast.success("Borrow successful!");
+      const toastId = toast.loading("Checking borrow eligibility...");
+      try {
+        await borrowTx(marginAccount, borrowAsset, borrowAmount);
+        await reloadMarginState();
+        toast.success("Borrow successful!", { id: toastId });
+      } catch (err: any) {
+        console.error("Borrow error:", err);
+        const isUserRejection =
+          err?.code === 4001 ||
+          err?.message?.includes("User rejected") ||
+          err?.message?.includes("user rejected");
+
+        if (isUserRejection) {
+          toast.error("Transaction cancelled", { id: toastId });
+        } else {
+          toast.error(err.message || "Borrow failed", { id: toastId });
+        }
+      }
+      return;
     }
 
     if (mode === "WB") {
@@ -664,23 +738,44 @@ export const LeverageAssetsTab = () => {
         return toast.error("Deposit amount required in WB mode");
       }
 
-      toast("Depositing collateral...");
-      await deposit(collateralAsset, collateralAmount);
+      const toastId = toast.loading("Depositing collateral...");
+      try {
+        await deposit(collateralAsset, collateralAmount);
+        toast.loading("Deposit complete. Checking borrow eligibility...", { id: toastId });
 
-      state = await reloadMarginState();
-      if (!state) return toast.error("State refresh failed");
+        state = await reloadMarginState();
+        if (!state) {
+          toast.error("State refresh failed", { id: toastId });
+          return;
+        }
 
-      if (amountUsd > state.maxBorrow) {
-        return toast.error("Borrow exceeds leverage limit after deposit");
+        if (amountUsd > state.maxBorrow) {
+          toast.error("Borrow exceeds leverage limit after deposit", { id: toastId });
+          return;
+        }
+
+        if (!validateBorrowRisk(state, amountUsd)) {
+          toast.dismiss(toastId);
+          return;
+        }
+
+        await borrowTx(marginAccount, borrowAsset, borrowAmount);
+        await reloadMarginState();
+        toast.success("Deposit + Borrow completed!", { id: toastId });
+      } catch (err: any) {
+        console.error("Deposit+Borrow error:", err);
+        const isUserRejection =
+          err?.code === 4001 ||
+          err?.message?.includes("User rejected") ||
+          err?.message?.includes("user rejected");
+
+        if (isUserRejection) {
+          toast.error("Transaction cancelled", { id: toastId });
+        } else {
+          toast.error(err.message || "Operation failed", { id: toastId });
+        }
       }
-
-      if (!validateBorrowRisk(state, amountUsd)) return;
-
-      toast("Borrowing...");
-      await borrowTx(marginAccount, borrowAsset, borrowAmount);
-
-      await reloadMarginState();
-      return toast.success("Deposit + Borrow completed!");
+      return;
     }
   };
 
@@ -1342,6 +1437,10 @@ export const LeverageAssetsTab = () => {
 
     setLoading(true);
 
+    // Track completed operations for partial failure handling
+    let depositsCompleted = 0;
+    let borrowsCompleted = 0;
+
     try {
       // Ensure we have the margin account address
       let targetAccount = marginAccountAddress;
@@ -1373,6 +1472,7 @@ export const LeverageAssetsTab = () => {
             value: amountBigInt
           });
           await publicClient.waitForTransactionReceipt({ hash: txHash });
+          depositsCompleted++;
           toast.success(`Deposited ${item.amount} ETH`);
         } else {
           // ERC20 Deposit - check token address exists
@@ -1409,6 +1509,7 @@ export const LeverageAssetsTab = () => {
             args: [targetAccount, tokenAddress, amountBigInt]
           });
           await publicClient.waitForTransactionReceipt({ hash: txHash });
+          depositsCompleted++;
           toast.success(`Deposited ${item.amount} ${item.asset}`);
         }
       }
@@ -1451,6 +1552,7 @@ export const LeverageAssetsTab = () => {
           }
 
           await publicClient.waitForTransactionReceipt({ hash: txHash });
+          borrowsCompleted++;
           toast.success(`Borrowed ${item.amount} ${item.asset}`);
         }
       }
@@ -1498,7 +1600,47 @@ export const LeverageAssetsTab = () => {
 
     } catch (error: any) {
       console.error("Strategy execution error:", error);
-      toast.error(error.message || "Failed to execute strategy");
+
+      // Check if user rejected the transaction
+      const isUserRejection =
+        error?.code === 4001 ||
+        error?.message?.includes("User rejected") ||
+        error?.message?.includes("user rejected") ||
+        error?.message?.includes("User denied") ||
+        error?.message?.includes("rejected the request");
+
+      // Build context message for partial success
+      const hasPartialSuccess = depositsCompleted > 0 || borrowsCompleted > 0;
+      const partialSuccessMsg = hasPartialSuccess
+        ? ` (${depositsCompleted} deposit${depositsCompleted !== 1 ? "s" : ""} completed)`
+        : "";
+
+      if (isUserRejection) {
+        if (hasPartialSuccess) {
+          toast.warning(`Transaction cancelled${partialSuccessMsg}`);
+        } else {
+          toast.error("Transaction cancelled");
+        }
+      } else if (error?.message?.includes("insufficient funds")) {
+        toast.error(`Insufficient funds for transaction${partialSuccessMsg}`);
+      } else if (error?.message?.includes("execution reverted")) {
+        toast.error(`Transaction failed${partialSuccessMsg} - please check your balances`);
+      } else {
+        const baseMsg = error.message || "Failed to execute strategy";
+        toast.error(hasPartialSuccess ? `${baseMsg}${partialSuccessMsg}` : baseMsg);
+      }
+
+      // Refresh state if any operations completed successfully
+      if (hasPartialSuccess) {
+        try {
+          await reloadMarginState();
+        } catch {
+          // Ignore refresh errors
+        }
+      }
+
+      // Always close the modal on error to improve UX
+      setActiveDialogue("none");
     } finally {
       setLoading(false);
       setLoadingMessage("");

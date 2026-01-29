@@ -1,104 +1,276 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useAccount, useWalletClient, usePublicClient, useChainId } from "wagmi";
+import { toast } from "sonner";
 import { Dropdown } from "../ui/dropdown";
-import { DropdownOptions } from "@/lib/constants";
 import { DEPOSIT_PERCENTAGES, PERCENTAGE_COLORS, UNIFIED_BALANCE_BREAKDOWN_DATA } from "@/lib/constants/margin";
 import { InfoCard } from "../margin/info-card";
 import { Button } from "../ui/button";
 import { AmountBreakdownDialogue } from "../ui/amount-breakdown-dialogue";
 import { motion, AnimatePresence } from "framer-motion";
-import { useUserStore } from "@/store/user";
 import { useTheme } from "@/contexts/theme-context";
-
-const infoPropsData = {
-  data: {
-    youGetVETH: 100,
-    ethPerVETH: 1.002889,
-
-    currentAPY: 4.95,
-    baseAPY: 2.79,
-    bonusAPY: 0.25,
-    rewardsAPY: 1.9,
-
-    projectedMonthlyFrom: 0,
-    projectedMonthlyTo: 100000,
-
-    projectedYearlyFrom: 0,
-    projectedYearlyTo: 100000,
-  },
-
-  expandableSections: [
-    {
-      title: "More Details",
-      headingBold: false,
-      defaultExpanded: false,
-      items: [
-        {
-          id: "baseAPY",
-          name: "Base APY (%)",
-        },
-        {
-          id: "bonusAPY",
-          name: "Bonus APY (%)",
-        },
-        {
-          id: "rewardsAPY",
-          name: "Rewards APY (%)",
-        },
-        {
-          id: "youGetVETH",
-          name: "You Get (vETH)",
-        },
-        {
-          id: "ethPerVETH",
-          name: "ETH per vETH",
-        },
-        {
-          id: "currentAPY",
-          name: "Current APY (%)",
-        },
-        {
-          id: "projectedMonthlyFrom",
-          name: "Projected Monthly Earnings (From)",
-        },
-        {
-          id: "projectedMonthlyTo",
-          name: "Projected Monthly Earnings (To)",
-        },
-        {
-          id: "projectedYearlyFrom",
-          name: "Projected Yearly Earnings (From)",
-        },
-        {
-          id: "projectedYearlyTo",
-          name: "Projected Yearly Earnings (To)",
-        },
-      ],
-    },
-  ],
-
-  showExpandable: true,
-};
+import { EarnAsset } from "@/lib/types";
+import { supply } from "@/lib/utils/earn/transactions";
+import { useFetchUserWalletBalance, useFetchConvertToShares, useFetchVaultData } from "@/lib/utils/earn/earnFetchers";
+import { SUPPORTED_TOKENS_BY_CHAIN } from "@/lib/utils/web3/token";
 
 export const SupplyLiquidityTab = () => {
   const { isDark } = useTheme();
-  const [selectedOption, setSelectedOption] = useState<string>("USDT");
-  const [valueInUSD, setValueInUSD] = useState<number>(0);
-  const [value, setValue] = useState<number>(0);
-  const [selectedPercentage, setSelectedPercentage] = useState<number>(10);
-  const [selectedBalance, setSelectedBalance] = useState<string>("PB");
-  const [unifiedBalance, setUnifiedBalance] = useState<number>(0);
-  const [isBalanceBreakdownOpen, setIsBalanceBreakdownOpen] = useState(false);
-  const userAddress = useUserStore((state) => state.address);
 
-  const handleBalanceBreakdownClick = () => {
-    if (selectedBalance === "WB") {
-      setIsBalanceBreakdownOpen(true);
+  // Wagmi hooks
+  const { address, isConnected } = useAccount();
+  const { data: walletClient } = useWalletClient();
+  const publicClient = usePublicClient();
+  const chainId = useChainId();
+
+  // Get supported assets for current chain (asset isolation)
+  const supportedAssets = useMemo(() => {
+    const tokens = SUPPORTED_TOKENS_BY_CHAIN[chainId] || ["ETH", "USDC"];
+    return tokens.filter((t): t is EarnAsset => ["ETH", "USDC", "USDT"].includes(t));
+  }, [chainId]);
+
+  // Local state
+  const [selectedAsset, setSelectedAsset] = useState<EarnAsset>("ETH");
+
+  // Reset selected asset when chain changes if current asset not supported
+  useEffect(() => {
+    if (!supportedAssets.includes(selectedAsset)) {
+      setSelectedAsset(supportedAssets[0] || "ETH");
+    }
+  }, [chainId, supportedAssets, selectedAsset]);
+  const [amount, setAmount] = useState<string>("");
+  const [selectedPercentage, setSelectedPercentage] = useState<number>(0);
+  const [selectedBalance, setSelectedBalance] = useState<string>("WB");
+  const [walletBalance, setWalletBalance] = useState<number>(0);
+  const [isBalanceBreakdownOpen, setIsBalanceBreakdownOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [sharesPreview, setSharesPreview] = useState<number>(0);
+
+  // Vault data (local state instead of store)
+  const [vaultData, setVaultData] = useState<{
+    exchangeRate: number;
+    supplyAPY: number;
+  } | null>(null);
+
+  // Fetch vault data
+  const fetchVaultData = useFetchVaultData(chainId, selectedAsset, publicClient);
+
+  // Fetchers
+  const fetchWalletBalance = useFetchUserWalletBalance(
+    chainId,
+    selectedAsset,
+    address,
+    publicClient
+  );
+
+  const fetchConvertToShares = useFetchConvertToShares(
+    chainId,
+    selectedAsset,
+    publicClient
+  );
+
+  // Fetch wallet balance and vault data when asset or address changes
+  useEffect(() => {
+    const loadData = async () => {
+      if (!isConnected || !address) {
+        setWalletBalance(0);
+        return;
+      }
+
+      // Fetch wallet balance
+      const balanceResult = await fetchWalletBalance();
+      if (balanceResult) {
+        setWalletBalance(balanceResult.balanceFormatted);
+      }
+
+      // Fetch vault data
+      const vaultResult = await fetchVaultData();
+      if (vaultResult) {
+        setVaultData({
+          exchangeRate: vaultResult.exchangeRate,
+          supplyAPY: 0, // Placeholder - would need utilization data
+        });
+      }
+    };
+    loadData();
+  }, [selectedAsset, address, isConnected, fetchWalletBalance, fetchVaultData]);
+
+  // Preview shares when amount changes
+  useEffect(() => {
+    const previewShares = async () => {
+      if (!amount || parseFloat(amount) <= 0) {
+        setSharesPreview(0);
+        return;
+      }
+      const result = await fetchConvertToShares(amount);
+      if (result) {
+        setSharesPreview(result.sharesFormatted);
+      }
+    };
+    previewShares();
+  }, [amount, fetchConvertToShares]);
+
+  // Format number to avoid scientific notation (e.g., 5.49669311e-10)
+  const formatAmount = (value: number): string => {
+    if (value === 0) return "0";
+    // Use toFixed with enough decimals, then trim trailing zeros
+    const decimals = selectedAsset === "ETH" ? 18 : 6;
+    return value.toFixed(decimals).replace(/\.?0+$/, "");
+  };
+
+  // Handle percentage button click
+  const handlePercentageClick = (percent: number) => {
+    setSelectedPercentage(percent);
+    if (walletBalance > 0) {
+      const calculatedAmount = (walletBalance * percent) / 100;
+      setAmount(formatAmount(calculatedAmount));
     }
   };
 
-  const handleCloseBalanceBreakdown = () => {
-    setIsBalanceBreakdownOpen(false);
+  // Reset form when asset changes
+  useEffect(() => {
+    setAmount("");
+    setSelectedPercentage(0);
+  }, [selectedAsset]);
+
+  // Handle supply transaction
+  const handleSupply = async () => {
+    if (!walletClient || !publicClient || !chainId || !address) {
+      toast.error("Please connect your wallet");
+      return;
+    }
+
+    if (!amount || parseFloat(amount) <= 0) {
+      toast.error("Please enter an amount");
+      return;
+    }
+
+    if (parseFloat(amount) > walletBalance) {
+      toast.error("Insufficient balance");
+      return;
+    }
+
+    setLoading(true);
+    const toastId = toast.loading(`Supplying ${amount} ${selectedAsset}...`);
+
+    try {
+      const result = await supply({
+        walletClient,
+        publicClient,
+        chainId,
+        asset: selectedAsset,
+        amount,
+        userAddress: address,
+      });
+
+      if (result.success) {
+        toast.success(`Successfully supplied ${amount} ${selectedAsset}`, {
+          id: toastId,
+        });
+
+        // Reset form
+        setAmount("");
+        setSelectedPercentage(0);
+
+        // Reload balances
+        const balanceResult = await fetchWalletBalance();
+        if (balanceResult) {
+          setWalletBalance(balanceResult.balanceFormatted);
+        }
+
+        // Reload vault data
+        const vaultResult = await fetchVaultData();
+        if (vaultResult) {
+          setVaultData({
+            exchangeRate: vaultResult.exchangeRate,
+            supplyAPY: 0,
+          });
+        }
+      } else {
+        throw new Error(result.error || "Supply failed");
+      }
+    } catch (error: any) {
+      console.error("Supply error:", error);
+
+      // Check if user rejected
+      const isUserRejection =
+        error?.code === 4001 ||
+        error?.message?.includes("User rejected") ||
+        error?.message?.includes("user rejected") ||
+        error?.message?.includes("User denied");
+
+      if (isUserRejection) {
+        toast.error("Transaction cancelled", { id: toastId });
+      } else {
+        toast.error(error.message || "Supply failed", { id: toastId });
+      }
+    } finally {
+      setLoading(false);
+    }
   };
+
+  // Calculate info card data
+  const exchangeRate = vaultData?.exchangeRate || 1;
+  const supplyAPY = vaultData?.supplyAPY || 0;
+  const amountNum = parseFloat(amount) || 0;
+
+  // Simple earnings calculation (principal * rate * time)
+  const monthlyEarnings = amountNum * (supplyAPY / 100) / 12;
+  const yearlyEarnings = amountNum * (supplyAPY / 100);
+
+  const infoData = {
+    youGetVETH: sharesPreview,
+    ethPerVETH: exchangeRate,
+    currentAPY: supplyAPY,
+    baseAPY: supplyAPY * 0.6,
+    bonusAPY: supplyAPY * 0.1,
+    rewardsAPY: supplyAPY * 0.3,
+    projectedMonthlyFrom: monthlyEarnings,
+    projectedMonthlyTo: monthlyEarnings * 1.1,
+    projectedYearlyFrom: yearlyEarnings,
+    projectedYearlyTo: yearlyEarnings * 1.1,
+  };
+
+  const infoPropsData = {
+    data: infoData,
+    expandableSections: [
+      {
+        title: "More Details",
+        headingBold: false,
+        defaultExpanded: false,
+        items: [
+          { id: "baseAPY", name: "Base APY (%)" },
+          { id: "bonusAPY", name: "Bonus APY (%)" },
+          { id: "rewardsAPY", name: "Rewards APY (%)" },
+          { id: "youGetVETH", name: `You Get (v${selectedAsset})` },
+          { id: "ethPerVETH", name: `${selectedAsset} per v${selectedAsset}` },
+          { id: "currentAPY", name: "Current APY (%)" },
+          { id: "projectedMonthlyFrom", name: "Projected Monthly Earnings (From)" },
+          { id: "projectedMonthlyTo", name: "Projected Monthly Earnings (To)" },
+          { id: "projectedYearlyFrom", name: "Projected Yearly Earnings (From)" },
+          { id: "projectedYearlyTo", name: "Projected Yearly Earnings (To)" },
+        ],
+      },
+    ],
+    showExpandable: true,
+  };
+
+  // Button text
+  const getButtonText = () => {
+    if (!isConnected) return "Connect Wallet";
+    if (loading) return "Supplying...";
+    if (!amount || parseFloat(amount) <= 0) return "Enter Amount";
+    if (parseFloat(amount) > walletBalance) return "Insufficient Balance";
+    return "Supply Liquidity";
+  };
+
+  // Button disabled state
+  const isButtonDisabled =
+    !isConnected ||
+    loading ||
+    !amount ||
+    parseFloat(amount) <= 0 ||
+    parseFloat(amount) > walletBalance;
+
   return (
     <>
       <form className={`flex gap-[16px] items-center w-full h-fit border-[1px] rounded-[16px] p-[16px] ${
@@ -110,9 +282,9 @@ export const SupplyLiquidityTab = () => {
               Select Asset
             </label>
             <Dropdown
-              items={DropdownOptions}
-              setSelectedOption={setSelectedOption}
-              selectedOption={selectedOption}
+              items={supportedAssets}
+              setSelectedOption={(val) => setSelectedAsset(val as EarnAsset)}
+              selectedOption={selectedAsset}
               classname="w-fit gap-[4px] items-center"
               dropdownClassname="w-full"
             />
@@ -124,45 +296,50 @@ export const SupplyLiquidityTab = () => {
               </label>
               <input
                 id="supply-amount"
-                onChange={(e) => setValue(Number(e.target.value))}
-                value={value}
+                onChange={(e) => {
+                  setAmount(e.target.value);
+                  setSelectedPercentage(0);
+                }}
+                value={amount}
                 type="number"
+                step="any"
+                min="0"
                 placeholder="Enter amount"
+                disabled={loading}
                 className={`w-full h-fit placeholder:text-[#C7C7C7] text-[16px] font-medium outline-none ${
                   isDark ? "text-white bg-[#111111]" : "bg-white"
-                }`}
+                } ${loading ? "opacity-50" : ""}`}
                 aria-describedby="usd-value"
               />
             </div>
             <output id="usd-value" className={`w-full h-fit text-[10px] font-medium ${
               isDark ? "text-[#919191]" : "text-[#76737B]"
             }`}>
-              {valueInUSD.toFixed(2)}
+              ≈ {sharesPreview.toFixed(4)} v{selectedAsset}
             </output>
           </div>
         </div>
         <div className="w-fit h-fit flex flex-col gap-[32px] items-end">
           <fieldset className="w-full h-fit flex gap-[8px]">
             <legend className="sr-only">Select deposit percentage</legend>
-            {DEPOSIT_PERCENTAGES.map((item) => {
-              return (
-                <button
-                  type="button"
-                  onClick={() => setSelectedPercentage(item)}
-                  key={item}
-                  className={`flex justify-center items-center cursor-pointer text-[14px] font-semibold w-fit h-[44px] rounded-[12px] p-[10px] ${
-                    selectedPercentage === item
-                      ? `${PERCENTAGE_COLORS[item]} text-white`
-                      : isDark
-                      ? "bg-[#222222] text-white"
-                      : "bg-[#F4F4F4] text-black"
-                  }`}
-                  aria-pressed={selectedPercentage === item}
-                >
-                  {item}%
-                </button>
-              );
-            })}
+            {DEPOSIT_PERCENTAGES.map((item) => (
+              <button
+                type="button"
+                onClick={() => handlePercentageClick(item)}
+                key={item}
+                disabled={loading || walletBalance <= 0}
+                className={`flex justify-center items-center cursor-pointer text-[14px] font-semibold w-fit h-[44px] rounded-[12px] p-[10px] ${
+                  selectedPercentage === item
+                    ? `${PERCENTAGE_COLORS[item]} text-white`
+                    : isDark
+                    ? "bg-[#222222] text-white"
+                    : "bg-[#F4F4F4] text-black"
+                } ${loading || walletBalance <= 0 ? "opacity-50 cursor-not-allowed" : ""}`}
+                aria-pressed={selectedPercentage === item}
+              >
+                {item}%
+              </button>
+            ))}
           </fieldset>
           <div className="w-fit h-fit flex flex-col items-end gap-[4px]">
             <fieldset className="flex w-fit h-fit rounded-[4px] gap-[4px] items-center">
@@ -215,21 +392,22 @@ export const SupplyLiquidityTab = () => {
             <output className="w-fit h-fit text-[10px] flex gap-[4px] font-semibold">
               <button
                 type="button"
-                onClick={handleBalanceBreakdownClick}
-                className={`${selectedBalance==="WB"?"underline cursor-pointer":""} ${
+                onClick={() => selectedBalance === "WB" && setIsBalanceBreakdownOpen(true)}
+                className={`${selectedBalance === "WB" ? "underline cursor-pointer" : ""} ${
                   isDark ? "text-white" : "text-[#111111]"
                 } text-[10px] font-semibold`}
                 disabled={selectedBalance !== "WB"}
               >
-                {selectedBalance==="WB"?"Unified Balance:":"Balance:"}
+                {selectedBalance === "WB" ? "Wallet Balance:" : "Balance:"}
               </button>
               <span className={isDark ? "text-white" : "text-[#363636]"}>
-                {unifiedBalance.toFixed(2)}
+                {walletBalance.toFixed(4)} {selectedAsset}
               </span>
             </output>
           </div>
         </div>
       </form>
+
       <section className="flex flex-col gap-[8px]" aria-label="Supply Details">
         <InfoCard
           data={infoPropsData.data}
@@ -237,11 +415,13 @@ export const SupplyLiquidityTab = () => {
           showExpandable={infoPropsData.showExpandable}
         />
       </section>
+
       <Button
-        text={!userAddress ? "Connect Wallet" : value === 0 ? "Enter Amount" : "Supply Liquidity"}
+        text={getButtonText()}
         size="large"
         type="gradient"
-        disabled={value === 0 ? true : false}
+        disabled={isButtonDisabled}
+        onClick={handleSupply}
       />
 
       <AnimatePresence>
@@ -255,7 +435,7 @@ export const SupplyLiquidityTab = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            onClick={handleCloseBalanceBreakdown}
+            onClick={() => setIsBalanceBreakdownOpen(false)}
           >
             <motion.article
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -266,13 +446,12 @@ export const SupplyLiquidityTab = () => {
             >
               <AmountBreakdownDialogue
                 heading={UNIFIED_BALANCE_BREAKDOWN_DATA.heading}
-                asset={selectedOption}
-                totalDeposit={unifiedBalance}
-                breakdown={UNIFIED_BALANCE_BREAKDOWN_DATA.breakdown.map(item => ({
-                  name: item.name,
-                  value: item.value
-                }))}
-                onClose={handleCloseBalanceBreakdown}
+                asset={selectedAsset}
+                totalDeposit={walletBalance}
+                breakdown={[
+                  { name: "Wallet Balance", value: walletBalance },
+                ]}
+                onClose={() => setIsBalanceBreakdownOpen(false)}
               />
             </motion.article>
           </motion.aside>
@@ -281,4 +460,3 @@ export const SupplyLiquidityTab = () => {
     </>
   );
 };
-

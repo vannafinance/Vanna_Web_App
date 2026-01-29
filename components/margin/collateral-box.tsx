@@ -1,7 +1,7 @@
 "use client";
 
 import { Collaterals } from "@/lib/types";
-import { useState, useEffect, useCallback, memo, useMemo } from "react";
+import { useState, useEffect, useCallback, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Dropdown } from "../ui/dropdown";
 import {
@@ -82,14 +82,20 @@ export const Collateral = (props: CollateralProps) => {
   const showDeleteButton = isStandard && hasCollateral;
   const isWBSelected = selectedBalanceType === "WB";
 
+  // Format number to avoid scientific notation
+  const formatAmount = (value: number, asset: string): string => {
+    if (value === 0) return "0";
+    const decimals = asset === "ETH" ? 18 : 6;
+    return value.toFixed(decimals).replace(/\.?0+$/, "");
+  };
+
   // Sync form with props when entering editing mode from standard view
   useEffect(() => {
     if (props.collaterals) {
-      setValueInput(props.collaterals.amount.toString());
-      setValueInUsd(props.collaterals.amountInUsd.toString());
+      setValueInput(formatAmount(props.collaterals.amount, props.collaterals.asset));
+      setValueInUsd(props.collaterals.amountInUsd.toFixed(2));
       setSelectedCurrency(props.collaterals.asset);
       setSelectedBalanceType(props.collaterals.balanceType.toUpperCase());
-
     }
     else{
       setSelectedBalanceType("WB")
@@ -104,16 +110,14 @@ export const Collateral = (props: CollateralProps) => {
     }
   }, [tokens, selectedCurrency]);
 
-  // Add new state for live unified balance
-
-  // Fetch live unified balance dynamically
-  const liveUnifiedBalance = useMemo(() => {
+  // Compute live unified balance directly (no useMemo to ensure fresh balance on every render)
+  const liveUnifiedBalance = (() => {
     if (props.getBalance && selectedCurrency) {
       const type = selectedBalanceType.toUpperCase() === "MB" ? "MB" : "WB";
       return props.getBalance(selectedCurrency, type);
     }
     return 0;
-  }, [props.getBalance, selectedCurrency, selectedBalanceType]);
+  })();
 
   // Calculate USD value from input using prices map
   useEffect(() => {
@@ -161,8 +165,9 @@ export const Collateral = (props: CollateralProps) => {
 
     let formatted = "0";
     if (calculatedAmount > 0) {
-      formatted = calculatedAmount.toFixed(8).replace(/0+$/, "");
-      if (formatted.endsWith(".")) formatted = formatted.slice(0, -1);
+      // Use appropriate decimals: ETH=18, stablecoins=6
+      const decimals = selectedCurrency === "ETH" ? 18 : 6;
+      formatted = calculatedAmount.toFixed(decimals).replace(/\.?0+$/, "");
     }
 
     setValueInput(formatted);
@@ -376,7 +381,7 @@ export const Collateral = (props: CollateralProps) => {
                 transition={{ duration: 0.1 }}
                 aria-label="View unified balance breakdown"
               >
-                Unified Balance: {liveUnifiedBalance} {selectedCurrency}
+                Unified Balance: {formatAmount(liveUnifiedBalance, selectedCurrency)} {selectedCurrency}
               </motion.button>
             </div>
           </motion.section>
@@ -399,7 +404,7 @@ export const Collateral = (props: CollateralProps) => {
                   <div className={`text-[20px] font-medium ${
                     isDark ? "text-white" : ""
                   }`}>
-                    {collateral.amount}
+                    {formatAmount(collateral.amount, collateral.asset)}
                   </div>
                   <div className="text-[12px] font-medium text-[#703AE6]">
                     ${collateral.amountInUsd}
@@ -462,7 +467,7 @@ export const Collateral = (props: CollateralProps) => {
                 transition={{ duration: 0.1 }}
                 aria-label="View unified balance breakdown"
               >
-                Unified Balance: {collateral.unifiedBalance} {collateral.asset}
+                Unified Balance: {formatAmount(collateral.unifiedBalance, collateral.asset)} {collateral.asset}
               </motion.button>
             </div>
 

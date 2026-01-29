@@ -92,6 +92,13 @@ export const RepayLoanTab = () => {
     setRepayAmountInUsd(repayAmount * price);
   }, [repayAmount, selectedRepayCurrency, prices]);
 
+  // Format number to avoid scientific notation
+  const formatAmount = (value: number, asset: string): string => {
+    if (value === 0) return "0";
+    const decimals = asset === "ETH" ? 18 : 6;
+    return value.toFixed(decimals).replace(/\.?0+$/, "");
+  };
+
   // Handler for percentage click
   const handlePercentageClick = (item: number) => {
     setSelectedRepayPercentage(item);
@@ -99,7 +106,7 @@ export const RepayLoanTab = () => {
     const targetUsd = (debt * item) / 100;
     const price = prices[selectedRepayCurrency] || 1;
     const amount = targetUsd / price;
-    setRepayAmount(Number(amount.toFixed(6)));
+    setRepayAmount(Number(formatAmount(amount, selectedRepayCurrency)));
   };
 
   // Handler for input change
@@ -140,7 +147,7 @@ export const RepayLoanTab = () => {
     if (!accounts.length) return toast.error("No Margin Account found");
 
     const marginAccount = accounts[0];
-    const amountStr = repayAmount.toString();
+    const amountStr = formatAmount(repayAmount, selectedRepayCurrency);
     const decimals = TOKEN_DECIMALS[selectedRepayCurrency] ?? 18;
     const parsedAmount = parseUnits(amountStr, decimals);
 

@@ -202,3 +202,142 @@ export interface OrderPlacementFormValues {
   gainAmount?: number;
   gainPercent?: number;
 }
+
+
+
+// For supply withdraw functionality on Vtoken (ETH, USDC, USDT)
+
+export type EarnAsset="ETH" | "USDC" | "USDT"
+
+
+// Supported chainid  for earn  
+
+export type EarnChild = 8453 | 1 | 42161 
+
+
+// valut info fetched from onchain  
+
+export interface ValutInfo {
+  asset:EarnAsset;
+  vTokenAddress:`0x${string}`;
+  chainId:EarnChild;
+
+  // Pools stats 
+
+  totalAsset:bigint;
+  totalSupply:bigint;
+
+
+  // calculated value in Number 
+
+  totalAssetFormated:number;
+  totalSupplyFormated:number;
+  exchangeRate:number;  //( example : 1 vToken = X underlying asset )
+
+
+  //Apy data
+
+  supplyApy:number;   //current supply apy
+  utilizationRate:number;  // current utilization rate
+
+
+
+}
+
+
+export interface UserValutPosition {
+  asset:EarnAsset;
+  chainId:EarnChild;
+
+
+  // Raw values from contract 
+
+  shares:bigint;   // vToken balance
+
+
+  //formated for display 
+
+  sharesFormated:number;
+  assetValue:number;  // underlying asset value
+  assetValueinUsd:number; // underlying asset value in USD
+  
+
+}
+
+
+// Params for supply tx 
+
+export interface SupplyParams {
+  asset:EarnAsset; // asset to supply like usdc,usdt,eth
+  amount:string; // amount in underlying asset to supply ( not vtoken amount)
+  receiver?:`0x${string}`; // optional receiver address
+
+}
+
+
+// params for withdraw tx
+
+
+export interface WithdrawParams {
+  asset:EarnAsset; // asset to withdraw like usdc,usdt,eth
+  amount:string; // amount in underlying asset to withdraw ( not vtoken amount)
+  receiver?:`0x${string}`; // optional receiver address
+}
+
+
+export interface SupplyResult {
+  success: boolean;
+  txHash?: `0x${string}`;
+  sharesReceived?: bigint;  // vTokens received
+  error?: string;
+
+}
+
+
+export interface WithdrawResult {
+  success: boolean;
+  txHash?: `0x${string}`;
+  assetsReceived?: bigint;  // Underlying tokens received
+  error?: string;
+  
+}
+
+
+//   Combined earn state for a single vault
+
+export interface EarnVaultState {
+  vault: ValutInfo | null;
+  userPosition: UserValutPosition | null;
+  loading: boolean;
+  error: string | null;
+  
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

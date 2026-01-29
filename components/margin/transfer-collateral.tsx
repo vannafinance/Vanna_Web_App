@@ -40,8 +40,7 @@ export const TransferCollateral = () => {
   const getBalance = useBalanceStore((s) => s.getBalance);
 
   // Get max balance from margin account for selected asset
-  const balanceAsset = selectedCurrency === "ETH" ? "WETH" : selectedCurrency;
-  const maxBalance = getBalance(balanceAsset, "MB");
+  const maxBalance = getBalance(selectedCurrency, "MB");
 
   const { reset, refreshBalances } = useBalanceStore();
 
@@ -61,11 +60,18 @@ export const TransferCollateral = () => {
     }
   }, [supportedTokens, selectedCurrency]);
 
+  // Format number to avoid scientific notation
+  const formatAmount = (value: number): string => {
+    if (value === 0) return "0";
+    const decimals = selectedCurrency === "ETH" ? 18 : 6;
+    return value.toFixed(decimals).replace(/\.?0+$/, "");
+  };
+
   const handlePercentageClick = (item: number) => {
     setPercentage(item);
-    const calculatedAmount = (item / 100 * maxBalance).toFixed(2);
-    setValueInput(calculatedAmount);
-    setValueInUsd(Number(calculatedAmount));
+    const calculatedAmount = (item / 100) * maxBalance;
+    setValueInput(formatAmount(calculatedAmount));
+    setValueInUsd(calculatedAmount);
   };
 
   const handleFlashClose = async () => {
@@ -79,7 +85,7 @@ export const TransferCollateral = () => {
 
 
     const asset = selectedCurrency;
-    const amount = maxBalance.toString(); // withdraw full MB balance
+    const amount = formatAmount(maxBalance); // withdraw full MB balance
 
     if (!maxBalance || maxBalance <= 0) {
       toast.error(`No ${asset} available to close.`, { duration: 3000 });
@@ -145,8 +151,7 @@ export const TransferCollateral = () => {
       }
 
       // Validate amount doesn't exceed asset-specific max balance
-      const checkAsset = asset === "ETH" ? "WETH" : asset;
-      const assetBalance = getBalance(checkAsset, "MB");
+      const assetBalance = getBalance(asset, "MB");
       if (Number(amount) > assetBalance) {
         throw new Error(`Amount exceeds available balance. Max: ${assetBalance} ${asset}`);
       }
@@ -438,7 +443,7 @@ export const TransferCollateral = () => {
             <p className={`text-[10px] font-medium ${isDark ? "text-white" : ""}`}>
               Transfer To: <span className="font-semibold">WB</span>
             </p>
-            <div className="text-[20px] font-medium ">{maxBalance.toFixed(2)} {selectedCurrency}</div>
+            <div className="text-[20px] font-medium ">{maxBalance.toFixed(4)} {selectedCurrency}</div>
 
             <motion.button
               onClick={handleMaxValueClick}

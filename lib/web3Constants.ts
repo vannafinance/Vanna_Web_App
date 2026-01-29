@@ -210,16 +210,12 @@ const arbTokensAddress: Record<string, `0x${string}`> = {
 };
 
 const arbAddressList = {
-  daiTokenAddress: "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
-  usdcTokenAddress: "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",
+  usdcTokenAddress: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",  // Native USDC (Circle)
   usdtTokenAddress: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
   wethTokenAddress: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
-  wbtcTokenAddress: "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f",
 
-  vDaiContractAddress: "0xA7d9c98dEDb545A6e66F46BEE8faF8f90c3a5c6f",
   vUSDCContractAddress: "0xE17258A56F0da671a028F2276Ddeaa5C1ccF3bdb",
   vUSDTContractAddress: "0x615A1B9A30C0C0e3E2391c5b93210Ce96FD2F0ef",
-  vWBTCContractAddress: "0x15Dd8d2d7034eb3d249189964Cb44a114D79cF68",
   vEtherContractAddress: "0xA1f41ad5e26167db20c722835A6DB33889c49Cd7",
   accountManagerContractAddress: "0x13da9e485D17c0F62f64F77aAbE7b6c048a2f33C",
   registryContractAddress: "0x6DCD57f3C7CBc465832213646BEEf5501f63a3C4",
@@ -241,16 +237,12 @@ const opTokensAddress: Record<string, `0x${string}`> = {
 };
 
 const opAddressList = {
-  daiTokenAddress: "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
-  usdcTokenAddress: "0x7F5c764cBc14f9669B88837ca1490cCa17c31607",
-  wethTokenAddress: "0x4200000000000000000000000000000000000006",
+  usdcTokenAddress: "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85",  // Native USDC (Circle)
   usdtTokenAddress: "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58",
-  wbtcTokenAddress: "0x68f180fcCe6836688e9084f035309E29Bf0A2095",
-  tTokenAddress: "0xc8b4aA9729EE997adE0B14723e9A37f5C01b9531",
-  vDaiContractAddress: "0x278e5d039ba2E09FaD254b87787f852f31060118",
+  wethTokenAddress: "0x4200000000000000000000000000000000000006",
+
   vUSDCContractAddress: "0x010305302F7BFc12Ec2597Cef77AF2DE91a90Ee9",
   vUSDTContractAddress: "0x7e70816B257Be3AbC4f2acA8C7e42b7bde76AEC8",
-  vWBTCContractAddress: "0xf197f4ed8473cC4c589D06319e4ccB52fa86CFE2",
   vEtherContractAddress: "0xa66d23d6b0bF9283059E2a2938d67FEE9080659b",
   accountManagerContractAddress: "0x6A82847B5Dc8c3535eE370308D78D396228A0D3a",
   registryContractAddress: "0xFd4568C1d084e281BEAa0d55BB5CFc7Cd91B39a4",
@@ -287,16 +279,12 @@ const baseTokensAddress: Record<string, `0x${string}`> = {
 };
 
 const baseAddressList = {
-  daiTokenAddress: "0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb",
-  usdcTokenAddress: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-  wethTokenAddress: "0x4200000000000000000000000000000000000006", 
-  usdtTokenAddress: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
-  wbtcTokenAddress: "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f",
+  usdcTokenAddress: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",  // Native USDC (Circle)
+  usdtTokenAddress: "0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2",
+  wethTokenAddress: "0x4200000000000000000000000000000000000006",
 
-  vDaiContractAddress: "0x70351aF1d415bc1D7cE930415EB75aE226fC7651",  
   vUSDCContractAddress: "0x22D4FB89834738714e6B4aDa414B900138148289",
-  vUSDTContractAddress: "0x615A1B9A30C0C0e3E2391c5b93210Ce96FD2F0ef",
-  vWBTCContractAddress: "0x15Dd8d2d7034eb3d249189964Cb44a114D79cF68",
+  vUSDTContractAddress: "0x22D4FB89834738714e6B4aDa414B900138148289",  // TODO: Replace with actual Base vUSDT address once deployed
   vEtherContractAddress: "0xA8A7Ae5C132524398FF29293C0bB00530d47cdA9",
   accountManagerContractAddress: "0x6F5303D7277B100443A3AfCec9886774d7214e00",
   registryContractAddress: "0xDfd5D412A9FB58aE12d6b1AC20Df97D038c3E32b",
