@@ -5,10 +5,10 @@ import { useFarmStore } from "@/store/farm-store";
 import { useRouter } from "next/navigation";
 import { useTheme } from "@/contexts/theme-context";
 import Image from "next/image";
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { iconPaths } from "@/lib/constants";
 import { AccountStatsGhost } from "@/components/earn/account-stats-ghost";
-import { LEVERAGE_HEALTH_STATS_ITEMS } from "@/lib/constants/farm";
+import { farmLiquidationStatsData, farmStatsData, LEVERAGE_HEALTH_STATS_ITEMS } from "@/lib/constants/farm";
 import { Chart } from "@/components/earn/chart";
 import { Table } from "@/components/earn/table";
 import { transactionTableBody, transactionTableHeadings } from "@/components/earn/acitivity-tab";
@@ -21,6 +21,10 @@ import { motion } from "framer-motion";
 import { AnimatedTabs } from "@/components/ui/animated-tabs";
 import { items } from "@/components/earn/details-tab";
 import { StatsCard } from "@/components/ui/stats-card";
+import { FarmStatsCard } from "@/components/farm/stats";
+import { Button } from "@/components/ui/button";
+import { RangeSelector } from "@/components/farm/range-selector";
+import { DepositTokensForm } from "@/components/farm/deposit-tokens-form";
 
 const UI_TABS = [
   { id: "all-transactions", label: "All Transactions" },
@@ -34,10 +38,90 @@ export default function FarmDetailPage() {
   const { isDark } = useTheme();
 
   const [activeUiTab, setActiveUiTab] = useState<string>("all-transactions");
+  const [showAddLiquidity, setShowAddLiquidity] = useState<boolean>(false);
 
   const handleUiTabChange = (tabId: string) => {
     setActiveUiTab(tabId);
   };
+
+  const handleAddLiquidityClick = () => {
+    setShowAddLiquidity(!showAddLiquidity);
+  };
+
+  // Range selector state and fake data - separate for each token
+  const [usdcRangeMin, setUsdcRangeMin] = useState<number>(0.0001);
+  const [usdcRangeMax, setUsdcRangeMax] = useState<number>(0.0004);
+  const [ethRangeMin, setEthRangeMin] = useState<number>(0.0001);
+  const [ethRangeMax, setEthRangeMax] = useState<number>(0.0004);
+
+  // Fake chart data for USDC range selector
+  const usdcChartData = useMemo(() => {
+    // Generate data points from 0.0000 to 0.0005 with varying heights
+    const data: Array<{ x: number; y: number }> = [];
+    for (let i = 0; i <= 50; i++) {
+      const x = 0.0000 + (i / 50) * 0.0005;
+      // Create a bell curve-like distribution with some randomness
+      const center = 0.00025;
+      const variance = 0.0001;
+      const normalizedX = (x - center) / variance;
+      const baseHeight = Math.exp(-(normalizedX * normalizedX) / 2) * 100;
+      const randomVariation = Math.random() * 20;
+      const y = Math.max(10, baseHeight + randomVariation);
+      data.push({ x, y });
+    }
+    return data;
+  }, []);
+
+  // Fake chart data for ETH range selector (different distribution)
+  const ethChartData = useMemo(() => {
+    // Generate data points from 0.0000 to 0.0005 with varying heights
+    const data: Array<{ x: number; y: number }> = [];
+    for (let i = 0; i <= 50; i++) {
+      const x = 0.0000 + (i / 50) * 0.0005;
+      // Create a different bell curve-like distribution for ETH
+      const center = 0.0003;
+      const variance = 0.00012;
+      const normalizedX = (x - center) / variance;
+      const baseHeight = Math.exp(-(normalizedX * normalizedX) / 2) * 100;
+      const randomVariation = Math.random() * 20;
+      const y = Math.max(10, baseHeight + randomVariation);
+      data.push({ x, y });
+    }
+    return data;
+  }, []);
+
+  const handleUsdcRangeChange = useCallback((min: number, max: number) => {
+    setUsdcRangeMin(min);
+    setUsdcRangeMax(max);
+  }, []);
+
+  const handleEthRangeChange = useCallback((min: number, max: number) => {
+    setEthRangeMin(min);
+    setEthRangeMax(max);
+  }, []);
+
+  // Calculate min and max price based on range values (asset1 per asset2)
+  const minPrice = useMemo(() => {
+    if (ethRangeMin === 0) return "0.0000";
+    const price = usdcRangeMin / ethRangeMin;
+    return price.toFixed(4);
+  }, [usdcRangeMin, ethRangeMin]);
+
+  const maxPrice = useMemo(() => {
+    if (ethRangeMax === 0) return "0.0000";
+    const price = usdcRangeMax / ethRangeMax;
+    return price.toFixed(4);
+  }, [usdcRangeMax, ethRangeMax]);
+
+  // State for manual input values
+  const [minPriceInput, setMinPriceInput] = useState<string>(minPrice);
+  const [maxPriceInput, setMaxPriceInput] = useState<string>(maxPrice);
+
+  // Update input values when calculated prices change
+  useEffect(() => {
+    setMinPriceInput(minPrice);
+    setMaxPriceInput(maxPrice);
+  }, [minPrice, maxPrice]);
 
 
   const totalBorrowedValue = useMarginAccountInfoStore(
@@ -203,7 +287,7 @@ export default function FarmDetailPage() {
 
   return (
     <main className="flex flex-col gap-[40px] pt-[40px] px-[40px] pb-[80px]">
-      <header className=" w-full h-fit">
+      <header className=" w-full h-fit flex justify-between">
         <div className="w-full h-fit flex flex-col gap-[20px]">
           <nav aria-label="Breadcrumb">
             <button
@@ -311,72 +395,214 @@ export default function FarmDetailPage() {
 
           </div>
         </div>
+        {isMultiAsset && !showAddLiquidity && (
+          <div className="w-[164px] h-fit">
+            <Button
+              type="solid"
+              size="medium"
+              disabled={false}
+              text="+ Add Liquidity"
+              onClick={handleAddLiquidityClick}
+            />
+          </div>
+        )}
       </header>
-      {!isMultiAsset && (
-        <>
-          <section className="w-full h-fit ">
-            <AccountStatsGhost items={LEVERAGE_HEALTH_STATS_ITEMS} />
-          </section>
-          <section className="w-full h-fit flex gap-[20px] ">
-            
-            <div className="w-full h-fit flex flex-col gap-[10px]">
-              <div className="w-full h-fit">
-                <AnimatedTabs containerClassName="w-full h-fit" tabClassName="w-full h-fit" type="solid" tabs={UI_TABS} activeTab={activeUiTab} onTabChange={handleUiTabChange} />
-              </div>
-              {activeUiTab === "all-transactions" ? (
-                <div className={`w-full h-fit flex flex-col gap-[24px] rounded-[20px] border-[1px] p-[24px] ${
-                  isDark ? "bg-[#111111]" : "bg-[#F7F7F7]"
-                }`}>
-                  <Chart  type="farm" heading="1 WISE = <0.001 WETH ($0.159)" downtrend="0.07%" />
-                  <Table
-                    filterDropdownPosition="right"
-                    tableBodyBackground={isDark ? "bg-[#222222]" : "bg-white"}
-                    heading={{
-                      heading: "All Transactions",
-                      tabsItems: [
-                        { id: "current-position", label: "Current Position" },
-                        { id: "position-history", label: "Position History" }
-                      ],
-                      tabType: "solid"
-                    }}
-                    activeTab={activeTab}
-                    onTabChange={handleTabChange}
-                    filters={{ filters: ["All"], customizeDropdown: true }}
-                    tableHeadings={transactionTableHeadings}
-                    tableBody={tableBodyData}
-                  />
-                </div>
-              ) : (
-                <div className={`w-full h-fit flex flex-col gap-[24px] rounded-[20px] border-[1px] p-[24px] ${
-                  isDark ? "bg-[#111111]" : "bg-[#F7F7F7]"
-                }`}>
-                  <h2 className={`w-full h-fit text-[20px] font-semibold ${
-                    isDark ? "text-white" : ""
-                  }`}>Statistics</h2>
-                  <article className="w-full h-full grid grid-cols-3 grid-rows-3 gap-x-[15px]" aria-label="Vault Statistics">
-            {items.map((item, idx) => {
-              return (
-                <StatsCard
-                  key={idx}
-                  heading={item.heading}
-                  mainInfo={item.mainInfo}
-                  subInfo={item.subInfo}
-                  tooltip={item.tooltip}
-                />
-              );
-            })}
-          </article>
-                </div>
-                
-              )}
+      {!isMultiAsset && <section className="w-full h-fit ">
+        <AccountStatsGhost items={LEVERAGE_HEALTH_STATS_ITEMS} />
+      </section>}
+      {!isMultiAsset && <section className="w-full h-fit flex gap-[20px] ">
+
+        <div className="w-full h-fit flex flex-col gap-[10px]">
+          <div className="w-full h-fit">
+            <AnimatedTabs containerClassName="w-full h-fit" tabClassName="w-full h-fit" type="solid" tabs={UI_TABS} activeTab={activeUiTab} onTabChange={handleUiTabChange} />
+          </div>
+          {activeUiTab === "all-transactions" ? (
+            <div className={`w-full h-fit flex flex-col gap-[24px] rounded-[20px] border-[1px] p-[24px] ${isDark ? "bg-[#111111]" : "bg-[#F7F7F7]"
+              }`}>
+              <Chart type="farm" heading="1 WISE = <0.001 WETH ($0.159)" downtrend="0.07%" />
+              <Table
+                filterDropdownPosition="right"
+                tableBodyBackground={isDark ? "bg-[#222222]" : "bg-white"}
+                heading={{
+                  heading: "All Transactions",
+                  tabsItems: [
+                    { id: "current-position", label: "Current Position" },
+                    { id: "position-history", label: "Position History" }
+                  ],
+                  tabType: "solid"
+                }}
+                activeTab={activeTab}
+                onTabChange={handleTabChange}
+                filters={{ filters: ["All"], customizeDropdown: true }}
+                tableHeadings={transactionTableHeadings}
+                tableBody={tableBodyData}
+              />
             </div>
-            <div className="w-[480px] h-fit flex flex-col gap-[20px]">
-              <Form />
+          ) : (
+            <div className={`w-full h-fit flex flex-col gap-[24px] rounded-[20px] border-[1px] p-[24px] ${isDark ? "bg-[#111111]" : "bg-[#F7F7F7]"
+              }`}>
+              <h2 className={`w-full h-fit text-[20px] font-semibold ${isDark ? "text-white" : ""
+                }`}>Statistics</h2>
+              <article className="w-full h-full grid grid-cols-3 grid-rows-3 gap-x-[15px]" aria-label="Vault Statistics">
+                {items.map((item, idx) => {
+                  return (
+                    <StatsCard
+                      key={idx}
+                      heading={item.heading}
+                      mainInfo={item.mainInfo}
+                      subInfo={item.subInfo}
+                      tooltip={item.tooltip}
+                    />
+                  );
+                })}
+              </article>
+            </div>
+
+          )}
+        </div>
+        <div className="w-[480px] h-fit flex flex-col gap-[20px]">
+          <Form />
+        </div>
+
+      </section>}
+
+      {isMultiAsset && <section className="w-full h-fit flex gap-[24px] ">
+        <div className="w-full h-fit flex flex-col gap-[24px]">
+          {showAddLiquidity ? (
+            <div className="w-full h-fit flex flex-col gap-[8px]">
+            <div className={`w-full h-fit rounded-[16px] border-[1px] p-[24px] ${isDark ? "bg-[#1A1A1A]" : "bg-[#F7F7F7]"
+              }`}>
+              <RangeSelector
+                token1Name="USDC"
+                token2Name="ETH"
+                token1ChartData={usdcChartData}
+                token2ChartData={ethChartData}
+                token1MinValue={usdcRangeMin}
+                token1MaxValue={usdcRangeMax}
+                token2MinValue={ethRangeMin}
+                token2MaxValue={ethRangeMax}
+                onToken1RangeChange={handleUsdcRangeChange}
+                onToken2RangeChange={handleEthRangeChange}
+                height={250}
+                xAxisLabels={["0.0000", "0.0001", "0.0002", "0.0003", "0.0004", "0.0005"]}
+                showControls={true}
+              />
+              
+              </div>
+              <div className={`w-full h-fit flex rounded-[16px] border-[1px] p-[20px] gap-[8px] ${isDark ? "bg-[#222222]" : "bg-[#F7F7F7]"} `}>
+                <div className={`w-full h-fit flex flex-col gap-[20px] rounded-[16px] border-[1px] p-[20px] ${isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"} `}>
+                  <div className="w-full h-fit flex flex-col ">
+                    <h3 className={`w-full h-fit text-[16px] font-semibold ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>Max Price</h3>
+                    <p className="w-full h-fit text-[12px] text-[#A7A7A7]">{farmData.title.split(" / ")[0]} per {farmData.title.split(" / ")[1]}</p>
+                  </div>
+                  <div className="w-full h-fit flex justify-between items-center">
+                    <input 
+                      type="text" 
+                      value={maxPriceInput}
+                      onChange={(e) => setMaxPriceInput(e.target.value)}
+                      className={`w-full h-[40px] min-h-[40px] rounded-[8px] border-[1px] pb-[4px] text-[24px] font-bold ${isDark ? "text-[#FFFFFF]" : "text-[#111827]"} border-none  outline-none`} 
+                      placeholder="0.0000" 
+                    />
+                    <div className="w-fit h-fit flex gap-[4px] items-center ">
+                      <div className="w-[24px] h-[24px]  bg-[#F1EBFD] flex items-center justify-center">
+                        <svg width="14" height="2" viewBox="0 0 14 2" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M13 2H1C0.734784 2 0.48043 1.89464 0.292893 1.70711C0.105357 1.51957 0 1.26522 0 1C0 0.734784 0.105357 0.48043 0.292893 0.292893C0.48043 0.105357 0.734784 0 1 0H13C13.2652 0 13.5196 0.105357 13.7071 0.292893C13.8946 0.48043 14 0.734784 14 1C14 1.26522 13.8946 1.51957 13.7071 1.70711C13.5196 1.89464 13.2652 2 13 2Z" fill="#703AE6" />
+                        </svg>
+
+                      </div>
+                      <div className="w-[24px] h-[24px]  bg-[#F1EBFD] flex items-center justify-center">
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M13 8H8V13C8 13.2652 7.89464 13.5196 7.70711 13.7071C7.51957 13.8946 7.26522 14 7 14C6.73478 14 6.48043 13.8946 6.29289 13.7071C6.10536 13.5196 6 13.2652 6 13V8H1C0.734784 8 0.48043 7.89464 0.292893 7.70711C0.105357 7.51957 0 7.26522 0 7C0 6.73478 0.105357 6.48043 0.292893 6.29289C0.48043 6.10536 0.734784 6 1 6H6V1C6 0.734784 6.10536 0.480429 6.29289 0.292893C6.48043 0.105357 6.73478 0 7 0C7.26522 0 7.51957 0.105357 7.70711 0.292893C7.89464 0.480429 8 0.734784 8 1V6H13C13.2652 6 13.5196 6.10536 13.7071 6.29289C13.8946 6.48043 14 6.73478 14 7C14 7.26522 13.8946 7.51957 13.7071 7.70711C13.5196 7.89464 13.2652 8 13 8Z" fill="#703AE6" />
+                        </svg>
+
+
                       </div>
 
-          </section>
-        </>
-      )}
+                    </div>
+
+                  </div>
+                </div>
+                <div className={`w-full h-fit flex flex-col gap-[20px] rounded-[16px] border-[1px] p-[20px] ${isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"} `}>
+                  <div className="w-full h-fit flex flex-col ">
+                    <h3 className={`w-full h-fit text-[16px] font-semibold ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>Min Price</h3>
+                    <p className="w-full h-fit text-[12px] text-[#A7A7A7]">{farmData.title.split(" / ")[0]} per {farmData.title.split(" / ")[1]}</p>
+                  </div>
+                  <div className="w-full h-fit flex justify-between items-center">
+                    <input 
+                      type="text" 
+                      value={minPriceInput}
+                      onChange={(e) => setMinPriceInput(e.target.value)}
+                      className={`w-full h-[40px] min-h-[40px] rounded-[8px] border-[1px] pb-[4px] text-[24px] font-bold ${isDark ? "text-[#FFFFFF]" : "text-[#111827]"} border-none  outline-none`} 
+                      placeholder="0.0000" 
+                    />
+                    <div className="w-fit h-fit flex gap-[4px] items-center ">
+                      <div className="w-[24px] h-[24px]  bg-[#F1EBFD] flex items-center justify-center">
+                        <svg width="14" height="2" viewBox="0 0 14 2" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M13 2H1C0.734784 2 0.48043 1.89464 0.292893 1.70711C0.105357 1.51957 0 1.26522 0 1C0 0.734784 0.105357 0.48043 0.292893 0.292893C0.48043 0.105357 0.734784 0 1 0H13C13.2652 0 13.5196 0.105357 13.7071 0.292893C13.8946 0.48043 14 0.734784 14 1C14 1.26522 13.8946 1.51957 13.7071 1.70711C13.5196 1.89464 13.2652 2 13 2Z" fill="#703AE6" />
+                        </svg>
+
+                      </div>
+                      <div className="w-[24px] h-[24px]  bg-[#F1EBFD] flex items-center justify-center">
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M13 8H8V13C8 13.2652 7.89464 13.5196 7.70711 13.7071C7.51957 13.8946 7.26522 14 7 14C6.73478 14 6.48043 13.8946 6.29289 13.7071C6.10536 13.5196 6 13.2652 6 13V8H1C0.734784 8 0.48043 7.89464 0.292893 7.70711C0.105357 7.51957 0 7.26522 0 7C0 6.73478 0.105357 6.48043 0.292893 6.29289C0.48043 6.10536 0.734784 6 1 6H6V1C6 0.734784 6.10536 0.480429 6.29289 0.292893C6.48043 0.105357 6.73478 0 7 0C7.26522 0 7.51957 0.105357 7.70711 0.292893C7.89464 0.480429 8 0.734784 8 1V6H13C13.2652 6 13.5196 6.10536 13.7071 6.29289C13.8946 6.48043 14 6.73478 14 7C14 7.26522 13.8946 7.51957 13.7071 7.70711C13.5196 7.89464 13.2652 8 13 8Z" fill="#703AE6" />
+                        </svg>
+
+
+                      </div>
+
+                    </div>
+
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          ) : (
+            <div className={`w-full h-fit flex flex-col gap-[24px] ${isDark ? "bg-[#111111]" : "bg-[#F7F7F7]"} border-[1px] rounded-[20px] p-[24px]`}>
+              <Chart type="farm" heading="1 WISE = <0.001 WETH ($0.159)" downtrend="0.07%" />
+              <Table
+                filterDropdownPosition="right"
+                tableBodyBackground={isDark ? "bg-[#222222]" : "bg-white"}
+                heading={{
+                  heading: "Your Transactions",
+                  tabsItems: [
+                    { id: "current-position", label: "Current Position" },
+                    { id: "position-history", label: "Position History" }
+                  ],
+                  tabType: "solid"
+                }}
+                activeTab={activeTab}
+                onTabChange={handleTabChange}
+                filters={{ filters: ["All"], customizeDropdown: true }}
+                tableHeadings={transactionTableHeadings}
+                tableBody={tableBodyData}
+              />
+              <Table
+                filterDropdownPosition="right"
+                tableBodyBackground={isDark ? "bg-[#222222]" : "bg-white"}
+                heading={{
+                  heading: "All Transactions",
+                }}
+                filters={{ filters: ["All"] }}
+                tableHeadings={transactionTableHeadings}
+                tableBody={tableBodyData}
+              />
+            </div>
+          )}
+        </div>
+        {!showAddLiquidity && (
+          <div className="w-[400px] h-fit">
+            <FarmStatsCard items={farmStatsData} />
+          </div>
+        )}
+        {showAddLiquidity && (<div className="w-fit h-fit flex flex-col gap-[20px]">
+          <DepositTokensForm assets={[`${farmData.title.split(" / ")[0]}`,`${farmData.title.split(" / ")[1]}`]} />
+          <div className="w-[400px] h-fit">
+          <FarmStatsCard items={farmLiquidationStatsData} />
+
+          </div>
+        </div>)}
+      </section>}
     </main>
   );
 }

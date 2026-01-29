@@ -563,6 +563,52 @@ export const MARGIN_ACCOUNT_STATS_VALUES: Record<
   crossMarginRatio: null,
 };
 
+export const farmStatsData = [
+  {
+    heading: "Pool balance",
+    value: "513.9M WISE / 28.9K ETH",
+    progressBar: {
+      percentage: 62,
+      value: "513.9M WISE",
+    },
+  },
+  {
+    heading: "Total APR",
+    value: "0.02%",
+  },
+  {
+    heading: "TVL",
+    value: "$163.4M",
+    downtrend: "6.11%",
+  },
+  {
+    heading: "24h volume",
+    value: "$30.4K",
+    uptrend: "68.24%",
+  },
+  {
+    heading: "24h fees",
+    value: "$91.17",
+  },
+];
+
+// Farm detail stats for liquidation and health, used with `FarmStatsCard`
+export const farmLiquidationStatsData = [
+  {
+    heading: "USDT/BNB Liquidation Price",
+    value: "$163.4M",
+  },
+  {
+    heading: "Time to Liquidation",
+    value: "$163.4M",
+  },
+  {
+    heading: "Health Factor",
+    value: "$91.17",
+  },
+];
+
+
 export const LEVERAGE_HEALTH_STATS_ITEMS = [
   {
     id: "maxLeverage",
