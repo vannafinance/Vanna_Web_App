@@ -2,7 +2,7 @@
 
 import { memo } from "react";
 import Image from "next/image";
-import { Checkbox } from "../ui/checkbox";
+import { Checkbox } from "../ui/Checkbox";
 import { Radio } from "../ui/radio-button";
 import { iconPaths } from "@/lib/constants";
 import { Collaterals } from "@/lib/types";

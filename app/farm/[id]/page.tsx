@@ -5,10 +5,10 @@ import { useFarmStore } from "@/store/farm-store";
 import { useRouter } from "next/navigation";
 import { useTheme } from "@/contexts/theme-context";
 import Image from "next/image";
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { iconPaths } from "@/lib/constants";
 import { AccountStatsGhost } from "@/components/earn/account-stats-ghost";
-import { farmStatsData, LEVERAGE_HEALTH_STATS_ITEMS } from "@/lib/constants/farm";
+import { farmLiquidationStatsData, farmStatsData, LEVERAGE_HEALTH_STATS_ITEMS } from "@/lib/constants/farm";
 import { Chart } from "@/components/earn/chart";
 import { Table } from "@/components/earn/table";
 import { transactionTableBody, transactionTableHeadings } from "@/components/earn/acitivity-tab";
@@ -24,6 +24,7 @@ import { StatsCard } from "@/components/ui/stats-card";
 import { FarmStatsCard } from "@/components/farm/stats";
 import { Button } from "@/components/ui/button";
 import { RangeSelector } from "@/components/farm/range-selector";
+import { DepositTokensForm } from "@/components/farm/deposit-tokens-form";
 
 const UI_TABS = [
   { id: "all-transactions", label: "All Transactions" },
@@ -98,6 +99,29 @@ export default function FarmDetailPage() {
     setEthRangeMin(min);
     setEthRangeMax(max);
   }, []);
+
+  // Calculate min and max price based on range values (asset1 per asset2)
+  const minPrice = useMemo(() => {
+    if (ethRangeMin === 0) return "0.0000";
+    const price = usdcRangeMin / ethRangeMin;
+    return price.toFixed(4);
+  }, [usdcRangeMin, ethRangeMin]);
+
+  const maxPrice = useMemo(() => {
+    if (ethRangeMax === 0) return "0.0000";
+    const price = usdcRangeMax / ethRangeMax;
+    return price.toFixed(4);
+  }, [usdcRangeMax, ethRangeMax]);
+
+  // State for manual input values
+  const [minPriceInput, setMinPriceInput] = useState<string>(minPrice);
+  const [maxPriceInput, setMaxPriceInput] = useState<string>(maxPrice);
+
+  // Update input values when calculated prices change
+  useEffect(() => {
+    setMinPriceInput(minPrice);
+    setMaxPriceInput(maxPrice);
+  }, [minPrice, maxPrice]);
 
 
   const totalBorrowedValue = useMarginAccountInfoStore(
@@ -465,14 +489,20 @@ export default function FarmDetailPage() {
               />
               
               </div>
-              <div className="w-full h-fit flex rounded-[16px] border-[1px] p-[20px] gap-[8px] bg-[#F7F7F7] ">
-                <div className="w-full h-fit flex flex-col gap-[20px] rounded-[16px] border-[1px] p-[20px] bg-[#FFFFFF] ">
+              <div className={`w-full h-fit flex rounded-[16px] border-[1px] p-[20px] gap-[8px] ${isDark ? "bg-[#222222]" : "bg-[#F7F7F7]"} `}>
+                <div className={`w-full h-fit flex flex-col gap-[20px] rounded-[16px] border-[1px] p-[20px] ${isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"} `}>
                   <div className="w-full h-fit flex flex-col ">
-                    <h3 className="w-full h-fit text-[16px] font-semibold text-[#111111]">Max Price</h3>
+                    <h3 className={`w-full h-fit text-[16px] font-semibold ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>Max Price</h3>
                     <p className="w-full h-fit text-[12px] text-[#A7A7A7]">{farmData.title.split(" / ")[0]} per {farmData.title.split(" / ")[1]}</p>
                   </div>
                   <div className="w-full h-fit flex justify-between items-center">
-                    <input type="text" className="w-full h-[40px] min-h-[40px] rounded-[8px] border-[1px] pb-[4px] text-[24px] font-bold text-[#111827] border-none  outline-none" placeholder="0.0000" />
+                    <input 
+                      type="text" 
+                      value={maxPriceInput}
+                      onChange={(e) => setMaxPriceInput(e.target.value)}
+                      className={`w-full h-[40px] min-h-[40px] rounded-[8px] border-[1px] pb-[4px] text-[24px] font-bold ${isDark ? "text-[#FFFFFF]" : "text-[#111827]"} border-none  outline-none`} 
+                      placeholder="0.0000" 
+                    />
                     <div className="w-fit h-fit flex gap-[4px] items-center ">
                       <div className="w-[24px] h-[24px]  bg-[#F1EBFD] flex items-center justify-center">
                         <svg width="14" height="2" viewBox="0 0 14 2" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -492,13 +522,19 @@ export default function FarmDetailPage() {
 
                   </div>
                 </div>
-                <div className="w-full h-fit flex flex-col gap-[20px] rounded-[16px] border-[1px] p-[20px] bg-[#FFFFFF] ">
+                <div className={`w-full h-fit flex flex-col gap-[20px] rounded-[16px] border-[1px] p-[20px] ${isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"} `}>
                   <div className="w-full h-fit flex flex-col ">
-                    <h3 className="w-full h-fit text-[16px] font-semibold text-[#111111]">Min Price</h3>
+                    <h3 className={`w-full h-fit text-[16px] font-semibold ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>Min Price</h3>
                     <p className="w-full h-fit text-[12px] text-[#A7A7A7]">{farmData.title.split(" / ")[0]} per {farmData.title.split(" / ")[1]}</p>
                   </div>
                   <div className="w-full h-fit flex justify-between items-center">
-                    <input type="text" className="w-full h-[40px] min-h-[40px] rounded-[8px] border-[1px] pb-[4px] text-[24px] font-bold text-[#111827] border-none  outline-none" placeholder="0.0000" />
+                    <input 
+                      type="text" 
+                      value={minPriceInput}
+                      onChange={(e) => setMinPriceInput(e.target.value)}
+                      className={`w-full h-[40px] min-h-[40px] rounded-[8px] border-[1px] pb-[4px] text-[24px] font-bold ${isDark ? "text-[#FFFFFF]" : "text-[#111827]"} border-none  outline-none`} 
+                      placeholder="0.0000" 
+                    />
                     <div className="w-fit h-fit flex gap-[4px] items-center ">
                       <div className="w-[24px] h-[24px]  bg-[#F1EBFD] flex items-center justify-center">
                         <svg width="14" height="2" viewBox="0 0 14 2" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -522,7 +558,7 @@ export default function FarmDetailPage() {
               </div>
             </div>
           ) : (
-            <div className="w-full h-fit flex flex-col gap-[24px] bg-[#F7F7F7] border-[1px] rounded-[20px] p-[24px]">
+            <div className={`w-full h-fit flex flex-col gap-[24px] ${isDark ? "bg-[#111111]" : "bg-[#F7F7F7]"} border-[1px] rounded-[20px] p-[24px]`}>
               <Chart type="farm" heading="1 WISE = <0.001 WETH ($0.159)" downtrend="0.07%" />
               <Table
                 filterDropdownPosition="right"
@@ -560,8 +596,9 @@ export default function FarmDetailPage() {
           </div>
         )}
         {showAddLiquidity && (<div className="w-fit h-fit flex flex-col gap-[20px]">
+          <DepositTokensForm assets={[`${farmData.title.split(" / ")[0]}`,`${farmData.title.split(" / ")[1]}`]} />
           <div className="w-[400px] h-fit">
-          <FarmStatsCard items={farmStatsData} />
+          <FarmStatsCard items={farmLiquidationStatsData} />
 
           </div>
         </div>)}

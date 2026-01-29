@@ -592,6 +592,22 @@ export const farmStatsData = [
   },
 ];
 
+// Farm detail stats for liquidation and health, used with `FarmStatsCard`
+export const farmLiquidationStatsData = [
+  {
+    heading: "USDT/BNB Liquidation Price",
+    value: "$163.4M",
+  },
+  {
+    heading: "Time to Liquidation",
+    value: "$163.4M",
+  },
+  {
+    heading: "Health Factor",
+    value: "$91.17",
+  },
+];
+
 
 export const LEVERAGE_HEALTH_STATS_ITEMS = [
   {

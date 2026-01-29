@@ -636,8 +636,8 @@ export const RangeSelector = ({
 
   return (
     <div className="w-full flex flex-col gap-[16px]">
-      {/* Chart section with white background */}
-      <div className="w-full bg-white rounded-[20px] p-[20px] flex flex-col gap-[16px]">
+      {/* Chart section with background */}
+      <div className={`w-full rounded-[20px] p-[20px] flex flex-col gap-[16px] ${isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"}`}>
         {/* Token selection buttons */}
         <div className="w-full h-fit flex items-center gap-[8px]">
         {(t1ChartData || t2ChartData) && (

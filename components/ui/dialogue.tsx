@@ -1,5 +1,5 @@
 import { Button } from "./button";
-import { Checkbox } from "./checkbox";
+import { Checkbox } from "./Checkbox";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useTheme } from "@/contexts/theme-context";
