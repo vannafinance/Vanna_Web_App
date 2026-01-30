@@ -7,14 +7,14 @@ import { MarginModeModal } from "./margin-mode-modal";
 import { PositionModeModal } from "./position-mode-modal";
 import { SplitSettingsModal } from "./split-settings-modal";
 import { OrderPreferenceModal } from "./order-preference-modal";
-import { AdvanceTpSlModal } from "./advance-tpsl-modal";
-
+import { AccountModal } from "./account-modal";
+import { FuturesUnitSettingsModal } from "./futures-unit-settings-modal";
 
 interface PerpsModalsProps {
-    activeModal: PerpsModalType;
-    close: () => void;
-    setValue: UseFormSetValue<PerpsOrderPlacementFormValues>;
-  }
+  activeModal: PerpsModalType;
+  close: () => void;
+  setValue: UseFormSetValue<PerpsOrderPlacementFormValues>;
+}
 
 const PerpsModals = ({ activeModal, close, setValue }: PerpsModalsProps) => {
   if (!activeModal) return null;
@@ -78,11 +78,14 @@ const PerpsModals = ({ activeModal, close, setValue }: PerpsModalsProps) => {
           }}
         />
       )}
-      {activeModal === "advanceTpSl" && (
-        <AdvanceTpSlModal
+      {activeModal === "account" && (
+        <AccountModal onClose={close} />
+      )}
+      {activeModal === "futuresUnitSettings" && (
+        <FuturesUnitSettingsModal
           onClose={close}
-          onConfirm={(data) => {
-            console.log("TP/SL data:", data);
+          onConfirm={(_orderType, quantityUnit) => {
+            setValue("quantityUnit", quantityUnit);
           }}
         />
       )}

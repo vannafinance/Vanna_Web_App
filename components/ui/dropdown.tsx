@@ -60,7 +60,7 @@ export const Dropdown = (props: Dropdown) => {
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         type="button"
-        className={`w-fit rounded-[8px]  ${props.classname} cursor-pointer flex justify-center items-center `}
+        className={`w-fit rounded-[8px] z-[10] ${props.classname} cursor-pointer flex justify-center items-center `}
         aria-label={`Selected: ${props.selectedOption}. Click to change option`}
         aria-expanded={isHover}
         aria-haspopup="listbox"

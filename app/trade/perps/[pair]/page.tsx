@@ -62,7 +62,7 @@ const Perps = () => {
   }, [isTradingPairSelectorOpen]);
 
   return (
-    <main className="w-full min-h-screen px-5 pt-10 bg-[#FFFFFF] grid grid-cols-[minmax(0,1fr)_316px] gap-2">
+    <main className="w-full min-h-screen px-5 pt-5 bg-[#FFFFFF] grid grid-cols-[minmax(0,1fr)_316px] gap-2">
       {/* left  */}
       <div className="flex flex-col flex-1 gap-2">
         {/* top: TradingPairInfo, charts & orderbook */}
@@ -87,7 +87,7 @@ const Perps = () => {
                       const market =
                         pair.marketType === "spot" ? "spot" : "perps";
                       router.push(
-                        `/trade/${market}/${pair.base.toLowerCase()}usdc`
+                        `/trade/${market}/${pair.base.toLowerCase()}usdc`,
                       );
                       setIsTradingPairSelectorOpen(false);
                     }}

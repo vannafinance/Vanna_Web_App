@@ -68,7 +68,7 @@ const orderDetailsColumns: Column<OrderDetailsType>[] = [
   {
     id: "fee",
     header: "Fee",
-    render: (row) => <span className="text-[#8E8E92]">{row.fee}</span>,
+    render: (row) => <span>{row.fee}</span>,
     align: "right",
   },
 ];
@@ -84,7 +84,7 @@ const orderDetailsData: OrderDetailsType[] = Array.from(
     filledPrice: "105,081.2",
     role: i % 2 === 0 ? "Maker" : "Taker",
     fee: "0.00012 USDT",
-  })
+  }),
 );
 
 export default function OrderDetailsTable() {

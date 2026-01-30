@@ -4,12 +4,13 @@ import { Table } from "../ui/Table";
 export type TransactionHistoryType = {
   id: string;
   dateTime: string;
-  direction: "Open long" | "Open short" | "Close long" | "Close short";
-  pair: string;
-  filledQty: string;
-  filledPrice: string;
-  role: "Taker" | "Maker";
+  coin: string;
+  marginMode: "Cross" | "Isolated";
+  futures: string;
+  type: string;
+  amount: string;
   fee: string;
+  walletBalance: string;
 };
 
 const transactionHistoryColumns: Column<TransactionHistoryType>[] = [
@@ -30,64 +31,114 @@ const transactionHistoryColumns: Column<TransactionHistoryType>[] = [
   },
 
   {
-    id: "direction",
-    header: "Direction",
+    id: "coin",
+    header: "Coin",
+    accessorKey: "coin",
+  },
+
+  {
+    id: "marginMode",
+    header: "Margin mode",
+    accessorKey: "marginMode",
+  },
+
+  {
+    id: "futures",
+    header: "Futures",
+    accessorKey: "futures",
+  },
+
+  {
+    id: "type",
+    header: "Type",
+    accessorKey: "type",
+  },
+
+  {
+    id: "amount",
+    header: "Amount",
     render: (row) => (
       <span
         className={
-          row.direction.includes("long") ? "text-[#16A3A3]" : "text-[#E5533D]"
+          row.amount.startsWith("-") ? "text-[#E5533D]" : "text-[#16A3A3]"
         }
       >
-        {row.direction}
+        {row.amount}
       </span>
     ),
   },
 
   {
-    id: "pair",
-    header: "Futures | Coin",
-    render: (row) => <span className="font-medium">{row.pair}</span>,
-  },
-
-  {
-    id: "filledQty",
-    header: "Filled quantity",
-    accessorKey: "filledQty",
-  },
-
-  {
-    id: "filledPrice",
-    header: "Filled price",
-    accessorKey: "filledPrice",
-  },
-
-  {
-    id: "role",
-    header: "Taker/Maker",
-    accessorKey: "role",
-  },
-
-  {
     id: "fee",
     header: "Fee",
-    render: (row) => <span className="text-[#8E8E92]">{row.fee}</span>,
+    accessorKey: "fee",
+  },
+
+  {
+    id: "walletBalance",
+    header: "Wallet Balance",
+    accessorKey: "walletBalance",
     align: "right",
   },
 ];
 
-const transactionHistoryData: TransactionHistoryType[] = Array.from(
-  { length: 10 },
-  (_, i) => ({
-    id: `tx-${i + 1}`,
+const transactionHistoryData: TransactionHistoryType[] = [
+  {
+    id: "tx-1",
     dateTime: "2025-10-23 14:25:46",
-    direction: i % 2 === 0 ? "Open long" : "Close short",
-    pair: "SBTCSUSDT",
-    filledQty: "0.050 SBTC",
-    filledPrice: "105,081.2",
-    role: i % 2 === 0 ? "Maker" : "Taker",
-    fee: "0.00012 USDT",
-  })
-);
+    coin: "SUSDT",
+    marginMode: "Cross",
+    futures: "SBTCSUSDT",
+    type: "Transfer In",
+    amount: "+100.00 SUSDT",
+    fee: "0.00 SUSDT",
+    walletBalance: "1,250.50 SUSDT",
+  },
+  {
+    id: "tx-2",
+    dateTime: "2025-10-23 13:15:22",
+    coin: "SUSDT",
+    marginMode: "Cross",
+    futures: "SETHSUSDT",
+    type: "Realized PnL",
+    amount: "+25.50 SUSDT",
+    fee: "0.00 SUSDT",
+    walletBalance: "1,150.50 SUSDT",
+  },
+  {
+    id: "tx-3",
+    dateTime: "2025-10-23 12:30:10",
+    coin: "SUSDT",
+    marginMode: "Isolated",
+    futures: "SBTCSUSDT",
+    type: "Trading Fee",
+    amount: "-1.25 SUSDT",
+    fee: "1.25 SUSDT",
+    walletBalance: "1,125.00 SUSDT",
+  },
+  {
+    id: "tx-4",
+    dateTime: "2025-10-22 18:45:33",
+    coin: "SUSDT",
+    marginMode: "Cross",
+    futures: "SXPRSUSDT",
+    type: "Funding Fee",
+    amount: "-0.85 SUSDT",
+    fee: "0.85 SUSDT",
+    walletBalance: "1,126.25 SUSDT",
+  },
+  {
+    id: "tx-5",
+    dateTime: "2025-10-22 16:20:15",
+    coin: "USDT",
+    marginMode: "Isolated",
+    futures: "ETHUSDT",
+    type: "Transfer Out",
+    amount: "-50.00 USDT",
+    fee: "0.00 USDT",
+    walletBalance: "1,127.10 USDT",
+  },
+];
 
 export default function TransactionHistoryTable() {
   return (

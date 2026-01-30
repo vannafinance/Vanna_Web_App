@@ -16,6 +16,8 @@ export type OrderHistoryType = {
   price: string;
   avgFilledPrice?: string;
   reduceOnly: "Yes" | "No";
+  postOnly: "Yes" | "No";
+  orderId: string;
   fee: string;
   status: "Executed" | "Canceled";
 };
@@ -104,8 +106,20 @@ export const orderHistoryColumns: Column<OrderHistoryType>[] = [
 
   {
     id: "reduceOnly",
-    header: "Reduce Only",
+    header: "Reduce only",
     accessorKey: "reduceOnly",
+  },
+
+  {
+    id: "postOnly",
+    header: "Post Only",
+    accessorKey: "postOnly",
+  },
+
+  {
+    id: "orderId",
+    header: "Order Id",
+    accessorKey: "orderId",
   },
 
   {
@@ -144,6 +158,8 @@ export const orderHistoryData: OrderHistoryType[] = [
     price: "105,126.4",
     avgFilledPrice: "105,126.4",
     reduceOnly: "No",
+    postOnly: "No",
+    orderId: "1234567890123456789",
     fee: "1.05126400 SUSDT",
     status: "Executed",
   },
@@ -160,6 +176,8 @@ export const orderHistoryData: OrderHistoryType[] = [
     price: "105,081.2",
     avgFilledPrice: "-",
     reduceOnly: "No",
+    postOnly: "Yes",
+    orderId: "9876543210987654321",
     fee: "1.05126400 SUSDT",
     status: "Canceled",
   },
@@ -176,6 +194,8 @@ export const orderHistoryData: OrderHistoryType[] = [
     price: "105,081.2",
     avgFilledPrice: "105,081.2",
     reduceOnly: "Yes",
+    postOnly: "No",
+    orderId: "5678901234567890123",
     fee: "0.83000000 USDT",
     status: "Executed",
   },

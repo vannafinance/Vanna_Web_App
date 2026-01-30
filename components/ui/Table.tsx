@@ -1,7 +1,7 @@
 "use client";
 
 import cn from "classnames";
-import React from "react";
+import React, { useRef, useState, useEffect } from "react";
 
 export type Align = "left" | "center" | "right";
 
@@ -16,6 +16,8 @@ export type Column<T> = {
   render?: (row: T) => React.ReactNode;
   className?: string;
   align?: Align;
+  // sticky column (right side)
+  sticky?: boolean;
 };
 
 export interface TableProps<T> {
@@ -34,8 +36,35 @@ export function Table<T>({
   className,
   emptyText = "",
 }: TableProps<T>) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isScrolledToRight, setIsScrolledToRight] = useState(true);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const checkScroll = () => {
+      const { scrollLeft, scrollWidth, clientWidth } = container;
+      // Consider "at right" if within 2px of the end
+      const atRight = scrollLeft + clientWidth >= scrollWidth - 2;
+      setIsScrolledToRight(atRight);
+    };
+
+    // Check initial state
+    checkScroll();
+
+    container.addEventListener("scroll", checkScroll);
+    window.addEventListener("resize", checkScroll);
+
+    return () => {
+      container.removeEventListener("scroll", checkScroll);
+      window.removeEventListener("resize", checkScroll);
+    };
+  }, []);
+
   return (
     <div
+      ref={containerRef}
       className={cn(
         "w-full h-[340px]     overflow-x-auto overflow-y-auto scrollbar-hide ",
         className
@@ -52,7 +81,9 @@ export function Table<T>({
                   "px-2 py-1 text-[12px] leading-[18px] h-8 font-medium text-[#919191] text-left whitespace-nowrap border-b border-[#E8E8E8]",
                   col.className ?? "min-w-[120px]",
                   col.align === "center" && "text-center",
-                  col.align === "right" && "text-right"
+                  col.align === "right" && "text-right",
+                  col.sticky && "sticky right-0 bg-[#F7F7F7] z-30",
+                  col.sticky && !isScrolledToRight && "shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]"
                 )}
               >
                 {col.header}
@@ -90,7 +121,9 @@ export function Table<T>({
 
                         col.className ?? "min-w-[120px]",
                         col.align === "center" && "text-center",
-                        col.align === "right" && "text-right"
+                        col.align === "right" && "text-right",
+                        col.sticky && "sticky right-0 bg-[#F7F7F7] z-10",
+                        col.sticky && !isScrolledToRight && "shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]"
                       )}
                     >
                       {content}

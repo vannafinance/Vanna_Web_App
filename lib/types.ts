@@ -201,7 +201,7 @@ export type PerpsOrderType =
   | "scaled-order"
   | "iceberg"
   | "twap";
-export type QuantityUnit = "USDT" | "BTC";
+export type QuantityUnit = "USDT" | "BTC" | "Cont";
 export type TakeProfitType = "price" | "roi" | "pnl" | "change";
 export type StopLossType = "price" | "roi" | "pnl" | "change";
 export type TriggerPriceType = "last" | "mark" | "index";
@@ -218,7 +218,7 @@ export type PositionMode = "one-way" | "hedge";
 export type SplitSettingsType = "qty-per-order" | "no-of-split-orders";
 export type OrderPreferenceType = "faster-execution" | "fixed-distance" | "fixed-price";
 
-export type PerpsModalType = "leverage" | "assetMode" | "marginMode" | "positionMode" | "splitSettings" | "orderPreference" | "advanceTpSl" | null;
+export type PerpsModalType = "leverage" | "assetMode" | "marginMode" | "positionMode" | "splitSettings" | "orderPreference" | "advanceTpSl" | "closePosition" | "account" | "futuresUnitSettings" | null;
 
 export interface PerpsOrderPlacementFormValues {
 

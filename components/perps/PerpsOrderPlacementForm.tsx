@@ -8,18 +8,12 @@ import {
   PerpsOrderAction,
   PerpsOrderType,
   TakeProfitType,
-  QuantityUnit,
   StopLossType,
   TimeInForce,
   TriggerPriceType,
   ExecutionPriceType,
   TwapFrequencyType,
   PerpsModalType,
-  AssetMode,
-  MarginMode,
-  PositionMode,
-  SplitSettingsType,
-  OrderPreferenceType,
 } from "@/lib/types";
 import { ORDER_TYPE_TABS } from "@/lib/constants/perps";
 import Image from "next/image";
@@ -35,11 +29,6 @@ import { Radio } from "../ui/radio-button";
 import { RadioGroup } from "../ui/radio-button";
 import { QuantitySlider } from "../ui/quantity-slider";
 import PerpsModals from "./perps-modals";
-
-const QUANTITY_SUFFIX_OPTIONS: SuffixOption<QuantityUnit>[] = [
-  { label: "USDT", value: "USDT" },
-  { label: "BTC", value: "BTC" },
-];
 
 const TRIGGER_PRICE_SUFFIX_OPTIONS: SuffixOption<TriggerPriceType>[] = [
   { label: "Last Price", value: "last" },
@@ -292,13 +281,19 @@ const PerpsOrderPlacementForm = () => {
           <span className="text-[12px] leading-[18px] font-medium">
             Available MB: {availableMarginBalance.toFixed(2)}USDT
           </span>
-          <Image
-            className="object-cover cursor-pointer"
-            width={16}
-            height={16}
-            alt="icons"
-            src="/icons/swap.svg"
-          />
+          <button
+            type="button"
+            onClick={() => setActiveModal("account")}
+            className="cursor-pointer"
+          >
+            <Image
+              className="object-cover"
+              width={16}
+              height={16}
+              alt="transfer"
+              src="/icons/swap.svg"
+            />
+          </button>
         </div>
 
         {/* Loop */}
@@ -508,16 +503,34 @@ const PerpsOrderPlacementForm = () => {
 
         {/* quantity */}
         <div className="flex flex-col gap-2.5">
-          <InputWithUnit<QuantityUnit>
-            label="Quantity"
-            placeholder="Enter Amount"
-            name="quantity"
-            register={register}
-            suffixMode="dropdown"
-            suffixOptions={QUANTITY_SUFFIX_OPTIONS}
-            selectedSuffix={quantityUnit}
-            onSuffixChange={(val) => setValue("quantityUnit", val)}
-          />
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] leading-[15px] font-medium text-[#111111]">
+              Quantity
+            </label>
+            <div className="h-9 flex items-center gap-2 p-2 rounded-lg bg-white border border-[#E2E2E2]">
+              <input
+                type="number"
+                placeholder="Enter Amount"
+                className="flex-1 min-w-0 bg-transparent text-[12px] leading-[18px] font-medium outline-none placeholder:text-[#C6C6C6]"
+                {...register("quantity")}
+              />
+              <button
+                type="button"
+                onClick={() => setActiveModal("futuresUnitSettings")}
+                className="cursor-pointer flex items-center gap-1 px-2 py-1 rounded  hover:bg-[#E5DBFA] transition-colors"
+              >
+                <span className="text-[12px] leading-[18px] font-semibold text-[#111111] hover:text-[#703AE6]">
+                  {quantityUnit}
+                </span>
+                <Image
+                  src="/icons/down-arrow.svg"
+                  width={12}
+                  height={12}
+                  alt="settings"
+                />
+              </button>
+            </div>
+          </div>
 
           {/* quantity slider */}
           <QuantitySlider

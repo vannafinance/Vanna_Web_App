@@ -301,6 +301,30 @@
     display: none; /* Chrome, Safari */
   }
 
+  /* Thin scrollbar */
+  .scrollbar-thin {
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: #A7A7A7 #F4F4F4; /* Firefox: thumb and track */
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px; /* Chrome, Safari, Edge */
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: #F4F4F4; /* Track color */
+    border-radius: 3px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: #A7A7A7; /* Thumb color */
+    border-radius: 3px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: #777777; /* Thumb hover color */
+  }
+
   .shadow {
     box-shadow: 0px 7px 15px rgba(0, 0, 0, 0.08),
       0px 28px 28px rgba(0, 0, 0, 0.07);

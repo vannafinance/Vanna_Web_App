@@ -1,7 +1,7 @@
 import { Column } from "../ui/Table";
 import { Table } from "../ui/Table";
 
-export type TradeHistoryType = {
+export type PositionHistoryType = {
   id: string;
   futures: string;
   openTime: string;
@@ -13,7 +13,7 @@ export type TradeHistoryType = {
   closedTime: string;
 };
 
-const tradeHistoryColumns: Column<TradeHistoryType>[] = [
+const positionHistoryColumns: Column<PositionHistoryType>[] = [
   {
     id: "futures",
     header: "Futures",
@@ -101,17 +101,13 @@ const tradeHistoryColumns: Column<TradeHistoryType>[] = [
   {
     id: "action",
     header: "Action",
-    render: () => (
-      <button className="px-3 py-1.5 border border-[#E2E2E2] rounded-md text-[12px]">
-        Details
-      </button>
-    ),
+    render: () => <div>--</div>,
     align: "right",
     className: "min-w-[100px]",
   },
 ];
 
-const tradeHistoryData: TradeHistoryType[] = Array.from(
+const positionHistoryData: PositionHistoryType[] = Array.from(
   { length: 8 },
   (_, i) => ({
     id: `trade-${i + 1}`,
@@ -123,17 +119,17 @@ const tradeHistoryData: TradeHistoryType[] = Array.from(
     pnl: i % 2 === 0 ? "+12.45 USDT" : "-6.30 USDT",
     roi: i % 2 === 0 ? "+1.26%" : "-0.64%",
     closedTime: "2025-10-23 14:25:46",
-  })
+  }),
 );
 
-export default function TradeHistoryTable() {
+export default function PositionHistoryTable() {
   return (
     <div className="p-2 rounded-lg border border-[#E2E2E2] bg-[#F7F7F7]">
       <Table
-        columns={tradeHistoryColumns}
-        data={tradeHistoryData}
+        columns={positionHistoryColumns}
+        data={positionHistoryData}
         getRowKey={(row) => row.id}
-        emptyText="No trade history"
+        emptyText="No position history"
       />
     </div>
   );
