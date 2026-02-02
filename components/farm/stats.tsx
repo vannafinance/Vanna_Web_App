@@ -1,5 +1,6 @@
 import { ProgressBar } from "../ui/progress-bar";
 import { useTheme } from "@/contexts/theme-context";
+import { TrendUpIcon, TrendDownIcon } from "@/components/icons";
 
 interface FarmStatsCardProps {
     items:{
@@ -38,18 +39,7 @@ export const FarmStatsCard = ({items}:FarmStatsCardProps) =>{
                     <div className="w-fit h-fit flex items-center ">
                         {item.downtrend && (
                             <>
-                                <svg
-                                    width="16"
-                                    height="16"
-                                    viewBox="0 0 8 8"
-                                    fill="none"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                >
-                                    <path
-                                        d="M4 8L0.535898 2H7.4641L4 8Z"
-                                        fill="#FC5457"
-                                    />
-                                </svg>
+                                <TrendDownIcon width={16} height={16} />
                                 <p className="text-[12px] font-semibold text-[#131313A1]">
                                     {item.downtrend}
                                 </p>
@@ -57,18 +47,7 @@ export const FarmStatsCard = ({items}:FarmStatsCardProps) =>{
                         )}
                         {!item.downtrend && item.uptrend && (
                             <>
-                                <svg
-                                    width="16"
-                                    height="16"
-                                    viewBox="0 0 8 8"
-                                    fill="none"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                >
-                                    <path
-                                        d="M4 0L7.4641 6H0.535898L4 0Z"
-                                        fill="#10B981"
-                                    />
-                                </svg>
+                                <TrendUpIcon width={16} height={16} />
                                 <p className="text-[12px] font-semibold text-[#131313A1]">
                                     {item.uptrend}
                                 </p>

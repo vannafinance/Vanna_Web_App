@@ -20,6 +20,7 @@ import { MBSelectionGrid } from "./mb-selection-grid";
 import { useMarginAccountInfoStore } from "@/store/margin-account-info-store";
 import { useUserStore } from "@/store/user";
 import { useTheme } from "@/contexts/theme-context";
+import { PlusIcon } from "@/components/icons";
 
 type Modes = "Deposit" | "Borrow";
 
@@ -474,22 +475,7 @@ export const LeverageAssetsTab = () => {
             transition={{ duration: 0.2 }}
             aria-label="Add new collateral"
           >
-            <svg
-              width="11"
-              height="11"
-              viewBox="0 0 11 11"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              aria-hidden="true"
-            >
-              <path
-                d="M5.33332 0.666748V10.0001M0.666656 5.33341H9.99999"
-                stroke="#703AE6"
-                strokeWidth="1.33333"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <PlusIcon stroke="#703AE6" width={11} height={11} />
             Add Collateral
           </motion.button>
         </motion.section>

@@ -25,6 +25,16 @@ import { FarmStatsCard } from "@/components/farm/stats";
 import { Button } from "@/components/ui/button";
 import { RangeSelector } from "@/components/farm/range-selector";
 import { DepositTokensForm } from "@/components/farm/deposit-tokens-form";
+import { useUserStore } from "@/store/user";
+import { 
+  ChevronLeftIcon, 
+  SortIcon, 
+  CompassIcon, 
+  ShareIcon, 
+  MinusIcon, 
+  PlusIcon, 
+  WarningIcon 
+} from "@/components/icons";
 
 const UI_TABS = [
   { id: "all-transactions", label: "All Transactions" },
@@ -36,6 +46,8 @@ export default function FarmDetailPage() {
   const id = params?.id as string;
   const router = useRouter();
   const { isDark } = useTheme();
+
+  const userAddress = useUserStore(user => user.address);
 
   const [activeUiTab, setActiveUiTab] = useState<string>("all-transactions");
   const [showAddLiquidity, setShowAddLiquidity] = useState<boolean>(false);
@@ -54,37 +66,35 @@ export default function FarmDetailPage() {
   const [ethRangeMin, setEthRangeMin] = useState<number>(0.0001);
   const [ethRangeMax, setEthRangeMax] = useState<number>(0.0004);
 
-  // Fake chart data for USDC range selector
+  // Generate chart data with deterministic values (SSR-safe, no Math.random)
   const usdcChartData = useMemo(() => {
-    // Generate data points from 0.0000 to 0.0005 with varying heights
     const data: Array<{ x: number; y: number }> = [];
+    const center = 0.00025;
+    const variance = 0.0001;
     for (let i = 0; i <= 50; i++) {
       const x = 0.0000 + (i / 50) * 0.0005;
-      // Create a bell curve-like distribution with some randomness
-      const center = 0.00025;
-      const variance = 0.0001;
       const normalizedX = (x - center) / variance;
       const baseHeight = Math.exp(-(normalizedX * normalizedX) / 2) * 100;
-      const randomVariation = Math.random() * 20;
-      const y = Math.max(10, baseHeight + randomVariation);
+      // Use deterministic variation based on index instead of Math.random()
+      const variation = (Math.sin(i * 0.5) + 1) * 10;
+      const y = Math.max(10, baseHeight + variation);
       data.push({ x, y });
     }
     return data;
   }, []);
 
-  // Fake chart data for ETH range selector (different distribution)
+  // Generate chart data for ETH (SSR-safe, no Math.random)
   const ethChartData = useMemo(() => {
-    // Generate data points from 0.0000 to 0.0005 with varying heights
     const data: Array<{ x: number; y: number }> = [];
+    const center = 0.0003;
+    const variance = 0.00012;
     for (let i = 0; i <= 50; i++) {
       const x = 0.0000 + (i / 50) * 0.0005;
-      // Create a different bell curve-like distribution for ETH
-      const center = 0.0003;
-      const variance = 0.00012;
       const normalizedX = (x - center) / variance;
       const baseHeight = Math.exp(-(normalizedX * normalizedX) / 2) * 100;
-      const randomVariation = Math.random() * 20;
-      const y = Math.max(10, baseHeight + randomVariation);
+      // Use deterministic variation based on index instead of Math.random()
+      const variation = (Math.cos(i * 0.4) + 1) * 10;
+      const y = Math.max(10, baseHeight + variation);
       data.push({ x, y });
     }
     return data;
@@ -122,6 +132,16 @@ export default function FarmDetailPage() {
     setMinPriceInput(minPrice);
     setMaxPriceInput(maxPrice);
   }, [minPrice, maxPrice]);
+
+  // Validate and sanitize price input
+  const handlePriceInputChange = useCallback((value: string, setter: (val: string) => void) => {
+    // Allow only numbers and decimal point
+    const sanitized = value.replace(/[^0-9.]/g, '');
+    // Prevent multiple decimal points
+    const parts = sanitized.split('.');
+    const validated = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : sanitized;
+    setter(validated);
+  }, []);
 
 
   const totalBorrowedValue = useMarginAccountInfoStore(
@@ -285,6 +305,31 @@ export default function FarmDetailPage() {
     router.push("/farm");
   };
 
+  // Loading state skeleton
+  if (!rowData) {
+    return (
+      <main className="flex flex-col gap-[40px] pt-[40px] px-[40px] pb-[80px]">
+        <div className="w-full h-fit flex justify-between">
+          <div className="w-full h-fit flex flex-col gap-[20px]">
+            <button
+              type="button"
+              onClick={handleBackToPools}
+              className={`w-fit h-fit flex gap-[12px] items-center cursor-pointer text-[16px] font-medium hover:text-[#703AE6] transition-colors ${isDark ? "text-white" : "text-[#5A5555]"}`}
+              aria-label="Back to pools"
+            >
+              <ChevronLeftIcon />
+              Back to pools
+            </button>
+            <div className="animate-pulse">
+              <div className={`h-[36px] w-[200px] rounded-[8px] ${isDark ? "bg-[#222222]" : "bg-gray-200"}`} />
+            </div>
+          </div>
+        </div>
+        <div className={`w-full h-[400px] rounded-[20px] animate-pulse ${isDark ? "bg-[#111111]" : "bg-gray-200"}`} />
+      </main>
+    );
+  }
+
   return (
     <main className="flex flex-col gap-[40px] pt-[40px] px-[40px] pb-[80px]">
       <header className=" w-full h-fit flex justify-between">
@@ -296,21 +341,7 @@ export default function FarmDetailPage() {
               className={`w-fit h-fit flex gap-[12px] items-center cursor-pointer text-[16px] font-medium hover:text-[#703AE6] transition-colors ${isDark ? "text-white" : "text-[#5A5555]"
                 }`}
             >
-              <svg
-                width="9"
-                height="16"
-                viewBox="0 0 9 16"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M8 1L1 8L8 15"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              <ChevronLeftIcon />
               Back to pools
             </button>
           </nav>
@@ -373,21 +404,15 @@ export default function FarmDetailPage() {
                 {isMultiAsset && <div className="w-fit h-fit flex gap-[4px] items-center">
                   {/* Sort icon */}
                   <div className="w-[24px] h-[24px] rounded-full bg-[#F4F4F4] flex items-center justify-center">
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M13.1382 3.80392C13.0082 3.93392 12.8375 3.99923 12.6668 3.99923C12.4962 3.99923 12.3255 3.93392 12.1955 3.80392L10.6668 2.27527V9.99925C10.6668 10.3673 10.3688 10.6659 10.0002 10.6659C9.63151 10.6659 9.33351 10.3673 9.33351 9.99925V2.27527L7.80485 3.80392C7.54418 4.06459 7.12285 4.06459 6.86218 3.80392C6.60151 3.54325 6.60151 3.12187 6.86218 2.86121L9.52818 0.195193C9.59018 0.133193 9.66345 0.0845 9.74545 0.0505C9.90811 -0.0168333 10.0922 -0.0168333 10.2549 0.0505C10.3369 0.0845 10.4102 0.133193 10.4722 0.195193L13.1382 2.86121C13.3988 3.12187 13.3988 3.54325 13.1382 3.80392ZM5.52885 9.52785L4.00019 11.0565V3.33257C4.00019 2.96457 3.70219 2.6659 3.33353 2.6659C2.96486 2.6659 2.66686 2.96457 2.66686 3.33257V11.0565L1.13821 9.52785C0.877547 9.26719 0.456167 9.26719 0.1955 9.52785C-0.0651667 9.78852 -0.0651667 10.2099 0.1955 10.4706L2.86152 13.1366C2.92352 13.1986 2.9968 13.2473 3.07881 13.2813C3.16014 13.3153 3.24686 13.3326 3.33353 13.3326C3.42019 13.3326 3.50691 13.3147 3.58825 13.2813C3.67025 13.2473 3.74353 13.1986 3.80553 13.1366L6.47151 10.4706C6.73218 10.2099 6.73218 9.78852 6.47151 9.52785C6.21085 9.26719 5.78951 9.26719 5.52885 9.52785Z" fill="#111111" />
-                    </svg>
+                    <SortIcon />
                   </div>
                   {/* Eye icon */}
                   <div className="w-[24px] h-[24px] rounded-full bg-[#F4F4F4] flex items-center justify-center">
-                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path fillRule="evenodd" clipRule="evenodd" d="M0 7.29167C0 5.3578 0.768227 3.50313 2.13568 2.13568C3.50313 0.768227 5.3578 0 7.29167 0C9.22554 0 11.0802 0.768227 12.4477 2.13568C13.8151 3.50313 14.5833 5.3578 14.5833 7.29167C14.5833 9.22554 13.8151 11.0802 12.4477 12.4477C11.0802 13.8151 9.22554 14.5833 7.29167 14.5833C5.3578 14.5833 3.50313 13.8151 2.13568 12.4477C0.768227 11.0802 0 9.22554 0 7.29167ZM6.33333 5.04917C5.55538 5.68898 5.03554 6.58894 4.87 7.5825L4.3225 10.8733C4.19667 11.6325 5.08 12.1425 5.67417 11.6533L8.25 9.53417C9.02795 8.89435 9.5478 7.99439 9.71333 7.00083L10.26 3.71C10.3867 2.95083 9.50333 2.44083 8.90917 2.93L6.33333 5.04917Z" fill="#111111" />
-                    </svg>
+                    <CompassIcon />
                   </div>
                   {/* Share icon */}
                   <div className="w-[24px] h-[24px] rounded-full bg-[#F4F4F4] flex items-center justify-center">
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M11.112 8.88802C10.3542 8.88802 9.6849 9.27083 9.28385 9.84896L4.35937 7.24219C4.40885 7.05729 4.44531 6.86719 4.44531 6.66667C4.44531 6.46615 4.41146 6.27604 4.35937 6.09115L9.28385 3.48438C9.6849 4.0651 10.3516 4.44531 11.112 4.44531C12.3385 4.44531 13.3333 3.45052 13.3333 2.22396C13.3333 0.997396 12.3385 0 11.112 0C9.88542 0 8.89062 0.994792 8.89062 2.22135C8.89062 2.24219 8.89583 2.26302 8.89583 2.28385L3.71354 5.02865C3.31771 4.66927 2.79948 4.44531 2.22396 4.44531C0.994792 4.44531 0 5.4401 0 6.66667C0 7.89323 0.994792 8.88802 2.22135 8.88802C2.79688 8.88802 3.3151 8.66406 3.71094 8.30469L8.89323 11.0495C8.89323 11.0703 8.88802 11.0911 8.88802 11.112C8.88802 12.3385 9.88281 13.3333 11.1094 13.3333C12.3359 13.3333 13.3307 12.3385 13.3307 11.112C13.3307 9.88542 12.3385 8.88802 11.112 8.88802Z" fill="#111111" />
-                    </svg>
+                    <ShareIcon />
                   </div>
                 </div>}
               </div>
@@ -400,9 +425,10 @@ export default function FarmDetailPage() {
             <Button
               type="solid"
               size="medium"
-              disabled={false}
+              disabled={!userAddress}
               text="+ Add Liquidity"
               onClick={handleAddLiquidityClick}
+              aria-label={userAddress ? "Add liquidity to pool" : "Connect wallet to add liquidity"}
             />
           </div>
         )}
@@ -499,25 +525,29 @@ export default function FarmDetailPage() {
                     <input 
                       type="text" 
                       value={maxPriceInput}
-                      onChange={(e) => setMaxPriceInput(e.target.value)}
+                      onChange={(e) => handlePriceInputChange(e.target.value, setMaxPriceInput)}
                       className={`w-full h-[40px] min-h-[40px] rounded-[8px] border-[1px] pb-[4px] text-[24px] font-bold ${isDark ? "text-[#FFFFFF]" : "text-[#111827]"} border-none  outline-none`} 
-                      placeholder="0.0000" 
+                      placeholder="0.0000"
+                      aria-label={`Maximum price: ${farmData.title.split(" / ")[0]} per ${farmData.title.split(" / ")[1]}`}
+                      inputMode="decimal"
                     />
                     <div className="w-fit h-fit flex gap-[4px] items-center ">
-                      <div className="w-[24px] h-[24px]  bg-[#F1EBFD] flex items-center justify-center">
-                        <svg width="14" height="2" viewBox="0 0 14 2" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M13 2H1C0.734784 2 0.48043 1.89464 0.292893 1.70711C0.105357 1.51957 0 1.26522 0 1C0 0.734784 0.105357 0.48043 0.292893 0.292893C0.48043 0.105357 0.734784 0 1 0H13C13.2652 0 13.5196 0.105357 13.7071 0.292893C13.8946 0.48043 14 0.734784 14 1C14 1.26522 13.8946 1.51957 13.7071 1.70711C13.5196 1.89464 13.2652 2 13 2Z" fill="#703AE6" />
-                        </svg>
-
-                      </div>
-                      <div className="w-[24px] h-[24px]  bg-[#F1EBFD] flex items-center justify-center">
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M13 8H8V13C8 13.2652 7.89464 13.5196 7.70711 13.7071C7.51957 13.8946 7.26522 14 7 14C6.73478 14 6.48043 13.8946 6.29289 13.7071C6.10536 13.5196 6 13.2652 6 13V8H1C0.734784 8 0.48043 7.89464 0.292893 7.70711C0.105357 7.51957 0 7.26522 0 7C0 6.73478 0.105357 6.48043 0.292893 6.29289C0.48043 6.10536 0.734784 6 1 6H6V1C6 0.734784 6.10536 0.480429 6.29289 0.292893C6.48043 0.105357 6.73478 0 7 0C7.26522 0 7.51957 0.105357 7.70711 0.292893C7.89464 0.480429 8 0.734784 8 1V6H13C13.2652 6 13.5196 6.10536 13.7071 6.29289C13.8946 6.48043 14 6.73478 14 7C14 7.26522 13.8946 7.51957 13.7071 7.70711C13.5196 7.89464 13.2652 8 13 8Z" fill="#703AE6" />
-                        </svg>
-
-
-                      </div>
-
+                      <button 
+                        type="button"
+                        className="w-[24px] h-[24px] bg-[#F1EBFD] flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                        aria-label="Decrease maximum price"
+                        disabled={!userAddress}
+                      >
+                        <MinusIcon />
+                      </button>
+                      <button 
+                        type="button"
+                        className="w-[24px] h-[24px] bg-[#F1EBFD] flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                        aria-label="Increase maximum price"
+                        disabled={!userAddress}
+                      >
+                        <PlusIcon />
+                      </button>
                     </div>
 
                   </div>
@@ -531,25 +561,29 @@ export default function FarmDetailPage() {
                     <input 
                       type="text" 
                       value={minPriceInput}
-                      onChange={(e) => setMinPriceInput(e.target.value)}
+                      onChange={(e) => handlePriceInputChange(e.target.value, setMinPriceInput)}
                       className={`w-full h-[40px] min-h-[40px] rounded-[8px] border-[1px] pb-[4px] text-[24px] font-bold ${isDark ? "text-[#FFFFFF]" : "text-[#111827]"} border-none  outline-none`} 
-                      placeholder="0.0000" 
+                      placeholder="0.0000"
+                      aria-label={`Minimum price: ${farmData.title.split(" / ")[0]} per ${farmData.title.split(" / ")[1]}`}
+                      inputMode="decimal"
                     />
                     <div className="w-fit h-fit flex gap-[4px] items-center ">
-                      <div className="w-[24px] h-[24px]  bg-[#F1EBFD] flex items-center justify-center">
-                        <svg width="14" height="2" viewBox="0 0 14 2" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M13 2H1C0.734784 2 0.48043 1.89464 0.292893 1.70711C0.105357 1.51957 0 1.26522 0 1C0 0.734784 0.105357 0.48043 0.292893 0.292893C0.48043 0.105357 0.734784 0 1 0H13C13.2652 0 13.5196 0.105357 13.7071 0.292893C13.8946 0.48043 14 0.734784 14 1C14 1.26522 13.8946 1.51957 13.7071 1.70711C13.5196 1.89464 13.2652 2 13 2Z" fill="#703AE6" />
-                        </svg>
-
-                      </div>
-                      <div className="w-[24px] h-[24px]  bg-[#F1EBFD] flex items-center justify-center">
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M13 8H8V13C8 13.2652 7.89464 13.5196 7.70711 13.7071C7.51957 13.8946 7.26522 14 7 14C6.73478 14 6.48043 13.8946 6.29289 13.7071C6.10536 13.5196 6 13.2652 6 13V8H1C0.734784 8 0.48043 7.89464 0.292893 7.70711C0.105357 7.51957 0 7.26522 0 7C0 6.73478 0.105357 6.48043 0.292893 6.29289C0.48043 6.10536 0.734784 6 1 6H6V1C6 0.734784 6.10536 0.480429 6.29289 0.292893C6.48043 0.105357 6.73478 0 7 0C7.26522 0 7.51957 0.105357 7.70711 0.292893C7.89464 0.480429 8 0.734784 8 1V6H13C13.2652 6 13.5196 6.10536 13.7071 6.29289C13.8946 6.48043 14 6.73478 14 7C14 7.26522 13.8946 7.51957 13.7071 7.70711C13.5196 7.89464 13.2652 8 13 8Z" fill="#703AE6" />
-                        </svg>
-
-
-                      </div>
-
+                      <button 
+                        type="button"
+                        className="w-[24px] h-[24px] bg-[#F1EBFD] flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                        aria-label="Decrease minimum price"
+                        disabled={!userAddress}
+                      >
+                        <MinusIcon />
+                      </button>
+                      <button 
+                        type="button"
+                        className="w-[24px] h-[24px] bg-[#F1EBFD] flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                        aria-label="Increase minimum price"
+                        disabled={!userAddress}
+                      >
+                        <PlusIcon />
+                      </button>
                     </div>
 
                   </div>
@@ -595,13 +629,24 @@ export default function FarmDetailPage() {
             <FarmStatsCard items={farmStatsData} />
           </div>
         )}
-        {showAddLiquidity && (<div className="w-fit h-fit flex flex-col gap-[20px]">
-          <DepositTokensForm assets={[`${farmData.title.split(" / ")[0]}`,`${farmData.title.split(" / ")[1]}`]} />
-          <div className="w-[400px] h-fit">
-          <FarmStatsCard items={farmLiquidationStatsData} />
-
+        {showAddLiquidity && (
+          <div className="w-fit h-fit flex flex-col gap-[20px]">
+            {!userAddress && (
+              <div 
+                className={`w-[400px] rounded-[12px] border-[1px] p-[16px] flex items-center gap-[12px] ${isDark ? "bg-[#1A1A1A] border-[#595959] text-[#FFFFFF]" : "bg-[#FFF9E6] border-[#FFD700] text-[#111111]"}`}
+                role="alert"
+                aria-live="polite"
+              >
+                <WarningIcon />
+                <span className="text-[14px] font-medium">Connect your wallet to add liquidity</span>
+              </div>
+            )}
+            <DepositTokensForm assets={[`${farmData.title.split(" / ")[0]}`,`${farmData.title.split(" / ")[1]}`]} />
+            <div className="w-[400px] h-fit">
+              <FarmStatsCard items={farmLiquidationStatsData} />
+            </div>
           </div>
-        </div>)}
+        )}
       </section>}
     </main>
   );

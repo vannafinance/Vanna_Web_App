@@ -16,6 +16,7 @@ import {
   BALANCE_TYPE_OPTIONS,
 } from "@/lib/constants/margin";
 import { useTheme } from "@/contexts/theme-context";
+import { EditIcon, CheckIcon, CloseIcon, MinusIcon } from "@/components/icons";
 
 interface Collateral {
   id?: string; // Add id prop
@@ -447,19 +448,7 @@ const CollateralComponent = (props: Collateral) => {
                 transition={{ duration: 0.1 }}
                 aria-label="Edit collateral"
               >
-                <svg
-                  width="13"
-                  height="14"
-                  viewBox="0 0 13 14"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M0 13.3333V10.9091H12.1212V13.3333H0ZM1.21212 9.69697V7.12121L8 0.348485C8.11111 0.237374 8.2399 0.151515 8.38636 0.0909091C8.53283 0.030303 8.68687 0 8.84848 0C9.0101 0 9.16667 0.030303 9.31818 0.0909091C9.4697 0.151515 9.60606 0.242424 9.72727 0.363636L10.5606 1.21212C10.6818 1.32323 10.7702 1.45455 10.8258 1.60606C10.8813 1.75758 10.9091 1.91414 10.9091 2.07576C10.9091 2.22727 10.8813 2.37626 10.8258 2.52273C10.7702 2.66919 10.6818 2.80303 10.5606 2.92424L3.78788 9.69697H1.21212ZM8.84848 2.90909L9.69697 2.06061L8.84848 1.21212L8 2.06061L8.84848 2.90909Z"
-                    fill={isDark ? "#FFFFFF" : "#111111"}
-                  />
-                </svg>
+                <EditIcon fill={isDark ? "#FFFFFF" : "#111111"} />
               </motion.button>
             </div>
           </motion.aside>
@@ -490,19 +479,7 @@ const CollateralComponent = (props: Collateral) => {
               transition={{ duration: 0.1 }}
               aria-label="Save collateral"
             >
-              <svg
-                width="13"
-                height="10"
-                viewBox="0 0 13 10"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
-              >
-                <path
-                  d="M4.88938 10L13 1.6568L11.3894 0L4.88938 6.68639L1.61062 3.31361L0 4.97041L4.88938 10Z"
-                  fill="white"
-                />
-              </svg>
+              <CheckIcon />
             </motion.button>
 
             {/* Cancel button */}
@@ -517,19 +494,7 @@ const CollateralComponent = (props: Collateral) => {
               transition={{ duration: 0.1 }}
               aria-label="Cancel editing"
             >
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 12 12"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
-              >
-                <path
-                  d="M6 7.68L1.68 12L0 10.32L4.32 6L0 1.68L1.68 0L6 4.32L10.32 0L12 1.68L7.68 6L12 10.32L10.32 12L6 7.68Z"
-                  fill={isDark ? "#FFFFFF" : "#111111"}
-                />
-              </svg>
+              <CloseIcon stroke={isDark ? "#FFFFFF" : "#111111"} width={12} height={12} />
             </motion.button>
           </motion.aside>
         )}
@@ -610,19 +575,7 @@ const CollateralComponent = (props: Collateral) => {
           transition={{ duration: 0.2 }}
           aria-label="Delete collateral"
         >
-          <svg
-            width="14"
-            height="3"
-            viewBox="0 0 14 3"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden="true"
-          >
-            <path
-              d="M13.3785 2.17793L7.77825 2.17793L5.60036 2.17793L7.72942e-05 2.17793L7.67884e-05 4.52819e-05L5.60036 4.5029e-05L7.77825 4.51976e-05L13.3785 4.55347e-05V2.17793Z"
-              fill={isDark ? "#FFFFFF" : "#111111"}
-            />
-          </svg>
+          <MinusIcon fill={isDark ? "#FFFFFF" : "#111111"} width={14} height={3} />
         </motion.button>
       )}
     </motion.article>

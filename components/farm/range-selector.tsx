@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useTheme } from "@/contexts/theme-context";
+import { ZoomInIcon, ZoomOutIcon, InfoIcon } from "@/components/icons";
 
 interface RangeSelectorProps {
   /**
@@ -78,6 +79,38 @@ interface RangeSelectorProps {
    * Show controls at the bottom
    */
   showControls?: boolean;
+  /**
+   * Current price for accurate calculations (defaults to center of range)
+   */
+  currentPrice?: number;
+  /**
+   * Base APR percentage (defaults to 14.14)
+   */
+  baseAPR?: number;
+  /**
+   * Minimum gap percentage between handles (defaults to 0.01%)
+   */
+  minGapPercentage?: number;
+  /**
+   * Range percentage for stable strategy (defaults to 10%)
+   */
+  stableRangePercentage?: number;
+  /**
+   * Range percentage for single-sided strategies (defaults to 30%)
+   */
+  singleSidedRangePercentage?: number;
+  /**
+   * Margin percentage for wide strategy (defaults to 5%)
+   */
+  wideMarginPercentage?: number;
+  /**
+   * Loading state
+   */
+  isLoading?: boolean;
+  /**
+   * Keyboard step size as percentage of range (defaults to 1%)
+   */
+  keyboardStepPercentage?: number;
   // Legacy props for backward compatibility
   /**
    * @deprecated Use token1ChartData and token1Name instead
@@ -132,6 +165,14 @@ export const RangeSelector = ({
   width = "100%",
   xAxisLabels,
   showControls = true,
+  currentPrice,
+  baseAPR = 14.14,
+  minGapPercentage = 0.0001,
+  stableRangePercentage = 0.1,
+  singleSidedRangePercentage = 0.3,
+  wideMarginPercentage = 0.05,
+  isLoading = false,
+  keyboardStepPercentage = 0.01,
   // Legacy props for backward compatibility
   usdcChartData,
   ethChartData,
@@ -145,9 +186,12 @@ export const RangeSelector = ({
   const { isDark } = useTheme();
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+  const minHandleRef = useRef<SVGGElement>(null);
+  const maxHandleRef = useRef<SVGGElement>(null);
   const [isDragging, setIsDragging] = useState<"min" | "max" | null>(null);
   const [containerWidth, setContainerWidth] = useState(0);
   const [containerHeight, setContainerHeight] = useState(height);
+  const [focusedHandle, setFocusedHandle] = useState<"min" | "max" | null>(null);
   
   // Callback ref to measure container width immediately when mounted
   const containerCallbackRef = useCallback((node: HTMLDivElement | null) => {
@@ -242,19 +286,30 @@ export const RangeSelector = ({
     if (t2MaxValue !== undefined) setInternalToken2Max(t2MaxValue);
   }, [t1MinValue, t1MaxValue, t2MinValue, t2MaxValue]);
 
-  // Calculate min and max from chart data
+  // Error handling: Validate chart data
+  const hasValidData = useMemo(() => {
+    return currentChartData && currentChartData.length > 0 && 
+           currentChartData.every(d => typeof d.x === 'number' && typeof d.y === 'number' && !isNaN(d.x) && !isNaN(d.y));
+  }, [currentChartData]);
+
+  // Calculate min and max from chart data with error handling
   const dataMin = useMemo(() => {
-    if (currentChartData.length === 0) return 0;
-    return Math.min(...currentChartData.map((d) => d.x));
-  }, [currentChartData]);
+    if (!hasValidData) return 0;
+    const min = Math.min(...currentChartData.map((d) => d.x));
+    return isNaN(min) ? 0 : min;
+  }, [currentChartData, hasValidData]);
+  
   const dataMax = useMemo(() => {
-    if (currentChartData.length === 0) return 0.0005;
-    return Math.max(...currentChartData.map((d) => d.x));
-  }, [currentChartData]);
+    if (!hasValidData) return 0.0005;
+    const max = Math.max(...currentChartData.map((d) => d.x));
+    return isNaN(max) ? 0.0005 : max;
+  }, [currentChartData, hasValidData]);
+  
   const dataYMax = useMemo(() => {
-    if (currentChartData.length === 0) return 100;
-    return Math.max(...currentChartData.map((d) => d.y));
-  }, [currentChartData]);
+    if (!hasValidData) return 100;
+    const max = Math.max(...currentChartData.map((d) => d.y));
+    return isNaN(max) ? 100 : max;
+  }, [currentChartData, hasValidData]);
 
   // Convert value to pixel position
   const valueToPixel = useCallback(
@@ -287,24 +342,26 @@ export const RangeSelector = ({
   const maxPixel = valueToPixel(currentMaxValue);
 
   // Calculate percentage indicators for handles
-  const centerPrice = useMemo(() => (dataMin + dataMax) / 2, [dataMin, dataMax]);
+  const effectiveCurrentPrice = useMemo(() => {
+    return currentPrice ?? (dataMin + dataMax) / 2;
+  }, [currentPrice, dataMin, dataMax]);
   
-  // Get pixel position for break-even line (center price where percentage is 0)
-  const breakEvenPixel = valueToPixel(centerPrice);
+  // Get pixel position for break-even line (current price where percentage is 0)
+  const breakEvenPixel = valueToPixel(effectiveCurrentPrice);
   
   const minPercentage = useMemo(() => {
-    if (centerPrice === 0) return "0";
-    const diff = currentMinValue - centerPrice;
-    const percentage = (diff / centerPrice) * 100;
+    if (effectiveCurrentPrice === 0) return "0";
+    const diff = currentMinValue - effectiveCurrentPrice;
+    const percentage = (diff / effectiveCurrentPrice) * 100;
     return percentage.toFixed(0);
-  }, [currentMinValue, centerPrice]);
+  }, [currentMinValue, effectiveCurrentPrice]);
 
   const maxPercentage = useMemo(() => {
-    if (centerPrice === 0) return "0";
-    const diff = currentMaxValue - centerPrice;
-    const percentage = (diff / centerPrice) * 100;
+    if (effectiveCurrentPrice === 0) return "0";
+    const diff = currentMaxValue - effectiveCurrentPrice;
+    const percentage = (diff / effectiveCurrentPrice) * 100;
     return percentage.toFixed(0);
-  }, [currentMaxValue, centerPrice]);
+  }, [currentMaxValue, effectiveCurrentPrice]);
 
   // Update container dimensions using ResizeObserver
   useEffect(() => {
@@ -350,54 +407,106 @@ export const RangeSelector = ({
     };
   }, [height, width]);
 
-  // Handle mouse down on handle
-  const handleMouseDown = (type: "min" | "max") => (e: React.MouseEvent) => {
+  // Handle pointer down on handle (supports both mouse and touch)
+  const handlePointerDown = (type: "min" | "max") => (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault();
     setIsDragging(type);
+    setFocusedHandle(type);
     // Clear selections when user starts manually dragging
     setSelectedRangeOption("");
     setSelectedStrategy("");
   };
 
-  // Handle mouse move
+  // Handle pointer move (supports both mouse and touch)
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
+    const handleMove = (e: MouseEvent | TouchEvent) => {
       if (!isDragging || !containerRef.current) return;
 
       const rect = containerRef.current.getBoundingClientRect();
-      const x = e.clientX - rect.left;
+      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+      const x = clientX - rect.left;
 
       if (isDragging === "min") {
         const newMin = pixelToValue(x);
-        // Allow min to go all the way to dataMin, and very close to maxValue
-        // Use a tiny minimum gap (0.01% of range) to prevent handles from overlapping
-        const minGap = (dataMax - dataMin) * 0.0001; // 0.01% of total range as minimum gap
+        // Use configurable minimum gap to prevent handles from overlapping
+        const minGap = (dataMax - dataMin) * minGapPercentage;
         const clampedMin = Math.max(dataMin, Math.min(newMin, currentMaxValue - minGap));
         handleCurrentRangeChange(clampedMin, currentMaxValue);
       } else if (isDragging === "max") {
         const newMax = pixelToValue(x);
-        // Allow max to go all the way to dataMax, and very close to minValue
-        // Use a tiny minimum gap (0.01% of range) to prevent handles from overlapping
-        const minGap = (dataMax - dataMin) * 0.0001; // 0.01% of total range as minimum gap
+        // Use configurable minimum gap to prevent handles from overlapping
+        const minGap = (dataMax - dataMin) * minGapPercentage;
         const clampedMax = Math.min(dataMax, Math.max(newMax, currentMinValue + minGap));
         handleCurrentRangeChange(currentMinValue, clampedMax);
       }
     };
 
-    const handleMouseUp = () => {
+    const handleEnd = () => {
       setIsDragging(null);
     };
 
     if (isDragging) {
-      window.addEventListener("mousemove", handleMouseMove);
-      window.addEventListener("mouseup", handleMouseUp);
+      // Add both mouse and touch event listeners
+      window.addEventListener("mousemove", handleMove);
+      window.addEventListener("mouseup", handleEnd);
+      window.addEventListener("touchmove", handleMove);
+      window.addEventListener("touchend", handleEnd);
     }
 
     return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("mousemove", handleMove);
+      window.removeEventListener("mouseup", handleEnd);
+      window.removeEventListener("touchmove", handleMove);
+      window.removeEventListener("touchend", handleEnd);
     };
-  }, [isDragging, currentMinValue, currentMaxValue, dataMin, dataMax, pixelToValue, handleCurrentRangeChange]);
+  }, [isDragging, currentMinValue, currentMaxValue, dataMin, dataMax, pixelToValue, handleCurrentRangeChange, minGapPercentage]);
+
+  // Keyboard navigation support
+  const handleKeyDown = useCallback((type: "min" | "max") => (e: React.KeyboardEvent) => {
+    const step = (dataMax - dataMin) * keyboardStepPercentage;
+    const minGap = (dataMax - dataMin) * minGapPercentage;
+
+    switch (e.key) {
+      case "ArrowLeft":
+      case "ArrowDown":
+        e.preventDefault();
+        if (type === "min") {
+          const newMin = Math.max(dataMin, currentMinValue - step);
+          handleCurrentRangeChange(newMin, currentMaxValue);
+        } else {
+          const newMax = Math.max(currentMinValue + minGap, currentMaxValue - step);
+          handleCurrentRangeChange(currentMinValue, newMax);
+        }
+        break;
+      case "ArrowRight":
+      case "ArrowUp":
+        e.preventDefault();
+        if (type === "min") {
+          const newMin = Math.min(currentMaxValue - minGap, currentMinValue + step);
+          handleCurrentRangeChange(newMin, currentMaxValue);
+        } else {
+          const newMax = Math.min(dataMax, currentMaxValue + step);
+          handleCurrentRangeChange(currentMinValue, newMax);
+        }
+        break;
+      case "Home":
+        e.preventDefault();
+        if (type === "min") {
+          handleCurrentRangeChange(dataMin, currentMaxValue);
+        } else {
+          handleCurrentRangeChange(currentMinValue, dataMax);
+        }
+        break;
+      case "End":
+        e.preventDefault();
+        if (type === "min") {
+          handleCurrentRangeChange(currentMaxValue - minGap, currentMaxValue);
+        } else {
+          handleCurrentRangeChange(currentMinValue, currentMinValue + minGap);
+        }
+        break;
+    }
+  }, [dataMin, dataMax, currentMinValue, currentMaxValue, keyboardStepPercentage, minGapPercentage, handleCurrentRangeChange]);
 
   // Generate SVG path for the chart
   const chartPath = useMemo(() => {
@@ -495,14 +604,13 @@ export const RangeSelector = ({
     handleCurrentRangeChange(newMin, newMax);
   };
 
-  // Strategy handlers
+  // Strategy handlers (using configurable values)
   const handleStable = () => {
     setSelectedStrategy("stable");
     setSelectedRangeOption(""); // Clear range option when strategy is selected
     // Stable strategy: centered around current price
-    const center = (dataMin + dataMax) / 2;
-    const range = (dataMax - dataMin) * 0.1; // 10% of full range
-    handleCurrentRangeChange(Math.max(dataMin, center - range / 2), Math.min(dataMax, center + range / 2));
+    const range = (dataMax - dataMin) * stableRangePercentage;
+    handleCurrentRangeChange(Math.max(dataMin, effectiveCurrentPrice - range / 2), Math.min(dataMax, effectiveCurrentPrice + range / 2));
   };
 
   const handleSingleSidedLeft = () => {
@@ -511,7 +619,7 @@ export const RangeSelector = ({
     // Single sided left: range from min to current max
     const currentMax = currentMaxValue;
     const range = currentMax - dataMin;
-    const newRange = range * 0.3; // 30% of available range
+    const newRange = range * singleSidedRangePercentage;
     handleCurrentRangeChange(dataMin, Math.min(dataMax, dataMin + newRange));
   };
 
@@ -520,7 +628,7 @@ export const RangeSelector = ({
     setSelectedRangeOption(""); // Clear range option when strategy is selected
     // Wide strategy: use most of the range
     const range = dataMax - dataMin;
-    const margin = range * 0.05; // 5% margin on each side
+    const margin = range * wideMarginPercentage;
     handleCurrentRangeChange(dataMin + margin, dataMax - margin);
   };
 
@@ -530,7 +638,7 @@ export const RangeSelector = ({
     // Single sided right: range from current min to max
     const currentMin = currentMinValue;
     const range = dataMax - currentMin;
-    const newRange = range * 0.3; // 30% of available range
+    const newRange = range * singleSidedRangePercentage;
     handleCurrentRangeChange(Math.max(dataMin, dataMax - newRange), dataMax);
   };
 
@@ -556,8 +664,6 @@ export const RangeSelector = ({
   }, [currentMinValue, currentMaxValue, dataMin, dataMax]);
 
   const calculateAPR = useMemo(() => {
-    // Base APR (example: 14.14%)
-    const baseAPR = 14.14;
     const capitalEfficiency = parseFloat(calculateCapitalEfficiency);
     const totalAPR = baseAPR * capitalEfficiency;
     return {
@@ -565,7 +671,7 @@ export const RangeSelector = ({
       efficiency: capitalEfficiency,
       total: totalAPR.toFixed(2),
     };
-  }, [calculateCapitalEfficiency]);
+  }, [calculateCapitalEfficiency, baseAPR]);
 
   // Range options data
   const rangeOptions = [
@@ -634,6 +740,40 @@ export const RangeSelector = ({
     },
   ], [calculateTokenRatio, calculateCapitalEfficiency, calculateAPR]);
 
+  // Loading skeleton
+  if (isLoading) {
+    return (
+      <div className="w-full flex flex-col gap-[16px]" role="status" aria-label="Loading chart">
+        <div className={`w-full rounded-[20px] p-[20px] flex flex-col gap-[16px] animate-pulse ${isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"}`}>
+          <div className="w-full h-fit flex items-center gap-[8px]">
+            <div className={`h-[32px] w-[80px] rounded-[8px] ${isDark ? "bg-[#1A1A1A]" : "bg-gray-200"}`} />
+            <div className={`h-[32px] w-[80px] rounded-[8px] ${isDark ? "bg-[#1A1A1A]" : "bg-gray-200"}`} />
+          </div>
+          <div className="w-full" style={{ height: `${height}px` }}>
+            <div className={`w-full h-full rounded-[8px] ${isDark ? "bg-[#1A1A1A]" : "bg-gray-200"}`} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (!hasValidData) {
+    return (
+      <div className="w-full flex flex-col gap-[16px]" role="alert">
+        <div className={`w-full rounded-[20px] p-[20px] flex flex-col gap-[16px] items-center justify-center ${isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"}`} style={{ height: `${height}px` }}>
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="24" cy="24" r="22" stroke={isDark ? "#595959" : "#BFBFBF"} strokeWidth="2" />
+            <path d="M24 14V26M24 34H24.02" stroke={isDark ? "#595959" : "#BFBFBF"} strokeWidth="3" strokeLinecap="round" />
+          </svg>
+          <p className={`text-[14px] font-medium ${isDark ? "text-[#919191]" : "text-[#5C5B5B]"}`}>
+            No valid chart data available
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full flex flex-col gap-[16px]">
       {/* Chart section with background */}
@@ -691,10 +831,7 @@ export const RangeSelector = ({
             isDark ? "bg-[#1A1A1A] border-[1px]" : "bg-white border-[1px]"
           }`}
         >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="8" cy="8" r="6" stroke={isDark ? "white" : "currentColor"} strokeWidth="2" />
-              <path d="M8 3V13M3 8H13" stroke={isDark ? "white" : "currentColor"} strokeWidth="2" strokeLinecap="round" />
-          </svg>
+          <ZoomInIcon stroke={isDark ? "white" : "currentColor"} />
         </button>
         <button
           type="button"
@@ -703,10 +840,7 @@ export const RangeSelector = ({
             isDark ? "bg-[#1A1A1A] border-[1px]" : "bg-white border-[1px]"
           }`}
         >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="8" cy="8" r="6" stroke={isDark ? "white" : "currentColor"} strokeWidth="2" />
-            <path d="M5 8H11" stroke={isDark ? "white" : "currentColor"} strokeWidth="2" strokeLinecap="round" />
-          </svg>
+          <ZoomOutIcon stroke={isDark ? "white" : "currentColor"} />
         </button>
       </div>
 
@@ -715,6 +849,8 @@ export const RangeSelector = ({
         ref={containerCallbackRef}
         className="w-full relative"
         style={{ height: `${height}px`, width }}
+        role="group"
+        aria-label={`Price range selector for ${selectedToken}`}
       >
         <svg
           ref={svgRef}
@@ -722,6 +858,8 @@ export const RangeSelector = ({
           height="100%"
           className="absolute inset-0"
           style={{ overflow: "visible" }}
+          role="img"
+          aria-label={`Price distribution chart showing range from ${dataMin.toFixed(4)} to ${dataMax.toFixed(4)}`}
         >
           {/* Chart area background */}
           <defs>
@@ -766,8 +904,21 @@ export const RangeSelector = ({
 
           {/* Min handle */}
           <g
+            ref={minHandleRef}
             style={{ cursor: "grab" }}
-            onMouseDown={handleMouseDown("min")}
+            onMouseDown={handlePointerDown("min")}
+            onTouchStart={handlePointerDown("min")}
+            tabIndex={0}
+            role="slider"
+            aria-label={`Minimum price: ${currentMinValue.toFixed(4)}`}
+            aria-valuemin={dataMin}
+            aria-valuemax={dataMax}
+            aria-valuenow={currentMinValue}
+            aria-valuetext={`${currentMinValue.toFixed(4)} (${minPercentage}%)`}
+            onKeyDown={handleKeyDown("min")}
+            onFocus={() => setFocusedHandle("min")}
+            onBlur={() => setFocusedHandle(null)}
+            className={focusedHandle === "min" ? "outline-none" : ""}
           >
             <line
               x1={minPixel}
@@ -785,6 +936,20 @@ export const RangeSelector = ({
               fill="#703AE6"
               rx="4"
             />
+            {/* Focus indicator */}
+            {focusedHandle === "min" && (
+              <rect
+                x={minPixel - 14}
+                y="-2"
+                width="28"
+                height="24"
+                fill="none"
+                stroke="#703AE6"
+                strokeWidth="2"
+                rx="6"
+                className="pointer-events-none"
+              />
+            )}
             {/* Pause icon */}
             <g transform={`translate(${minPixel - 6}, 6)`}>
               <rect x="0" y="2" width="2" height="6" fill="white" />
@@ -818,8 +983,21 @@ export const RangeSelector = ({
 
           {/* Max handle */}
           <g
+            ref={maxHandleRef}
             style={{ cursor: "grab" }}
-            onMouseDown={handleMouseDown("max")}
+            onMouseDown={handlePointerDown("max")}
+            onTouchStart={handlePointerDown("max")}
+            tabIndex={0}
+            role="slider"
+            aria-label={`Maximum price: ${currentMaxValue.toFixed(4)}`}
+            aria-valuemin={dataMin}
+            aria-valuemax={dataMax}
+            aria-valuenow={currentMaxValue}
+            aria-valuetext={`${currentMaxValue.toFixed(4)} (${maxPercentage}%)`}
+            onKeyDown={handleKeyDown("max")}
+            onFocus={() => setFocusedHandle("max")}
+            onBlur={() => setFocusedHandle(null)}
+            className={focusedHandle === "max" ? "outline-none" : ""}
           >
             <line
               x1={maxPixel}
@@ -837,6 +1015,20 @@ export const RangeSelector = ({
               fill="#703AE6"
               rx="4"
             />
+            {/* Focus indicator */}
+            {focusedHandle === "max" && (
+              <rect
+                x={maxPixel - 14}
+                y="-2"
+                width="28"
+                height="24"
+                fill="none"
+                stroke="#703AE6"
+                strokeWidth="2"
+                rx="6"
+                className="pointer-events-none"
+              />
+            )}
             {/* Pause icon */}
             <g transform={`translate(${maxPixel - 6}, 6)`}>
               <rect x="0" y="2" width="2" height="6" fill="white" />
@@ -948,10 +1140,7 @@ export const RangeSelector = ({
                   }`}>
                     {metric.label}
                   </span>
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="7" cy="7" r="6.5" stroke={isDark ? "#FFFFFF" : "#5C5B5B"} />
-                    <path d="M7 4V7M7 10H7.01" stroke={isDark ? "#FFFFFF" : "#5C5B5B"} strokeWidth="1.5" strokeLinecap="round" />
-                  </svg>
+                  <InfoIcon stroke={isDark ? "#FFFFFF" : "#5C5B5B"} />
                 </div>
                 <span className={`text-[16px] font-semibold ${
                   isDark ? "text-white" : "text-[#181822]"

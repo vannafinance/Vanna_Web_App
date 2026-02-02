@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
 import { useTheme } from "@/contexts/theme-context";
+import { ChevronDownIcon } from "@/components/icons";
 
 interface Dropdown {
   items:string[];
@@ -79,23 +80,13 @@ export const Dropdown = (props: Dropdown) => {
           aria-hidden="true"
         />} {" "}
         {props.selectedOption}
-        <motion.svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={1.5}
-          stroke="currentColor"
-          className="size-5"
+        <motion.div
           aria-hidden="true"
           animate={{ rotate: isHover ? 180 : 0 }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="m19.5 8.25-7.5 7.5-7.5-7.5"
-          />
-        </motion.svg>
+          <ChevronDownIcon className="size-5" />
+        </motion.div>
       </button>
       <AnimatePresence>
         {isHover && (

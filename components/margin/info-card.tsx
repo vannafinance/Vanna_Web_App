@@ -5,6 +5,7 @@ import { useState } from "react";
 import { FIELD_FORMAT_MAP, LARGE_FORMAT_FIELDS } from "@/lib/constants/margin";
 import { formatValue, FormatType } from "@/lib/utils/format-value";
 import { useTheme } from "@/contexts/theme-context";
+import { ArrowDownIcon } from "@/components/icons";
 
 interface InfoItem {
   id: string;
@@ -148,21 +149,12 @@ export const InfoCard = ({
             >
               {section.title}
               {/* Expand/collapse arrow */}
-              <motion.svg
-                width="13"
-                height="8"
-                viewBox="0 0 13 8"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
+              <motion.div
                 animate={{ rotate: expandedStates[section.title] ? 180 : 0 }}
                 transition={{ duration: 0.3 }}
               >
-                <path
-                  d="M11.91 8.38201e-05L12.97 1.06108L7.193 6.84008C7.10043 6.93324 6.99036 7.00717 6.8691 7.05761C6.74785 7.10806 6.61783 7.13403 6.4865 7.13403C6.35517 7.13403 6.22514 7.10806 6.10389 7.05761C5.98264 7.00717 5.87257 6.93324 5.78 6.84008L0 1.06108L1.06 0.00108375L6.485 5.42508L11.91 8.38201e-05Z"
-                  fill={isDark ? "#FFFFFF" : "black"}
-                />
-              </motion.svg>
+                <ArrowDownIcon fill={isDark ? "#FFFFFF" : "black"} />
+              </motion.div>
             </motion.button>
 
             {/* Expandable content */}

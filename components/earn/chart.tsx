@@ -6,6 +6,7 @@ import { AnimatedTabs } from "../ui/animated-tabs";
 import { ExpandableModal } from "../ui/expandable-modal";
 import { useTheme } from "@/contexts/theme-context";
 import { netVolumeData , netEarningsData } from "@/lib/constants/portfolio";
+import { TrendUpIcon, TrendDownIcon } from "@/components/icons";
 
 interface ChartProps {
   type: "overall-deposit" | "net-apy" | "my-supply" | "deposit-apy" | "net-volume" | "net-profit-loss" | "farm";
@@ -234,18 +235,7 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
           </h2>
           {type === "farm" && uptrend && (
             <div className="w-full h-fit flex items-center gap-[4px]">
-              <svg
-                width="8"
-                height="8"
-                viewBox="0 0 8 8"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M4 0L7.4641 6H0.535898L4 0Z"
-                  fill="#10B981"
-                />
-              </svg>
+              <TrendUpIcon />
               <p className={`text-[12px] font-medium text-[#10B981]`}>
                 {uptrend}
               </p>
@@ -253,18 +243,7 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
           )}
           {type === "farm" && downtrend && (
             <div className="w-full h-fit flex items-center gap-[4px]">
-              <svg
-                width="8"
-                height="8"
-                viewBox="0 0 8 8"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M4 8L0.535898 2H7.4641L4 8Z"
-                  fill="#FC5457"
-                />
-              </svg>
+              <TrendDownIcon />
               <p className={`text-[12px] font-medium text-[#FC5457]`}>
                 {downtrend}
               </p>
@@ -377,18 +356,7 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
                   </h2>
                   {type === "farm" && uptrend && (
                     <div className="w-full h-fit flex items-center gap-[4px]">
-                      <svg
-                        width="8"
-                        height="8"
-                        viewBox="0 0 8 8"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          d="M4 0L7.4641 6H0.535898L4 0Z"
-                          fill="#10B981"
-                        />
-                      </svg>
+                      <TrendUpIcon />
                       <p className={`text-[12px] font-medium text-[#10B981]`}>
                         {uptrend}
                       </p>
@@ -396,18 +364,7 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
                   )}
                   {type === "farm" && downtrend && (
                     <div className="w-full h-fit flex items-center gap-[4px]">
-                      <svg
-                        width="8"
-                        height="8"
-                        viewBox="0 0 8 8"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          d="M4 8L0.535898 2H7.4641L4 8Z"
-                          fill="#FC5457"
-                        />
-                      </svg>
+                      <TrendDownIcon />
                       <p className={`text-[12px] font-medium text-[#FC5457]`}>
                         {downtrend}
                       </p>

@@ -15,6 +15,7 @@ import { SupplyApy } from "./supply-apy";
 import { PieChart } from "../ui/pie-chart";
 import { ProgressBar } from "../ui/progress-bar";
 import { useTheme } from "@/contexts/theme-context";
+import { ArrowTopRightIcon, SortVerticalIcon, ChevronLeftIcon, ChevronRightIcon } from "@/components/icons";
 
 const ITEMS_PER_PAGE = 4;
 
@@ -443,16 +444,7 @@ const CellContent = ({
                 type="button"
                 className="cursor-pointer w-[20px] h-[20px] flex flex-col justify-center items-center"
               >
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                  <path
-                    d="M9.29169 4.95838L0.625 4.95838M9.29169 4.95838L4.95829 0.625M9.29169 4.95838L4.95829 9.29162"
-                    stroke="#434C53"
-                    strokeOpacity="0.95"
-                    strokeWidth="1.25"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                <ArrowTopRightIcon />
               </button>
             )}
           </div>
@@ -1011,18 +1003,7 @@ export const Table = memo((props: TableProps) => {
                         }`}
                         aria-label={`Sort by ${item.label}`}
                       >
-                        <svg
-                          width="12"
-                          height="13"
-                          viewBox="0 0 12 13"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M6.86559 2.73278C6.98278 2.84983 7.14163 2.91557 7.30726 2.91557C7.47288 2.91557 7.63174 2.84983 7.74892 2.73278L8.34892 2.13278V10.6245C8.34892 10.7902 8.41477 10.9492 8.53198 11.0664C8.64919 11.1836 8.80816 11.2495 8.97392 11.2495C9.13968 11.2495 9.29866 11.1836 9.41587 11.0664C9.53308 10.9492 9.59892 10.7902 9.59892 10.6245V2.13278L10.1989 2.73278C10.2561 2.79419 10.3251 2.84344 10.4018 2.8776C10.4785 2.91176 10.5612 2.93013 10.6452 2.93161C10.7291 2.93309 10.8124 2.91765 10.8903 2.88622C10.9681 2.85478 11.0388 2.808 11.0981 2.74865C11.1575 2.6893 11.2043 2.61861 11.2357 2.54078C11.2671 2.46296 11.2826 2.3796 11.2811 2.29568C11.2796 2.21176 11.2612 2.129 11.2271 2.05234C11.1929 1.97567 11.1437 1.90667 11.0823 1.84945L9.41559 0.182783C9.2984 0.0657412 9.13955 0 8.97392 0C8.8083 0 8.64944 0.0657412 8.53226 0.182783L6.86559 1.84945C6.74855 1.96664 6.68281 2.12549 6.68281 2.29112C6.68281 2.45674 6.74855 2.6156 6.86559 2.73278ZM2.93226 10.7828L3.53226 10.1828C3.58948 10.1214 3.65848 10.0721 3.73514 10.038C3.81181 10.0038 3.89457 9.98544 3.97849 9.98396C4.06241 9.98248 4.14576 9.99791 4.22359 10.0293C4.30141 10.0608 4.37211 10.1076 4.43146 10.1669C4.4908 10.2263 4.53759 10.297 4.56903 10.3748C4.60046 10.4526 4.6159 10.536 4.61442 10.6199C4.61294 10.7038 4.59457 10.7866 4.56041 10.8632C4.52625 10.9399 4.477 11.0089 4.41559 11.0661L2.74892 12.7328C2.63174 12.8498 2.47288 12.9156 2.30726 12.9156C2.14163 12.9156 1.98278 12.8498 1.86559 12.7328L0.198923 11.0661C0.137518 11.0089 0.0882658 10.9399 0.0541058 10.8632C0.0199459 10.7866 0.00157792 10.7038 9.72687e-05 10.6199C-0.00138338 10.536 0.0140536 10.4526 0.0454878 10.3748C0.076922 10.297 0.123709 10.2263 0.183058 10.1669C0.242407 10.1076 0.313102 10.0608 0.390925 10.0293C0.468749 9.99791 0.552106 9.98248 0.636026 9.98396C0.719945 9.98544 0.802706 10.0038 0.879372 10.038C0.956038 10.0721 1.02504 10.1214 1.08226 10.1828L1.68226 10.7828V2.29112C1.68226 2.12536 1.7481 1.96639 1.86531 1.84917C1.98253 1.73196 2.1415 1.66612 2.30726 1.66612C2.47302 1.66612 2.63199 1.73196 2.7492 1.84917C2.86641 1.96639 2.93226 2.12536 2.93226 2.29112V10.7828Z"
-                            fill={props.tableHeadingTextColor || "#999999"}
-                          />
-                        </svg>
+                        <SortVerticalIcon fill={props.tableHeadingTextColor || "#999999"} />
                       </button>
                     )}
                     {item.label}
@@ -1074,15 +1055,7 @@ export const Table = memo((props: TableProps) => {
             } ${isDark ? "text-white" : "text-[#111111]"}`}
             aria-label="Previous page"
           >
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-              <path
-                d="M7.5 9L4.5 6L7.5 3"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <ChevronLeftIcon stroke={isDark ? "#FFFFFF" : "#111111"} strokeWidth={1.5} />
           </button>
 
           <span className="px-[24px] py-[8px] rounded-full bg-[#F1EBFD] text-[#703AE6] text-[14px] font-semibold" aria-live="polite" aria-atomic="true">
@@ -1100,15 +1073,7 @@ export const Table = memo((props: TableProps) => {
             } ${isDark ? "text-white" : "text-[#111111]"}`}
             aria-label="Next page"
           >
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-              <path
-                d="M4.5 9L7.5 6L4.5 3"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <ChevronRightIcon stroke={isDark ? "#FFFFFF" : "#111111"} strokeWidth={1.5} />
           </button>
         </nav>
       )}

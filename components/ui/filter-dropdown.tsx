@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, useMemo, useCallback, memo } from "react";
 import { SearchBar } from "./search-bar";
 import { Checkbox } from "./Checkbox";
 import { useTheme } from "@/contexts/theme-context";
+import { EyeIcon, CloseIcon } from "@/components/icons";
 
 interface FilterDropdownProps {
   dropDownType: "collateral" | "deposit" | "all-chains" | "All" | "customize" | "curator" | "provider" | "vaults" | "protocol";
@@ -62,12 +63,7 @@ const DropdownOption = memo(
                 />
               </svg>
             ) : (
-              <svg width="14" height="10" viewBox="0 0 14 10" fill="none">
-                <path
-                  d="M6.66667 7.27273C7.42424 7.27273 8.06818 7.00758 8.59848 6.47727C9.12879 5.94697 9.39394 5.30303 9.39394 4.54545C9.39394 3.78788 9.12879 3.14394 8.59848 2.61364C8.06818 2.08333 7.42424 1.81818 6.66667 1.81818C5.90909 1.81818 5.26515 2.08333 4.73485 2.61364C4.20455 3.14394 3.93939 3.78788 3.93939 4.54545C3.93939 5.30303 4.20455 5.94697 4.73485 6.47727C5.26515 7.00758 5.90909 7.27273 6.66667 7.27273ZM6.66667 6.18182C6.21212 6.18182 5.82576 6.02273 5.50758 5.70455C5.18939 5.38636 5.0303 5 5.0303 4.54545C5.0303 4.09091 5.18939 3.70455 5.50758 3.38636C5.82576 3.06818 6.21212 2.90909 6.66667 2.90909C7.12121 2.90909 7.50758 3.06818 7.82576 3.38636C8.14394 3.70455 8.30303 4.09091 8.30303 4.54545C8.30303 5 8.14394 5.38636 7.82576 5.70455C7.50758 6.02273 7.12121 6.18182 6.66667 6.18182ZM6.66667 9.09091C5.19192 9.09091 3.84848 8.67929 2.63636 7.85606C1.42424 7.03283 0.545455 5.92929 0 4.54545C0.545455 3.16162 1.42424 2.05808 2.63636 1.23485C3.84848 0.411616 5.19192 0 6.66667 0C8.14141 0 9.48485 0.411616 10.697 1.23485C11.9091 2.05808 12.7879 3.16162 13.3333 4.54545C12.7879 5.92929 11.9091 7.03283 10.697 7.85606C9.48485 8.67929 8.14141 9.09091 6.66667 9.09091Z"
-                  fill={isDark ? "#FFFFFF" : "#111111"}
-                />
-              </svg>
+              <EyeIcon fill={isDark ? "#FFFFFF" : "#111111"} />
             )}
           </div>
           {hasIcon && (
@@ -401,15 +397,7 @@ export const FilterDropdown = memo((props: FilterDropdownProps) => {
                 className="w-[16px] h-[16px] flex flex-shrink-0 flex-col items-center justify-center cursor-pointer hover:opacity-70 transition-opacity"
                 onClick={handleClearSelection}
               >
-                <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
-                  <path
-                    d="M7.25 0.75L0.75 7.25M0.75 0.75L7.25 7.25"
-                    stroke="#111111"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                <CloseIcon />
               </div>
             </div>
           )}

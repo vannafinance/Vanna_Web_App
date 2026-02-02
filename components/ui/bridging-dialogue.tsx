@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "./button";
 import { motion, AnimatePresence } from "framer-motion";
+import { CheckmarkIcon, SpinnerIcon } from "@/components/icons";
 
 interface BridgingDialogueProps {
   heading: string;
@@ -138,12 +139,7 @@ export const BridgingDialogue = (props: BridgingDialogueProps) => {
                     exit={{ opacity: 0, scale: 0.8 }}
                     transition={{ duration: 0.3 }}
                   >
-                    <motion.svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
+                    <motion.div
                       animate={{ rotate: 360 }}
                       transition={{
                         duration: 1,
@@ -151,18 +147,8 @@ export const BridgingDialogue = (props: BridgingDialogueProps) => {
                         ease: "linear",
                       }}
                     >
-                      <circle
-                        cx="8"
-                        cy="8"
-                        r="6"
-                        stroke="white"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeDasharray="28 12"
-                        fill="none"
-                        opacity="0.8"
-                      />
-                    </motion.svg>
+                      <SpinnerIcon />
+                    </motion.div>
                   </motion.div>
                 )}
               </AnimatePresence>

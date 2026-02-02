@@ -8,6 +8,7 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import { useMarginAccountInfoStore } from "@/store/margin-account-info-store";
 import { TABLE_ROW_HEADINGS, COIN_ICONS } from "@/lib/constants/margin";
 import { useTheme } from "@/contexts/theme-context";
+import { InfoCircleIcon, ChevronLeftIcon, ChevronRightIcon } from "@/components/icons";
 
 interface PositionstableProps {
   onRepayClick?: () => void;
@@ -274,19 +275,12 @@ export const Positionstable = ({ onRepayClick, onOpenPositionClick }: Positionst
                 >
                   {/* Info icon (if position is open) */}
                   {item.isOpen && (
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 14 14"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
+                    <InfoCircleIcon 
+                      width={14} 
+                      height={14} 
+                      fill={isDark ? "#FFFFFF" : "black"} 
                       className="flex-shrink-0"
-                    >
-                      <path
-                        d="M6 3.33333H7.33333V4.66667H6V3.33333ZM6 6H7.33333V10H6V6ZM6.66667 0C2.98667 0 0 2.98667 0 6.66667C0 10.3467 2.98667 13.3333 6.66667 13.3333C10.3467 13.3333 13.3333 10.3467 13.3333 6.66667C13.3333 2.98667 10.3467 0 6.66667 0ZM6.66667 12C3.72667 12 1.33333 9.60667 1.33333 6.66667C1.33333 3.72667 3.72667 1.33333 6.66667 1.33333C9.60667 1.33333 12 3.72667 12 6.66667C12 9.60667 9.60667 12 6.66667 12Z"
-                        fill={isDark ? "#FFFFFF" : "black"}
-                      />
-                    </svg>
+                    />
                   )}
                   {item.interestAccrued} USD
                 </motion.div>
@@ -333,21 +327,7 @@ export const Positionstable = ({ onRepayClick, onOpenPositionClick }: Positionst
               } ${isDark ? "text-white" : "text-[#111111]"}`}
               aria-label="Previous page"
             >
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 12 12"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M7.5 9L4.5 6L7.5 3"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              <ChevronLeftIcon />
             </button>
 
             <span className="px-[24px] py-[8px] rounded-full bg-[#F1EBFD] text-[#703AE6] text-[14px] font-semibold">
@@ -365,21 +345,7 @@ export const Positionstable = ({ onRepayClick, onOpenPositionClick }: Positionst
               } ${isDark ? "text-white" : "text-[#111111]"}`}
               aria-label="Next page"
             >
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 12 12"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M4.5 9L7.5 6L4.5 3"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              <ChevronRightIcon />
             </button>
           </motion.div>
         )}
