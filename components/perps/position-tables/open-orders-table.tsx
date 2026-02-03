@@ -1,6 +1,9 @@
 import Image from "next/image";
+import { useState } from "react";
 import { Column } from "../../ui/Table";
 import { Table } from "../../ui/Table";
+import { Modal } from "../../ui/modal";
+import { ChaseOrderModal } from "../modals/chase-order-modal";
 
 type OrderTabType =
   | "limitMarket"
@@ -95,8 +98,10 @@ export type TwapOrderType = BaseOrderType & {
   reduceOnly: "Yes" | "No";
 };
 
-// Column definitions for Limit/Market
-const limitMarketColumns: Column<LimitMarketOrderType>[] = [
+// Column definitions for Limit/Market - function to allow callbacks
+const getLimitMarketColumns = (
+  onChase: (orderId: string) => void,
+): Column<LimitMarketOrderType>[] => [
   {
     id: "dateTime",
     header: "Time",
@@ -213,9 +218,12 @@ const limitMarketColumns: Column<LimitMarketOrderType>[] = [
       </button>
     ),
     sticky: true,
-    render: () => (
+    render: (row) => (
       <div className="flex gap-2 justify-end">
-        <button className="cursor-pointer px-3 py-2 border-[0.75px] border-[#E2E2E2] bg-[#FFFFFF] rounded-md text-[12px] leading-[18px] text-[#111111]">
+        <button
+          onClick={() => onChase(row.id)}
+          className="cursor-pointer px-3 py-2 border-[0.75px] border-[#E2E2E2] bg-[#FFFFFF] rounded-md text-[12px] leading-[18px] text-[#111111]"
+        >
           Chase
         </button>
         <button className="cursor-pointer px-3 py-2 border-[0.75px] border-[#E2E2E2] bg-[#FFFFFF] rounded-md text-[12px] leading-[18px] text-[#111111]">
@@ -832,6 +840,23 @@ interface OpenOrdersTableProps {
 export default function OpenOrdersTable({
   activeTab = "limitMarket",
 }: OpenOrdersTableProps) {
+  const [isChaseModalOpen, setIsChaseModalOpen] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+
+  const handleChaseClick = (orderId: string) => {
+    setSelectedOrderId(orderId);
+    setIsChaseModalOpen(true);
+  };
+
+  const handleChaseConfirm = () => {
+    console.log("Chase order confirmed for:", selectedOrderId);
+    // Handle chase order logic here
+    setIsChaseModalOpen(false);
+    setSelectedOrderId(null);
+  };
+
+  const limitMarketColumns = getLimitMarketColumns(handleChaseClick);
+
   const renderTable = () => {
     switch (activeTab) {
       case "limitMarket":
@@ -894,8 +919,18 @@ export default function OpenOrdersTable({
   };
 
   return (
-    <div className="p-2 rounded-lg border border-[#E2E2E2] bg-[#F7F7F7]">
-      {renderTable()}
-    </div>
+    <>
+      <div className="p-2 rounded-lg border border-[#E2E2E2] bg-[#F7F7F7]">
+        {renderTable()}
+      </div>
+
+      {/* Chase Order Modal */}
+      <Modal open={isChaseModalOpen} onClose={() => setIsChaseModalOpen(false)}>
+        <ChaseOrderModal
+          onClose={() => setIsChaseModalOpen(false)}
+          onConfirm={handleChaseConfirm}
+        />
+      </Modal>
+    </>
   );
 }

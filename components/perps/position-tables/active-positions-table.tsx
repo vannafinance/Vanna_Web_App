@@ -6,9 +6,10 @@ import { Column } from "../../ui/Table";
 import { Table } from "../../ui/Table";
 import { Modal } from "../../ui/modal";
 import { ClosePositionModal } from "../modals/close-position-modal";
-import { TpSlModal, TpSlMode } from "../modals/tp-sl-modal";
-import { ColumnPreferenceItem } from "@/lib/types";
+import { TpSlModal } from "../modals/tp-sl-modal";
+import { ColumnPreferenceItem, TpSlMode } from "@/lib/types";
 import { SharePositionModal } from "../modals/share-position-modal";
+import { AdjustLeverageModal } from "../modals/adjust-leverage-modal";
 
 export type ActivePositionType = {
   id: string;
@@ -53,6 +54,7 @@ const getActivePositionsColumns = (
   onOpenModal: (position: ActivePositionType, type: "market" | "limit") => void,
   onOpenTpSlModal: (position: ActivePositionType, mode: TpSlMode) => void,
   onOpenShareCard: (position: ActivePositionType) => void,
+  onOpenLeverageModal: (position: ActivePositionType) => void,
 ): Column<ActivePositionType>[] => [
   {
     id: "futures",
@@ -69,7 +71,11 @@ const getActivePositionsColumns = (
             {row.futures.side} {row.futures.leverage} {row.futures.mode}
           </span>
         </div>
-        <button type="button" className="cursor-pointer">
+        <button
+          type="button"
+          className="cursor-pointer"
+          onClick={() => onOpenLeverageModal(row)}
+        >
           <Image src="/icons/edit.svg" alt="edit" width={16} height={16} />
         </button>
       </div>
@@ -289,7 +295,12 @@ const getActivePositionsColumns = (
 const activePositionsData: ActivePositionType[] = [
   {
     id: "pos-1",
-    futures: { pair: "BTCUSDT", leverage: "11x", mode: "Isolated", side: "Long" },
+    futures: {
+      pair: "BTCUSDT",
+      leverage: "11x",
+      mode: "Isolated",
+      side: "Long",
+    },
     positionSize: { size: "0.020" },
     positionValue: "1,900.60 USDT",
     entryPrice: "91,421.3",
@@ -347,7 +358,12 @@ const activePositionsData: ActivePositionType[] = [
 
   {
     id: "pos-3",
-    futures: { pair: "SOLUSDT", leverage: "15x", mode: "Isolated", side: "Long" },
+    futures: {
+      pair: "SOLUSDT",
+      leverage: "15x",
+      mode: "Isolated",
+      side: "Long",
+    },
     positionSize: { size: "6.00" },
     positionValue: "780.12 USDT",
     entryPrice: "118.2",
@@ -405,7 +421,12 @@ const activePositionsData: ActivePositionType[] = [
 
   {
     id: "pos-5",
-    futures: { pair: "AVAXUSDT", leverage: "20x", mode: "Isolated", side: "Long" },
+    futures: {
+      pair: "AVAXUSDT",
+      leverage: "20x",
+      mode: "Isolated",
+      side: "Long",
+    },
     positionSize: { size: "15.0" },
     positionValue: "525.30 USDT",
     entryPrice: "32.5",
@@ -463,7 +484,12 @@ const activePositionsData: ActivePositionType[] = [
 
   {
     id: "pos-7",
-    futures: { pair: "ADAUSDT", leverage: "12x", mode: "Isolated", side: "Long" },
+    futures: {
+      pair: "ADAUSDT",
+      leverage: "12x",
+      mode: "Isolated",
+      side: "Long",
+    },
     positionSize: { size: "3000" },
     positionValue: "1,050.00 USDT",
     entryPrice: "0.32",
@@ -492,7 +518,12 @@ const activePositionsData: ActivePositionType[] = [
 
   {
     id: "pos-8",
-    futures: { pair: "DOGEUSDT", leverage: "25x", mode: "Isolated", side: "Short" },
+    futures: {
+      pair: "DOGEUSDT",
+      leverage: "25x",
+      mode: "Isolated",
+      side: "Short",
+    },
     positionSize: { size: "8000" },
     positionValue: "640.00 USDT",
     entryPrice: "0.082",
@@ -550,7 +581,12 @@ const activePositionsData: ActivePositionType[] = [
 
   {
     id: "pos-10",
-    futures: { pair: "LINKUSDT", leverage: "9x", mode: "Isolated", side: "Short" },
+    futures: {
+      pair: "LINKUSDT",
+      leverage: "9x",
+      mode: "Isolated",
+      side: "Short",
+    },
     positionSize: { size: "80" },
     positionValue: "1,120.00 USDT",
     entryPrice: "13.2",
@@ -619,6 +655,14 @@ export default function ActivePositionsTable({
     position: null,
   });
 
+  const [leverageModal, setLeverageModal] = useState<{
+    isOpen: boolean;
+    position: ActivePositionType | null;
+  }>({
+    isOpen: false,
+    position: null,
+  });
+
   const handleOpenModal = (
     position: ActivePositionType,
     type: "market" | "limit",
@@ -638,7 +682,10 @@ export default function ActivePositionsTable({
     });
   };
 
-  const handleOpenTpSlModal = (position: ActivePositionType, mode: TpSlMode) => {
+  const handleOpenTpSlModal = (
+    position: ActivePositionType,
+    mode: TpSlMode,
+  ) => {
     setTpslModal({
       isOpen: true,
       position,
@@ -679,10 +726,25 @@ export default function ActivePositionsTable({
     });
   };
 
+  const handleOpenLeverageModal = (position: ActivePositionType) => {
+    setLeverageModal({
+      isOpen: true,
+      position,
+    });
+  };
+
+  const handleCloseLeverageModal = () => {
+    setLeverageModal({
+      isOpen: false,
+      position: null,
+    });
+  };
+
   const allColumns = getActivePositionsColumns(
     handleOpenModal,
     handleOpenTpSlModal,
     handleOpenShareCard,
+    handleOpenLeverageModal,
   );
 
   // Filter columns based on visibility preferences
@@ -822,7 +884,9 @@ export default function ActivePositionsTable({
             side:
               shareCard.position.futures.side === "Short" ? "short" : "long",
             leverage: shareCard.position.futures.leverage,
-            pnlAmount: parseNumericValue(shareCard.position.unrealizedPnl.amount),
+            pnlAmount: parseNumericValue(
+              shareCard.position.unrealizedPnl.amount,
+            ),
             pnlPercentage: parseNumericValue(
               shareCard.position.unrealizedPnl.percentage,
             ),
@@ -831,6 +895,22 @@ export default function ActivePositionsTable({
           }}
         />
       )}
+
+      {/* Adjust Leverage Modal */}
+      <Modal open={leverageModal.isOpen} onClose={handleCloseLeverageModal}>
+        {leverageModal.position && (
+          <AdjustLeverageModal
+            pair={leverageModal.position.futures.pair}
+            defaultValue={parseInt(leverageModal.position.futures.leverage)}
+            max={20}
+            onClose={handleCloseLeverageModal}
+            onConfirm={(val, batchAdjust) => {
+              console.log("Leverage adjusted:", val, batchAdjust);
+              handleCloseLeverageModal();
+            }}
+          />
+        )}
+      </Modal>
     </>
   );
 }

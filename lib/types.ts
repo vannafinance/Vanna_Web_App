@@ -306,3 +306,31 @@ export interface ColumnPreferenceItem {
   label: string;
   hasToggle: boolean;
 }
+
+export type AccountType = "Portfolio Balance" | "Margin Balance";
+
+export interface ChainOption {
+  name: string;
+  icon: string;
+}
+
+export interface TokenOption {
+  symbol: string;
+  icon: string;
+}
+
+export type TpSlMode = "entire_position" | "partial_position" | "trailing" | "mmr_sl";
+export type TpSlTriggerPriceType = "Last" | "Mark" | "Index";
+export type TpSlValueType = "ROI(%)" | "Change(%)" | "PnL(USDC)";
+export type TpSlOrderType = "Limit" | "BBO";
+export type TpSlBBOType = "Counterparty 1" | "Counterparty 5" | "Queue 1" | "Queue 5";
+
+export interface TpSlPositionData {
+  pair: string;
+  leverage: string;
+  mode: "Cross" | "Isolated";
+  lastPrice: string;
+  entryPrice: string;
+  markPrice: string;
+  estLiquidationPrice: string;
+}

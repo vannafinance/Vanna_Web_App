@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import ToggleButton from "../../ui/toggle";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ColumnPreferenceItem } from "@/lib/types";
 
 type Props = {
@@ -15,8 +15,6 @@ type Props = {
   onReset: () => void;
   isOpen: boolean;
   onToggle: () => void;
-  buttonRef?: React.RefObject<HTMLButtonElement | null>;
-  popupRef?: React.RefObject<HTMLDivElement | null>;
 };
 
 export default function ColumnPreferencesPopup({
@@ -28,11 +26,28 @@ export default function ColumnPreferencesPopup({
   onReset,
   isOpen,
   onToggle,
-  buttonRef,
-  popupRef,
 }: Props) {
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Handle click outside to close popup
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        isOpen &&
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        onToggle();
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen, onToggle]);
 
   // Get displayed columns (toggle ON) and sort by columnOrder
   const displayedColumns = columnItems
@@ -105,9 +120,8 @@ export default function ColumnPreferencesPopup({
   };
 
   return (
-    <div ref={popupRef} className="relative">
+    <div ref={containerRef} className="relative">
       <button
-        ref={buttonRef}
         type="button"
         className="cursor-pointer w-7 h-3.5 flex items-center justify-center"
         onClick={onToggle}

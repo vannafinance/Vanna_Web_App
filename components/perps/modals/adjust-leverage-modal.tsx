@@ -51,7 +51,12 @@ export const AdjustLeverageModal = ({
             disabled={leverage <= 1}
             className="w-9 h-9 rounded-lg bg-[#F4F4F4] flex items-center justify-center text-[24px] font-medium text-[#111111] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#D5D5D5] transition-colors"
           >
-            <Image src="/icons/minus.svg" alt="minus" width={16} height={16} />
+            <Image
+              src="/perp/minus-icon.svg"
+              alt="minus"
+              width={12}
+              height={12}
+            />
           </button>
 
           {/* Leverage Input */}
@@ -82,7 +87,12 @@ export const AdjustLeverageModal = ({
             disabled={leverage >= max}
             className="w-9 h-9 rounded-lg bg-[#F4F4F4] flex items-center justify-center text-[24px] font-medium text-[#111111] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#D5D5D5] transition-colors"
           >
-            <Image src="/icons/plus.svg" alt="plus" width={16} height={16} />
+            <Image
+              src="/perp/plus-icon.svg"
+              alt="plus"
+              width={12}
+              height={12}
+            />
           </button>
         </div>
 

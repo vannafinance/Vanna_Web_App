@@ -1,4 +1,15 @@
-import { MainTabType, OrderTabType, ColumnPreferenceItem } from "@/lib/types";
+import {
+  MainTabType,
+  OrderTabType,
+  ColumnPreferenceItem,
+  AccountType,
+  ChainOption,
+  TokenOption,
+  TpSlTriggerPriceType,
+  TpSlValueType,
+  TpSlOrderType,
+  TpSlBBOType,
+} from "@/lib/types";
 
 export const ORDER_TYPE_TABS = [
   { id: "limit", label: "Limit" },
@@ -172,3 +183,44 @@ export const PREFERENCE_ITEMS = [
   { id: "transactionHistory", label: "Transaction History", hasToggle: true },
   { id: "assets", label: "Assets", hasToggle: true },
 ] as const;
+
+export const CHAIN_OPTIONS: ChainOption[] = [
+  { name: "BNB Chain", icon: "/icons/bnb-icon.svg" },
+  { name: "Arbitrum", icon: "/icons/arbitrum-icon.svg" },
+  { name: "Ethereum", icon: "/icons/eth-icon.png" },
+  { name: "Polygon", icon: "/icons/polygon-icon.png" },
+  { name: "Base", icon: "/icons/base-icon.svg" },
+  { name: "Optimism", icon: "/icons/optimism-icon.svg" },
+];
+
+export const TOKEN_OPTIONS: TokenOption[] = [
+  { symbol: "USDT", icon: "/icons/usdt-icon.svg" },
+  { symbol: "USDC", icon: "/icons/usdc-icon.svg" },
+  { symbol: "ETH", icon: "/icons/eth-icon.png" },
+];
+
+export const ACCOUNT_TYPE_OPTIONS: AccountType[] = [
+  "Portfolio Balance",
+  "Margin Balance",
+];
+
+export const DEPOSIT_TIME_CHAINS: Record<string, string> = {
+  Arbitrum: "5~10 minutes",
+  Ethereum: "10~15 minutes",
+  Polygon: "5~10 minutes",
+  "BNB Chain": "3~5 minutes",
+  Base: "5~10 minutes",
+  Optimism: "5~10 minutes",
+};
+
+export const BRIDGE_OPTIONS = ["Stargate", "LayerZero", "Wormhole", "Across"];
+
+export const TP_SL_PRICE_TYPE_OPTIONS: TpSlTriggerPriceType[] = ["Last", "Mark", "Index"];
+export const TP_SL_VALUE_TYPE_OPTIONS: TpSlValueType[] = ["ROI(%)", "Change(%)", "PnL(USDC)"];
+export const TP_SL_ORDER_TYPE_OPTIONS: TpSlOrderType[] = ["Limit", "BBO"];
+export const TP_SL_BBO_OPTIONS: TpSlBBOType[] = [
+  "Counterparty 1",
+  "Counterparty 5",
+  "Queue 1",
+  "Queue 5",
+];

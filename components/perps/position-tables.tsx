@@ -5,11 +5,8 @@ import OrderHistoryTable from "./position-tables/order-history-table";
 import TransactionHistoryTable from "./position-tables/transaction-history";
 import OrderDetailsTable from "./position-tables/order-details-table";
 import ActivePositionsTable from "./position-tables/active-positions-table";
-import { motion, AnimatePresence } from "framer-motion";
-import Image from "next/image";
 import { Button } from "../ui/button";
 import { Checkbox } from "../ui/Checkbox";
-import ToggleButton from "../ui/toggle";
 import PositionHistoryTable from "./position-tables/position-history-table";
 import AssetsTable from "./position-tables/assets-table";
 
@@ -67,8 +64,6 @@ const PositionTables = () => {
     // Initialize with all column items in their default order
     return POSITION_COLUMN_ITEMS.map((col) => col.id);
   });
-
-
 
   // Handle tab preference toggle - switch tab if current active tab is being hidden
   const handleTabPreferenceToggle = (itemId: string, state: boolean) => {
@@ -131,7 +126,9 @@ const PositionTables = () => {
   );
 
   // Get the selected sort option
-  const selectedSortOption = SORT_OPTIONS.find((opt) => opt.id === selectedSort);
+  const selectedSortOption = SORT_OPTIONS.find(
+    (opt) => opt.id === selectedSort,
+  );
 
   return (
     <div
@@ -142,26 +139,24 @@ const PositionTables = () => {
       {/* Tabs */}
       <div className="flex p-0.5 gap-6 justify-between">
         <div className="flex gap-1">
-          {MAIN_TABS
-            .filter((tab) => {
-              // Map tab.id to preference key (position -> positions)
-              const prefKey = tab.id === "position" ? "positions" : tab.id;
-              return tabPreferences[prefKey as keyof typeof tabPreferences];
-            })
-            .map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`cursor-pointer text-[12px] font-semibold  transition-colors py-2 px-4 ${
-                  activeTab === tab.id
-                    ? "text-[#703AE6] bg-[#F1EBFD] rounded-lg"
-                    : "text-[#111111] hover:text-gray-900 hover:bg-gray-50"
-                }`}
-              >
-                {tab.label}
-                {tab.count !== null && `(${tab.count})`}
-              </button>
-            ))}
+          {MAIN_TABS.filter((tab) => {
+            // Map tab.id to preference key (position -> positions)
+            const prefKey = tab.id === "position" ? "positions" : tab.id;
+            return tabPreferences[prefKey as keyof typeof tabPreferences];
+          }).map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`cursor-pointer text-[12px] font-semibold  transition-colors py-2 px-4 ${
+                activeTab === tab.id
+                  ? "text-[#703AE6] bg-[#F1EBFD] rounded-lg"
+                  : "text-[#111111] hover:text-gray-900 hover:bg-gray-50"
+              }`}
+            >
+              {tab.label}
+              {tab.count !== null && `(${tab.count})`}
+            </button>
+          ))}
         </div>
         <div className="flex items-center gap-3">
           {/* show current checkbox */}
@@ -266,7 +261,9 @@ const PositionTables = () => {
               onReorderColumns={handleReorderColumns}
               onReset={resetColumnPreferences}
               isOpen={isColumnPreferencesOpen}
-              onToggle={() => setIsColumnPreferencesOpen(!isColumnPreferencesOpen)}
+              onToggle={() =>
+                setIsColumnPreferencesOpen(!isColumnPreferencesOpen)
+              }
             />
             <Button
               text="Close All"
@@ -296,8 +293,12 @@ const PositionTables = () => {
               columnOrder={columnOrder}
             />
           )}
-          {activeTab === "openOrders" && <OpenOrdersTable activeTab={activeFilterTab} />}
-          {activeTab === "orderHistory" && <OrderHistoryTable />}
+          {activeTab === "openOrders" && (
+            <OpenOrdersTable activeTab={activeFilterTab} />
+          )}
+          {activeTab === "orderHistory" && (
+            <OrderHistoryTable activeTab={activeFilterTab} />
+          )}
           {activeTab === "positionHistory" && <PositionHistoryTable />}
           {activeTab === "orderDetails" && <OrderDetailsTable />}
           {activeTab === "transactionHistory" && <TransactionHistoryTable />}

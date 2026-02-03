@@ -4,7 +4,7 @@ import { Button } from "./button";
 import { ReactNode } from "react";
 
 interface BaseModalContentProps {
-  title: string;
+  title: ReactNode;
   subtitle?: string;
   width?: string;
   children: ReactNode;
@@ -36,9 +36,9 @@ export const BaseModalContent = ({
   return (
     <div className={containerClasses} style={style}>
       {/* Title */}
-      <h3 className="text-[16px] leading-[24px] font-semibold text-[#111111]">
+      <div className="text-[16px] leading-[24px] font-semibold text-[#111111] flex items-center gap-1.5">
         {title}
-      </h3>
+      </div>
 
       {/* Subtitle (optional) */}
       {subtitle && (

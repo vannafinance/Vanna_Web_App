@@ -20,7 +20,7 @@ export const CloseAllPositionsModal = ({
       onConfirm={onConfirm}
     >
       {/* Message */}
-      <p className="text-[12px] leading-[18px] text-[#111111]">
+      <p className="text-[12px] leading-[18px] text-[#111111] font-medium">
         All positions will be closed at the best market price. Are you sure you
         want to close all positions?
       </p>
