@@ -23,19 +23,23 @@ type SharePositionModalProps = {
   };
 };
 
-export const SharePositionModal = ({ open, onClose, card }: SharePositionModalProps) => {
+export const SharePositionModal = ({
+  open,
+  onClose,
+  card,
+}: SharePositionModalProps) => {
   const [showLeverage, setShowLeverage] = useState(true);
   const [showPnlAmount, setShowPnlAmount] = useState(true);
   const [showPrices, setShowPrices] = useState(true);
 
   const shareItems = useMemo(
     () => [
-      { key: "copy", label: "Copy link", icon: "/icons/share-icon.svg" },
-      { key: "download", label: "Download", icon: "/icons/camera.svg" },
-      { key: "x", label: "Twitter", textIcon: "X" },
-      { key: "telegram", label: "Telegram", textIcon: "TG" },
-      { key: "reddit", label: "Reddit", textIcon: "R" },
-      { key: "facebook", label: "Facebook", textIcon: "f" },
+      { key: "copy", label: "Copy link", icon: "/perp/copy-link.svg" },
+      { key: "download", label: "Download", icon: "/perp/download.svg" },
+      { key: "x", label: "X", icon: "/perp/twitter.svg" },
+      { key: "telegram", label: "Telegram", icon: "/perp/telegram.svg" },
+      { key: "reddit", label: "Reddit", icon: "/perp/reddit.svg" },
+      { key: "facebook", label: "Facebook", icon: "/perp/facebook.svg" },
     ],
     [],
   );
@@ -102,16 +106,18 @@ export const SharePositionModal = ({ open, onClose, card }: SharePositionModalPr
                 // UI-only for now; hook up actual share/copy/download when needed.
               }}
             >
-              <div className="h-11 w-11 rounded-full bg-[#F3F3F3] flex items-center justify-center group-hover:bg-[#EAEAEA] transition">
-                {item.icon ? (
-                  <Image src={item.icon} alt={item.label} width={18} height={18} />
-                ) : (
-                  <span className="text-[14px] font-semibold text-[#111111]">
-                    {item.textIcon}
-                  </span>
-                )}
+              <div className="h-10 w-10 rounded-full overflow-hidden">
+                <Image
+                  src={item.icon}
+                  alt={item.label}
+                  width={44}
+                  height={44}
+                  className="w-full h-full object-cover"
+                />
               </div>
-              <span className="text-[12px] text-[#111111]">{item.label}</span>
+              <span className="text-[12px] leading-[18px] font-medium text-[#111111]">
+                {item.label}
+              </span>
             </button>
           ))}
         </div>
@@ -119,4 +125,3 @@ export const SharePositionModal = ({ open, onClose, card }: SharePositionModalPr
     </Modal>
   );
 };
-

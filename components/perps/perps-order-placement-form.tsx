@@ -9,16 +9,24 @@ import {
   PerpsOrderType,
   TakeProfitType,
   StopLossType,
-  TimeInForce,
   TriggerPriceType,
   ExecutionPriceType,
-  TwapFrequencyType,
   PerpsModalType,
+  TwapFrequencyType,
+  TimeInForce,
 } from "@/lib/types";
 import Image from "next/image";
 import ToggleButton from "../ui/toggle";
 import { InputWithoutUnit } from "../ui/InputWithoutUnit";
-import { InputWithUnit, SuffixOption } from "../ui/InputWithUnit";
+import { InputWithUnit } from "../ui/InputWithUnit";
+import {
+  TRIGGER_PRICE_SUFFIX_OPTIONS,
+  EXECUTION_PRICE_SUFFIX_OPTIONS,
+  TP_SUFFIX_OPTIONS,
+  SL_SUFFIX_OPTIONS,
+  TIME_IN_FORCE_OPTIONS,
+  TWAP_FREQUENCY_OPTIONS,
+} from "./constants";
 import { Checkbox } from "../ui/Checkbox";
 import { Dropdown } from "../ui/dropdown";
 import { useUserStore } from "@/store/user";
@@ -28,40 +36,6 @@ import { Radio } from "../ui/radio-button";
 import { RadioGroup } from "../ui/radio-button";
 import { QuantitySlider } from "../ui/quantity-slider";
 import PerpsModals from "./modals/perps-modals";
-
-const TRIGGER_PRICE_SUFFIX_OPTIONS: SuffixOption<TriggerPriceType>[] = [
-  { label: "Last Price", value: "last" },
-  { label: "Mark Price", value: "mark" },
-  { label: "Index Price", value: "index" },
-];
-
-const EXECUTION_PRICE_SUFFIX_OPTIONS: SuffixOption<ExecutionPriceType>[] = [
-  { label: "Limit", value: "limit" },
-  { label: "Market", value: "market" },
-];
-
-const TP_SUFFIX_OPTIONS: SuffixOption<TakeProfitType>[] = [
-  { label: "Price (USDT)", value: "price" },
-  { label: "ROI (%)", value: "roi" },
-  { label: "PnL (USDT)", value: "pnl" },
-  { label: "Change (%)", value: "change" },
-];
-
-const SL_SUFFIX_OPTIONS: SuffixOption<StopLossType>[] = [
-  { label: "Price (USDT)", value: "price" },
-  { label: "ROI (%)", value: "roi" },
-  { label: "PnL (USDT)", value: "pnl" },
-  { label: "Change (%)", value: "change" },
-];
-
-const TIME_IN_FORCE_OPTIONS: TimeInForce[] = ["GTC", "Post-Only", "FOK", "IOC"];
-const TWAP_FREQUENCY_OPTIONS: TwapFrequencyType[] = [
-  "5s",
-  "10s",
-  "20s",
-  "30s",
-  "60s",
-];
 
 const PerpsOrderPlacementForm = () => {
   const [activeModal, setActiveModal] = useState<PerpsModalType>(null);

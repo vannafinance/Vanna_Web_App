@@ -165,7 +165,7 @@ const getActivePositionsColumns = (
             onClick={() => onOpenShareCard(row)}
           >
             <Image
-              src="/icons/share-icon.svg"
+              src="/perp/share-icon.svg"
               alt="share"
               width={16}
               height={16}

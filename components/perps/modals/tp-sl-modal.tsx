@@ -3,11 +3,7 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { BaseModalContent } from "../../ui/base-modal-content";
-import {
-  TpSlMode,
- 
-  TpSlPositionData,
-} from "@/lib/types";
+import { TpSlMode, TpSlPositionData } from "@/lib/types";
 import { EntirePositionTab } from "./tp-sl-entire-tab";
 import { PartialPositionTab } from "./tp-sl-partial-tab";
 import { TrailingTab } from "./tp-sl-trailing-tab";
@@ -93,15 +89,6 @@ export const TpSlModal = ({
           </span>
           <span className="text-[12px] leading-[18px] font-semibold text-[#111111]">
             {position?.markPrice || "102,964"} USDT
-          </span>
-        </div>
-
-        <div className="flex flex-col gap-0.5">
-          <span className="flex text-[10px] leading-[15px] font-medium text-[#919191]">
-            Last Price
-          </span>
-          <span className="text-[12px] leading-[18px] font-semibold text-[#111111]">
-            {position?.lastPrice || "102,964"} USDT
           </span>
         </div>
 
