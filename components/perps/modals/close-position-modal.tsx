@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { ActivePositionType } from "./ActivePositionsTable";
-import { Button } from "../ui/button";
-import { QuantitySlider } from "../ui/quantity-slider";
+import { ActivePositionType } from "../position-tables/active-positions-table";
+import { QuantitySlider } from "../../ui/quantity-slider";
+import { BaseModalContent } from "../../ui/base-modal-content";
 
 interface ClosePositionModalProps {
   position: ActivePositionType;
@@ -68,17 +67,13 @@ export const ClosePositionModal = ({
   };
 
   return (
-    <motion.div
-      className="w-[418px] rounded-[20px] p-5 bg-[#F7F7F7] flex flex-col gap-5"
-      initial={{ opacity: 0, scale: 0.95, y: 20 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
+    <BaseModalContent
+      title="Close"
+      width="418px"
+      gap="gap-5"
+      onClose={onClose}
+      onConfirm={handleConfirm}
     >
-      {/* Header */}
-      <h3 className="text-[16px] leading-6 font-semibold text-[#111111]">
-        Close
-      </h3>
-
       {/* Limit / Market Close Toggle */}
       <div className="flex gap-1 rounded-lg p-1 bg-white">
         <button
@@ -159,7 +154,6 @@ export const ClosePositionModal = ({
         </div>
 
         {/* Close Price Input - Only show in Limit mode */}
-
         {type === "limit" && (
           <div className="flex items-center justify-between rounded-lg border border-[#E2E2E2] bg-white px-2 py-3">
             <span className="text-[10px] leading-[100%] text-[#111111]">
@@ -214,28 +208,6 @@ export const ClosePositionModal = ({
         the MMR, the higher the risk. Position liquidation/reduction will be
         triggered when the MMR reaches 100%.
       </p>
-
-      {/* Action Buttons */}
-      <div className="flex gap-3">
-        <div className="flex-1">
-          <Button
-            text="Cancel"
-            size="small"
-            type="ghost"
-            disabled={false}
-            onClick={onClose}
-          />
-        </div>
-        <div className="flex-1">
-          <Button
-            text="Confirm"
-            size="small"
-            type="solid"
-            disabled={false}
-            onClick={handleConfirm}
-          />
-        </div>
-      </div>
-    </motion.div>
+    </BaseModalContent>
   );
 };

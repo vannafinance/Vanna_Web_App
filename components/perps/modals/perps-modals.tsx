@@ -1,5 +1,5 @@
 import { PerpsModalType, PerpsOrderPlacementFormValues } from "@/lib/types";
-import { Modal } from "../ui/modal";
+import { Modal } from "../../ui/modal";
 import { UseFormSetValue } from "react-hook-form";
 import { AdjustLeverageModal } from "./adjust-leverage-modal";
 import { AssetModeModal } from "./asset-mode-modal";
@@ -14,9 +14,10 @@ interface PerpsModalsProps {
   activeModal: PerpsModalType;
   close: () => void;
   setValue: UseFormSetValue<PerpsOrderPlacementFormValues>;
+  formValues: PerpsOrderPlacementFormValues;
 }
 
-const PerpsModals = ({ activeModal, close, setValue }: PerpsModalsProps) => {
+const PerpsModals = ({ activeModal, close, setValue, formValues }: PerpsModalsProps) => {
   if (!activeModal) return null;
 
   return (
@@ -24,7 +25,7 @@ const PerpsModals = ({ activeModal, close, setValue }: PerpsModalsProps) => {
       {activeModal === "leverage" && (
         <AdjustLeverageModal
           pair="ETHUSDT"
-          defaultValue={10}
+          defaultValue={formValues.leverage}
           max={20}
           onClose={close}
           onConfirm={(val) => {
@@ -34,7 +35,7 @@ const PerpsModals = ({ activeModal, close, setValue }: PerpsModalsProps) => {
       )}
       {activeModal === "assetMode" && (
         <AssetModeModal
-          defaultMode="single"
+          defaultMode={formValues.assetMode}
           onClose={close}
           onConfirm={(mode) => {
             setValue("assetMode", mode);
@@ -44,7 +45,7 @@ const PerpsModals = ({ activeModal, close, setValue }: PerpsModalsProps) => {
       {activeModal === "marginMode" && (
         <MarginModeModal
           pair="ETHUSDT"
-          defaultMode="isolated"
+          defaultMode={formValues.marginMode}
           onClose={close}
           onConfirm={(mode) => {
             setValue("marginMode", mode);
@@ -53,7 +54,7 @@ const PerpsModals = ({ activeModal, close, setValue }: PerpsModalsProps) => {
       )}
       {activeModal === "positionMode" && (
         <PositionModeModal
-          defaultMode="one-way"
+          defaultMode={formValues.positionMode}
           onClose={close}
           onConfirm={(mode) => {
             setValue("positionMode", mode);
@@ -62,7 +63,7 @@ const PerpsModals = ({ activeModal, close, setValue }: PerpsModalsProps) => {
       )}
       {activeModal === "splitSettings" && (
         <SplitSettingsModal
-          defaultMode="qty-per-order"
+          defaultMode={formValues.splitSettings}
           onClose={close}
           onConfirm={(mode) => {
             setValue("splitSettings", mode);
@@ -71,7 +72,7 @@ const PerpsModals = ({ activeModal, close, setValue }: PerpsModalsProps) => {
       )}
       {activeModal === "orderPreference" && (
         <OrderPreferenceModal
-          defaultMode="faster-execution"
+          defaultMode={formValues.orderPreference}
           onClose={close}
           onConfirm={(mode) => {
             setValue("orderPreference", mode);

@@ -1,6 +1,6 @@
 import Image from "next/image";
-import { Column } from "../ui/Table";
-import { Table } from "../ui/Table";
+import { Column } from "../../ui/Table";
+import { Table } from "../../ui/Table";
 
 type OrderTabType =
   | "limitMarket"

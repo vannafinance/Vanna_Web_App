@@ -2,14 +2,9 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
-import ToggleButton from "../ui/toggle";
+import ToggleButton from "../../ui/toggle";
 import { useState } from "react";
-
-export type ColumnPreferenceItem = {
-  id: string;
-  label: string;
-  hasToggle: boolean; // false means "Not Supported" - can't be toggled
-};
+import { ColumnPreferenceItem } from "@/lib/types";
 
 type Props = {
   columnItems: ColumnPreferenceItem[];

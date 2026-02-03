@@ -1,7 +1,7 @@
 "use client";
 
-import PerpsOrderPlacementForm from "@/components/perps/PerpsOrderPlacementForm";
-import PositionTables from "@/components/perps/PositionTables";
+import PerpsOrderPlacementForm from "@/components/perps/perps-order-placement-form";
+import PositionTables from "@/components/perps/position-tables";
 import TradingPairInfo from "@/components/ui/TradingPairInfo";
 import TradingPairSearch from "@/components/spot/TradingPairSearch";
 import { Dropdown } from "@/components/ui/dropdown";

@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Column } from "../ui/Table";
-import { Table } from "../ui/Table";
-import { Modal } from "../ui/modal";
-import { ClosePositionModal } from "./close-position-modal";
-import { TpSlModal, TpSlMode } from "./tp-sl-modal";
-import { ColumnPreferenceItem } from "./ColumnPreferencesPopup";
-import { SharePositionModal } from "./share-position-modal";
+import { Column } from "../../ui/Table";
+import { Table } from "../../ui/Table";
+import { Modal } from "../../ui/modal";
+import { ClosePositionModal } from "../modals/close-position-modal";
+import { TpSlModal, TpSlMode } from "../modals/tp-sl-modal";
+import { ColumnPreferenceItem } from "@/lib/types";
+import { SharePositionModal } from "../modals/share-position-modal";
 
 export type ActivePositionType = {
   id: string;

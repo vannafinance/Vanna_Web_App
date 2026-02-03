@@ -2,10 +2,10 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { Dropdown } from "../ui/dropdown";
-import { QuantitySlider } from "../ui/quantity-slider";
-import { Button } from "../ui/button";
-import { Checkbox } from "../ui/Checkbox";
+import { Dropdown } from "../../ui/dropdown";
+import { QuantitySlider } from "../../ui/quantity-slider";
+import { Checkbox } from "../../ui/Checkbox";
+import { BaseModalContent } from "../../ui/base-modal-content";
 
 export type TpSlMode =
   | "entire_position"
@@ -111,12 +111,18 @@ export const TpSlModal = ({
   );
 
   return (
-    <div className="w-[524px] flex flex-col gap-5 rounded-[20px] bg-[#F7F7F7] p-5">
-      {/* header */}
-      <div className="flex gap-1">
-        <h3 className="text-[16px] leading-6 font-semibold text-[#111111]">
-          TP/SL
-        </h3>
+    <BaseModalContent
+      title="TP/SL"
+      width="524px"
+      gap="gap-5"
+      onClose={onClose}
+      onConfirm={() => {
+        onConfirm?.({ mode: selectedMode });
+        onClose();
+      }}
+    >
+      {/* header icon info */}
+      <div className="flex gap-1 -mt-4 mb-2">
         <Image src="/icons/info.svg" alt="info" width={20} height={20} />
       </div>
 
@@ -800,60 +806,76 @@ export const TpSlModal = ({
               <span className="text-[10px] leading-[15px] font-medium text-[#111111]">
                 Trigger MMR
               </span>
-              <span className="text-[10px] leading-[15px] font-medium text-[#5C5B5B]">
-                Current MMR:
-              </span>
+              <div className="flex items-center gap-1">
+                <Image
+                  src="/icons/settings-icon.svg"
+                  alt="settings"
+                  width={12}
+                  height={12}
+                />
+                <span className="text-[10px] leading-[100%] font-medium text-[#703AE6]">
+                  Preset order distance: 0%
+                </span>
+              </div>
             </div>
             <div className="h-9 flex gap-2 items-center rounded-lg border border-[#E2E2E2] bg-white px-2">
+              <span className="text-[12px] text-[#A7A7A7] leading-[18px] font-medium shrink-0">
+                Trigger MMR
+              </span>
               <input
                 type="number"
-                value={entireSlPrice}
-                onChange={(e) => setEntireSlPrice(e.target.value)}
-                className="flex-1 text-[12px] leading-[18px] font-medium outline-none"
+                value={triggerMmr ?? ""}
+                onChange={(e) =>
+                  setTriggerMmr(e.target.value ? Number(e.target.value) : null)
+                }
+                className="flex-1 min-w-0 text-[12px] leading-[18px] font-medium outline-none"
               />
-              <span className="text-[10px] leading-[15px] font-medium">%</span>
+              <span className="text-[10px] leading-[15px] font-medium shrink-0">
+                %
+              </span>
             </div>
             <QuantitySlider
-              min={70}
+              min={0}
               max={100}
               step={1}
-              value={triggerMmr ?? 70}
+              value={triggerMmr ?? 0}
               onChange={setTriggerMmr}
-              markers={[70, 75, 80, 85, 90, 95, 100]}
+              markers={[0, 25, 50, 75, 100]}
             />
           </div>
-          <p className="text-[12px] leading-[100%] text-[#5C5B5B]">
-            When MMR≥0%, the position will be closed at the market price. The
-            higher the MMR, the higher the risk. Position liquidation/reduction
-            will be triggered when the MMR reaches 100%.
-          </p>
+          <div className="flex flex-col gap-2">
+            <div className="flex justify-between">
+              <span className="text-[12px] leading-[18px] font-medium text-[#919191]">
+                Trigger Price:
+              </span>
+              <span className="text-[12px] leading-[18px] font-semibold text-[#111111]">
+                -- USDT
+              </span>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#F1EBFD] border border-[#703AE6]">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <circle cx="8" cy="8" r="7" stroke="#703AE6" strokeWidth="1.5" />
+                <path
+                  d="M8 5V8.5"
+                  stroke="#703AE6"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+                <circle cx="8" cy="11" r="0.75" fill="#703AE6" />
+              </svg>
+              <span className="text-[11px] leading-[16px] font-medium text-[#703AE6]">
+                Position liquidation/reduction will be triggered based on MMR.
+              </span>
+            </div>
+          </div>
         </>
       )}
-
-      {/* action buttons */}
-      <div className="flex gap-3">
-        <div className="flex-1">
-          <Button
-            text="Cancel"
-            size="small"
-            type="ghost"
-            disabled={false}
-            onClick={onClose}
-          />
-        </div>
-        <div className="flex-1">
-          <Button
-            text="Confirm"
-            size="small"
-            type="solid"
-            disabled={false}
-            onClick={() => {
-              onConfirm?.({ mode: selectedMode });
-              onClose();
-            }}
-          />
-        </div>
-      </div>
-    </div>
+    </BaseModalContent>
   );
 };

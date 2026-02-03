@@ -1,5 +1,5 @@
-import { Column } from "../ui/Table";
-import { Table } from "../ui/Table";
+import { Column } from "../../ui/Table";
+import { Table } from "../../ui/Table";
 
 export type PositionHistoryType = {
   id: string;

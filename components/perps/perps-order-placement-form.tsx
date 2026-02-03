@@ -15,7 +15,6 @@ import {
   TwapFrequencyType,
   PerpsModalType,
 } from "@/lib/types";
-import { ORDER_TYPE_TABS } from "@/lib/constants/perps";
 import Image from "next/image";
 import ToggleButton from "../ui/toggle";
 import { InputWithoutUnit } from "../ui/InputWithoutUnit";
@@ -28,7 +27,7 @@ import PerpsOrderTypeTabs from "../ui/PerpsOrderTypeTabs";
 import { Radio } from "../ui/radio-button";
 import { RadioGroup } from "../ui/radio-button";
 import { QuantitySlider } from "../ui/quantity-slider";
-import PerpsModals from "./perps-modals";
+import PerpsModals from "./modals/perps-modals";
 
 const TRIGGER_PRICE_SUFFIX_OPTIONS: SuffixOption<TriggerPriceType>[] = [
   { label: "Last Price", value: "last" },
@@ -140,7 +139,7 @@ const PerpsOrderPlacementForm = () => {
     timeInForce: "GTC",
   };
 
-  const { watch, setValue, register, control } =
+  const { watch, setValue, register, control, getValues } =
     useForm<PerpsOrderPlacementFormValues>({
       defaultValues: perpsOrderPlacementFormValues,
     });
@@ -214,26 +213,26 @@ const PerpsOrderPlacementForm = () => {
     <>
       <form className="w-[316px] bg-[#F7F7F7] border border-[#E2E2E2] rounded-2xl p-4 flex flex-col gap-5 text-[10px] leading-[15px] text-[#111111] font-medium">
         {/* top buttons */}
-        <div className="flex gap-2 p-1 ">
+        <div className="flex gap-2">
           <button
             type="button"
             onClick={() => setActiveModal("marginMode")}
-            className="cursor-pointer h-[39px] px-2 py-3  rounded-lg bg-[#E2E2E2] text-[12px] leading-[100%] font-semibold"
+            className="flex-1 cursor-pointer h-[39px] py-2.5 rounded-lg bg-[#E2E2E2] text-[12px] leading-[100%] font-semibold"
           >
             {marginMode === "cross" ? "Cross" : "Isolated"}
           </button>
           <button
             type="button"
             onClick={() => setActiveModal("leverage")}
-            className="cursor-pointer h-[39px] px-3 py-3  rounded-lg bg-[#E2E2E2] text-[12px] leading-[100%] font-semibold"
+            className="flex-1 cursor-pointer h-[39px] py-2.5 rounded-lg bg-[#E2E2E2] text-[12px] leading-[100%] font-semibold"
           >
-            {leverage}
+            {leverage}x
           </button>
           {/* asset mode */}
           <button
             type="button"
             onClick={() => setActiveModal("assetMode")}
-            className="cursor-pointer h-[39px] px-5 py-3  rounded-lg bg-[#E2E2E2] text-[12px] leading-[100%] font-semibold"
+            className="flex-1 cursor-pointer h-[39px] py-2.5 rounded-lg bg-[#E2E2E2] text-[12px] leading-[100%] font-semibold"
           >
             {assetMode === "single" ? "S" : "M"}
           </button>
@@ -241,9 +240,9 @@ const PerpsOrderPlacementForm = () => {
           <button
             type="button"
             onClick={() => setActiveModal("positionMode")}
-            className="cursor-pointer h-[39px] px-4 py-3  rounded-lg bg-[#E2E2E2] text-[12px] leading-[100%] font-semibold"
+            className="flex-1 cursor-pointer h-[39px] py-2.5 rounded-lg bg-[#E2E2E2] text-[12px] leading-[100%] font-semibold"
           >
-            {positionMode === "hedge" ? "Hedge Mode" : "One-Way"}
+            {positionMode === "hedge" ? "Hedge" : "One-Way"}
           </button>
         </div>
 
@@ -936,6 +935,7 @@ const PerpsOrderPlacementForm = () => {
         activeModal={activeModal}
         close={() => setActiveModal(null)}
         setValue={setValue}
+        formValues={getValues()}
       />
     </>
   );

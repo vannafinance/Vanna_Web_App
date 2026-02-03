@@ -283,3 +283,26 @@ export interface TradingPairInfoStats {
   label: string;
   value: string;
 }
+
+export type MainTabType =
+  | "openOrders"
+  | "orderHistory"
+  | "positionHistory"
+  | "position"
+  | "orderDetails"
+  | "transactionHistory"
+  | "assets";
+
+export type OrderTabType =
+  | "limitMarket"
+  | "trailingStop"
+  | "tpSl"
+  | "trigger"
+  | "iceberg"
+  | "twap";
+
+export interface ColumnPreferenceItem {
+  id: string;
+  label: string;
+  hasToggle: boolean;
+}

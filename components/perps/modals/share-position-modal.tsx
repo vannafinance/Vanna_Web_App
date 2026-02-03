@@ -2,9 +2,9 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
-import PositionPnlCard from "./position-pnl-card";
-import { Modal } from "../ui/modal";
-import { Checkbox } from "../ui/Checkbox";
+import PositionPnlCard from "../position-pnl-card";
+import { Modal } from "../../ui/modal";
+import { Checkbox } from "../../ui/Checkbox";
 
 type SharePositionModalProps = {
   open: boolean;
