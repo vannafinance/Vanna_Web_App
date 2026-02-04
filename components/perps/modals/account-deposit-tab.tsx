@@ -28,9 +28,14 @@ export const DepositTab = forwardRef<DepositTabRef, DepositTabProps>(
   ({ onValidChange }, ref) => {
     // Form state
     const [amount, setAmount] = useState("");
-    const [accountType, setAccountType] = useState<AccountType>("Portfolio Balance");
-    const [selectedChain, setSelectedChain] = useState<ChainOption>(CHAIN_OPTIONS[0]);
-    const [selectedToken, setSelectedToken] = useState<TokenOption>(TOKEN_OPTIONS[0]);
+    const [accountType, setAccountType] =
+      useState<AccountType>("Portfolio Balance");
+    const [selectedChain, setSelectedChain] = useState<ChainOption>(
+      CHAIN_OPTIONS[0],
+    );
+    const [selectedToken, setSelectedToken] = useState<TokenOption>(
+      TOKEN_OPTIONS[0],
+    );
 
     // Dropdown states
     const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false);
@@ -330,7 +335,7 @@ export const DepositTab = forwardRef<DepositTabRef, DepositTabProps>(
         )}
       </div>
     );
-  }
+  },
 );
 
 DepositTab.displayName = "DepositTab";

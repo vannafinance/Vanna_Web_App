@@ -11,15 +11,7 @@ import { useParams, useRouter } from "next/navigation";
 import { NonOrderBook } from "@/components/perps/non-orderbook";
 
 const PROTCOL_OPTIONS = ["Aster", "Avantis"];
-
-const perpNonOrderbookStats = [
-  { label: "Mark price", value: "3,377.55" },
-  { label: "OI (L/S)", value: "10.6M / 9.1M" },
-  { label: "Index Price", value: "3,377.55" },
-  { label: "24h vol", value: "3.21B" },
-  { label: "Net rate (L/S)", value: "-0.0005% / None" },
-  { label: "Est ann funding", value: "+0.0100%" },
-];
+const NET_RATE_INTERVALS = ["1h", "4h", "8h", "24h"];
 
 const Perps = () => {
   const params = useParams<{ pair: string }>();
@@ -33,6 +25,24 @@ const Perps = () => {
     useState(false);
   const tradingPairSelectorRef = useRef<HTMLDivElement>(null);
   const [protocol, setProtocol] = useState("Aster");
+  const [netRateInterval, setNetRateInterval] = useState("1h");
+
+  const perpNonOrderbookStats = [
+    { label: "Mark price", value: "3,377.55" },
+    { label: "OI (L/S)", value: "10.6M / 9.1M" },
+    { label: "Index Price", value: "3,377.55" },
+    { label: "24h vol", value: "3.21B" },
+    {
+      label: "Net rate(L/S)",
+      value: "-0.0005% / None",
+      dropdown: {
+        items: NET_RATE_INTERVALS,
+        selectedOption: netRateInterval,
+        onSelect: setNetRateInterval,
+      },
+    },
+    { label: "Est ann funding", value: "+0.0100%" },
+  ];
 
   useEffect(() => {
     if (!isTradingPairSelectorOpen) return;

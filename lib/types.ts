@@ -1,3 +1,5 @@
+import React from "react";
+
 export interface AssetAmount {
   asset: string;
   amount: string;
@@ -282,6 +284,11 @@ export interface PerpsOrderPlacementFormValues {
 export interface TradingPairInfoStats {
   label: string;
   value: string;
+  dropdown?: {
+    items: string[];
+    selectedOption: string;
+    onSelect: React.Dispatch<React.SetStateAction<string>>;
+  };
 }
 
 export type MainTabType =

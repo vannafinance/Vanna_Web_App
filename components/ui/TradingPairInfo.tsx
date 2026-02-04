@@ -1,5 +1,6 @@
 import { TradingPairInfoStats } from "@/lib/types";
 import Image from "next/image";
+import { Dropdown } from "./dropdown";
 
 interface TradingPairInfoProps {
   isOpen: boolean;
@@ -54,8 +55,19 @@ const TradingPairInfo = ({
 
       {stats.map((stat) => (
         <div key={stat.label} className="flex flex-col gap-1 ">
-          <div className="text-[#A7A7A7] font-medium text-[12px] leading-[18px]">
-            {stat.label}
+          <div className="flex items-center gap-1 whitespace-nowrap">
+            <span className="text-[#A7A7A7] font-medium text-[12px] leading-[18px]">
+              {stat.label}
+            </span>
+            {stat.dropdown && (
+              <Dropdown
+                items={stat.dropdown.items}
+                selectedOption={stat.dropdown.selectedOption}
+                setSelectedOption={stat.dropdown.onSelect}
+                classname="gap-0.5 text-[#111111] font-medium text-[10px] leading-3 bg-white border border-[#E2E2E2] rounded px-1  "
+                dropdownClassname="text-[8px] leading-[12px] font-medium"
+              />
+            )}
           </div>
           <div className="text-[#111111] font-medium text-[12px] leading-[18px]">
             {stat.value}

@@ -26,7 +26,7 @@ import {
   SL_SUFFIX_OPTIONS,
   TIME_IN_FORCE_OPTIONS,
   TWAP_FREQUENCY_OPTIONS,
-} from "./constants";
+} from "@/lib/constants/perps";
 import { Checkbox } from "../ui/Checkbox";
 import { Dropdown } from "../ui/dropdown";
 import { useUserStore } from "@/store/user";
