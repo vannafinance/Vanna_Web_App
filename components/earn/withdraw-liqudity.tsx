@@ -1,10 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
 import { useAccount, useWalletClient, usePublicClient, useChainId } from "wagmi";
-import { toast } from "sonner";
 import { Dropdown } from "../ui/dropdown";
 import { DEPOSIT_PERCENTAGES, PERCENTAGE_COLORS } from "@/lib/constants/margin";
 import { InfoCard } from "../margin/info-card";
 import { Button } from "../ui/button";
+import { TransactionModal } from "../ui/transaction-modal";
 import { useTheme } from "@/contexts/theme-context";
 import { EarnAsset } from "@/lib/types";
 import { withdraw } from "@/lib/utils/earn/transactions";
@@ -41,6 +41,19 @@ export const WithdrawLiquidity = () => {
   const [assetsValue, setAssetsValue] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const [assetsPreview, setAssetsPreview] = useState<number>(0);
+
+  // Transaction modal state
+  const [txModal, setTxModal] = useState<{
+    isOpen: boolean;
+    status: "pending" | "success" | "error";
+    message?: string;
+    txHash?: string;
+  }>({
+    isOpen: false,
+    status: "pending",
+    message: "",
+    txHash: "",
+  });
 
   // Vault data (local state)
   const [vaultData, setVaultData] = useState<{
@@ -106,6 +119,8 @@ export const WithdrawLiquidity = () => {
     previewAssets();
   }, [shares, fetchConvertToAssets]);
 
+  
+
   // Format number to avoid scientific notation (e.g., 5.49669311e-10)
   const formatAmount = (value: number): string => {
     if (value === 0) return "0";
@@ -132,22 +147,38 @@ export const WithdrawLiquidity = () => {
   // Handle withdraw transaction
   const handleWithdraw = async () => {
     if (!walletClient || !publicClient || !chainId || !address) {
-      toast.error("Please connect your wallet");
+      setTxModal({
+        isOpen: true,
+        status: "error",
+        message: "Please connect your wallet",
+      });
       return;
     }
 
     if (!shares || parseFloat(shares) <= 0) {
-      toast.error("Please enter an amount");
+      setTxModal({
+        isOpen: true,
+        status: "error",
+        message: "Please enter an amount",
+      });
       return;
     }
 
     if (parseFloat(shares) > vTokenBalance) {
-      toast.error("Insufficient vToken balance");
+      setTxModal({
+        isOpen: true,
+        status: "error",
+        message: "Insufficient vToken balance",
+      });
       return;
     }
 
     setLoading(true);
-    const toastId = toast.loading(`Withdrawing ${shares} v${selectedAsset}...`);
+    setTxModal({
+      isOpen: true,
+      status: "pending",
+      message: `Withdrawing ${shares} v${selectedAsset}...`,
+    });
 
     try {
       const result = await withdraw({
@@ -160,8 +191,11 @@ export const WithdrawLiquidity = () => {
       });
 
       if (result.success) {
-        toast.success(`Successfully withdrew ${assetsPreview.toFixed(4)} ${selectedAsset}`, {
-          id: toastId,
+        setTxModal({
+          isOpen: true,
+          status: "success",
+          message: `Successfully withdrew ${assetsPreview.toFixed(4)} ${selectedAsset}`,
+          txHash: result.txHash,
         });
 
         // Reset form
@@ -196,11 +230,13 @@ export const WithdrawLiquidity = () => {
         error?.message?.includes("user rejected") ||
         error?.message?.includes("User denied");
 
-      if (isUserRejection) {
-        toast.error("Transaction cancelled", { id: toastId });
-      } else {
-        toast.error(error.message || "Withdraw failed", { id: toastId });
-      }
+      setTxModal({
+        isOpen: true,
+        status: "error",
+        message: isUserRejection
+          ? "Transaction cancelled"
+          : error.message || "Withdraw failed",
+      });
     } finally {
       setLoading(false);
     }
@@ -366,6 +402,16 @@ export const WithdrawLiquidity = () => {
         type="gradient"
         disabled={isButtonDisabled}
         onClick={handleWithdraw}
+      />
+
+      {/* Transaction Modal */}
+      <TransactionModal
+        isOpen={txModal.isOpen}
+        status={txModal.status}
+        message={txModal.message}
+        txHash={txModal.txHash}
+        onClose={() => setTxModal({ ...txModal, isOpen: false })}
+        onRetry={txModal.status === "error" ? handleWithdraw : undefined}
       />
     </>
   );

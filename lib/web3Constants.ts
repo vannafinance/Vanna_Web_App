@@ -284,7 +284,7 @@ const baseAddressList = {
   wethTokenAddress: "0x4200000000000000000000000000000000000006",
 
   vUSDCContractAddress: "0x22D4FB89834738714e6B4aDa414B900138148289",
-  vUSDTContractAddress: "0x22D4FB89834738714e6B4aDa414B900138148289",  // TODO: Replace with actual Base vUSDT address once deployed
+  vUSDTContractAddress: "0x615A1B9A30C0C0e3E2391c5b93210Ce96FD2F0ef",  // TODO: Replace with actual Base vUSDT address once deployed
   vEtherContractAddress: "0xA8A7Ae5C132524398FF29293C0bB00530d47cdA9",
   accountManagerContractAddress: "0x6F5303D7277B100443A3AfCec9886774d7214e00",
   registryContractAddress: "0xDfd5D412A9FB58aE12d6b1AC20Df97D038c3E32b",

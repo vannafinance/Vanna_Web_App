@@ -58,10 +58,13 @@ export const Collateral = (props: CollateralProps) => {
   const { isDark } = useTheme();
 
   // Form state
+
+  const DEFAULT_TOKENS = ["USDC", "USDT", "ETH"];
+
   const tokens = props.supportedTokens ?? [];
 
   const [selectedCurrency, setSelectedCurrency] = useState<string>(
-    props.collaterals ? props.collaterals.asset : (tokens[0] || "")
+    props.collaterals ? props.collaterals.asset : (tokens[0] || "USDC")
   );
   const [valueInput, setValueInput] = useState<string>("0.0");
   const [valueInUsd, setValueInUsd] = useState<string>("0.0");
@@ -97,7 +100,7 @@ export const Collateral = (props: CollateralProps) => {
       setSelectedCurrency(props.collaterals.asset);
       setSelectedBalanceType(props.collaterals.balanceType.toUpperCase());
     }
-    else{
+    else {
       setSelectedBalanceType("WB")
     }
 
@@ -123,8 +126,21 @@ export const Collateral = (props: CollateralProps) => {
   useEffect(() => {
     if (isEditing && valueInput) {
       const amount = parseFloat(valueInput) || 0;
-      const price = props.prices?.[selectedCurrency] ?? 0;
-      setValueInUsd((amount * price).toFixed(2));
+
+      // Get price with fallback: stablecoins default to $1
+      let price = props.prices?.[selectedCurrency];
+      if (price === undefined || price === null || price === 0) {
+        // Stablecoins default to $1 if price not available
+        if (selectedCurrency === "USDC" || selectedCurrency === "USDT") {
+          price = 1;
+        } else {
+          price = 0;
+        }
+      }
+
+      const usdValue = (amount * price).toFixed(2);
+      setValueInUsd(usdValue);
+      console.log(`[Collateral] ${amount} ${selectedCurrency} = $${usdValue} (price: $${price})`);
     }
   }, [valueInput, isEditing, props.prices, selectedCurrency]);
 
@@ -195,9 +211,8 @@ export const Collateral = (props: CollateralProps) => {
 
   return (
     <motion.article
-      className={`relative flex justify-between gap-[20px] w-full p-[20px] rounded-[16px] border-[1px] ${
-        isDark ? "bg-[#111111]" : "bg-white"
-      }`}
+      className={`relative flex justify-between gap-[20px] w-full p-[20px] rounded-[16px] border-[1px] ${isDark ? "bg-[#111111]" : "bg-white"
+        }`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
@@ -228,7 +243,11 @@ export const Collateral = (props: CollateralProps) => {
                 classname="text-[16px] font-medium gap-[8px]"
                 selectedOption={selectedCurrency}
                 setSelectedOption={setSelectedCurrency}
-                items={props.supportedTokens }
+                items={
+                  props.supportedTokens && props.supportedTokens.length > 0
+                    ? props.supportedTokens
+                    : DEFAULT_TOKENS
+                }
               />
             </div>
 
@@ -243,17 +262,15 @@ export const Collateral = (props: CollateralProps) => {
               <input
                 id={`collateral-amount-input-${props.index}`}
                 onChange={handleInputChange}
-                className={`w-full text-[20px] focus:border-[0px] focus:outline-none font-medium placeholder:text-[#C7C7C7] ${
-                  isDark ? "placeholder:text-[#A7A7A7] text-white bg-[#111111]" : "bg-white"
-                }`}
+                className={`w-full text-[20px] focus:border-[0px] focus:outline-none font-medium placeholder:text-[#C7C7C7] ${isDark ? "placeholder:text-[#A7A7A7] text-white bg-[#111111]" : "bg-white"
+                  }`}
                 type="text"
                 placeholder="0.0"
                 value={valueInput}
               />
               <div
-                className={`text-[12px] font-medium ${
-                  isDark ? "text-[#919191]" : "text-[#76737B]"
-                }`}
+                className={`text-[12px] font-medium ${isDark ? "text-[#919191]" : "text-[#76737B]"
+                  }`}
                 aria-live="polite"
               >
                 {valueInUsd} USD
@@ -264,9 +281,8 @@ export const Collateral = (props: CollateralProps) => {
                 <motion.button
                   type="button"
                   onClick={handleViewSourcesClick}
-                  className={`text-[12px] font-medium cursor-pointer hover:underline text-left ${
-                    isDark ? "text-white" : ""
-                  }`}
+                  className={`text-[12px] font-medium cursor-pointer hover:underline text-left ${isDark ? "text-white" : ""
+                    }`}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   transition={{ duration: 0.1 }}
@@ -289,9 +305,8 @@ export const Collateral = (props: CollateralProps) => {
             }}
           >
             {/* Asset icon and name */}
-            <div className={`p-[10px] flex gap-[8px] text-[16px] font-medium ${
-              isDark ? "text-white" : ""
-            }`}>
+            <div className={`p-[10px] flex gap-[8px] text-[16px] font-medium ${isDark ? "text-white" : ""
+              }`}>
               {hasCollateral && (
                 <>
                   <Image
@@ -336,8 +351,8 @@ export const Collateral = (props: CollateralProps) => {
                     key={item}
                     onClick={() => handlePercentageClick(item)}
                     className={`h-[44px] w-[95px] text-center text-[14px] text-medium cursor-pointer ${percentage === item
-                        ? `${PERCENTAGE_COLORS[item]} text-white`
-                        : isDark
+                      ? `${PERCENTAGE_COLORS[item]} text-white`
+                      : isDark
                         ? "bg-[#222222] text-white"
                         : "bg-[#F4F4F4]"
                       } p-[10px] rounded-[12px]`}
@@ -401,9 +416,8 @@ export const Collateral = (props: CollateralProps) => {
               <>
                 {/* Amount and USD value */}
                 <div className="items-center flex gap-[8px]">
-                  <div className={`text-[20px] font-medium ${
-                    isDark ? "text-white" : ""
-                  }`}>
+                  <div className={`text-[20px] font-medium ${isDark ? "text-white" : ""
+                    }`}>
                     {formatAmount(collateral.amount, collateral.asset)}
                   </div>
                   <div className="text-[12px] font-medium text-[#703AE6]">
@@ -416,9 +430,8 @@ export const Collateral = (props: CollateralProps) => {
                   <motion.button
                     type="button"
                     onClick={handleViewSourcesClick}
-                    className={`underline decoration-1 text-[12px] font-medium cursor-pointer text-left ${
-                      isDark ? "text-white" : ""
-                    }`}
+                    className={`underline decoration-1 text-[12px] font-medium cursor-pointer text-left ${isDark ? "text-white" : ""
+                      }`}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     transition={{ duration: 0.1 }}
@@ -459,9 +472,8 @@ export const Collateral = (props: CollateralProps) => {
               <motion.button
                 type="button"
                 onClick={handleUnifiedBalanceClick}
-                className={`text-[12px] font-medium cursor-pointer hover:underline text-left ${
-                  isDark ? "text-white" : "text-[#111111]"
-                }`}
+                className={`text-[12px] font-medium cursor-pointer hover:underline text-left ${isDark ? "text-white" : "text-[#111111]"
+                  }`}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 transition={{ duration: 0.1 }}
@@ -478,8 +490,8 @@ export const Collateral = (props: CollateralProps) => {
                 onClick={() => props.onEdit?.(props.id!)}
                 disabled={props.isAnyOtherEditing}
                 className={`p-[8.73px] rounded-[8px] bg-[#F4F4F4] h-fit min-w-[32px] flex-shrink-0 ${props.isAnyOtherEditing
-                    ? "opacity-50 cursor-not-allowed"
-                    : "cursor-pointer"
+                  ? "opacity-50 cursor-not-allowed"
+                  : "cursor-pointer"
                   }`}
                 whileHover={
                   props.isAnyOtherEditing
@@ -552,9 +564,8 @@ export const Collateral = (props: CollateralProps) => {
             <motion.button
               type="button"
               onClick={handleCancel}
-              className={`cursor-pointer flex flex-col justify-center items-center w-[32px] h-[32px] rounded-[8px] p-[12px] flex-shrink-0 ${
-                isDark ? "bg-[#222222]" : "bg-[#F4F4F4]"
-              }`}
+              className={`cursor-pointer flex flex-col justify-center items-center w-[32px] h-[32px] rounded-[8px] p-[12px] flex-shrink-0 ${isDark ? "bg-[#222222]" : "bg-[#F4F4F4]"
+                }`}
               whileHover={{ scale: 1.05, backgroundColor: isDark ? "#333333" : "#F0F0F0" }}
               whileTap={{ scale: 0.95 }}
               transition={{ duration: 0.1 }}
@@ -643,9 +654,8 @@ export const Collateral = (props: CollateralProps) => {
         <motion.button
           type="button"
           onClick={() => props.onDelete?.(props.id!)}
-          className={`cursor-pointer flex flex-col justify-center items-center w-[32px] h-[32px] rounded-full absolute -right-3 -top-2 ${
-            isDark ? "bg-[#333333]" : "bg-[#E2E2E2]"
-          }`}
+          className={`cursor-pointer flex flex-col justify-center items-center w-[32px] h-[32px] rounded-full absolute -right-3 -top-2 ${isDark ? "bg-[#333333]" : "bg-[#E2E2E2]"
+            }`}
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 1, scale: 1 }}
           whileHover={{ scale: 1.2, backgroundColor: isDark ? "#444444" : "#D0D0D0" }}

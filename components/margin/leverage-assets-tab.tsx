@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import ToggleButton from "@/components/ui/toggle";
 import { Collaterals, BorrowInfo, MarginState } from "@/lib/types";
 
@@ -32,14 +32,15 @@ import { baseAddressList, arbAddressList, opAddressList } from "@/lib/web3Consta
 import { erc20Abi, formatUnits, parseEther, parseUnits } from "viem";
 import { iconPaths } from "@/lib/constants";
 
-///lib/utils/margim/calculation iumport 
+///lib/utils/margim/calculation iumport
 import marginCalc from "@/lib/utils/margin/calculations"
 import { depositTx, withdrawTx } from "@/lib/utils/margin/transactions";
 import { useMarginStore } from "@/store/margin-account-state";
 import { getAddressList } from "@/lib/utils/web3/addressList";
-import { useFetchAccountCheck, useFetchBorrowState, useFetchCollateralState } from "@/lib/utils/margin/marginFetchers";
+import { useFetchAccountCheck, useFetchBorrowState, useFetchCollateralState, useFetchBorrowPositions } from "@/lib/utils/margin/marginFetchers";
 import { useBalanceStore } from "@/store/balance-store";
 import { useTheme } from "@/contexts/theme-context";
+import { TransactionModal } from "@/components/ui/transaction-modal";
 
 
 
@@ -61,7 +62,11 @@ export const LeverageAssetsTab = () => {
   const address = useUserStore((state) => state.address);
   const marginState = useMarginStore((s) => s.marginState);
   const [marginAccountAddress, setMarginAccountAddress] = useState<`0x${string}` | undefined>(undefined);
-  const [prices, setPrices] = useState<Record<string, number>>({});
+  // Initialize prices with stablecoin defaults
+  const [prices, setPrices] = useState<Record<string, number>>({
+    USDC: 1,
+    USDT: 1,
+  });
 
   // Wagmi hooks
   const { chainId } = useAccount();
@@ -71,6 +76,13 @@ export const LeverageAssetsTab = () => {
   // Loading states
   const [loading, setLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState("");
+
+  // Transaction Modal State
+  const [txModalOpen, setTxModalOpen] = useState(false);
+  const [txModalStatus, setTxModalStatus] = useState<"pending" | "success" | "error">("pending");
+  const [txModalTitle, setTxModalTitle] = useState("");
+  const [txModalMessage, setTxModalMessage] = useState("");
+  const [txModalHash, setTxModalHash] = useState<string | undefined>(undefined);
 
   // zustand state 
 
@@ -87,9 +99,19 @@ export const LeverageAssetsTab = () => {
       try {
         const res = await fetch("/api/prices");
         const data = await res.json();
-        setPrices(data);
+
+        // Ensure stablecoins always have $1 price if missing from API
+        const updatedPrices = {
+          USDC: data.USDC ?? 1,
+          USDT: data.USDT ?? 1,
+          ...data, // Spread other prices from API
+        };
+
+        setPrices(updatedPrices);
+        console.log("[Prices] Fetched prices:", updatedPrices);
       } catch (e) {
-        console.error("Error fetching prices:", e);
+        console.error("[Prices] Error fetching prices:", e);
+        // Keep initial stablecoin prices even if fetch fails
       }
     };
     fetchPrices();
@@ -99,21 +121,6 @@ export const LeverageAssetsTab = () => {
     return SUPPORTED_TOKENS_BY_CHAIN[chainId ?? 0] ?? [];
   }, [chainId]);
 
-
-
-  // Bind deposit and withdrae as of now because we have moved this 2 fucntion as of now 
-  //////////////////////////////////////////////////////////////////////////////////////////
-  // we shift this  to @/lib/utils/web3
-  // const getAddressList = (): AddressList | null => {
-  //   if (!chainId) return null;
-  //   if (chainId === 42161) return arbAddressList;
-  //   if (chainId === 10) return opAddressList;
-  //   if (chainId === 8453) return baseAddressList;
-  //   return null;
-  // };
-
-  // const addressList=getAddressList(chainId!)
-
   const deposit = (asset: string, amount: string) => depositTx({
     walletClient,
     publicClient,
@@ -121,23 +128,8 @@ export const LeverageAssetsTab = () => {
     fetchAccountCheck,
     asset,
     amount
-  })
-
-  // This is just a wrapper Our main logic has written  in lib/utils/margin/transaction.ts we have mentioned there 
-  // to make it modular ! 
-
-  // const withdraw = (asset: string, amount: string) =>
-  //   withdrawTx({
-  //     walletClient,
-  //     publicClient,
-  //     chainId,
-  //     fetchAccountCheck,
-  //     asset,
-  //     amount,
-  //   });
-
-  // Later we will bind all the functionality in transaction.ts file 
-  ////////////////////////////////////////////////////////////////////////////////////
+  }
+  );
   // Margin account creation Flow  
   const handlecreateAccount = async () => {
     const addressList = getAddressList(chainId!);
@@ -212,171 +204,12 @@ export const LeverageAssetsTab = () => {
       setLoading(false);
     }
   };
-
-  //   // fetchWalletBalance 
-  //   const fetchWalletBalance = async (asset: string) => {
-  //     if (!chainId || !publicClient || !address) return;
-
-  //     const tokenAddress = tokenAddressByChain[chainId]?.[asset];
-  //     if (asset === "ETH") {
-  //       const raw = await publicClient.getBalance({ address });
-  //       const formated = Number(formatUnits(raw, 18))
-  //       return formated;
-  //     }
-
-  //     const raw = await publicClient.readContract({
-  //       address: tokenAddress,
-  //       abi: erc20Abi,
-  //       functionName: "balanceOf",
-  //       args: [address]
-  //     })
-
-  //     const decimals = TOKEN_DECIMALS[asset];
-  //     const formated = Number(formatUnits(raw, decimals))
-  //     return formated;
-  //   }
-
-  //   // fetchMarginBalance
-  //   const fetchMarginBalances = async (): Promise<Collaterals[]> => {
-  //   if (!chainId || !publicClient || !address) return [];
-
-  //   const accounts = await fetchAccountCheck();
-  //   if (!accounts || accounts.length === 0) return [];
-
-  //   const marginAccount = accounts[0];
-
-  //   // Split tokens
-  //   const erc20Tokens = TOKEN_OPTIONS.filter(t => t !== "ETH");
-  //   const ethToken = TOKEN_OPTIONS.includes("ETH");
-
-  //   const addressMap = tokenAddressByChain[chainId] ?? {};
-
-  //   // Prepare multicall args
-  //   const erc20Calls = erc20Tokens.map(token => ({
-  //     address: addressMap[token],
-  //     abi: erc20Abi,
-  //     functionName: "balanceOf",
-  //     args: [marginAccount]
-  //   }));
-
-  //   const [ethBalanceRaw, erc20Results] = await Promise.all([
-  //     ethToken ? publicClient.getBalance({ address: marginAccount }) : Promise.resolve(0n),
-  //     erc20Calls.length > 0 ? publicClient.multicall({ contracts: erc20Calls }) : Promise.resolve([])
-  //   ]);
-
-  //   const results: Collaterals[] = [];
-
-  //   // ETH mapping
-  //   if (ethToken) {
-  //     const ethBal = Number(formatUnits(ethBalanceRaw, 18));
-  //     if (ethBal > 0) {
-  //       results.push({
-  //         asset: "ETH",
-  //         amount: ethBal,
-  //         amountInUsd: ethBal,
-  //         unifiedBalance: ethBal,
-  //         balanceType: "mb"
-  //       });
-  //     }
-  //   }
-
-  //   // ERC20 mapping
-  //   erc20Tokens.forEach((token, i) => {
-  //     const entry = erc20Results[i];
-  //     if (!entry || entry.status === "failure") return;
-
-  //     const raw = entry.result as bigint;
-  //     const decimals = TOKEN_DECIMALS[token] ?? 18;
-  //     const value = Number(formatUnits(raw, decimals));
-
-  //     if (value > 0) {
-  //       results.push({
-  //         asset: token,
-  //         amount: value,
-  //         amountInUsd: value,
-  //         unifiedBalance: value,
-  //         balanceType: "mb"
-  //       });
-  //     }
-  //   });
-
-  //   return results;
-  // };
-
-
-
-
+  
 
   const fetchAccountCheck = useFetchAccountCheck(chainId, address as `0x${string}`, publicClient);
   const fetchCollateralState = useFetchCollateralState(chainId, publicClient);
   const fetchBorrowState = useFetchBorrowState(chainId, publicClient);
-
-  // We have placed the fetchAccountCheck,fetchCollateralState,fetchBorrowState into lib/utils/margin/Marginfetchers 
-  // const fetchAccountCheck = useCallback(async (): Promise<`0x${string}`[]> => {
-  //   const addressList = getAddressList(chainId);
-  //   if (!addressList) return [];
-
-  //   const accounts = await publicClient.readContract({
-  //     address: addressList.registryContractAddress,
-  //     abi: Registry.abi,
-  //     functionName: "accountsOwnedBy",
-  //     args: [address],
-  //   }) as `0x${string}`[];
-
-  //   return accounts;
-  // }, [address, publicClient, chainId]);
-
-  // const fetchCollateralState = useCallback(async (acc: `0x${string}`) => {
-  //   if (!publicClient || !chainId) return [];
-
-  //   const addressList = getAddressList(chainId);
-  //   if (!addressList) return [];
-
-  //   const raw = await publicClient.readContract({
-  //     address: addressList.riskEngineContractAddress,
-  //     abi: RiskEngine.abi,
-  //     functionName: "getBalance",
-  //     args: [acc]
-  //   }) as bigint[];
-
-  //   const collatralUsd = Number(raw) / 1e16;
-
-  //   return [
-  //     {
-  //       token: "USD",
-  //       amount: collatralUsd,
-  //       usd: collatralUsd
-  //     }
-  //   ]
-  // }, [publicClient, chainId])
-
-  // const fetchBorrowState = useCallback(async (acc: `0x${string}`) => {
-  //   if (!publicClient || !chainId) return []
-
-  //   const addressList = getAddressList(chainId)
-  //   if (!addressList) return []
-
-  //   const raw = await publicClient.readContract({
-  //     address: addressList.riskEngineContractAddress,
-  //     abi: RiskEngine.abi,
-  //     functionName: "getBorrows",
-  //     args: [acc]
-  //   }) as bigint[];
-
-  //   const borrowUsd = Number(raw) / 1e16;
-
-  //   return [
-  //     {
-  //       token: "USD",
-  //       amount: borrowUsd,
-  //       usd: borrowUsd
-  //     }
-  //   ];
-  // }, [publicClient, chainId])
-
-
-  // New: Simulation functions for preview (without mutating state)
-
+  const fetchBorrowPositions = useFetchBorrowPositions(chainId, publicClient);
 
   const simulateStrategy = useCallback((
     state: MarginState | null,
@@ -570,12 +403,18 @@ export const LeverageAssetsTab = () => {
   const validateBorrowRisk = (state: MarginState, totalUsd: number): boolean => {
     const { newHF, newLTV } = simulateStrategy(state, 0, totalUsd);
     if (newHF <= 1.0) {
-      toast.error("Borrow would put account into liquidation");
+      setTxModalStatus("error");
+      setTxModalTitle("Risk Too High");
+      setTxModalMessage("Borrow would put account into liquidation. Please reduce borrow amount or add more collateral.");
+      setTxModalOpen(true);
       return false;
     }
 
     if (newLTV > 0.9) {
-      toast.error("Borrow exceeds 90% LTV");
+      setTxModalStatus("error");
+      setTxModalTitle("LTV Limit Exceeded");
+      setTxModalMessage("Borrow exceeds 90% Loan-to-Value ratio. Please reduce borrow amount.");
+      setTxModalOpen(true);
       return false;
     }
 
@@ -607,6 +446,13 @@ export const LeverageAssetsTab = () => {
       tokenAddress = token;
     }
 
+    // Enhanced logging for debugging
+    console.log(`[Borrow Check] Chain: ${chainId}, Asset: ${asset}, Amount: ${amount}`);
+    console.log(`[Borrow Check] Token Address: ${tokenAddress}`);
+    console.log(`[Borrow Check] Margin Account: ${marginAccount}`);
+    console.log(`[Borrow Check] Parsed Amount: ${parsed.toString()} (${decimals} decimals)`);
+    console.log(`[Borrow Check] Current Margin State:`, marginState);
+
     try {
       // Call RiskEngine.isBorrowAllowed() - this is a view function that simulates the borrow
       const isAllowed = await publicClient!.readContract({
@@ -616,22 +462,36 @@ export const LeverageAssetsTab = () => {
         args: [marginAccount, tokenAddress, parsed],
       });
 
+      console.log(`[Borrow Check] RiskEngine.isBorrowAllowed returned:`, isAllowed);
+
       if (!isAllowed) {
-        return { allowed: false, error: "Borrow would violate health factor" };
+        return { allowed: false, error: "Borrow would violate health factor. Need more collateral or lower borrow amount." };
       }
 
       return { allowed: true };
     } catch (err: any) {
-      console.error("canBorrow preflight check failed:", err);
+      console.error("[Borrow Check] Preflight check FAILED:", err);
+      console.error("[Borrow Check] Full error:", JSON.stringify(err, null, 2));
+
       // Parse common revert reasons
       const msg = err?.message || "";
-      if (msg.includes("insufficient liquidity")) {
+      const shortMsg = err?.shortMessage || "";
+      const errorStr = `${msg} ${shortMsg}`.toLowerCase();
+
+      if (errorStr.includes("insufficient liquidity") || errorStr.includes("liquidity")) {
         return { allowed: false, error: "Insufficient liquidity in lending pool" };
       }
-      if (msg.includes("oracle") || msg.includes("price")) {
-        return { allowed: false, error: "Oracle price unavailable for this asset" };
+      if (errorStr.includes("oracle") || errorStr.includes("price")) {
+        return { allowed: false, error: "Oracle price unavailable for this asset on Arbitrum. Try Base or Optimism." };
       }
-      return { allowed: false, error: "Borrow check failed - transaction would revert" };
+      if (errorStr.includes("health factor") || errorStr.includes("healthfactor")) {
+        return { allowed: false, error: "Health factor too low. Need more collateral." };
+      }
+      if (errorStr.includes("minimum") || errorStr.includes("min")) {
+        return { allowed: false, error: "Amount below minimum threshold" };
+      }
+
+      return { allowed: false, error: `Borrow check failed: ${shortMsg || msg || "Unknown error"}` };
     }
   };
 
@@ -703,32 +563,51 @@ export const LeverageAssetsTab = () => {
 
     if (mode === "MB") {
       if (state.collateralUsd <= 0) {
-        return toast.error("Insufficient collateral in Margin Account");
+        return toast.error("Insufficient collateral in Margin Account. Deposit collateral first.");
       }
 
+      console.log(`[Borrow] Attempting to borrow ${borrowAmount} ${borrowAsset} (${amountUsd} USD)`);
+      console.log(`[Borrow] Current collateral: ${state.collateralUsd} USD`);
+      console.log(`[Borrow] Current debt: ${state.borrowUsd} USD`);
+      console.log(`[Borrow] Max borrow available: ${state.maxBorrow} USD`);
+      console.log(`[Borrow] Current HF: ${state.hf}`);
+
       if (amountUsd > state.maxBorrow) {
-        return toast.error("Borrow exceeds leverage limit");
+        return toast.error(`Borrow amount ($${amountUsd.toFixed(2)}) exceeds max borrowing power ($${state.maxBorrow.toFixed(2)}). Reduce amount or add more collateral.`);
       }
 
       if (!validateBorrowRisk(state, amountUsd)) return;
 
-      const toastId = toast.loading("Checking borrow eligibility...");
+      // Show pending modal
+      setTxModalStatus("pending");
+      setTxModalTitle("Processing Borrow");
+      setTxModalMessage("Checking borrow eligibility and submitting transaction...");
+      setTxModalHash(undefined);
+      setTxModalOpen(true);
+
       try {
-        await borrowTx(marginAccount, borrowAsset, borrowAmount);
+        const txHash = await borrowTx(marginAccount, borrowAsset, borrowAmount);
+        setTxModalMessage("Borrow transaction submitted. Waiting for confirmation...");
+
         await reloadMarginState();
-        toast.success("Borrow successful!", { id: toastId });
+
+        // Show success modal
+        setTxModalStatus("success");
+        setTxModalTitle("Borrow Successful");
+        setTxModalMessage(`Successfully borrowed ${borrowAmount} ${borrowAsset}!`);
+        setTxModalHash(txHash);
       } catch (err: any) {
-        console.error("Borrow error:", err);
+        console.error("[Borrow] Transaction error:", err);
         const isUserRejection =
           err?.code === 4001 ||
           err?.message?.includes("User rejected") ||
           err?.message?.includes("user rejected");
 
-        if (isUserRejection) {
-          toast.error("Transaction cancelled", { id: toastId });
-        } else {
-          toast.error(err.message || "Borrow failed", { id: toastId });
-        }
+        // Show error modal
+        setTxModalStatus("error");
+        setTxModalTitle(isUserRejection ? "Transaction Cancelled" : "Borrow Failed");
+        setTxModalMessage(isUserRejection ? "You cancelled the transaction" : (err.message || "Borrow transaction failed"));
+        console.error("[Borrow] Full error details:", JSON.stringify(err, null, 2));
       }
       return;
     }
@@ -738,42 +617,66 @@ export const LeverageAssetsTab = () => {
         return toast.error("Deposit amount required in WB mode");
       }
 
-      const toastId = toast.loading("Depositing collateral...");
+      const depositUsd = Number(collateralAmount) * (prices[collateralAsset] || 0);
+
+      console.log(`[WB Mode] Depositing ${collateralAmount} ${collateralAsset} (~$${depositUsd.toFixed(2)})`);
+      console.log(`[WB Mode] Then borrowing ${borrowAmount} ${borrowAsset} (~$${amountUsd.toFixed(2)})`);
+
+      // Show pending modal
+      setTxModalStatus("pending");
+      setTxModalTitle("Processing Deposit & Borrow");
+      setTxModalMessage("Depositing collateral to margin account...");
+      setTxModalHash(undefined);
+      setTxModalOpen(true);
+
       try {
         await deposit(collateralAsset, collateralAmount);
-        toast.loading("Deposit complete. Checking borrow eligibility...", { id: toastId });
+        setTxModalMessage("Deposit complete. Refreshing account state...");
 
         state = await reloadMarginState();
         if (!state) {
-          toast.error("State refresh failed", { id: toastId });
+          setTxModalStatus("error");
+          setTxModalTitle("State Refresh Failed");
+          setTxModalMessage("Failed to refresh margin account state");
           return;
         }
 
+        console.log(`[WB Mode] After deposit - Collateral: ${state.collateralUsd} USD, Max Borrow: ${state.maxBorrow} USD`);
+
         if (amountUsd > state.maxBorrow) {
-          toast.error("Borrow exceeds leverage limit after deposit", { id: toastId });
+          setTxModalStatus("error");
+          setTxModalTitle("Borrow Limit Exceeded");
+          setTxModalMessage(`Borrow amount ($${amountUsd.toFixed(2)}) exceeds max borrow ($${state.maxBorrow.toFixed(2)}) after deposit`);
           return;
         }
 
         if (!validateBorrowRisk(state, amountUsd)) {
-          toast.dismiss(toastId);
+          setTxModalOpen(false);
           return;
         }
 
-        await borrowTx(marginAccount, borrowAsset, borrowAmount);
+        setTxModalMessage("Checking borrow eligibility...");
+        const txHash = await borrowTx(marginAccount, borrowAsset, borrowAmount);
+        setTxModalMessage("Borrow submitted. Waiting for confirmation...");
         await reloadMarginState();
-        toast.success("Deposit + Borrow completed!", { id: toastId });
+
+        // Show success modal
+        setTxModalStatus("success");
+        setTxModalTitle("Transaction Successful");
+        setTxModalMessage(`Successfully deposited ${collateralAmount} ${collateralAsset} and borrowed ${borrowAmount} ${borrowAsset}!`);
+        setTxModalHash(txHash);
       } catch (err: any) {
-        console.error("Deposit+Borrow error:", err);
+        console.error("[WB Mode] Deposit+Borrow error:", err);
         const isUserRejection =
           err?.code === 4001 ||
           err?.message?.includes("User rejected") ||
           err?.message?.includes("user rejected");
 
-        if (isUserRejection) {
-          toast.error("Transaction cancelled", { id: toastId });
-        } else {
-          toast.error(err.message || "Operation failed", { id: toastId });
-        }
+        // Show error modal
+        setTxModalStatus("error");
+        setTxModalTitle(isUserRejection ? "Transaction Cancelled" : "Operation Failed");
+        setTxModalMessage(isUserRejection ? "You cancelled the transaction" : (err.message || "Deposit and borrow operation failed"));
+        console.error("[WB Mode] Full error:", JSON.stringify(err, null, 2));
       }
       return;
     }
@@ -866,12 +769,32 @@ export const LeverageAssetsTab = () => {
   };
 
   const repayFull = async () => {
-    const state = await reloadMarginState();
-    if (!state || state.borrowUsd <= 0) return;
+    // 1. Fetch the actual active borrows (not just USD aggregate)
+    const accounts = await fetchAccountCheck();
+    if (!accounts.length) {
+      setTxModalStatus("error");
+      setTxModalTitle("No Margin Account");
+      setTxModalMessage("No margin account found.");
+      setTxModalOpen(true);
+      return;
+    }
+
+    const activeBorrows = await fetchBorrowPositions(accounts[0]);
+
+    if (activeBorrows.length === 0) {
+      setTxModalStatus("error");
+      setTxModalTitle("No Active Borrows");
+      setTxModalMessage("No active borrows found to repay.");
+      setTxModalOpen(true);
+      return;
+    }
+
+    // For now, let's repay the first found debt (or loop through them)
+    const debt = activeBorrows[0];
 
     await executeRepay({
-      asset: "USDC",
-      amount: state.borrowUsd.toFixed(6),
+      asset: debt.asset, // 2. Use the actual borrowed asset
+      amount: debt.amount, // 3. Use the actual token amount
       mode: "WB",
     });
   };
@@ -886,41 +809,92 @@ export const LeverageAssetsTab = () => {
     mode: "MB" | "WB";
   }) => {
     if (!walletClient || !publicClient || !chainId || !address) {
-      return toast.error("Wallet not ready");
+      setTxModalStatus("error");
+      setTxModalTitle("Wallet Not Connected");
+      setTxModalMessage("Please connect your wallet to continue.");
+      setTxModalOpen(true);
+      return;
     }
 
     const addressList = getAddressList(chainId);
-    if (!addressList) return toast.error("Unsupported network");
+    if (!addressList) {
+      setTxModalStatus("error");
+      setTxModalTitle("Unsupported Network");
+      setTxModalMessage("This network is not supported.");
+      setTxModalOpen(true);
+      return;
+    }
 
     const accounts = await fetchAccountCheck();
-    if (!accounts.length) return toast.error("No Margin Account found");
+    if (!accounts.length) {
+      setTxModalStatus("error");
+      setTxModalTitle("No Margin Account");
+      setTxModalMessage("No margin account found.");
+      setTxModalOpen(true);
+      return;
+    }
 
     const marginAccount = accounts[0];
     let state = marginState || (await reloadMarginState());
-    if (!state) return toast.error("State missing");
+    if (!state) {
+      setTxModalStatus("error");
+      setTxModalTitle("State Error");
+      setTxModalMessage("Failed to load margin state.");
+      setTxModalOpen(true);
+      return;
+    }
 
     const amountUsd = Number(amount);
 
-    if (mode === "MB") {
-      if (state.borrowUsd <= 0) {
-        return toast.error("No borrowed debt to repay");
+    setTxModalStatus("pending");
+    setTxModalTitle("Processing Repay");
+    setTxModalMessage("Preparing repay transaction...");
+    setTxModalOpen(true);
+
+    try {
+      if (mode === "MB") {
+        if (state.borrowUsd <= 0) {
+          setTxModalStatus("error");
+          setTxModalTitle("No Debt");
+          setTxModalMessage("No borrowed debt to repay.");
+          return;
+        }
+
+        setTxModalMessage("Repaying from margin balance...");
+        const txHash = await repayTx(marginAccount, asset, amount);
+        await reloadMarginState();
+
+        setTxModalStatus("success");
+        setTxModalTitle("Repay Successful");
+        setTxModalMessage(`Successfully repaid ${amount} ${asset}!`);
+        setTxModalHash(txHash);
+        return;
       }
 
-      toast("Repaying...");
-      await repayTx(marginAccount, asset, amount);
-      await reloadMarginState();
-      return toast.success("Repay completed!");
-    }
+      if (mode === "WB") {
+        setTxModalMessage("Depositing from wallet to margin...");
+        await deposit(asset, amount);
 
-    if (mode === "WB") {
-      toast("Paying from wallet → depositing into margin...");
-      await deposit(asset, amount);
+        setTxModalMessage("Repaying debt...");
+        const txHash = await repayTx(marginAccount, asset, amount);
 
-      toast("Repaying...");
-      await repayTx(marginAccount, asset, amount);
+        await reloadMarginState();
 
-      await reloadMarginState();
-      return toast.success("Wallet repay completed!");
+        setTxModalStatus("success");
+        setTxModalTitle("Repay Successful");
+        setTxModalMessage(`Successfully repaid ${amount} ${asset} from wallet!`);
+        setTxModalHash(txHash);
+        return;
+      }
+    } catch (err: any) {
+      const isUserRejection =
+        err?.code === 4001 ||
+        err?.message?.includes("User rejected") ||
+        err?.message?.includes("user rejected");
+
+      setTxModalStatus("error");
+      setTxModalTitle(isUserRejection ? "Transaction Cancelled" : "Repay Failed");
+      setTxModalMessage(isUserRejection ? "You cancelled the transaction" : (err.message || "Repay transaction failed"));
     }
   };
 
@@ -1293,9 +1267,9 @@ export const LeverageAssetsTab = () => {
 
   // only loads once wallet , chain are ready
   // no unnecessary console logs
-  // we placed this fetchers things here just because we need the chnages in the zustabd store why ?? Because currently my 
+  // we placed this fetchers things here just because we need the chnages in the zustabd store why ?? Because currently my
   // fetchAccountCheck, fetchCollateralState, fetchBorrowState is in leverage-asset-tab.tsx
-  // It also good later we can shift these fetchAccount state things to another folder 
+  // It also good later we can shift these fetchAccount state things to another folder
 
   const fetchers = useMemo(() => ({
     fetchAccountCheck,
@@ -1308,10 +1282,39 @@ export const LeverageAssetsTab = () => {
     useMarginStore.getState().setFetchers(fetchers);
   }, [fetchers]);
 
-  // 2) Trigger initial load once wallet/network is ready
+  // 2) Trigger initial load once wallet/network is ready AND fetchers are registered
+  // Only load on actual wallet/network changes, not on every component mount/tab switch
+  const hasLoadedRef = useRef(false);
+  const lastChainRef = useRef<number | undefined>(undefined);
+  const lastAddressRef = useRef<string | undefined>(undefined);
+
   useEffect(() => {
     if (!publicClient || !chainId || !address) return;
-    reloadMarginState();
+
+    // Check if wallet or network actually changed
+    const walletChanged = lastAddressRef.current !== address;
+    const networkChanged = lastChainRef.current !== chainId;
+
+    // Only reload if wallet/network changed, or first load
+    if (!hasLoadedRef.current || walletChanged || networkChanged) {
+      console.log('[MarginStore] Loading margin state:', {
+        reason: !hasLoadedRef.current ? 'initial load' : walletChanged ? 'wallet changed' : 'network changed',
+        chainId,
+        address: address.slice(0, 10) + '...'
+      });
+
+      // Debounce: Wait 1 second after change before reloading
+      const timer = setTimeout(() => {
+        reloadMarginState();
+        hasLoadedRef.current = true;
+        lastChainRef.current = chainId;
+        lastAddressRef.current = address;
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    } else {
+      console.log('[MarginStore] Skipping reload - using cached data');
+    }
   }, [publicClient, chainId, address, reloadMarginState]);
 
   // Fetch margin account address once
@@ -1388,13 +1391,19 @@ export const LeverageAssetsTab = () => {
 
   const handleExecuteStrategy = async () => {
     if (!walletClient || !publicClient || !chainId || !address) {
-      toast.error("Wallet not connected");
+      setTxModalStatus("error");
+      setTxModalTitle("Wallet Not Connected");
+      setTxModalMessage("Please connect your wallet to continue.");
+      setTxModalOpen(true);
       return;
     }
 
     const addressList = getAddressList(chainId);
     if (!addressList) {
-      toast.error("Unsupported network");
+      setTxModalStatus("error");
+      setTxModalTitle("Unsupported Network");
+      setTxModalMessage("This network is not supported. Please switch to Arbitrum, Base, or Optimism.");
+      setTxModalOpen(true);
       return;
     }
 
@@ -1437,6 +1446,13 @@ export const LeverageAssetsTab = () => {
 
     setLoading(true);
 
+    // Show pending modal
+    setTxModalStatus("pending");
+    setTxModalTitle("Processing Transaction");
+    setTxModalMessage("Preparing your transaction...");
+    setTxModalHash(undefined);
+    setTxModalOpen(true);
+
     // Track completed operations for partial failure handling
     let depositsCompleted = 0;
     let borrowsCompleted = 0;
@@ -1445,7 +1461,7 @@ export const LeverageAssetsTab = () => {
       // Ensure we have the margin account address
       let targetAccount = marginAccountAddress;
       if (!targetAccount) {
-        setLoadingMessage("Fetching margin account...");
+        setTxModalMessage("Fetching margin account...");
         const accounts = await fetchAccountCheck();
         if (accounts && accounts.length > 0) {
           targetAccount = accounts[0] as `0x${string}`;
@@ -1463,7 +1479,7 @@ export const LeverageAssetsTab = () => {
 
         // Handle native ETH deposit first (no token address needed)
         if (item.asset === "ETH") {
-          setLoadingMessage(`Depositing ${item.amount} ETH...`);
+          setTxModalMessage(`Depositing ${item.amount} ETH...`);
           const txHash = await walletClient.writeContract({
             address: addressList.accountManagerContractAddress as `0x${string}`,
             abi: AccountManager.abi,
@@ -1473,7 +1489,6 @@ export const LeverageAssetsTab = () => {
           });
           await publicClient.waitForTransactionReceipt({ hash: txHash });
           depositsCompleted++;
-          toast.success(`Deposited ${item.amount} ETH`);
         } else {
           // ERC20 Deposit - check token address exists
           const tokenAddress = tokenAddressByChain[chainId]?.[item.asset];
@@ -1481,7 +1496,7 @@ export const LeverageAssetsTab = () => {
             console.warn(`Token address not found for ${item.asset}`);
             continue;
           }
-          setLoadingMessage(`Checking allowance for ${item.asset}...`);
+          setTxModalMessage(`Checking allowance for ${item.asset}...`);
           const allowance = await publicClient.readContract({
             address: tokenAddress as `0x${string}`,
             abi: erc20Abi,
@@ -1490,7 +1505,7 @@ export const LeverageAssetsTab = () => {
           }) as bigint;
 
           if (allowance < amountBigInt) {
-            setLoadingMessage(`Approving ${item.asset}...`);
+            setTxModalMessage(`Approving ${item.asset}...`);
             const approveHash = await walletClient.writeContract({
               address: tokenAddress as `0x${string}`,
               abi: erc20Abi,
@@ -1498,10 +1513,9 @@ export const LeverageAssetsTab = () => {
               args: [addressList.accountManagerContractAddress as `0x${string}`, amountBigInt]
             });
             await publicClient.waitForTransactionReceipt({ hash: approveHash });
-            toast.success(`Approved ${item.asset}`);
           }
 
-          setLoadingMessage(`Depositing ${item.amount} ${item.asset}...`);
+          setTxModalMessage(`Depositing ${item.amount} ${item.asset}...`);
           const txHash = await walletClient.writeContract({
             address: addressList.accountManagerContractAddress as `0x${string}`,
             abi: AccountManager.abi,
@@ -1510,20 +1524,21 @@ export const LeverageAssetsTab = () => {
           });
           await publicClient.waitForTransactionReceipt({ hash: txHash });
           depositsCompleted++;
-          toast.success(`Deposited ${item.amount} ${item.asset}`);
+          setTxModalHash(txHash); // Store last deposit hash
         }
       }
 
       // --- EXECUTE BORROWS ---
       if (borrowsToExecute.length > 0) {
         // Refresh state before borrowing to ensure we have latest collateral data
+        setTxModalMessage("Refreshing account state before borrowing...");
         await reloadMarginState();
 
         for (const item of borrowsToExecute) {
           const decimals = TOKEN_DECIMALS[item.asset] ?? 18;
           const amountBigInt = parseUnits(item.amount, decimals);
 
-          setLoadingMessage(`Borrowing ${item.amount} ${item.asset}...`);
+          setTxModalMessage(`Borrowing ${item.amount} ${item.asset}...`);
 
           let txHash: `0x${string}`;
 
@@ -1553,12 +1568,12 @@ export const LeverageAssetsTab = () => {
 
           await publicClient.waitForTransactionReceipt({ hash: txHash });
           borrowsCompleted++;
-          toast.success(`Borrowed ${item.amount} ${item.asset}`);
+          setTxModalHash(txHash); // Store last borrow hash
         }
       }
 
       // Refresh all stores
-      setLoadingMessage("Updating balances...");
+      setTxModalMessage("Updating balances...");
 
       await Promise.all([
         reloadMarginState(),
@@ -1572,26 +1587,21 @@ export const LeverageAssetsTab = () => {
 
       // --- UPDATE POSITIONS HISTORY ---
       // TODO: Fill this later - Update the CollateralBorrowStore with the new position
-      // We need to construct a Position object and add it to the store.
-      /*
-      const newPosition = {
-        positionId: `pos-${Date.now()}`,
-        isOpen: true,
-        collateral: deposits.map(d => ({ asset: d.asset, amount: d.amount })),
-        borrowed: borrowsToExecute.map(b => ({ asset: b.asset, amount: b.amount })),
-        leverage: leverage,
-        collateralUsdValue: totalDepositValue,
-        borrowUsdValue: borrowsToExecute.reduce((acc, b) => acc + normalizeBorrowUsd(b.asset, b.amount), 0),
-        timestamp: Date.now(),
-        txHash: txHash // Use the last hash or array of hashes
-      };
-      useCollateralBorrowStore.getState().addPosition(newPosition);
-      */
       console.log("Strategy executed. Position data ready for store update.");
 
       setHasMarginAccount({ hasMarginAccount: true });
 
-      toast.success("Strategy executed successfully!");
+      // Show success modal
+      setTxModalStatus("success");
+      setTxModalTitle("Strategy Executed Successfully");
+      setTxModalMessage(
+        deposits.length > 0 && borrowsCompleted > 0
+          ? `Deposited ${deposits.length} asset(s) and borrowed ${borrowsCompleted} asset(s)`
+          : deposits.length > 0
+          ? `Deposited ${deposits.length} asset(s)`
+          : `Borrowed ${borrowsCompleted} asset(s)`
+      );
+
       setActiveDialogue("none");
 
       // Reset form
@@ -1612,22 +1622,25 @@ export const LeverageAssetsTab = () => {
       // Build context message for partial success
       const hasPartialSuccess = depositsCompleted > 0 || borrowsCompleted > 0;
       const partialSuccessMsg = hasPartialSuccess
-        ? ` (${depositsCompleted} deposit${depositsCompleted !== 1 ? "s" : ""} completed)`
+        ? ` ${depositsCompleted} deposit${depositsCompleted !== 1 ? "s" : ""} completed before failure.`
         : "";
 
+      // Show error modal
+      setTxModalStatus("error");
+
       if (isUserRejection) {
-        if (hasPartialSuccess) {
-          toast.warning(`Transaction cancelled${partialSuccessMsg}`);
-        } else {
-          toast.error("Transaction cancelled");
-        }
+        setTxModalTitle("Transaction Cancelled");
+        setTxModalMessage(hasPartialSuccess ? `You cancelled the transaction.${partialSuccessMsg}` : "You cancelled the transaction");
       } else if (error?.message?.includes("insufficient funds")) {
-        toast.error(`Insufficient funds for transaction${partialSuccessMsg}`);
+        setTxModalTitle("Insufficient Funds");
+        setTxModalMessage(`Not enough funds for transaction.${partialSuccessMsg}`);
       } else if (error?.message?.includes("execution reverted")) {
-        toast.error(`Transaction failed${partialSuccessMsg} - please check your balances`);
+        setTxModalTitle("Transaction Reverted");
+        setTxModalMessage(`Transaction failed - please check your balances.${partialSuccessMsg}`);
       } else {
+        setTxModalTitle("Transaction Failed");
         const baseMsg = error.message || "Failed to execute strategy";
-        toast.error(hasPartialSuccess ? `${baseMsg}${partialSuccessMsg}` : baseMsg);
+        setTxModalMessage(hasPartialSuccess ? `${baseMsg}${partialSuccessMsg}` : baseMsg);
       }
 
       // Refresh state if any operations completed successfully
@@ -1639,7 +1652,7 @@ export const LeverageAssetsTab = () => {
         }
       }
 
-      // Always close the modal on error to improve UX
+      // Always close the dialogue on error
       setActiveDialogue("none");
     } finally {
       setLoading(false);
@@ -2201,6 +2214,31 @@ export const LeverageAssetsTab = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Transaction Status Modal */}
+      <TransactionModal
+        isOpen={txModalOpen}
+        status={txModalStatus}
+        title={txModalTitle}
+        message={txModalMessage}
+        txHash={txModalHash}
+        onClose={() => {
+          setTxModalOpen(false);
+          // Reset form if successful
+          if (txModalStatus === "success") {
+            setCurrentCollaterals([]);
+            setLeverage(2);
+          }
+        }}
+        onRetry={
+          txModalStatus === "error"
+            ? () => {
+                setTxModalOpen(false);
+                // User can try again
+              }
+            : undefined
+        }
+      />
     </>
   );
 }

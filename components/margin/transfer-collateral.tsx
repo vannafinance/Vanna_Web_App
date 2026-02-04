@@ -13,15 +13,28 @@ import { toast } from "sonner";
 import { useBalanceStore } from "@/store/balance-store";
 import { SUPPORTED_TOKENS_BY_CHAIN, TOKEN_DECIMALS } from "@/lib/utils/web3/token";
 import { useTheme } from "@/contexts/theme-context";
+import { TransactionModal } from "@/components/ui/transaction-modal";
+
+
 
 export const TransferCollateral = () => {
+
+
+
   const { isDark } = useTheme();
+
+  // Transaction Modal State
+  const [txModalOpen, setTxModalOpen] = useState(false);
+  const [txModalStatus, setTxModalStatus] = useState<"pending" | "success" | "error">("pending");
+  const [txModalTitle, setTxModalTitle] = useState("");
+  const [txModalMessage, setTxModalMessage] = useState("");
+  const [txModalHash, setTxModalHash] = useState<string | undefined>(undefined);
   const { chainId, address } = useAccount();
   const supportedTokens = useMemo(() => {
     return SUPPORTED_TOKENS_BY_CHAIN[chainId ?? 0] ?? [];
   }, [chainId]);
 
-  const [selectedCurrency, setSelectedCurrency] = useState<string>(supportedTokens[0] || "");
+  const [selectedCurrency, setSelectedCurrency] = useState<string>(supportedTokens[0] || "USDC");
   const [valueInput, setValueInput] = useState<string>("");
   const [valueInUsd, setValueInUsd] = useState<number>(0.0);
   const [percentage, setPercentage] = useState<number>(0);
@@ -88,12 +101,21 @@ export const TransferCollateral = () => {
     const amount = formatAmount(maxBalance); // withdraw full MB balance
 
     if (!maxBalance || maxBalance <= 0) {
-      toast.error(`No ${asset} available to close.`, { duration: 3000 });
+      setTxModalStatus("error");
+      setTxModalTitle("No Balance");
+      setTxModalMessage(`No ${asset} available to close.`);
+      setTxModalOpen(true);
       return;
     }
 
     setIsLoading(true);
-    const toastId = toast.loading(`💨 Closing ${asset} position...`, { duration: Infinity });
+
+    // Show pending modal
+    setTxModalStatus("pending");
+    setTxModalTitle("Flash Closing Position");
+    setTxModalMessage(`Closing ${asset} position...`);
+    setTxModalHash(undefined);
+    setTxModalOpen(true);
 
     try {
       const { tx_hash, marginAccount } = await transfer_collateral(asset, amount);
@@ -105,20 +127,30 @@ export const TransferCollateral = () => {
         marginAccount,
       });
 
-      toast.success(`Flash close complete: ${maxBalance} ${asset} withdrawn.`, {
-        id: toastId,
-        duration: 5000,
-      });
+      // Show success modal
+      setTxModalStatus("success");
+      setTxModalTitle("Flash Close Complete");
+      setTxModalMessage(`Successfully withdrawn ${maxBalance} ${asset} to wallet!`);
 
     } catch (err: any) {
-      toast.error(err?.message ?? "Flash Close failed.", {
-        duration: 5000,
-        id: toastId,
-      });
+      const isUserRejection =
+        err?.code === 4001 ||
+        err?.message?.includes("User rejected") ||
+        err?.message?.includes("user rejected");
+
+      setTxModalStatus("error");
+      setTxModalTitle(isUserRejection ? "Transaction Cancelled" : "Flash Close Failed");
+      setTxModalMessage(isUserRejection ? "You cancelled the transaction" : (err?.message ?? "Flash Close transaction failed"));
     } finally {
       setIsLoading(false);
     }
   };
+
+    const DEFAULT_TOKENS = ["USDC", "USDT", "ETH"];
+  const dropdownItems =
+  supportedTokens && supportedTokens.length > 0
+    ? supportedTokens
+    : DEFAULT_TOKENS;
 
 
   const transfer_collateral = async (asset: string, amount: string) => {
@@ -252,16 +284,21 @@ export const TransferCollateral = () => {
     console.log("Transfer initiated:", { asset, amount });
 
     if (!amount || Number(amount) === 0) {
-      toast.error("⚠️ Please enter an amount", {
-        duration: 3000,
-      });
+      setTxModalStatus("error");
+      setTxModalTitle("Invalid Amount");
+      setTxModalMessage("Please enter an amount to transfer.");
+      setTxModalOpen(true);
       return;
     }
 
     setIsLoading(true);
-    const toastId = toast.loading(`📤 Transferring ${amount} ${asset} from MB to WB...`, {
-      duration: Infinity,
-    });
+
+    // Show pending modal
+    setTxModalStatus("pending");
+    setTxModalTitle("Transferring Collateral");
+    setTxModalMessage(`Transferring ${amount} ${asset} from Margin to Wallet...`);
+    setTxModalHash(undefined);
+    setTxModalOpen(true);
 
     try {
       const { tx_hash, marginAccount } = await transfer_collateral(asset, amount);
@@ -279,13 +316,12 @@ export const TransferCollateral = () => {
       if (tx_hash) {
         setValueInput("");
         setPercentage(0);
-        toast.success(
-          `✅ Transfer successful! ${amount} ${asset} moved from MB to WB.\nTx: ${tx_hash.slice(0, 10)}...`,
-          {
-            id: toastId,
-            duration: 5000,
-          }
-        );
+
+        // Show success modal
+        setTxModalStatus("success");
+        setTxModalTitle("Transfer Successful");
+        setTxModalMessage(`Successfully transferred ${amount} ${asset} from Margin Balance to Wallet Balance!`);
+        setTxModalHash(tx_hash);
       }
     } catch (err: any) {
       console.error("✗ Transfer error in handler:", {
@@ -295,12 +331,14 @@ export const TransferCollateral = () => {
         fullError: err,
       });
 
-      const errorMessage = err?.message || "Transaction failed. Please try again.";
+      const isUserRejection =
+        err?.code === 4001 ||
+        err?.message?.includes("User rejected") ||
+        err?.message?.includes("user rejected");
 
-      toast.error(errorMessage, {
-        id: toastId,
-        duration: 5000,
-      });
+      setTxModalStatus("error");
+      setTxModalTitle(isUserRejection ? "Transaction Cancelled" : "Transfer Failed");
+      setTxModalMessage(isUserRejection ? "You cancelled the transaction" : (err?.message || "Transfer transaction failed"));
     } finally {
       setIsLoading(false);
     }
@@ -349,7 +387,7 @@ export const TransferCollateral = () => {
                 classname="text-[16px] font-medium gap-[8px]"
                 selectedOption={selectedCurrency}
                 setSelectedOption={setSelectedCurrency}
-                items={supportedTokens}
+                items={dropdownItems}
                 dropdownClassname="text-[14px] font-medium gap-[8px]"
               />
             </div>
@@ -500,6 +538,26 @@ export const TransferCollateral = () => {
           />
         </motion.div>
       </motion.div>
+
+      {/* Transaction Status Modal */}
+      <TransactionModal
+        isOpen={txModalOpen}
+        status={txModalStatus}
+        title={txModalTitle}
+        message={txModalMessage}
+        txHash={txModalHash}
+        onClose={() => {
+          setTxModalOpen(false);
+        }}
+        onRetry={
+          txModalStatus === "error"
+            ? () => {
+                setTxModalOpen(false);
+                // User can try again
+              }
+            : undefined
+        }
+      />
     </motion.div>
   );
 };

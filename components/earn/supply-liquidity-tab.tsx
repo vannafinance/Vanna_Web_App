@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo } from "react";
 import { useAccount, useWalletClient, usePublicClient, useChainId } from "wagmi";
-import { toast } from "sonner";
 import { Dropdown } from "../ui/dropdown";
 import { DEPOSIT_PERCENTAGES, PERCENTAGE_COLORS, UNIFIED_BALANCE_BREAKDOWN_DATA } from "@/lib/constants/margin";
 import { InfoCard } from "../margin/info-card";
 import { Button } from "../ui/button";
 import { AmountBreakdownDialogue } from "../ui/amount-breakdown-dialogue";
+import { TransactionModal } from "../ui/transaction-modal";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/contexts/theme-context";
 import { EarnAsset } from "@/lib/types";
@@ -44,6 +44,19 @@ export const SupplyLiquidityTab = () => {
   const [isBalanceBreakdownOpen, setIsBalanceBreakdownOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [sharesPreview, setSharesPreview] = useState<number>(0);
+
+  // Transaction modal state
+  const [txModal, setTxModal] = useState<{
+    isOpen: boolean;
+    status: "pending" | "success" | "error";
+    message?: string;
+    txHash?: string;
+  }>({
+    isOpen: false,
+    status: "pending",
+    message: "",
+    txHash: "",
+  });
 
   // Vault data (local state instead of store)
   const [vaultData, setVaultData] = useState<{
@@ -135,22 +148,38 @@ export const SupplyLiquidityTab = () => {
   // Handle supply transaction
   const handleSupply = async () => {
     if (!walletClient || !publicClient || !chainId || !address) {
-      toast.error("Please connect your wallet");
+      setTxModal({
+        isOpen: true,
+        status: "error",
+        message: "Please connect your wallet",
+      });
       return;
     }
 
     if (!amount || parseFloat(amount) <= 0) {
-      toast.error("Please enter an amount");
+      setTxModal({
+        isOpen: true,
+        status: "error",
+        message: "Please enter an amount",
+      });
       return;
     }
 
     if (parseFloat(amount) > walletBalance) {
-      toast.error("Insufficient balance");
+      setTxModal({
+        isOpen: true,
+        status: "error",
+        message: "Insufficient balance",
+      });
       return;
     }
 
     setLoading(true);
-    const toastId = toast.loading(`Supplying ${amount} ${selectedAsset}...`);
+    setTxModal({
+      isOpen: true,
+      status: "pending",
+      message: `Supplying ${amount} ${selectedAsset}...`,
+    });
 
     try {
       const result = await supply({
@@ -163,8 +192,11 @@ export const SupplyLiquidityTab = () => {
       });
 
       if (result.success) {
-        toast.success(`Successfully supplied ${amount} ${selectedAsset}`, {
-          id: toastId,
+        setTxModal({
+          isOpen: true,
+          status: "success",
+          message: `Successfully supplied ${amount} ${selectedAsset}`,
+          txHash: result.txHash,
         });
 
         // Reset form
@@ -198,11 +230,13 @@ export const SupplyLiquidityTab = () => {
         error?.message?.includes("user rejected") ||
         error?.message?.includes("User denied");
 
-      if (isUserRejection) {
-        toast.error("Transaction cancelled", { id: toastId });
-      } else {
-        toast.error(error.message || "Supply failed", { id: toastId });
-      }
+      setTxModal({
+        isOpen: true,
+        status: "error",
+        message: isUserRejection
+          ? "Transaction cancelled"
+          : error.message || "Supply failed",
+      });
     } finally {
       setLoading(false);
     }
@@ -457,6 +491,16 @@ export const SupplyLiquidityTab = () => {
           </motion.aside>
         )}
       </AnimatePresence>
+
+      {/* Transaction Modal */}
+      <TransactionModal
+        isOpen={txModal.isOpen}
+        status={txModal.status}
+        message={txModal.message}
+        txHash={txModal.txHash}
+        onClose={() => setTxModal({ ...txModal, isOpen: false })}
+        onRetry={txModal.status === "error" ? handleSupply : undefined}
+      />
     </>
   );
 };

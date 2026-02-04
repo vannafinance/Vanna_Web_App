@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { DEPOSIT_PERCENTAGES, PERCENTAGE_COLORS } from "@/lib/constants/margin";
 import { Dropdown } from "../ui/dropdown";
@@ -16,8 +16,9 @@ import { getAddressList } from "@/lib/utils/web3/addressList";
 import { tokenAddressByChain, TOKEN_DECIMALS } from "@/lib/utils/web3/token";
 import AccountManager from "../../abi/vanna/out/out/AccountManager.sol/AccountManager.json";
 import { erc20Abi, parseUnits } from "viem";
-import { useFetchAccountCheck } from "@/lib/utils/margin/marginFetchers";
+import { useFetchAccountCheck, useFetchCollateralState, useFetchBorrowState, useFetchBorrowPositions } from "@/lib/utils/margin/marginFetchers";
 import { useTheme } from "@/contexts/theme-context";
+import { TransactionModal } from "@/components/ui/transaction-modal";
 
 export const RepayLoanTab = () => {
   const { isDark } = useTheme();
@@ -26,6 +27,13 @@ export const RepayLoanTab = () => {
 
    const { chainId, address } = useAccount();
 
+  // Transaction Modal State
+  const [txModalOpen, setTxModalOpen] = useState(false);
+  const [txModalStatus, setTxModalStatus] = useState<"pending" | "success" | "error">("pending");
+  const [txModalTitle, setTxModalTitle] = useState("");
+  const [txModalMessage, setTxModalMessage] = useState("");
+  const [txModalHash, setTxModalHash] = useState<string | undefined>(undefined);
+
 
    const supportedTokens = useMemo(() => {
     return SUPPORTED_TOKENS_BY_CHAIN[chainId ?? 0] ?? [];
@@ -33,26 +41,35 @@ export const RepayLoanTab = () => {
 
   const { data: walletClient } = useWalletClient();
   
-  const [repayStats, setRepayStats] = useState({
-    netOutstandingAmountToPay: 0,
-    availableBalance: 0,
-    frozenBalance: 0,
-  });
-
 
   const [selectedRepayCurrency, setSelectedRepayCurrency] =
-    useState<string>(supportedTokens[0] || "");
+  useState<string>(supportedTokens[0] || "");
   const [selectedRepayPercentage, setSelectedRepayPercentage] =
-    useState<number>(10);
-  const [repayAmount, setRepayAmount] = useState<number>(0);
+  useState<number>(10);
+  const [repayAmount, setRepayAmount] = useState<string>("");
   const [repayAmountInUsd, setRepayAmountInUsd] = useState<number>(0);
   const [prices, setPrices] = useState<Record<string, number>>({});
-  
+  const [borrowPositions, setBorrowPositions] = useState<Array<{ asset: string; amount: string }>>([]);
+
   const publicClient = usePublicClient();
   const { marginState, reloadMarginState } = useMarginStore((s) => s);
-  const getBalance = useBalanceStore((s) => s.getBalance);
+  const { getBalance, refreshBalances } = useBalanceStore((s) => s);
   const fetchAccountCheck = useFetchAccountCheck(chainId, address as `0x${string}`, publicClient);
+  const fetchCollateralState = useFetchCollateralState(chainId, publicClient);
+  const fetchBorrowState = useFetchBorrowState(chainId, publicClient);
+  const fetchBorrowPositions = useFetchBorrowPositions(chainId, publicClient);
   const [loading, setLoading] = useState(false);
+
+  // Inject fresh fetchers into the store to ensure state reloads use current closures
+  const fetchers = useMemo(() => ({
+    fetchAccountCheck,
+    fetchCollateralState,
+    fetchBorrowState,
+  }), [fetchAccountCheck, fetchCollateralState, fetchBorrowState]);
+
+  useEffect(() => {
+    useMarginStore.getState().setFetchers(fetchers);
+  }, [fetchers]);
 
   // Popup visibility states
   const [isPayNowPopupOpen, setIsPayNowPopupOpen] = useState(false);
@@ -69,6 +86,9 @@ export const RepayLoanTab = () => {
       try {
         const res = await fetch("/api/prices");
         const data = await res.json();
+        // Fallback for stablecoins if missing
+        if (!data.USDC) data.USDC = 1;
+        if (!data.USDT) data.USDT = 1;
         setPrices(data);
       } catch (e) {
         console.error("Error fetching prices:", e);
@@ -77,19 +97,110 @@ export const RepayLoanTab = () => {
     fetchPrices();
   }, []);
 
+  // Refresh balances and borrow positions only on wallet/network changes (not every tab switch)
+  const hasLoadedRepayRef = useRef(false);
+  const lastChainRepayRef = useRef<number | undefined>(undefined);
+  const lastAddressRepayRef = useRef<string | undefined>(undefined);
+
   useEffect(() => {
-    if (marginState) {
-      setRepayStats({
-        netOutstandingAmountToPay: marginState.borrowUsd,
-        availableBalance: getBalance(selectedRepayCurrency, "WB"),
-        frozenBalance: marginState.collateralUsd,
+    if (!chainId || !address || !publicClient) return;
+
+    // Check if wallet or network actually changed
+    const walletChanged = lastAddressRepayRef.current !== address;
+    const networkChanged = lastChainRepayRef.current !== chainId;
+
+    // Only fetch if wallet/network changed, or first load
+    if (!hasLoadedRepayRef.current || walletChanged || networkChanged) {
+      console.log('[RepayLoanTab] Loading borrow positions:', {
+        reason: !hasLoadedRepayRef.current ? 'initial load' : walletChanged ? 'wallet changed' : 'network changed'
       });
+
+      const refresh = async () => {
+        try {
+          const accounts = await fetchAccountCheck();
+          const marginAccount = accounts[0];
+
+          // Fetch borrow positions (balances are handled globally)
+          const positions = marginAccount
+            ? await fetchBorrowPositions(marginAccount)
+            : [];
+
+          setBorrowPositions(positions);
+
+          hasLoadedRepayRef.current = true;
+          lastChainRepayRef.current = chainId;
+          lastAddressRepayRef.current = address;
+        } catch (error) {
+          console.error("Failed to load borrow positions in RepayLoanTab:", error);
+        }
+      };
+
+      // Debounce to prevent rapid fetches
+      const timer = setTimeout(refresh, 800);
+      return () => clearTimeout(timer);
+    } else {
+      console.log('[RepayLoanTab] Using cached borrow positions');
     }
-  }, [marginState, getBalance, selectedRepayCurrency]);
+  }, [chainId, address, publicClient, fetchAccountCheck, fetchBorrowPositions]);
+
+  // Get borrowed amount for a specific asset
+  const getBorrowedAmount = useCallback((asset: string): number => {
+    const position = borrowPositions.find(p => p.asset === asset || (p.asset === "WETH" && asset === "ETH"));
+    return position ? Number(position.amount) : 0;
+  }, [borrowPositions]);
+
+  // Calculate total outstanding from borrow positions (more accurate than RiskEngine aggregate)
+  // Track where the data is coming from for debugging
+  const [dataSource, setDataSource] = useState<"positions" | "riskEngine" | "none">("none");
+
+  const totalOutstandingUsd = useMemo(() => {
+    if (!borrowPositions || borrowPositions.length === 0) {
+      const riskEngineValue = marginState?.borrowUsd || 0;
+      if (riskEngineValue > 0) {
+        setDataSource("riskEngine");
+        console.log(`[Repay Stats] Using RiskEngine: $${riskEngineValue.toFixed(2)}`);
+      } else {
+        setDataSource("none");
+        console.log(`[Repay Stats] No borrow data available`);
+      }
+      return riskEngineValue;
+    }
+
+    // Sum up all borrowed assets in USD
+    const total = borrowPositions.reduce((sum, position) => {
+      const price = prices[position.asset] || (position.asset === "WETH" ? prices["ETH"] : 0) || 0;
+      const amountUsd = Number(position.amount) * price;
+      console.log(`[Repay Stats] ${position.asset}: ${position.amount} × $${price} = $${amountUsd.toFixed(2)}`);
+      return sum + amountUsd;
+    }, 0);
+
+    const riskEngineValue = marginState?.borrowUsd || 0;
+    console.log(`[Repay Stats] Calculated from positions: $${total.toFixed(2)} (${borrowPositions.length} positions)`);
+    console.log(`[Repay Stats] RiskEngine value: $${riskEngineValue.toFixed(2)}`);
+
+    // Prefer calculated total over marginState if we have positions
+    if (total > 0) {
+      setDataSource("positions");
+      return total;
+    } else if (riskEngineValue > 0) {
+      setDataSource("riskEngine");
+      return riskEngineValue;
+    } else {
+      setDataSource("none");
+      return 0;
+    }
+  }, [borrowPositions, prices, marginState]);
+
+  // Derive stats directly from store state to ensure instant updates
+  const repayStats = useMemo(() => ({
+    netOutstandingAmountToPay: totalOutstandingUsd,
+    availableBalance: getBorrowedAmount(selectedRepayCurrency),
+    frozenBalance: marginState?.collateralUsd || 0,
+  }), [totalOutstandingUsd, getBorrowedAmount, selectedRepayCurrency, marginState]);
 
   useEffect(() => {
     const price = prices[selectedRepayCurrency] || 0;
-    setRepayAmountInUsd(repayAmount * price);
+    setRepayAmountInUsd(Number(repayAmount) * price);
   }, [repayAmount, selectedRepayCurrency, prices]);
 
   // Format number to avoid scientific notation
@@ -106,12 +217,15 @@ export const RepayLoanTab = () => {
     const targetUsd = (debt * item) / 100;
     const price = prices[selectedRepayCurrency] || 1;
     const amount = targetUsd / price;
-    setRepayAmount(Number(formatAmount(amount, selectedRepayCurrency)));
+    setRepayAmount(formatAmount(amount, selectedRepayCurrency));
   };
 
   // Handler for input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setRepayAmount(Number(e.target.value));
+    const val = e.target.value;
+    if (val === "" || /^\d*\.?\d*$/.test(val)) {
+      setRepayAmount(val);
+    }
   };
 
   // Handler for pay now click
@@ -137,22 +251,44 @@ export const RepayLoanTab = () => {
 
   const executeRepay = async () => {
     if (!walletClient || !publicClient || !chainId || !address) {
-      return toast.error("Wallet not ready");
+      setTxModalStatus("error");
+      setTxModalTitle("Wallet Not Connected");
+      setTxModalMessage("Please connect your wallet to continue.");
+      setTxModalOpen(true);
+      return;
     }
 
     const addressList = getAddressList(chainId);
-    if (!addressList) return toast.error("Unsupported network");
+    if (!addressList) {
+      setTxModalStatus("error");
+      setTxModalTitle("Unsupported Network");
+      setTxModalMessage("This network is not supported.");
+      setTxModalOpen(true);
+      return;
+    }
 
     const accounts = await fetchAccountCheck();
-    if (!accounts.length) return toast.error("No Margin Account found");
+    if (!accounts.length) {
+      setTxModalStatus("error");
+      setTxModalTitle("No Margin Account");
+      setTxModalMessage("No margin account found.");
+      setTxModalOpen(true);
+      return;
+    }
 
     const marginAccount = accounts[0];
-    const amountStr = formatAmount(repayAmount, selectedRepayCurrency);
+    const amountStr = repayAmount;
     const decimals = TOKEN_DECIMALS[selectedRepayCurrency] ?? 18;
     const parsedAmount = parseUnits(amountStr, decimals);
 
     setLoading(true);
-    const toastId = toast.loading("Processing Repayment...");
+
+    // Show pending modal
+    setTxModalStatus("pending");
+    setTxModalTitle("Processing Repayment");
+    setTxModalMessage("Preparing repayment transaction...");
+    setTxModalHash(undefined);
+    setTxModalOpen(true);
 
     try {
       // 1. Deposit to Margin Account first (assuming paying from wallet)
@@ -160,7 +296,7 @@ export const RepayLoanTab = () => {
       const tokenAddress = tokenAddressByChain[chainId]?.[selectedRepayCurrency];
 
       if (selectedRepayCurrency !== "ETH") {
-        if (!tokenAddress) throw new Error("Token address not found");
+        if (!tokenAddress) throw new Error(`Token address not found for ${selectedRepayCurrency} on chain ${chainId}`);
         const allowance = await publicClient.readContract({
           address: tokenAddress as `0x${string}`,
           abi: erc20Abi,
@@ -169,12 +305,14 @@ export const RepayLoanTab = () => {
         }) as bigint;
 
         if (allowance < parsedAmount) {
-          toast.loading("Approving token...", { id: toastId });
+          setTxModalMessage(`Approving ${selectedRepayCurrency}...`);
+          // Use MAX_UINT256 so we only need to approve once
+          const MAX_UINT256 = BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
           const approveHash = await walletClient.writeContract({
             address: tokenAddress as `0x${string}`,
             abi: erc20Abi,
             functionName: "approve",
-            args: [addressList.accountManagerContractAddress as `0x${string}`, parsedAmount],
+            args: [addressList.accountManagerContractAddress as `0x${string}`, MAX_UINT256],
           });
           await publicClient.waitForTransactionReceipt({ hash: approveHash });
         }
@@ -183,8 +321,8 @@ export const RepayLoanTab = () => {
       // 2. Repay (Deposit + Repay logic handled by AccountManager if we use repay? No, usually separate)
       // Actually, AccountManager might have a function to repay from wallet?
       // Looking at LeverageAssetsTab, executeRepay with mode "WB" does: deposit -> repay.
-      
-      toast.loading("Depositing for repayment...", { id: toastId });
+
+      setTxModalMessage("Depositing for repayment...");
       // Deposit
       if (selectedRepayCurrency === "ETH") {
          const tx = await walletClient.writeContract({
@@ -205,7 +343,7 @@ export const RepayLoanTab = () => {
          await publicClient.waitForTransactionReceipt({ hash: tx });
       }
 
-      toast.loading("Repaying loan...", { id: toastId });
+      setTxModalMessage("Repaying loan...");
       // Repay
       if (selectedRepayCurrency === "ETH") {
          const tx = await walletClient.writeContract({
@@ -225,14 +363,38 @@ export const RepayLoanTab = () => {
          await publicClient.waitForTransactionReceipt({ hash: tx });
       }
 
-      await reloadMarginState();
-      toast.success("Repayment successful!", { id: toastId });
-      setRepayAmount(0);
+      // Wait for next block to ensure state is updated on RPC
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Refresh Margin State, Wallet Balances, and Borrow Positions
+      const [, , positions] = await Promise.all([
+        reloadMarginState(),
+        refreshBalances({ chainId, address, publicClient, marginAccount }),
+        fetchBorrowPositions(marginAccount)
+      ]);
+
+      setBorrowPositions(positions);
+
+      // Show success modal
+      setTxModalStatus("success");
+      setTxModalTitle("Repayment Successful");
+      setTxModalMessage(`Successfully repaid ${repayAmount} ${selectedRepayCurrency}!`);
+
+      setRepayAmount("");
       setIsPayNowPopupOpen(false);
 
     } catch (error: any) {
       console.error(error);
-      toast.error(error.message || "Repayment failed", { id: toastId });
+
+      const isUserRejection =
+        error?.code === 4001 ||
+        error?.message?.includes("User rejected") ||
+        error?.message?.includes("user rejected");
+
+      // Show error modal
+      setTxModalStatus("error");
+      setTxModalTitle(isUserRejection ? "Transaction Cancelled" : "Repayment Failed");
+      setTxModalMessage(isUserRejection ? "You cancelled the transaction" : (error.message || "Repayment transaction failed"));
     } finally {
       setLoading(false);
     }
@@ -240,7 +402,7 @@ export const RepayLoanTab = () => {
   
 
   // Check if buttons should be disabled (when input is 0 or empty)
-  const isInputEmpty = repayAmount === 0 || repayAmount === null || repayAmount === undefined;
+  const isInputEmpty = !repayAmount || Number(repayAmount) === 0;
 
   return (
     <motion.section
@@ -289,8 +451,33 @@ export const RepayLoanTab = () => {
                   {key === "netOutstandingAmountToPay"
                     ? "Net Outstanding Amount to Repay"
                     : key === "availableBalance"
-                    ? "Available Balance"
+                    ? "Borrowed Balance"
                     : "Frozen Balance"}
+                  {/* Debug badge for Net Outstanding */}
+                  {key === "netOutstandingAmountToPay" && (
+                    <span
+                      className={`ml-2 px-2 py-1 text-[10px] font-medium rounded ${
+                        dataSource === "positions"
+                          ? "bg-green-100 text-green-700"
+                          : dataSource === "riskEngine"
+                          ? "bg-blue-100 text-blue-700"
+                          : "bg-gray-100 text-gray-700"
+                      }`}
+                      title={
+                        dataSource === "positions"
+                          ? "Calculated from borrow positions"
+                          : dataSource === "riskEngine"
+                          ? "From RiskEngine contract"
+                          : "No borrow data"
+                      }
+                    >
+                      {dataSource === "positions"
+                        ? "📊 From Positions"
+                        : dataSource === "riskEngine"
+                        ? "⚙️ From RiskEngine"
+                        : "⚠️ No Data"}
+                    </span>
+                  )}
                 </motion.div>
                 <motion.div
                   className={`text-[24px] font-bold ${
@@ -304,7 +491,7 @@ export const RepayLoanTab = () => {
                     ease: "easeOut",
                   }}
                 >
-                  {typeof value === 'number' ? value.toFixed(4) : value}
+                  ${typeof value === 'number' ? value.toFixed(2) : value}
                 </motion.div>
               </motion.article>
             );
@@ -536,6 +723,26 @@ export const RepayLoanTab = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Transaction Status Modal */}
+      <TransactionModal
+        isOpen={txModalOpen}
+        status={txModalStatus}
+        title={txModalTitle}
+        message={txModalMessage}
+        txHash={txModalHash}
+        onClose={() => {
+          setTxModalOpen(false);
+        }}
+        onRetry={
+          txModalStatus === "error"
+            ? () => {
+                setTxModalOpen(false);
+                // User can try again
+              }
+            : undefined
+        }
+      />
     </motion.section>
   );
 };

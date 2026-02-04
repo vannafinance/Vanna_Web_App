@@ -10,7 +10,7 @@ export const TOKEN_OPTIONS = poolsPlaceholder.map(p=>p.name)  //["WETH", "WBTC",
 // WETH	✔	canonical
 // WBTC	❌	no native WBTC
 // USDC	✔	native USDC on Base
-// USDT	❌	not deployed yet
+// USDT	✔	bridged USDT on Base (0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2)
 // DAI	❌	not canonical
 
 
@@ -51,9 +51,10 @@ export const tokenAddressByChain: Record<number, Record<string, `0x${string}`>> 
 
 
 export const SUPPORTED_TOKENS_BY_CHAIN: Record<number, TokenSymbol[]> = {
-  42161: ["ETH", "USDC", "USDT"],  // Arbitrum - all supported
-  10:    ["ETH", "USDC", "USDT"],  // Optimism - all supported
-  8453:  ["ETH", "USDC"],          // Base - USDT not deployed yet
+  42161: ["USDC","ETH", "USDT"],  // Arbitrum - all supported
+  10: ["USDC","ETH", "USDT"],  // Optimism - all supported
+  8453: ["USDC","ETH", "USDT"],  // Base - USDT now supported ✅
+
 };
 
 

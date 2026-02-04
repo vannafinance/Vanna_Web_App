@@ -29,6 +29,13 @@ const calcBorrowUsd = (b: { usd: number }[]): number =>
 // ============================================
 // Formula: HF = (Collateral × Collateral Factor) / Debt
 // HF > 1 = Safe, HF <= 1 = Liquidatable
+// User-1 :- 
+  //  2000 (collatral)
+  // liquidation threshold 90%=0.9
+  // debt = 1500
+// HF = (2000 * 0.9) / 1500 = 1.2 (safe)
+
+
 const calcHF = (collUsd: number, debtUsd: number): number => {
   if (debtUsd <= 0) return Infinity;
   if (collUsd <= 0) return 0;
@@ -40,10 +47,18 @@ const calcHF = (collUsd: number, debtUsd: number): number => {
 // ============================================
 // Formula: LTV = Debt / Collateral
 // Returns ratio (0.5 = 50% LTV)
+
+// 1600 / 2000 = 0.8 (80% LTV)
+// 1000/2000 = 0.5 (50% LTV)
+// 1800/1800 = 1 (100% LTV)
+
+
 const calcLTV = (collUsd: number, debtUsd: number): number => {
   if (collUsd <= 0) return debtUsd > 0 ? Infinity : 0;
   return debtUsd / collUsd;
 };
+
+
 
 // LTV as percentage (0-100)
 const calcLTVPercent = (collUsd: number, debtUsd: number): number => {
@@ -53,9 +68,13 @@ const calcLTVPercent = (collUsd: number, debtUsd: number): number => {
 // ============================================
 // LEVERAGE
 // ============================================
+
+
 // Formula: Leverage = Total Position / Equity
 // Where: Equity = Collateral - Debt
 // Alternative: Leverage = 1 / (1 - LTV)
+
+
 const calcLeverage = (collUsd: number, debtUsd: number): number => {
   const equity = collUsd - debtUsd;
   if (equity <= 0) return Infinity; // Over-leveraged or underwater
@@ -74,6 +93,12 @@ const calcLeverageFromLTV = (ltv: number): number => {
 // ============================================
 // Formula: Liquidation Price = (Debt × Liquidation Threshold) / Collateral Amount
 // This calculates at what price the collateral would trigger liquidation
+
+
+
+// 1600/ (2000 * 0.9) = 0.8888 (88.88% of current price
+// If current price = $100, liquidation price = $88.88
+
 const calcLiquidationPrice = (
   debtUsd: number,
   collateralAmount: number,
@@ -89,7 +114,8 @@ const calcLiquidationPrice = (
   return liqPrice;
 };
 
-// Calculate liquidation price as percentage drop from current price
+
+
 const calcLiquidationPriceDropPercent = (
   debtUsd: number,
   collateralAmount: number,
@@ -106,15 +132,26 @@ const calcLiquidationPriceDropPercent = (
 // MAX BORROW / WITHDRAW
 // ============================================
 // Max additional borrowing while staying under LTV limit
+
+// 2000 * 0.9 = 1800 max debt
+// current debt = 1500
+// max borrow = 1800 - 1500 = 300
+
 const calcMaxBorrow = (collUsd: number, debtUsd: number): number => {
   const maxDebt = collUsd * PROTOCOL_CONSTANTS.MAX_LTV;
   return Math.max(0, maxDebt - debtUsd);
 };
 
+// 1800 / 0.9 = 2000 (collateral needed to cover 1800 debt at 90% LTV)
+// current collateral = 2000
+// max withdraw = 2000 - 2000 = 0
+
+
 // Max withdrawable collateral while maintaining safe position
 const calcMaxWithdraw = (collUsd: number, debtUsd: number): number => {
   if (debtUsd <= 0) return collUsd;
   // Minimum collateral needed = debt / MAX_LTV
+
   const minCollateral = debtUsd / PROTOCOL_CONSTANTS.MAX_LTV;
   return Math.max(0, collUsd - minCollateral);
 };
@@ -155,9 +192,8 @@ const getHFWarning = (hf: number): string | null => {
   }
 };
 
-// ============================================
 // SIMULATION HELPERS
-// ============================================
+
 interface SimulationResult {
   newHF: number;
   newLTV: number;
@@ -197,6 +233,9 @@ const simulatePosition = (
 // ============================================
 // VALIDATION HELPERS
 // ============================================
+
+
+
 const validateBorrow = (
   collUsd: number,
   currentDebtUsd: number,
