@@ -9,6 +9,7 @@ import { tradeItems } from "@/lib/constants";
 import { useTheme } from "@/contexts/theme-context";
 import { useUserStore } from "@/store/user";
 import { SunIcon, MoonIcon } from "@/components/icons";
+import { gsap } from "gsap";
 
 interface Navbar {
   items: {
@@ -34,6 +35,8 @@ export const Navbar = (props: Navbar) => {
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const dropdownItemsRef = useRef<HTMLDivElement[]>([]);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -43,6 +46,64 @@ export const Navbar = (props: Navbar) => {
       }
     };
   }, []);
+
+  // GSAP animation for dropdown
+  useEffect(() => {
+    if (!dropdownRef.current) return;
+
+    if (isDropdownOpen) {
+      // Opening animation
+      gsap.fromTo(
+        dropdownRef.current,
+        {
+          height: 0,
+          opacity: 0,
+        },
+        {
+          height: "auto",
+          opacity: 1,
+          duration: 0.3,
+          ease: "power2.out",
+        }
+      );
+
+      // Stagger animation for items
+      if (dropdownItemsRef.current.length > 0) {
+        gsap.fromTo(
+          dropdownItemsRef.current,
+          {
+            opacity: 0,
+            y: -10,
+          },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.2,
+            stagger: 0.03,
+            ease: "power2.out",
+            delay: 0.1,
+          }
+        );
+      }
+    } else {
+      // Closing animation
+      if (dropdownItemsRef.current.length > 0) {
+        gsap.to(dropdownItemsRef.current, {
+          opacity: 0,
+          duration: 0.15,
+          ease: "power2.in",
+        });
+      }
+      
+      gsap.to(dropdownRef.current, {
+        height: 0,
+        opacity: 0,
+        duration: 0.25,
+        ease: "power2.in",
+        delay: 0.05,
+      });
+    }
+  }, [isDropdownOpen]);
 
   // Handler for nav item click with link
   const handleNavItemClickWithLink = (item: {
@@ -99,7 +160,7 @@ export const Navbar = (props: Navbar) => {
     };
 
   return (
-    <div className={`relative ${isDark ? "bg-[#111111]" : ""}`}>
+    <div className={`${isDark ? "bg-[#111111]" : ""}`}>
       <motion.div
         className={`py-[12px] px-[40px] w-full h-fit flex justify-between items-center ${isDark ? "text-white" : ""}`}
         initial={{ y: -100, opacity: 0 }}
@@ -429,60 +490,50 @@ export const Navbar = (props: Navbar) => {
           )}
         </motion.div>
       </motion.div>
-      <AnimatePresence>
-        {isDropdownOpen && (
-          <motion.div
-            id="trade-menu"
-            role="menu"
-            aria-label="Trade menu"
-            layout
-            initial={{ opacity: 0, height: 0, y: -8 }}
-            animate={{ opacity: 1, height: "auto", y: 0 }}
-            exit={{ opacity: 0, height: 0, y: -8 }}
-            transition={{ duration: 0.22, ease: "easeOut" }}
-            onMouseEnter={handleDropdownMouseEnter}
-            onMouseLeave={handleDropdownMouseLeave}
-            className={`w-full absolute py-[8px] flex justify-center gap-[4px] ${
-              isDark 
-                ? "bg-[#111111] border-t-[1px] border-b-[1px]" 
-                : "border-t-[1px] border-[#F4F4F4] border-b-[1px] border-[#F4F4F4]"
-            }`}
-          >
-            {tradeItems.map((item, idx) => {
-              const isActive = pathname === item.link;
-              return (
-                <motion.div
-                  key={item.link}
-                  role="menuitem"
-                  tabIndex={0}
-                  onClick={() => {
-                    handleNavItemClickWithLink(item);
-                  }}
-                  onKeyDown={handleNavKeyDown(item)}
-                  className={`${
-                    isActive ? "bg-[#FFE6F2] text-[#FF007A]" : isDark ? "text-white" : ""
-                  } cursor-pointer hover:text-[#FF007A] py-[8px] px-[16px] text-[14px] font-medium rounded-[8px]`}
-                  initial={{ opacity: 0, y: -6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -6 }}
-                  transition={{
-                    duration: 0.15,
-                    ease: "easeOut",
-                    delay: idx * 0.02,
-                  }}
-                  whileHover={{
-                    scale: 0.95,
-                    transition: { type: "spring", stiffness: 300, damping: 15 },
-                  }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  {item.title}
-                </motion.div>
-              );
-            })}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {isDropdownOpen && (
+        <div
+          ref={dropdownRef}
+          id="trade-menu"
+          role="menu"
+          aria-label="Trade menu"
+          onMouseEnter={handleDropdownMouseEnter}
+          onMouseLeave={handleDropdownMouseLeave}
+          className={`w-full py-[8px] flex justify-center gap-[4px] overflow-hidden ${
+            isDark 
+              ? "bg-[#111111] border-t-[1px] border-b-[1px]" 
+              : "border-t-[1px] border-[#F4F4F4] border-b-[1px] border-[#F4F4F4]"
+          }`}
+          style={{ height: 0, opacity: 0 }}
+        >
+          {tradeItems.map((item, idx) => {
+            const isActive = pathname === item.link;
+            return (
+              <motion.div
+                key={item.link}
+                ref={(el) => {
+                  if (el) dropdownItemsRef.current[idx] = el;
+                }}
+                role="menuitem"
+                tabIndex={0}
+                onClick={() => {
+                  handleNavItemClickWithLink(item);
+                }}
+                onKeyDown={handleNavKeyDown(item)}
+                className={`${
+                  isActive ? "bg-[#FFE6F2] text-[#FF007A]" : isDark ? "text-white" : ""
+                } cursor-pointer hover:text-[#FF007A] py-[8px] px-[16px] text-[14px] font-medium rounded-[8px]`}
+                whileHover={{
+                  scale: 0.95,
+                  transition: { type: "spring", stiffness: 300, damping: 15 },
+                }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {item.title}
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };

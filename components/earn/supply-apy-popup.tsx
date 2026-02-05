@@ -1,4 +1,61 @@
 import { Button } from "../ui/button";
+import { motion } from "framer-motion";
+
+// Animation variants
+const popupVariants = {
+  hidden: { 
+    opacity: 0, 
+    scale: 0.9,
+    y: -20,
+  },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: {
+      duration: 0.3,
+      ease: "easeOut" as const,
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, x: -10 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: {
+      duration: 0.3,
+      ease: "easeOut" as const,
+    },
+  },
+};
+
+const headerVariants = {
+  hidden: { opacity: 0, y: -10 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.2,
+      ease: "easeOut" as const,
+    },
+  },
+};
+
+const footerVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.3,
+      ease: "easeOut" as const,
+      delay: 0.2,
+    },
+  },
+};
 
 const supplyApyPopupItem = [
   {
@@ -21,24 +78,40 @@ interface SupplyApyPopupProps {
 
 export const SupplyApyPopup = ({ onClose }: SupplyApyPopupProps) => {
   return (
-    <article 
+    <motion.article 
       className="shadow-md w-[349px] h-fit rounded-[12px] p-[16px] flex flex-col gap-[16px] bg-[#FFFFFF]"
       aria-label="Supply APY Breakdown"
+      variants={popupVariants}
+      initial="hidden"
+      animate="visible"
     >
       <section className="w-full h-fit flex flex-col gap-[12px]">
-        <header className="w-full h-fit flex justify-between items-center border-[1px] bg-[#F7F7F7] p-[12px] rounded-[8px]">
+        <motion.header 
+          className="w-full h-fit flex justify-between items-center border-[1px] bg-[#F7F7F7] p-[12px] rounded-[8px]"
+          variants={headerVariants}
+        >
           <h2 className="text-[10px] font-medium w-full">APY TYPE</h2>
           <div className="w-[137.5px] h-fit flex justify-between items-center">
             <h3 className="text-[10px] font-medium w-full">1D</h3>
             <h3 className="text-[10px] font-medium w-full">7D</h3>
           </div>
-        </header>
-        <dl className="w-full h-fit flex flex-col gap-[4px]">
-          {supplyApyPopupItem.map((item) => {
+        </motion.header>
+        <motion.dl 
+          className="w-full h-fit flex flex-col gap-[4px]"
+          variants={popupVariants}
+        >
+          {supplyApyPopupItem.map((item, index) => {
             return (
-              <div
+              <motion.div
                 key={item.title}
                 className="w-full h-fit rounded-[8px] flex justify-between items-center py-[8px] px-[12px] bg-[#FBFBFB]"
+                variants={itemVariants}
+                whileHover={{ 
+                  scale: 1.02, 
+                  backgroundColor: "#F1EBFD",
+                  transition: { duration: 0.2 }
+                }}
+                transition={{ delay: index * 0.05 }}
               >
                 <div className="w-full h-fit flex flex-col gap-[4px]">
                   <dt className="w-full text-[10px] font-semibold">
@@ -56,20 +129,31 @@ export const SupplyApyPopup = ({ onClose }: SupplyApyPopupProps) => {
                     {item.sevenDay}
                   </dd>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
-        </dl>
-        <hr className="w-[317px] h-px bg-[#E2E2E2] border-0" />
-        <div className="w-full h-fit flex justify-between items-center">
+        </motion.dl>
+        <motion.hr 
+          className="w-[317px] h-px bg-[#E2E2E2] border-0"
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ duration: 0.3, delay: 0.3 }}
+        />
+        <motion.div 
+          className="w-full h-fit flex justify-between items-center"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.35 }}
+          whileHover={{ scale: 1.02 }}
+        >
           <strong className="text-[10px] font-semibold w-full">Overall APY</strong>
           <div className="flex justify-between items-center w-[137.5px] h-fit">
             <strong className="text-[10px] font-semibold w-full">10.08%</strong>
             <strong className="text-[10px] font-semibold w-full">10.02%</strong>
           </div>
-        </div>
+        </motion.div>
       </section>
-      <footer>
+      <motion.footer variants={footerVariants}>
         <Button
           text="Close"
           size="small"
@@ -77,7 +161,7 @@ export const SupplyApyPopup = ({ onClose }: SupplyApyPopupProps) => {
           disabled={false}
           onClick={onClose || (() => {})}
         />
-      </footer>
-    </article>
+      </motion.footer>
+    </motion.article>
   );
 };

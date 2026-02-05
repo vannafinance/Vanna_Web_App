@@ -102,9 +102,14 @@ export const SupplyLiquidityTab = () => {
   };
   return (
     <>
-      <form className={`flex gap-[16px] items-center w-full h-fit border-[1px] rounded-[16px] p-[16px] ${
-        isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"
-      }`}>
+      <motion.form 
+        className={`flex gap-[16px] items-center w-full h-fit border-[1px] rounded-[16px] p-[16px] ${
+          isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"
+        }`}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, ease: "easeOut" as const }}
+      >
         <div className="w-full h-full flex flex-col gap-[44px] justify-between">
           <div className="w-full h-fit">
             <label htmlFor="asset-select" className="sr-only">
@@ -147,7 +152,7 @@ export const SupplyLiquidityTab = () => {
             <legend className="sr-only">Select deposit percentage</legend>
             {DEPOSIT_PERCENTAGES.map((item) => {
               return (
-                <button
+                <motion.button
                   type="button"
                   onClick={() => setSelectedPercentage(item)}
                   key={item}
@@ -159,16 +164,19 @@ export const SupplyLiquidityTab = () => {
                       : "bg-[#F4F4F4] text-black"
                   }`}
                   aria-pressed={selectedPercentage === item}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
                 >
                   {item}%
-                </button>
+                </motion.button>
               );
             })}
           </fieldset>
           <div className="w-fit h-fit flex flex-col items-end gap-[4px]">
             <fieldset className="flex w-fit h-fit rounded-[4px] gap-[4px] items-center">
               <legend className="sr-only">Select balance type</legend>
-              <button
+              <motion.button
                 type="button"
                 onClick={() => setSelectedBalance("PB")}
                 className={`w-[28px] h-fit rounded-[4px] p-[4px] text-[12px] font-medium cursor-pointer ${
@@ -180,13 +188,16 @@ export const SupplyLiquidityTab = () => {
                 }`}
                 aria-pressed={selectedBalance === "PB"}
                 aria-label="Protocol Balance"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                transition={{ duration: 0.15 }}
               >
                 PB
-              </button>
+              </motion.button>
               <span className="w-[16px] h-[16px] flex items-center justify-center" aria-hidden="true">
                 <SwapIcon fill={isDark ? "#FFFFFF" : "#000000"} />
               </span>
-              <button
+              <motion.button
                 type="button"
                 onClick={() => setSelectedBalance("WB")}
                 className={`w-[28px] h-fit rounded-[4px] p-[4px] text-[12px] font-medium cursor-pointer ${
@@ -198,9 +209,12 @@ export const SupplyLiquidityTab = () => {
                 }`}
                 aria-pressed={selectedBalance === "WB"}
                 aria-label="Wallet Balance"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                transition={{ duration: 0.15 }}
               >
                 WB
-              </button>
+              </motion.button>
             </fieldset>
             <output className="w-fit h-fit text-[10px] flex gap-[4px] font-semibold">
               <button
@@ -219,20 +233,32 @@ export const SupplyLiquidityTab = () => {
             </output>
           </div>
         </div>
-      </form>
-      <section className="flex flex-col gap-[8px]" aria-label="Supply Details">
+      </motion.form>
+      <motion.section 
+        className="flex flex-col gap-[8px]" 
+        aria-label="Supply Details"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" as const }}
+      >
         <InfoCard
           data={infoPropsData.data}
           expandableSections={infoPropsData.expandableSections}
           showExpandable={infoPropsData.showExpandable}
         />
-      </section>
-      <Button
-        text={!userAddress ? "Connect Wallet" : value === 0 ? "Enter Amount" : "Supply Liquidity"}
-        size="large"
-        type="gradient"
-        disabled={value === 0 ? true : false}
-      />
+      </motion.section>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.15, ease: "easeOut" as const }}
+      >
+        <Button
+          text={!userAddress ? "Connect Wallet" : value === 0 ? "Enter Amount" : "Supply Liquidity"}
+          size="large"
+          type="gradient"
+          disabled={value === 0 ? true : false}
+        />
+      </motion.div>
 
       <AnimatePresence>
         {isBalanceBreakdownOpen && (

@@ -5,6 +5,7 @@ import { Button } from "../ui/button"
 import { useUserStore } from "@/store/user"
 import { useState, useCallback } from "react"
 import { useTheme } from "@/contexts/theme-context"
+import { motion, AnimatePresence } from "framer-motion"
 
 
 export const DepositTokensForm = ({ assets }: { assets: string[] }) => {
@@ -41,20 +42,48 @@ export const DepositTokensForm = ({ assets }: { assets: string[] }) => {
         })
     }, [])
 
-    return <div className="w-full h-fit flex flex-col gap-[12px] ">
-        <div className={`w-full h-fit text-[20px] font-semibold ${isDark ? "text-white" : "text-[#111111]"}`}>
+    return <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="w-full h-fit flex flex-col gap-[12px] "
+    >
+        <motion.div 
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
+            className={`w-full h-fit text-[20px] font-semibold ${isDark ? "text-white" : "text-[#111111]"}`}
+        >
             Deposit Tokens
-        </div>
-        <div className={`w-full h-fit text-[12px] font-medium ${isDark ? "text-[#919191]" : "text-[#5C5B5B]"}`}>
+        </motion.div>
+        <motion.div 
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3, delay: 0.15 }}
+            className={`w-full h-fit text-[12px] font-medium ${isDark ? "text-[#919191]" : "text-[#5C5B5B]"}`}
+        >
             Specify the token amounts for your liquidity contribution.
-        </div>
-        <div className={`w-full h-fit flex flex-col rounded-[20px] border-[1px] p-[16px] flex flex-col gap-[16px] ${isDark ? "bg-[#222222]" : "bg-[#F4F4F4]"}`}>
+        </motion.div>
+        <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+            className={`w-full h-fit flex flex-col rounded-[20px] border-[1px] p-[16px] flex flex-col gap-[16px] ${isDark ? "bg-[#222222]" : "bg-[#F4F4F4]"}`}
+        >
             <div className={`text-[14px] font-medium w-full h-fit flex gap-[8px] items-center justify-end ${isDark ? "text-white" : "text-[#111111]"}`}>
                 Single Asset
                 <ToggleButton onToggle={() => { setIsSingleAsset(!isSingleAsset) }} size="small" />
                 Multi Assets
             </div>
-            {!isSingleAsset && <div className="w-full h-fit flex flex-col gap-[12px]">
+            <AnimatePresence mode="wait">
+            {!isSingleAsset && <motion.div 
+                key="multi"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                transition={{ duration: 0.3 }}
+                className="w-full h-fit flex flex-col gap-[12px]"
+            >
                 <div className={`w-full h-[100px] rounded-[8px] p-[20px] border-[1px] flex gap-[20px] ${isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"}`}>
                     <div className="   w-full h-full flex flex-col justify-between">
                         <div>
@@ -105,8 +134,15 @@ export const DepositTokensForm = ({ assets }: { assets: string[] }) => {
                         </div>
                     </div>
                 </div>
-            </div>}
-            {isSingleAsset && <div className={`w-full h-[100px] rounded-[8px] p-[20px] border-[1px] flex gap-[20px] ${isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"}`}>
+            </motion.div>}
+            {isSingleAsset && <motion.div 
+                key="single"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                transition={{ duration: 0.3 }}
+                className={`w-full h-[100px] rounded-[8px] p-[20px] border-[1px] flex gap-[20px] ${isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"}`}
+            >
                 <div className="   w-full h-full flex flex-col justify-between">
                     <div>
                         <input
@@ -130,12 +166,19 @@ export const DepositTokensForm = ({ assets }: { assets: string[] }) => {
                         Margin Balance: <span className={`cursor-pointer whitespace-nowrap text-[12px] underline ${isDark ? "text-[#919191]" : "text-[#363636]"}`}>{marginBalance} USD</span>
                     </div>
                 </div>
-            </div>}
+            </motion.div>}
+            </AnimatePresence>
 
-            <Button text={`${userAddress ? "Deposit" : "Connect Wallet"}`} size="large" type="solid" disabled={!userAddress} />
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3, delay: 0.3 }}
+            >
+                <Button text={`${userAddress ? "Deposit" : "Connect Wallet"}`} size="large" type="solid" disabled={!userAddress} />
+            </motion.div>
 
-        </div>
+        </motion.div>
 
 
-    </div>
+    </motion.div>
 }

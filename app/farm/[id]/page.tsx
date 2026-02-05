@@ -36,6 +36,54 @@ import {
   WarningIcon 
 } from "@/components/icons";
 
+// Animation variants
+const headerVariants = {
+  hidden: { opacity: 0, y: -20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.4,
+      ease: "easeOut" as const,
+    },
+  },
+};
+
+const sectionVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.4,
+      ease: "easeOut" as const,
+    },
+  },
+};
+
+const staggerContainerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, x: -10 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: {
+      duration: 0.3,
+      ease: "easeOut" as const,
+    },
+  },
+};
+
 const UI_TABS = [
   { id: "all-transactions", label: "All Transactions" },
   { id: "analytics", label: "Analytics" },
@@ -332,18 +380,26 @@ export default function FarmDetailPage() {
 
   return (
     <main className="flex flex-col gap-[40px] pt-[40px] px-[40px] pb-[80px]">
-      <header className=" w-full h-fit flex justify-between">
+      <motion.header
+        initial="hidden"
+        animate="visible"
+        variants={headerVariants}
+        className=" w-full h-fit flex justify-between"
+      >
         <div className="w-full h-fit flex flex-col gap-[20px]">
           <nav aria-label="Breadcrumb">
-            <button
+            <motion.button
               type="button"
               onClick={handleBackToPools}
+              whileHover={{ x: -5 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ duration: 0.2 }}
               className={`w-fit h-fit flex gap-[12px] items-center cursor-pointer text-[16px] font-medium hover:text-[#703AE6] transition-colors ${isDark ? "text-white" : "text-[#5A5555]"
                 }`}
             >
               <ChevronLeftIcon />
               Back to pools
-            </button>
+            </motion.button>
           </nav>
           <div className="w-full h-fit flex gap-[16px] items-center">
             {/* Chain icon for multi-asset type - 16px */}
@@ -358,7 +414,11 @@ export default function FarmDetailPage() {
             <div className="flex gap-[16px]">
               {isMultiAsset ? (
                 // Multi-asset icons (half-half display like table)
-                <div className="flex items-center -space-x-[18px]">
+                <motion.div
+                  className="flex items-center -space-x-[18px]"
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ duration: 0.2 }}
+                >
                   {farmData.titles?.map((titleName: string, iconIdx: number) => {
                     const assetIconPath = iconPaths[titleName.toUpperCase()];
                     if (!assetIconPath) return null;
@@ -374,15 +434,17 @@ export default function FarmDetailPage() {
                       />
                     );
                   })}
-                </div>
+                </motion.div>
               ) : (
                 // Single asset icon
-                <Image
-                  src={iconPath}
-                  alt={`${farmData.title}-icon`}
-                  width={36}
-                  height={36}
-                />
+                <motion.div whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
+                  <Image
+                    src={iconPath}
+                    alt={`${farmData.title}-icon`}
+                    width={36}
+                    height={36}
+                  />
+                </motion.div>
               )}
               <div className="w-fit h-fit flex gap-[8px] items-center">
                 <h1 className={`w-fit h-fit text-[24px] font-bold ${isDark ? "text-white" : "text-[#181822]"
@@ -421,7 +483,12 @@ export default function FarmDetailPage() {
           </div>
         </div>
         {isMultiAsset && !showAddLiquidity && (
-          <div className="w-[164px] h-fit">
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+            className="w-[164px] h-fit"
+          >
             <Button
               type="solid"
               size="medium"
@@ -430,21 +497,37 @@ export default function FarmDetailPage() {
               onClick={handleAddLiquidityClick}
               aria-label={userAddress ? "Add liquidity to pool" : "Connect wallet to add liquidity"}
             />
-          </div>
+          </motion.div>
         )}
-      </header>
-      {!isMultiAsset && <section className="w-full h-fit ">
-        <AccountStatsGhost items={LEVERAGE_HEALTH_STATS_ITEMS} />
-      </section>}
-      {!isMultiAsset && <section className="w-full h-fit flex gap-[20px] ">
+      </motion.header>
+      {!isMultiAsset && (
+        <motion.section
+          initial="hidden"
+          animate="visible"
+          variants={sectionVariants}
+          transition={{ delay: 0.2 }}
+          className="w-full h-fit "
+        >
+          <AccountStatsGhost items={LEVERAGE_HEALTH_STATS_ITEMS} />
+        </motion.section>
+      )}
+      {!isMultiAsset && (
+        <motion.section
+          initial="hidden"
+          animate="visible"
+          variants={staggerContainerVariants}
+          transition={{ delay: 0.3 }}
+          className="w-full h-fit flex gap-[20px] "
+        >
 
-        <div className="w-full h-fit flex flex-col gap-[10px]">
+        <motion.div variants={itemVariants} className="w-full h-fit flex flex-col gap-[10px]">
           <div className="w-full h-fit">
             <AnimatedTabs containerClassName="w-full h-fit" tabClassName="w-full h-fit" type="solid" tabs={UI_TABS} activeTab={activeUiTab} onTabChange={handleUiTabChange} />
           </div>
           {activeUiTab === "all-transactions" ? (
             <div className={`w-full h-fit flex flex-col gap-[24px] rounded-[20px] border-[1px] p-[24px] ${isDark ? "bg-[#111111]" : "bg-[#F7F7F7]"
-              }`}>
+              }`}
+            >
               <Chart type="farm" heading="1 WISE = <0.001 WETH ($0.159)" downtrend="0.07%" />
               <Table
                 filterDropdownPosition="right"
@@ -466,7 +549,8 @@ export default function FarmDetailPage() {
             </div>
           ) : (
             <div className={`w-full h-fit flex flex-col gap-[24px] rounded-[20px] border-[1px] p-[24px] ${isDark ? "bg-[#111111]" : "bg-[#F7F7F7]"
-              }`}>
+              }`}
+            >
               <h2 className={`w-full h-fit text-[20px] font-semibold ${isDark ? "text-white" : ""
                 }`}>Statistics</h2>
               <article className="w-full h-full grid grid-cols-3 grid-rows-3 gap-x-[15px]" aria-label="Vault Statistics">
@@ -485,19 +569,50 @@ export default function FarmDetailPage() {
             </div>
 
           )}
-        </div>
-        <div className="w-[480px] h-fit flex flex-col gap-[20px]">
+        </motion.div>
+        <motion.div
+          variants={itemVariants}
+          className="w-[480px] h-fit flex flex-col gap-[20px]"
+        >
           <Form />
-        </div>
+        </motion.div>
 
-      </section>}
+      </motion.section>
+      )}
 
-      {isMultiAsset && <section className="w-full h-fit flex gap-[24px] ">
-        <div className="w-full h-fit flex flex-col gap-[24px]">
+      {isMultiAsset && (
+        <motion.section
+          initial="hidden"
+          animate="visible"
+          variants={staggerContainerVariants}
+          transition={{ delay: 0.2 }}
+          className="w-full h-fit flex gap-[24px] "
+        >
+        <motion.div variants={itemVariants} className="w-full h-fit flex flex-col gap-[24px]">
           {showAddLiquidity ? (
-            <div className="w-full h-fit flex flex-col gap-[8px]">
-            <div className={`w-full h-fit rounded-[16px] border-[1px] p-[24px] ${isDark ? "bg-[#1A1A1A]" : "bg-[#F7F7F7]"
-              }`}>
+            <motion.div
+              initial="hidden"
+              animate="visible"
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: {
+                    staggerChildren: 0.1,
+                    delayChildren: 0.05,
+                  },
+                },
+              }}
+              className="w-full h-fit flex flex-col gap-[8px]"
+            >
+            <motion.div
+              variants={{
+                hidden: { opacity: 0, y: 20 },
+                visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+              }}
+              className={`w-full h-fit rounded-[16px] border-[1px] p-[24px] ${isDark ? "bg-[#1A1A1A]" : "bg-[#F7F7F7]"
+              }`}
+            >
               <RangeSelector
                 token1Name="USDC"
                 token2Name="ETH"
@@ -514,9 +629,16 @@ export default function FarmDetailPage() {
                 showControls={true}
               />
               
-              </div>
-              <div className={`w-full h-fit flex rounded-[16px] border-[1px] p-[20px] gap-[8px] ${isDark ? "bg-[#222222]" : "bg-[#F7F7F7]"} `}>
-                <div className={`w-full h-fit flex flex-col gap-[20px] rounded-[16px] border-[1px] p-[20px] ${isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"} `}>
+              </motion.div>
+              <motion.div
+                variants={{
+                  hidden: { opacity: 0, y: 20 },
+                  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+                }}
+                className={`w-full h-fit flex rounded-[16px] border-[1px] p-[20px] gap-[8px] ${isDark ? "bg-[#222222]" : "bg-[#F7F7F7]"} `}
+              >
+                <div className={`w-full h-fit flex flex-col gap-[20px] rounded-[16px] border-[1px] p-[20px] ${isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"} `}
+                >
                   <div className="w-full h-fit flex flex-col ">
                     <h3 className={`w-full h-fit text-[16px] font-semibold ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>Max Price</h3>
                     <p className="w-full h-fit text-[12px] text-[#A7A7A7]">{farmData.title.split(" / ")[0]} per {farmData.title.split(" / ")[1]}</p>
@@ -532,27 +654,32 @@ export default function FarmDetailPage() {
                       inputMode="decimal"
                     />
                     <div className="w-fit h-fit flex gap-[4px] items-center ">
-                      <button 
+                      <motion.button 
                         type="button"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
                         className="w-[24px] h-[24px] bg-[#F1EBFD] flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                         aria-label="Decrease maximum price"
                         disabled={!userAddress}
                       >
                         <MinusIcon />
-                      </button>
-                      <button 
+                      </motion.button>
+                      <motion.button 
                         type="button"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
                         className="w-[24px] h-[24px] bg-[#F1EBFD] flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                         aria-label="Increase maximum price"
                         disabled={!userAddress}
                       >
                         <PlusIcon />
-                      </button>
+                      </motion.button>
                     </div>
 
                   </div>
                 </div>
-                <div className={`w-full h-fit flex flex-col gap-[20px] rounded-[16px] border-[1px] p-[20px] ${isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"} `}>
+                <div className={`w-full h-fit flex flex-col gap-[20px] rounded-[16px] border-[1px] p-[20px] ${isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"} `}
+                >
                   <div className="w-full h-fit flex flex-col ">
                     <h3 className={`w-full h-fit text-[16px] font-semibold ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>Min Price</h3>
                     <p className="w-full h-fit text-[12px] text-[#A7A7A7]">{farmData.title.split(" / ")[0]} per {farmData.title.split(" / ")[1]}</p>
@@ -568,31 +695,36 @@ export default function FarmDetailPage() {
                       inputMode="decimal"
                     />
                     <div className="w-fit h-fit flex gap-[4px] items-center ">
-                      <button 
+                      <motion.button 
                         type="button"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
                         className="w-[24px] h-[24px] bg-[#F1EBFD] flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                         aria-label="Decrease minimum price"
                         disabled={!userAddress}
                       >
                         <MinusIcon />
-                      </button>
-                      <button 
+                      </motion.button>
+                      <motion.button 
                         type="button"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
                         className="w-[24px] h-[24px] bg-[#F1EBFD] flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                         aria-label="Increase minimum price"
                         disabled={!userAddress}
                       >
                         <PlusIcon />
-                      </button>
+                      </motion.button>
                     </div>
 
                   </div>
                 </div>
 
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           ) : (
-            <div className={`w-full h-fit flex flex-col gap-[24px] ${isDark ? "bg-[#111111]" : "bg-[#F7F7F7]"} border-[1px] rounded-[20px] p-[24px]`}>
+            <div className={`w-full h-fit flex flex-col gap-[24px] ${isDark ? "bg-[#111111]" : "bg-[#F7F7F7]"} border-[1px] rounded-[20px] p-[24px]`}
+            >
               <Chart type="farm" heading="1 WISE = <0.001 WETH ($0.159)" downtrend="0.07%" />
               <Table
                 filterDropdownPosition="right"
@@ -623,31 +755,66 @@ export default function FarmDetailPage() {
               />
             </div>
           )}
-        </div>
+        </motion.div>
         {!showAddLiquidity && (
-          <div className="w-[400px] h-fit">
+          <motion.div
+            variants={itemVariants}
+            className="w-[400px] h-fit"
+          >
             <FarmStatsCard items={farmStatsData} />
-          </div>
+          </motion.div>
         )}
         {showAddLiquidity && (
-          <div className="w-fit h-fit flex flex-col gap-[20px]">
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: { opacity: 0 },
+              visible: {
+                opacity: 1,
+                transition: {
+                  staggerChildren: 0.1,
+                  delayChildren: 0.1,
+                },
+              },
+            }}
+            className="w-fit h-fit flex flex-col gap-[20px]"
+          >
             {!userAddress && (
-              <div 
+              <motion.div
+                variants={{
+                  hidden: { opacity: 0, y: -10 },
+                  visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+                }}
                 className={`w-[400px] rounded-[12px] border-[1px] p-[16px] flex items-center gap-[12px] ${isDark ? "bg-[#1A1A1A] border-[#595959] text-[#FFFFFF]" : "bg-[#FFF9E6] border-[#FFD700] text-[#111111]"}`}
                 role="alert"
                 aria-live="polite"
               >
                 <WarningIcon />
                 <span className="text-[14px] font-medium">Connect your wallet to add liquidity</span>
-              </div>
+              </motion.div>
             )}
-            <DepositTokensForm assets={[`${farmData.title.split(" / ")[0]}`,`${farmData.title.split(" / ")[1]}`]} />
-            <div className="w-[400px] h-fit">
+            <motion.div
+              variants={{
+                hidden: { opacity: 0, y: 20 },
+                visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+              }}
+            >
+              <DepositTokensForm assets={[`${farmData.title.split(" / ")[0]}`,`${farmData.title.split(" / ")[1]}`]} />
+            </motion.div>
+            <motion.div
+              variants={{
+                hidden: { opacity: 0, y: 20 },
+                visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+              }}
+              className="w-[400px] h-fit"
+            >
               <FarmStatsCard items={farmLiquidationStatsData} />
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         )}
-      </section>}
+      </motion.section>
+      )}
     </main>
   );
 }

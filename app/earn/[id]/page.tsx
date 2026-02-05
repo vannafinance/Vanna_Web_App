@@ -7,6 +7,7 @@ import { YourPositions } from "@/components/earn/your-positions";
 import { AnimatedTabs } from "@/components/ui/animated-tabs";
 import Image from "next/image";
 import { useState, use, useMemo } from "react";
+import { motion } from "framer-motion";
 import { ActivityTab } from "@/components/earn/acitivity-tab";
 import { AnalyticsTab } from "@/components/earn/analytics-tab";
 import { MarginManagersTab } from "@/components/earn/margin-managers-tab";
@@ -49,6 +50,54 @@ const tabs = [
   { id: "analytics", label: "Analytics" },
   { id: "margin-managers", label: "Margin Managers" },
 ];
+
+// Animation variants
+const headerVariants = {
+  hidden: { opacity: 0, y: -20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+      ease: "easeOut" as const,
+    },
+  },
+};
+
+const fadeInVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.4,
+      ease: "easeOut" as const,
+    },
+  },
+};
+
+const contentVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, x: -10 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: {
+      duration: 0.4,
+      ease: "easeOut" as const,
+    },
+  },
+};
 
 export default function EarnPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -136,28 +185,43 @@ export default function EarnPage({ params }: { params: Promise<{ id: string }> }
 
   return (
     <main className="flex flex-col gap-[40px]">
-      <header className="pt-[40px] px-[80px] w-full h-fit">
+      <motion.header
+        className="pt-[40px] px-[80px] w-full h-fit"
+        variants={headerVariants}
+        initial="hidden"
+        animate="visible"
+      >
         <div className="w-full h-fit flex flex-col gap-[20px]">
           <nav aria-label="Breadcrumb">
-            <button
+            <motion.button
               type="button"
               onClick={handleBackToPools}
               className={`w-fit h-fit flex gap-[12px] items-center cursor-pointer text-[16px] font-medium hover:text-[#703AE6] transition-colors ${
                 isDark ? "text-white" : "text-[#5A5555]"
               }`}
+              whileHover={{ x: -4 }}
+              transition={{ duration: 0.2 }}
             >
               <ChevronLeftIcon stroke="currentColor" strokeWidth={2} />
               Back to pools
-            </button>
+            </motion.button>
           </nav>
-          <div className="w-full h-fit flex gap-[16px] items-center">
+          <motion.div
+            className="w-full h-fit flex gap-[16px] items-center"
+            variants={itemVariants}
+          >
             <div className="flex gap-[16px]">
-              <Image
-                src={iconPath}
-                alt={`${vaultData.title}-icon`}
-                width={36}
-                height={36}
-              />
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Image
+                  src={iconPath}
+                  alt={`${vaultData.title}-icon`}
+                  width={36}
+                  height={36}
+                />
+              </motion.div>
               <div className="w-fit h-fit flex gap-[8px] items-center">
                 <h1 className={`w-fit h-fit text-[24px] font-bold ${
                   isDark ? "text-white" : "text-[#181822]"
@@ -189,17 +253,35 @@ export default function EarnPage({ params }: { params: Promise<{ id: string }> }
                 height={20}
               />
             </div>
-          </div>
+          </motion.div>
         </div>
-      </header>
+      </motion.header>
       
-      <section className="px-[80px]" aria-label="Vault Statistics">
+      <motion.section
+        className="px-[80px]"
+        aria-label="Vault Statistics"
+        variants={fadeInVariants}
+        initial="hidden"
+        animate="visible"
+        transition={{ delay: 0.2 }}
+      >
         <AccountStatsGhost items={accountStatsItems} />
-      </section>
+      </motion.section>
 
-      <section className="px-[80px] pb-[80px] w-full h-fit" aria-label="Vault Details and Actions">
-        <div className="flex gap-[20px] w-full h-fit">
-          <article className="w-[700px] h-full flex flex-col gap-[24px]">
+      <motion.section
+        className="px-[80px] pb-[80px] w-full h-fit"
+        aria-label="Vault Details and Actions"
+        variants={contentVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.div className="flex gap-[20px] w-full h-fit" variants={contentVariants}>
+          <motion.article
+            className="w-[700px] h-full flex flex-col gap-[24px]"
+            variants={itemVariants}
+            whileHover={{ scale: 1.005 }}
+            transition={{ duration: 0.2 }}
+          >
             <nav className="w-full h-[48px]" aria-label="Vault Information Tabs">
               <AnimatedTabs
                 tabs={tabs}
@@ -216,12 +298,17 @@ export default function EarnPage({ params }: { params: Promise<{ id: string }> }
             {activeTab === "analytics" && <AnalyticsTab />}
             {activeTab === "margin-managers" && <MarginManagersTab />}
             {activeTab === "collateral-limits" && <CollateralLimitsTab />}
-          </article>
-          <aside aria-label="Transaction Form">
+          </motion.article>
+          <motion.aside
+            aria-label="Transaction Form"
+            variants={itemVariants}
+            whileHover={{ scale: 1.01 }}
+            transition={{ duration: 0.2 }}
+          >
             <Form />
-          </aside>
-        </div>
-      </section>
+          </motion.aside>
+        </motion.div>
+      </motion.section>
     </main>
   );
 }

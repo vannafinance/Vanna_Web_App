@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import { Chart } from "@/components/earn/chart";
 import { Table } from "@/components/earn/table";
 import { AccountStats } from "@/components/margin/account-stats";
@@ -10,6 +11,42 @@ import { ACCOUNT_STATS_ITEMS } from "@/lib/constants/margin";
 import { useUserStore } from "@/store/user";
 import { RewardsTable } from "@/components/earn/rewards-table";
 import { useEarnVaultStore } from "@/store/earn-vault-store";
+
+// Animation variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.05,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+      ease: "easeOut" as const,
+    },
+  },
+};
+
+const fadeInVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.4,
+      ease: "easeOut" as const,
+    },
+  },
+};
 
 export default function Earn() {
   const userAddress = useUserStore((state) => state.address);
@@ -78,22 +115,43 @@ export default function Earn() {
   return (
     <main>
       {userAddress && (
-        <section className="p-[40px] w-full h-fit flex gap-[24px]" aria-label="User Dashboard">
-          <div className="flex gap-[16px] w-full h-fit">
-            <article className="w-[437.33px] h-fit">
+        <motion.section
+          className="p-[40px] w-full h-fit flex gap-[24px]"
+          aria-label="User Dashboard"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          <motion.div className="flex gap-[16px] w-full h-fit" variants={containerVariants}>
+            <motion.article 
+              className="w-[437.33px] h-fit"
+              variants={itemVariants}
+            >
               <Chart containerWidth="w-[437.33px]" containerHeight="h-[331px]" type="overall-deposit" />
-            </article>
-            <article className="w-[437.33px] h-fit">
+            </motion.article>
+            <motion.article 
+              className="w-[437.33px] h-fit"
+              variants={itemVariants}
+            >
               <Chart containerWidth="w-[437.33px]" containerHeight="h-[331px]" type="net-apy" />
-            </article>
-            <aside className="w-full h-fit">
+            </motion.article>
+            <motion.aside 
+              className="w-full h-fit"
+              variants={itemVariants}
+            >
               <RewardsTable />
-            </aside>
-          </div>
-        </section>
+            </motion.aside>
+          </motion.div>
+        </motion.section>
       )}
 
-      <section className="h-[206px] w-full pt-[40px] px-[40px]" aria-label="Account Statistics">
+      <motion.section
+        className="h-[206px] w-full pt-[40px] px-[40px]"
+        aria-label="Account Statistics"
+        variants={fadeInVariants}
+        initial="hidden"
+        animate="visible"
+      >
         <AccountStats
           items={ACCOUNT_STATS_ITEMS.slice(0, 3)}
           values={{
@@ -102,9 +160,16 @@ export default function Earn() {
             netAvailableCollateral: !userAddress ? "-" : 1000,
           }}
         />
-      </section>
+      </motion.section>
 
-      <section className="p-[40px] w-full h-fit" aria-label="Vaults and Positions">
+      <motion.section
+        className="p-[40px] w-full h-fit"
+        aria-label="Vaults and Positions"
+        variants={fadeInVariants}
+        initial="hidden"
+        animate="visible"
+        transition={{ delay: 0.2 }}
+      >
         <Table
           filterDropdownPosition="right"
           filters={{
@@ -126,7 +191,7 @@ export default function Earn() {
           onRowClick={handleRowClick}
           hoverBackground="hover:bg-[#F1EBFD]"
         />
-      </section>
+      </motion.section>
     </main>
   );
 }

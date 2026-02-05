@@ -40,7 +40,7 @@ export const FarmStatsCard = ({items}:FarmStatsCardProps) =>{
                         {item.downtrend && (
                             <>
                                 <TrendDownIcon width={16} height={16} />
-                                <p className="text-[12px] font-semibold text-[#131313A1]">
+                                <p className={`text-[12px] font-semibold text-red-500`}>
                                     {item.downtrend}
                                 </p>
                             </>
@@ -48,7 +48,7 @@ export const FarmStatsCard = ({items}:FarmStatsCardProps) =>{
                         {!item.downtrend && item.uptrend && (
                             <>
                                 <TrendUpIcon width={16} height={16} />
-                                <p className="text-[12px] font-semibold text-[#131313A1]">
+                                <p className={`text-[12px] font-semibold text-green-500`}>
                                     {item.uptrend}
                                 </p>
                             </>

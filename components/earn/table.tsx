@@ -5,6 +5,7 @@ import {
   useState,
   memo,
 } from "react";
+import { motion } from "framer-motion";
 import { AnimatedTabs } from "../ui/animated-tabs";
 import { FilterDropdown } from "../ui/filter-dropdown";
 import { SearchBar } from "../ui/search-bar";
@@ -18,6 +19,54 @@ import { useTheme } from "@/contexts/theme-context";
 import { ArrowTopRightIcon, SortVerticalIcon, ChevronLeftIcon, ChevronRightIcon } from "@/components/icons";
 
 const ITEMS_PER_PAGE = 4;
+
+// Animation variants
+const tableContainerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.05,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+const tableRowVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.3,
+      ease: "easeOut" as const,
+    },
+  },
+};
+
+const headerVariants = {
+  hidden: { opacity: 0, y: -10 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.4,
+      ease: "easeOut" as const,
+    },
+  },
+};
+
+const paginationVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.3,
+      ease: "easeOut" as const,
+    },
+  },
+};
 
 const FILTER_OPTIONS = {
   collateral: ["ETH", "USDC", "USDT"],
@@ -505,7 +554,7 @@ const TableRow = memo(
     }, [onRowClick, row, rowIndex]);
 
     return (
-      <tr
+      <motion.tr
         onClick={onRowClick ? handleClick : undefined}
         className={`group ${onRowClick ? "cursor-pointer" : ""} ${
           hoverBackground || ""
@@ -514,6 +563,9 @@ const TableRow = memo(
             ? tableBodyBackground || "bg-[#222222]"
             : tableBodyBackground || "bg-[#F7F7F7]"
         } border-[1px]`}
+        variants={tableRowVariants}
+        whileHover={onRowClick ? { scale: 1.005, y: -2 } : undefined}
+        transition={{ duration: 0.2 }}
       >
         {visibleCells.map((cell: any, idx: number) => (
           <td
@@ -535,7 +587,7 @@ const TableRow = memo(
             />
           </td>
         ))}
-      </tr>
+      </motion.tr>
     );
   }
 );
@@ -747,7 +799,12 @@ export const Table = memo((props: TableProps) => {
   return (
     <section className="w-full h-fit flex flex-col gap-[24px]" aria-label={props.heading.heading || "Data Table"}>
       {hasHeadingTitle && (
-        <header className="flex justify-between items-center">
+        <motion.header
+          className="flex justify-between items-center"
+          variants={headerVariants}
+          initial="hidden"
+          animate="visible"
+        >
           <h2 className={`text-[16px] font-semibold ${
             isDark ? "text-white" : "text-[#434C53F2]"
           }`}>
@@ -838,11 +895,18 @@ export const Table = memo((props: TableProps) => {
               )}
             </div>
           )}
-        </header>
+        </motion.header>
       )}
 
       {hasTabs && (
-        <nav className="w-fit h-fit" aria-label="Table Navigation Tabs">
+        <motion.nav
+          className="w-fit h-fit"
+          aria-label="Table Navigation Tabs"
+          variants={headerVariants}
+          initial="hidden"
+          animate="visible"
+          transition={{ delay: 0.1 }}
+        >
           <AnimatedTabs
             tabs={props.heading.tabsItems!}
             activeTab={activeTab}
@@ -850,11 +914,17 @@ export const Table = memo((props: TableProps) => {
             type={props.heading.tabType}
             tabClassName="text-[12px]"
           />
-        </nav>
+        </motion.nav>
       )}
 
       {showAllChainDropdown && (
-        <header className={`flex ${showFilterTabType && showAllChainDropdown ? "flex-col gap-[16px]" : "justify-between items-center"}`}>
+        <motion.header
+          className={`flex ${showFilterTabType && showAllChainDropdown ? "flex-col gap-[16px]" : "justify-between items-center"}`}
+          variants={headerVariants}
+          initial="hidden"
+          animate="visible"
+          transition={{ delay: 0.15 }}
+        >
           <div className={`flex ${showFilterTabType && showAllChainDropdown ? "justify-between w-full" : "items-center gap-[12px]"}`}>
             <div className="flex items-center gap-[12px]" role="search" aria-label="Table Search and Filters">
               <FilterDropdown
@@ -973,11 +1043,16 @@ export const Table = memo((props: TableProps) => {
               />
             )}
           </div>
-        </header>
+        </motion.header>
       )}
 
       {hasData ? (
-        <table className="w-full h-fit rounded-[12px] flex flex-col gap-[8px]">
+        <motion.table
+          className="w-full h-fit rounded-[12px] flex flex-col gap-[8px]"
+          variants={tableContainerVariants}
+          initial="hidden"
+          animate="visible"
+        >
           <thead>
             <tr className="w-full h-fit rounded-[12px] px-[20px] flex gap-[16px]">
               {visibleHeadings.map((item, idx) => {
@@ -995,16 +1070,19 @@ export const Table = memo((props: TableProps) => {
                     } gap-[4px] items-center`}
                   >
                     {item.icon && (
-                      <button
+                      <motion.button
                         type="button"
                         onClick={() => handleSort(item.id)}
                         className={`w-[20px] h-[20px] flex flex-col justify-center items-center cursor-pointer hover:opacity-70 transition-all ${
                           isDesc ? "rotate-180" : ""
                         }`}
                         aria-label={`Sort by ${item.label}`}
+                        whileHover={{ scale: 1.15 }}
+                        whileTap={{ scale: 0.9 }}
+                        transition={{ duration: 0.15 }}
                       >
                         <SortVerticalIcon fill={props.tableHeadingTextColor || "#999999"} />
-                      </button>
+                      </motion.button>
                     )}
                     {item.label}
                   </th>
@@ -1012,7 +1090,10 @@ export const Table = memo((props: TableProps) => {
               })}
             </tr>
           </thead>
-          <tbody className="flex flex-col gap-[8px] w-full">
+          <motion.tbody
+            className="flex flex-col gap-[8px] w-full"
+            variants={tableContainerVariants}
+          >
             {paginatedData.map((row, idx) => (
               <TableRow
                 key={idx}
@@ -1028,23 +1109,34 @@ export const Table = memo((props: TableProps) => {
                 isDark={isDark}
               />
             ))}
-          </tbody>
-        </table>
+          </motion.tbody>
+        </motion.table>
       ) : (
-        <section className={`w-full h-[402px] border-[1px] rounded-[8px] flex flex-col items-center justify-center ${
-          isDark ? "bg-[#222222]" : "bg-[#F7F7F7]"
-        }`}>
+        <motion.section
+          className={`w-full h-[402px] border-[1px] rounded-[8px] flex flex-col items-center justify-center ${
+            isDark ? "bg-[#222222]" : "bg-[#F7F7F7]"
+          }`}
+          variants={tableRowVariants}
+          initial="hidden"
+          animate="visible"
+        >
           <p className={`text-[14px] font-medium ${
             isDark ? "text-[#919191]" : "text-[#76737B]"
           }`}>
             No data available
           </p>
-        </section>
+        </motion.section>
       )}
 
       {hasData && totalPages > 1 && (
-        <nav className="flex items-center justify-center gap-[16px] py-[16px]" aria-label="Table Pagination">
-          <button
+        <motion.nav
+          className="flex items-center justify-center gap-[16px] py-[16px]"
+          aria-label="Table Pagination"
+          variants={paginationVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          <motion.button
             type="button"
             onClick={handlePreviousPage}
             disabled={currentPage === 1}
@@ -1054,15 +1146,26 @@ export const Table = memo((props: TableProps) => {
                 : "cursor-pointer hover:opacity-70"
             } ${isDark ? "text-white" : "text-[#111111]"}`}
             aria-label="Previous page"
+            whileHover={currentPage !== 1 ? { scale: 1.1, x: -2 } : undefined}
+            whileTap={currentPage !== 1 ? { scale: 0.95 } : undefined}
+            transition={{ duration: 0.2 }}
           >
             <ChevronLeftIcon stroke={isDark ? "#FFFFFF" : "#111111"} strokeWidth={1.5} />
-          </button>
+          </motion.button>
 
-          <span className="px-[24px] py-[8px] rounded-full bg-[#F1EBFD] text-[#703AE6] text-[14px] font-semibold" aria-live="polite" aria-atomic="true">
+          <motion.span
+            className="px-[24px] py-[8px] rounded-full bg-[#F1EBFD] text-[#703AE6] text-[14px] font-semibold"
+            aria-live="polite"
+            aria-atomic="true"
+            key={currentPage}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+          >
             {currentPage} of {totalPages}
-          </span>
+          </motion.span>
 
-          <button
+          <motion.button
             type="button"
             onClick={handleNextPage}
             disabled={currentPage === totalPages}
@@ -1072,10 +1175,13 @@ export const Table = memo((props: TableProps) => {
                 : "cursor-pointer hover:opacity-70"
             } ${isDark ? "text-white" : "text-[#111111]"}`}
             aria-label="Next page"
+            whileHover={currentPage !== totalPages ? { scale: 1.1, x: 2 } : undefined}
+            whileTap={currentPage !== totalPages ? { scale: 0.95 } : undefined}
+            transition={{ duration: 0.2 }}
           >
             <ChevronRightIcon stroke={isDark ? "#FFFFFF" : "#111111"} strokeWidth={1.5} />
-          </button>
-        </nav>
+          </motion.button>
+        </motion.nav>
       )}
     </section>
   );

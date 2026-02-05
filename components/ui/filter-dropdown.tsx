@@ -1,6 +1,7 @@
 import { iconPaths } from "@/lib/constants";
 import Image from "next/image";
 import { useEffect, useState, useRef, useMemo, useCallback, memo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { SearchBar } from "./search-bar";
 import { Checkbox } from "./Checkbox";
 import { useTheme } from "@/contexts/theme-context";
@@ -16,6 +17,45 @@ interface FilterDropdownProps {
   showDropdownFilters?: boolean; // Control dropdown filters section visibility (default: true)
   dropdownPosition?: "left" | "right"; // Control dropdown menu position (default: "right")
 }
+
+// Animation variants
+const dropdownVariants = {
+  hidden: {
+    opacity: 0,
+    y: -10,
+    scale: 0.95,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.2,
+      ease: "easeOut" as const,
+    },
+  },
+  exit: {
+    opacity: 0,
+    y: -10,
+    scale: 0.95,
+    transition: {
+      duration: 0.15,
+      ease: "easeIn" as const,
+    },
+  },
+};
+
+const optionVariants = {
+  hidden: { opacity: 0, x: -5 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: {
+      duration: 0.2,
+      ease: "easeOut" as const,
+    },
+  },
+};
 
 // Memoized dropdown option item to prevent unnecessary re-renders
 const DropdownOption = memo(
@@ -110,7 +150,7 @@ const FilterChip = memo(
     const { isDark } = useTheme();
 
     return (
-      <div
+      <motion.div
         onClick={onClick}
         className={`${
           isActive
@@ -119,9 +159,12 @@ const FilterChip = memo(
             ? "text-white hover:text-[#703AE6]"
             : "text-black hover:text-[#703AE6]"
         } w-fit h-fit rounded-[8px] py-[6px] px-[12px] text-[14px] font-semibold cursor-pointer`}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        transition={{ duration: 0.15 }}
       >
         {item}
-      </div>
+      </motion.div>
     );
   }
 );
@@ -268,11 +311,14 @@ export const FilterDropdown = memo((props: FilterDropdownProps) => {
       {/* Large Dropdown Types (all-chains, customize) */}
       {(props.dropDownType === "all-chains" ||
         props.dropDownType === "customize") && (
-        <div
+        <motion.div
           onClick={toggleDropdown}
           className={`cursor-pointer h-[48px] ${
             isDark ? "border bg-[#222222]" : "border bg-white"
           } rounded-[8px] py-[12px] px-[16px] flex items-center gap-[4px] max-w-full min-w-0`}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          transition={{ duration: 0.15 }}
         >
           {props.dropDownType === "all-chains" && (
             <>
@@ -341,7 +387,7 @@ export const FilterDropdown = memo((props: FilterDropdownProps) => {
               />
             </svg>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* Small Dropdown Types (collateral, deposit, All) */}
@@ -357,11 +403,14 @@ export const FilterDropdown = memo((props: FilterDropdownProps) => {
             :
           </div>
           {props.currentDropdownItem?.length === 0 ? (
-            <div
+            <motion.div
               onClick={toggleDropdown}
               className={`cursor-pointer text-[12px] font-semibold ${
                 isDark ? "text-white" : "text-black"
               } flex gap-[4px]`}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ duration: 0.15 }}
             >
               <div className="w-[20] h-[20] flex flex-col items-center justify-center">
                 <svg width="17" height="12" viewBox="0 0 17 12" fill="none">
@@ -380,11 +429,13 @@ export const FilterDropdown = memo((props: FilterDropdownProps) => {
                 </svg>
               </div>
               {props.dropDownType !== "All" && "All"}
-            </div>
+            </motion.div>
           ) : (
-            <div
+            <motion.div
               onClick={toggleDropdown}
               className="h-fit rounded-[8px] border-[1px] flex items-center justify-center py-[8px] px-[16px] gap-[4px] max-w-full"
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.15 }}
             >
               <div
                 className={`text-[14px] font-medium ${
@@ -393,30 +444,38 @@ export const FilterDropdown = memo((props: FilterDropdownProps) => {
               >
                 {displayText}
               </div>
-              <div
+              <motion.div
                 className="w-[16px] h-[16px] flex flex-shrink-0 flex-col items-center justify-center cursor-pointer hover:opacity-70 transition-opacity"
                 onClick={handleClearSelection}
+                whileHover={{ scale: 1.2, rotate: 90 }}
+                whileTap={{ scale: 0.9 }}
+                transition={{ duration: 0.15 }}
               >
                 <CloseIcon />
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           )}
         </div>
       )}
 
       {/* Dropdown Menu */}
-      {isOpen && (
-        <div
-          className={`absolute ${
-            props.currentDropdownItem.length > 0 ? "top-12" : "top-6"
-          } w-[368px] h-fit rounded-[16px] p-[16px] flex flex-col gap-[15px] shadow-md z-50 ${
-            props.dropDownType === "all-chains" 
-              ? "left-0 top-14" 
-              : props.dropdownPosition === "left" 
-                ? "left-0" 
-                : "right-0"
-          } ${isDark ? "bg-[#222222] border-[1px]" : "bg-[#F4F4F4]"}`}
-        >
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            className={`absolute ${
+              props.currentDropdownItem.length > 0 ? "top-12" : "top-6"
+            } w-[368px] h-fit rounded-[16px] p-[16px] flex flex-col gap-[15px] shadow-md z-50 ${
+              props.dropDownType === "all-chains" 
+                ? "left-0 top-14" 
+                : props.dropdownPosition === "left" 
+                  ? "left-0" 
+                  : "right-0"
+            } ${isDark ? "bg-[#222222] border-[1px]" : "bg-[#F4F4F4]"}`}
+            variants={dropdownVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+          >
           {(props.showSearchBar !== false) && (
             <SearchBar
               value={searchValue}
@@ -437,31 +496,43 @@ export const FilterDropdown = memo((props: FilterDropdownProps) => {
                   />
                 ))}
               </div>
-              <div
+              <motion.div
                 onClick={handleClearFilters}
                 className={`cursor-pointer w-fit h-fit text-[14px] font-semibold underline rounded-[8px] ${
                   isDark ? "text-white" : ""
                 }`}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ duration: 0.15 }}
               >
                 Clear
-              </div>
+              </motion.div>
             </div>
           )}
 
           <div className="w-full h-full flex flex-col gap-[15px]">
-            {filteredOptions.map((item) => (
-              <DropdownOption
+            {filteredOptions.map((item, index) => (
+              <motion.div
                 key={item}
-                item={item}
-                isChecked={props.currentDropdownItem.includes(item)}
-                dropDownType={props.dropDownType}
-                onToggle={createToggleHandler(item)}
-                isDark={isDark}
-              />
+                variants={optionVariants}
+                initial="hidden"
+                animate="visible"
+                transition={{ delay: index * 0.03 }}
+                whileHover={{ x: 4 }}
+              >
+                <DropdownOption
+                  item={item}
+                  isChecked={props.currentDropdownItem.includes(item)}
+                  dropDownType={props.dropDownType}
+                  onToggle={createToggleHandler(item)}
+                  isDark={isDark}
+                />
+              </motion.div>
             ))}
           </div>
-        </div>
-      )}
+        </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 });

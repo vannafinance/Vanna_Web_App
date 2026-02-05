@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { Dropdown } from "../ui/dropdown";
 import { DropdownOptions } from "@/lib/constants";
 import { InfoCard } from "../margin/info-card";
@@ -86,9 +87,14 @@ export const WithdrawLiquidity = () => {
 
   return (
     <>
-      <form className={`flex gap-[16px] items-start w-full h-fit border-[1px] rounded-[16px] p-[16px] ${
-        isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"
-      }`}>
+      <motion.form 
+        className={`flex gap-[16px] items-start w-full h-fit border-[1px] rounded-[16px] p-[16px] ${
+          isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"
+        }`}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, ease: "easeOut" as const }}
+      >
         <div className="w-full h-full flex flex-col gap-[44px] justify-between">
           <div className="w-fit h-fit flex items-center gap-[4px]">
             <span className="w-[20px] h-[20px]">
@@ -151,26 +157,38 @@ export const WithdrawLiquidity = () => {
             </output>
           </fieldset>
         </div>
-      </form>
-      <section className="flex flex-col gap-[8px]" aria-label="Withdraw Details">
+      </motion.form>
+      <motion.section 
+        className="flex flex-col gap-[8px]" 
+        aria-label="Withdraw Details"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" as const }}
+      >
         <InfoCard
           data={infoPropsData.data}
           expandableSections={infoPropsData.expandableSections}
           showExpandable={infoPropsData.showExpandable}
         />
-      </section>
-      <Button
-        text={
-          !userAddress
-            ? "Connect Wallet"
-            : value === 0
-            ? "Enter Amount"
-            : "Withdraw Liquidity"
-        }
-        size="large"
-        type="gradient"
-        disabled={value === 0 ? true : false}
-      />
+      </motion.section>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.15, ease: "easeOut" as const }}
+      >
+        <Button
+          text={
+            !userAddress
+              ? "Connect Wallet"
+              : value === 0
+              ? "Enter Amount"
+              : "Withdraw Liquidity"
+          }
+          size="large"
+          type="gradient"
+          disabled={value === 0 ? true : false}
+        />
+      </motion.div>
     </>
   );
 };

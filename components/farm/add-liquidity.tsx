@@ -7,6 +7,7 @@ import { useMarginAccountInfoStore } from "@/store/margin-account-info-store"
 import { useUserStore } from "@/store/user"
 import { Button } from "../ui/button"
 import { useTheme } from "@/contexts/theme-context"
+import { motion, AnimatePresence } from "framer-motion"
 
 export const AddLiquidity = () => {
   const [value, setValue] = useState<string>("")
@@ -58,10 +59,15 @@ export const AddLiquidity = () => {
   };
 
   return (
-    <>
-      <div className={`w-full h-fit p-[20px] rounded-[16px] ${
-        isDark ? "bg-[#111111]" : "bg-white"
-      }`}>
+    <div className="w-full h-fit flex flex-col gap-[24px]">
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className={`w-full h-fit  p-[20px] rounded-[16px] ${
+          isDark ? "bg-[#111111]" : "bg-white"
+        }`}
+      >
         <div className="w-full flex items-center gap-[20px]">
           <div className="w-full h-full flex flex-col gap-[24px]">
             <div className="w-full h-fit ">
@@ -98,23 +104,36 @@ export const AddLiquidity = () => {
             </div>
           </div>
         </div>
-      </div>
-      {(Number(value) > 0) && (
-        <div>
-          <InfoCard
-            data={marginAccountInfo}
-            items={[...MARGIN_ACCOUNT_INFO_ITEMS]}
-          />
-        </div>
-      )}
+      </motion.div>
+      <AnimatePresence>
+        {(Number(value) > 0) && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+          >
+            <InfoCard
+              data={marginAccountInfo}
+              items={[...MARGIN_ACCOUNT_INFO_ITEMS]}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      <Button 
-        disabled={!userAddress || (Number(value) <= 0) ? true : false} 
-        type="gradient" 
-        size="large" 
-        text={!userAddress ? "Connect Wallet" : Number(value) > 0 ? "Add Liquidity" : "Enter Amount"}
-      />
-    </>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3, delay: 0.1 }}
+      >
+        <Button 
+          disabled={!userAddress || (Number(value) <= 0) ? true : false} 
+          type="gradient" 
+          size="large" 
+          text={!userAddress ? "Connect Wallet" : Number(value) > 0 ? "Add Liquidity" : "Enter Amount"}
+        />
+      </motion.div>
+    </div>
   )
 }
 

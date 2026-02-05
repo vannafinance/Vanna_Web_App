@@ -28,14 +28,15 @@ const rewardsData = [
     rewards: "100",
   },
   {
-    id: 4,
+    id: 6,
     name: "10k Assets",
     points: "100",
     rewards: "100",
   }
 ];
-export const RewardsTable = () => {
+export const RewardsTable = ({height = "330px"}: {height?: string}) => {
   const { isDark } = useTheme();
+  const hasRewards = rewardsData.length > 0;
   
   return (
     <section 
@@ -51,51 +52,62 @@ export const RewardsTable = () => {
       }`}>
         Rewards
       </h2>
-      <table className="w-full h-fit flex flex-col gap-[4px]" aria-label="Claimable Rewards">
-        <thead>
-          <tr className="w-full h-fit flex gap-[2px] rounded-[12px]  items-center">
-            {rewardsHeading.map((heading) => (
-              <th
-                key={heading}
-                className={`w-full h-full p-[8px] flex items-center ${
-                  heading === "Claim all" ? "text-center justify-center" : "text-start justify-start"
-                } text-[10px] font-medium text-[#707070]`}
-              >
-                {heading}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="flex flex-col gap-[4px] max-h-[220px] overflow-y-auto">
-          {rewardsData.map((reward,idx) => (
-            <tr
-              key={idx}
-              className="cursor-pointer w-full h-fit flex hover:bg-[#F1EBFD] rounded-[8px] items-center group"
-            >
-              <td className={`w-full h-full py-[4px] px-[8px] text-[10px] font-medium flex items-center ${
-                isDark ? "text-white group-hover:text-[#090909]" : "text-[#090909]"
-              }`}>
-                {reward.name}
-              </td>
-              <td className={`w-full h-full py-[4px] px-[8px] text-[10px] font-medium flex items-center ${
-                isDark ? "text-white group-hover:text-[#090909]" : "text-[#090909]"
-              }`}>
-                {reward.points}
-              </td>
-              <td className={`w-full h-full py-[4px] px-[8px] text-[10px] font-medium flex items-center ${
-                isDark ? "text-white group-hover:text-[#090909]" : "text-[#090909]"
-              }`}>
-                {reward.rewards}
-              </td>
-              <td className={`w-full h-full py-[4px] px-[8px] text-[10px] font-medium flex items-center justify-end ${
-                isDark ? "text-white group-hover:text-[#090909]" : "text-[#090909]"
-              }`}>
-                <Button text="Claim" size="small" type="solid" disabled={false}  />
-              </td>
+      
+      {!hasRewards ? (
+        <div className="w-full h-full flex items-center justify-center min-h-[200px]">
+          <p className={`text-[14px] font-medium ${
+            isDark ? "text-[#707070]" : "text-[#707070]"
+          }`}>
+            No rewards available
+          </p>
+        </div>
+      ) : (
+        <table className="w-full h-fit flex flex-col gap-[4px]" aria-label="Claimable Rewards">
+          <thead>
+            <tr className="w-full h-fit flex gap-[2px] rounded-[12px]  items-center">
+              {rewardsHeading.map((heading) => (
+                <th
+                  key={heading}
+                  className={`w-full h-full p-[8px] flex items-center ${
+                    heading === "Claim all" ? "text-center justify-center" : "text-start justify-start"
+                  } text-[10px] font-medium text-[#707070]`}
+                >
+                  {heading}
+                </th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="flex flex-col gap-[4px] max-h-[220px] overflow-y-auto">
+            {rewardsData.map((reward,idx) => (
+              <tr
+                key={idx}
+                className="cursor-pointer w-full h-fit flex hover:bg-[#F1EBFD] rounded-[8px] items-center group"
+              >
+                <td className={`w-full h-full py-[4px] px-[8px] text-[10px] font-medium flex items-center ${
+                  isDark ? "text-white group-hover:text-[#090909]" : "text-[#090909]"
+                }`}>
+                  {reward.name}
+                </td>
+                <td className={`w-full h-full py-[4px] px-[8px] text-[10px] font-medium flex items-center ${
+                  isDark ? "text-white group-hover:text-[#090909]" : "text-[#090909]"
+                }`}>
+                  {reward.points}
+                </td>
+                <td className={`w-full h-full py-[4px] px-[8px] text-[10px] font-medium flex items-center ${
+                  isDark ? "text-white group-hover:text-[#090909]" : "text-[#090909]"
+                }`}>
+                  {reward.rewards}
+                </td>
+                <td className={`w-full h-full py-[4px] px-[8px] text-[10px] font-medium flex items-center justify-end ${
+                  isDark ? "text-white group-hover:text-[#090909]" : "text-[#090909]"
+                }`}>
+                  <Button text="Claim" size="small" type="solid" disabled={false}  />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </section>
   );
 };
