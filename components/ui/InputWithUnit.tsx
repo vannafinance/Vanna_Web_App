@@ -69,8 +69,9 @@ export function InputWithUnit<T extends string>({
               const option = suffixOptions.find((o) => o.label === label);
               if (option) onSuffixChange?.(option.value);
             }}
-            classname="text-[12px] font-medium leading-[18px] gap-2"
+            classname="text-[12px] font-medium leading-[18px] gap-1"
             dropdownClassname="text-[12px] font-medium"
+            arrowClassname="size-4"
           />
         </div>
       )}

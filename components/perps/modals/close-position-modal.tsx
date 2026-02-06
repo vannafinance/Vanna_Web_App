@@ -4,6 +4,12 @@ import { useState } from "react";
 import { ActivePositionType } from "../position-tables/active-positions-table";
 import { QuantitySlider } from "../../ui/quantity-slider";
 import { BaseModalContent } from "../../ui/base-modal-content";
+import { AnimatedTabs } from "../../ui/animated-tabs";
+
+const CLOSE_POSITION_TABS = [
+  { id: "limit", label: "Limit" },
+  { id: "market", label: "Market" },
+];
 
 interface ClosePositionModalProps {
   position: ActivePositionType;
@@ -75,30 +81,13 @@ export const ClosePositionModal = ({
       onConfirm={handleConfirm}
     >
       {/* Limit / Market Close Toggle */}
-      <div className="flex gap-1 rounded-lg p-1 bg-white">
-        <button
-          type="button"
-          onClick={() => setType("limit")}
-          className={`cursor-pointer flex-1 h-[39px] rounded-lg py-3 text-[12px] font-semibold transition-colors ${
-            type === "limit"
-              ? "bg-[#F1EBFD] text-[#703AE6]"
-              : "bg-transparent text-[#111111]"
-          }`}
-        >
-          Limit
-        </button>
-        <button
-          type="button"
-          onClick={() => setType("market")}
-          className={`cursor-pointer flex-1 h-[39px] rounded-lg py-3 text-[12px] font-semibold transition-colors ${
-            type === "market"
-              ? "bg-[#F1EBFD] text-[#703AE6]"
-              : "bg-transparent text-[#111111]"
-          }`}
-        >
-          Market
-        </button>
-      </div>
+      <AnimatedTabs
+        type="ghost-compact"
+        tabs={CLOSE_POSITION_TABS}
+        activeTab={type}
+        onTabChange={(tabId) => setType(tabId as "market" | "limit")}
+        tabClassName="flex-1"
+      />
 
       {/* Position Info Header */}
       <div className="flex items-center gap-1">

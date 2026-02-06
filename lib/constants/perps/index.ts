@@ -37,7 +37,7 @@ export const FILTER_OPTIONS = [
   "DOGEUSDT",
   "MATICUSDT",
   "LINKUSDT",
-  "LITUSDT"
+  "LITUSDT",
 ];
 
 // Column preferences for positions table
@@ -192,7 +192,6 @@ export const PREFERENCE_ITEMS = [
 ] as const;
 
 export const CHAIN_OPTIONS: ChainOption[] = [
-  { name: "BNB Chain", icon: "/icons/bnb-icon.svg" },
   { name: "Arbitrum", icon: "/icons/arbitrum-icon.svg" },
   { name: "Ethereum", icon: "/icons/eth-icon.png" },
   { name: "Polygon", icon: "/icons/polygon-icon.png" },
@@ -222,8 +221,16 @@ export const DEPOSIT_TIME_CHAINS: Record<string, string> = {
 
 export const BRIDGE_OPTIONS = ["Stargate", "LayerZero", "Wormhole", "Across"];
 
-export const TP_SL_PRICE_TYPE_OPTIONS: TpSlTriggerPriceType[] = ["Last", "Mark", "Index"];
-export const TP_SL_VALUE_TYPE_OPTIONS: TpSlValueType[] = ["ROI(%)", "Change(%)", "PnL(USDC)"];
+export const TP_SL_PRICE_TYPE_OPTIONS: TpSlTriggerPriceType[] = [
+  "Last",
+  "Mark",
+  "Index",
+];
+export const TP_SL_VALUE_TYPE_OPTIONS: TpSlValueType[] = [
+  "ROI(%)",
+  "Change(%)",
+  "PnL(USDC)",
+];
 export const TP_SL_ORDER_TYPE_OPTIONS: TpSlOrderType[] = ["Limit", "BBO"];
 export const TP_SL_BBO_OPTIONS: TpSlBBOType[] = [
   "Counterparty 1",
@@ -238,10 +245,11 @@ export const TRIGGER_PRICE_SUFFIX_OPTIONS: SuffixOption<TriggerPriceType>[] = [
   { label: "Index Price", value: "index" },
 ];
 
-export const EXECUTION_PRICE_SUFFIX_OPTIONS: SuffixOption<ExecutionPriceType>[] = [
-  { label: "Limit", value: "limit" },
-  { label: "Market", value: "market" },
-];
+export const EXECUTION_PRICE_SUFFIX_OPTIONS: SuffixOption<ExecutionPriceType>[] =
+  [
+    { label: "Limit", value: "limit" },
+    { label: "Market", value: "market" },
+  ];
 
 export const TP_SUFFIX_OPTIONS: SuffixOption<TakeProfitType>[] = [
   { label: "Price (USDT)", value: "price" },
@@ -257,7 +265,12 @@ export const SL_SUFFIX_OPTIONS: SuffixOption<StopLossType>[] = [
   { label: "Change (%)", value: "change" },
 ];
 
-export const TIME_IN_FORCE_OPTIONS: TimeInForce[] = ["GTC", "Post-Only", "FOK", "IOC"];
+export const TIME_IN_FORCE_OPTIONS: TimeInForce[] = [
+  "GTC",
+  "Post-Only",
+  "FOK",
+  "IOC",
+];
 
 export const TWAP_FREQUENCY_OPTIONS: TwapFrequencyType[] = [
   "5s",

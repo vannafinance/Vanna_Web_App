@@ -748,6 +748,7 @@ const PerpsOrderPlacementForm = () => {
                 }
                 classname="text-[12px] p-2 rounded-lg text-[#FFFFFF] leading-[100%] font-semibold bg-[#24A0A9]"
                 dropdownClassname="text-[12px]"
+                arrowClassname="size-4"
               />
             </div>
 
@@ -826,6 +827,7 @@ const PerpsOrderPlacementForm = () => {
               }
               classname="gap-0.5 text-[12px] leading-[18px] font-medium"
               dropdownClassname="text-[12px] font-semibold"
+              arrowClassname="size-4"
             />
           </div>
         )}

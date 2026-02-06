@@ -11,6 +11,8 @@ interface Dropdown {
   selectedOption: string;
   classname: string;
   dropdownClassname: string;
+  menuClassname?: string;
+  arrowClassname?: string;
 }
 
 export const Dropdown = (props: Dropdown) => {
@@ -55,7 +57,9 @@ export const Dropdown = (props: Dropdown) => {
   };
 
   return (
-    <div className="relative inline-block z-[100] w-full">
+    <div
+      className={`relative inline-block w-full ${isHover ? "z-100" : "z-0"}`}
+    >
       <button
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
@@ -65,23 +69,25 @@ export const Dropdown = (props: Dropdown) => {
         aria-expanded={isHover}
         aria-haspopup="listbox"
       >
-        {iconPaths[props.selectedOption] && (
-          <Image
-            src={iconPaths[props.selectedOption]}
-            width={20}
-            height={20}
-            alt={props.selectedOption}
-            aria-hidden="true"
-          />
-        )}{" "}
-        {props.selectedOption}
+        <span className="flex items-center gap-2">
+          {iconPaths[props.selectedOption] && (
+            <Image
+              src={iconPaths[props.selectedOption]}
+              width={20}
+              height={20}
+              alt={props.selectedOption}
+              aria-hidden="true"
+            />
+          )}
+          {props.selectedOption}
+        </span>
         <motion.svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
           strokeWidth={1.5}
           stroke="currentColor"
-          className="size-5"
+          className={props.arrowClassname || "size-5"}
           aria-hidden="true"
           animate={{ rotate: isHover ? 180 : 0 }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
@@ -102,9 +108,9 @@ export const Dropdown = (props: Dropdown) => {
             transition={{ duration: 0.2, ease: "easeOut" }}
             onMouseEnter={handleDropdownMouseEnter}
             onMouseLeave={handleDropdownMouseLeave}
-            className={`absolute z-[100] bg-white p-2 top-8 -left-4 shadow-lg rounded-[6px] ${
-              props.items.length > 4 ? "max-h-48 overflow-y-auto" : ""
-            }`}
+            className={`absolute z-100 bg-white p-2 shadow-lg rounded-[6px] ${
+              props.menuClassname || "top-8 -left-4"
+            } ${props.items.length > 4 ? "max-h-48 overflow-y-auto" : ""}`}
             role="listbox"
             aria-label="Options"
           >

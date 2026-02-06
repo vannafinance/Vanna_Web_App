@@ -3,11 +3,19 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { BaseModalContent } from "../../ui/base-modal-content";
+import { AnimatedTabs } from "../../ui/animated-tabs";
 import { TpSlMode, TpSlPositionData } from "@/lib/types";
 import { EntirePositionTab } from "./tp-sl-entire-tab";
 import { PartialPositionTab } from "./tp-sl-partial-tab";
 import { TrailingTab } from "./tp-sl-trailing-tab";
 import { MmrSlTab } from "./tp-sl-mmr-tab";
+
+const TP_SL_TABS = [
+  { id: "entire_position", label: "Entire Position" },
+  { id: "partial_position", label: "Partial Position" },
+  { id: "trailing", label: "Trailing TP/SL" },
+  { id: "mmr_sl", label: "MMR SL" },
+];
 
 interface TpSlModalProps {
   defaultMode?: TpSlMode;
@@ -103,52 +111,13 @@ export const TpSlModal = ({
       </div>
 
       {/* tabs */}
-      <div className="bg-white flex gap-1 p-1 rounded-lg ">
-        <button
-          type="button"
-          onClick={() => setSelectedMode("entire_position")}
-          className={`cursor-pointer flex-1 h-[39px] rounded-lg py-3 text-[12px] font-semibold transition-colors ${
-            selectedMode === "entire_position"
-              ? "bg-[#F1EBFD] text-[#703AE6]"
-              : "bg-transparent text-[#111111]"
-          }`}
-        >
-          Entire Position
-        </button>
-        <button
-          type="button"
-          onClick={() => setSelectedMode("partial_position")}
-          className={`cursor-pointer flex-1 h-[39px] rounded-lg py-3 text-[12px] font-semibold transition-colors ${
-            selectedMode === "partial_position"
-              ? "bg-[#F1EBFD] text-[#703AE6]"
-              : "bg-transparent text-[#111111]"
-          }`}
-        >
-          Partial Position
-        </button>
-        <button
-          type="button"
-          onClick={() => setSelectedMode("trailing")}
-          className={`cursor-pointer flex-1 h-[39px] rounded-lg py-3 text-[12px] font-semibold transition-colors ${
-            selectedMode === "trailing"
-              ? "bg-[#F1EBFD] text-[#703AE6]"
-              : "bg-transparent text-[#111111]"
-          }`}
-        >
-          Trailing TP/SL
-        </button>
-        <button
-          type="button"
-          onClick={() => setSelectedMode("mmr_sl")}
-          className={`cursor-pointer flex-1 h-[39px] rounded-lg py-3 text-[12px] font-semibold transition-colors ${
-            selectedMode === "mmr_sl"
-              ? "bg-[#F1EBFD] text-[#703AE6]"
-              : "bg-transparent text-[#111111]"
-          }`}
-        >
-          MMR SL
-        </button>
-      </div>
+      <AnimatedTabs
+        type="ghost-compact"
+        tabs={TP_SL_TABS}
+        activeTab={selectedMode}
+        onTabChange={(tabId) => setSelectedMode(tabId as TpSlMode)}
+        tabClassName="flex-1 whitespace-nowrap "
+      />
 
       {/* fields based on selected mode */}
       {selectedMode === "entire_position" && <EntirePositionTab />}

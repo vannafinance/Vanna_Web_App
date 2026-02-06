@@ -40,4 +40,11 @@ export const iconPaths: Record<string, string> = {
   KATANA: "/icons/katana.jpg",
   ARBITRUM: "/icons/arbitrum-icon.svg",
   BASE: "/icons/base-icon.svg",
+  // Chain names (for chain selector dropdowns)
+  "BNB Chain": "/icons/bnb-icon.svg",
+  Arbitrum: "/icons/arbitrum-icon.svg",
+  Ethereum: "/icons/eth-icon.png",
+  Polygon: "/icons/polygon-icon.png",
+  Base: "/icons/base-icon.svg",
+  Optimism: "/icons/optimism-icon.svg",
 };

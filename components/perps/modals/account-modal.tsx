@@ -3,11 +3,18 @@
 import { useState, useRef, useCallback } from "react";
 import Image from "next/image";
 import { BaseModalContent } from "../../ui/base-modal-content";
+import { AnimatedTabs } from "../../ui/animated-tabs";
 import { DepositTab, DepositTabRef } from "./account-deposit-tab";
 import { WithdrawTab, WithdrawTabRef } from "./account-withdraw-tab";
 import { TransferTab, TransferTabRef } from "./account-transfer-tab";
 
 type AccountTab = "deposit" | "withdraw" | "transfer";
+
+const ACCOUNT_TABS = [
+  { id: "deposit", label: "Deposit" },
+  { id: "withdraw", label: "Withdraw" },
+  { id: "transfer", label: "Transfer" },
+];
 
 interface AccountModalProps {
   onClose: () => void;
@@ -81,22 +88,12 @@ export const AccountModal = ({
     >
       {/* Tabs + History Icon Row */}
       <div className="flex items-center justify-between">
-        <div className="flex gap-1 rounded-lg p-1 bg-white">
-          {(["deposit", "withdraw", "transfer"] as const).map((tab) => (
-            <button
-              key={tab}
-              type="button"
-              onClick={() => handleTabChange(tab)}
-              className={`cursor-pointer px-4 h-[39px] rounded-lg py-3 text-[12px] font-semibold transition-colors capitalize ${
-                activeTab === tab
-                  ? "bg-[#F1EBFD] text-[#703AE6]"
-                  : "bg-transparent text-[#111111]"
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
+        <AnimatedTabs
+          type="ghost-compact"
+          tabs={ACCOUNT_TABS}
+          activeTab={activeTab}
+          onTabChange={(tabId) => handleTabChange(tabId as AccountTab)}
+        />
 
         {/* History Icon */}
         <button

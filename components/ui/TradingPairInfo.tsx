@@ -64,8 +64,9 @@ const TradingPairInfo = ({
                 items={stat.dropdown.items}
                 selectedOption={stat.dropdown.selectedOption}
                 setSelectedOption={stat.dropdown.onSelect}
-                classname="gap-0.5 text-[#111111] font-medium text-[10px] leading-3 bg-white border border-[#E2E2E2] rounded px-1  "
-                dropdownClassname="text-[8px] leading-[12px] font-medium"
+                classname="gap-0.5 text-[#111111] font-medium text-[12px] leading-[18px] bg-white border border-[#E2E2E2] rounded px-1  "
+                dropdownClassname="text-[10px] leading-[12px] font-medium"
+                arrowClassname="size-3"
               />
             )}
           </div>

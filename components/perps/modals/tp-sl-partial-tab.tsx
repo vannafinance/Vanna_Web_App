@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { TpSlTriggerPriceType, TpSlValueType, TpSlOrderType, TpSlBBOType } from "@/lib/types";
+import {
+  TpSlTriggerPriceType,
+  TpSlValueType,
+  TpSlOrderType,
+  TpSlBBOType,
+} from "@/lib/types";
 import {
   TP_SL_PRICE_TYPE_OPTIONS,
   TP_SL_VALUE_TYPE_OPTIONS,
@@ -83,6 +88,7 @@ export const PartialPositionTab = () => {
                 }
                 classname="gap-0.5 text-[12px] leading-[18px] font-medium"
                 dropdownClassname="text-[12px] font-semibold"
+                arrowClassname="size-4"
               />
             </div>
           </div>
@@ -94,9 +100,7 @@ export const PartialPositionTab = () => {
               type="number"
               value={partialTpRoi ?? ""}
               onChange={(e) =>
-                setPartialTpRoi(
-                  e.target.value ? Number(e.target.value) : null,
-                )
+                setPartialTpRoi(e.target.value ? Number(e.target.value) : null)
               }
               className="flex-1 min-w-0 text-[12px] leading-[18px] font-medium outline-none"
             />
@@ -109,6 +113,7 @@ export const PartialPositionTab = () => {
                 }
                 classname="gap-0.5 text-[12px] leading-[18px] font-medium"
                 dropdownClassname="text-[12px] font-semibold"
+                arrowClassname="size-4"
               />
             </div>
           </div>
@@ -148,8 +153,10 @@ export const PartialPositionTab = () => {
                     setSelectedOption={(val) =>
                       setPartialTpBboType(val as TpSlBBOType)
                     }
-                    classname="flex-1 gap-0.5 text-[12px] leading-[18px] font-medium"
+                    classname="flex-1 w-full! justify-between! text-[12px] leading-[18px] font-medium"
                     dropdownClassname="text-[12px] font-semibold"
+                    arrowClassname="size-4"
+                    menuClassname="top-full left-0 mt-1 w-full border border-[#E2E2E2] rounded-lg"
                   />
                 )}
               </div>
@@ -160,8 +167,10 @@ export const PartialPositionTab = () => {
                   setSelectedOption={(val) =>
                     setPartialTpOrderType(val as TpSlOrderType)
                   }
-                  classname="flex-1 gap-0.5 text-[12px] leading-[18px] font-medium"
+                  classname="flex-1 w-full! justify-between! text-[12px] leading-[18px] font-medium"
                   dropdownClassname="text-[12px] font-semibold"
+                  arrowClassname="size-4"
+                  menuClassname="top-full left-0 mt-1 w-full border border-[#E2E2E2] rounded-lg"
                 />
               </div>
             </div>
@@ -235,6 +244,7 @@ export const PartialPositionTab = () => {
                 }
                 classname="gap-0.5 text-[12px] leading-[18px] font-medium"
                 dropdownClassname="text-[12px] font-semibold"
+                arrowClassname="size-4"
               />
             </div>
           </div>
@@ -246,9 +256,7 @@ export const PartialPositionTab = () => {
               type="number"
               value={partialSlRoi ?? ""}
               onChange={(e) =>
-                setPartialSlRoi(
-                  e.target.value ? Number(e.target.value) : null,
-                )
+                setPartialSlRoi(e.target.value ? Number(e.target.value) : null)
               }
               className="flex-1 min-w-0 text-[12px] leading-[18px] font-medium outline-none"
             />
@@ -261,6 +269,7 @@ export const PartialPositionTab = () => {
                 }
                 classname="gap-0.5 text-[12px] leading-[18px] font-medium"
                 dropdownClassname="text-[12px] font-semibold"
+                arrowClassname="size-4"
               />
             </div>
           </div>
@@ -300,8 +309,10 @@ export const PartialPositionTab = () => {
                     setSelectedOption={(val) =>
                       setPartialSlBboType(val as TpSlBBOType)
                     }
-                    classname="flex-1 gap-0.5 text-[12px] leading-[18px] font-medium"
+                    classname="flex-1 w-full! justify-between! text-[12px] leading-[18px] font-medium"
                     dropdownClassname="text-[12px] font-semibold"
+                    arrowClassname="size-4"
+                    menuClassname="top-full left-0 mt-1 w-full border border-[#E2E2E2] rounded-lg"
                   />
                 )}
               </div>
@@ -312,8 +323,10 @@ export const PartialPositionTab = () => {
                   setSelectedOption={(val) =>
                     setPartialSlOrderType(val as TpSlOrderType)
                   }
-                  classname="flex-1 gap-0.5 text-[12px] leading-[18px] font-medium"
+                  classname="flex-1 w-full! justify-between! text-[12px] leading-[18px] font-medium"
                   dropdownClassname="text-[12px] font-semibold"
+                  arrowClassname="size-4"
+                  menuClassname="top-full left-0 mt-1 w-full border border-[#E2E2E2] rounded-lg"
                 />
               </div>
             </div>

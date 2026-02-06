@@ -1,5 +1,5 @@
 import { useUserStore } from "@/store/user";
-import { useState, useRef, useEffect } from "react";
+import { useState, useMemo } from "react";
 import OpenOrdersTable from "./position-tables/open-orders-table";
 import OrderHistoryTable from "./position-tables/order-history-table";
 import TransactionHistoryTable from "./position-tables/transaction-history";
@@ -9,6 +9,7 @@ import { Button } from "../ui/button";
 import { Checkbox } from "../ui/Checkbox";
 import PositionHistoryTable from "./position-tables/position-history-table";
 import AssetsTable from "./position-tables/assets-table";
+import { AnimatedTabs } from "../ui/animated-tabs";
 
 import { Modal } from "../ui/modal";
 import { CloseAllPositionsModal } from "./modals/close-all-positions-modal";
@@ -130,34 +131,33 @@ const PositionTables = () => {
     (opt) => opt.id === selectedSort,
   );
 
+  // Filter and transform main tabs for AnimatedTabs
+  const filteredMainTabs = useMemo(() => {
+    return MAIN_TABS.filter((tab) => {
+      const prefKey = tab.id === "position" ? "positions" : tab.id;
+      return tabPreferences[prefKey as keyof typeof tabPreferences];
+    }).map((tab) => ({
+      id: tab.id,
+      label: tab.count !== null ? `${tab.label}(${tab.count})` : tab.label,
+    }));
+  }, [tabPreferences]);
+
   return (
     <div
       className={`w-full rounded-lg ${
         !userAddress ? "bg-white" : "bg-[#F7F7F7]"
-      }    flex flex-col gap-2 p-2`}
+      }    flex flex-col gap-1 p-2`}
     >
       {/* Tabs */}
       <div className="flex p-0.5 gap-6 justify-between">
-        <div className="flex gap-1">
-          {MAIN_TABS.filter((tab) => {
-            // Map tab.id to preference key (position -> positions)
-            const prefKey = tab.id === "position" ? "positions" : tab.id;
-            return tabPreferences[prefKey as keyof typeof tabPreferences];
-          }).map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`cursor-pointer text-[12px] font-semibold  transition-colors py-2 px-4 ${
-                activeTab === tab.id
-                  ? "text-[#703AE6] bg-[#F1EBFD] rounded-lg"
-                  : "text-[#111111] hover:text-gray-900 hover:bg-gray-50"
-              }`}
-            >
-              {tab.label}
-              {tab.count !== null && `(${tab.count})`}
-            </button>
-          ))}
-        </div>
+        <AnimatedTabs
+          type="ghost-compact"
+          tabs={filteredMainTabs}
+          activeTab={activeTab}
+          onTabChange={(tabId) => setActiveTab(tabId as MainTabType)}
+          containerClassName="!bg-transparent !p-0 !rounded-none"
+          tabClassName="py-2"
+        />
         <div className="flex items-center gap-3">
           {/* show current checkbox */}
           {activeTab !== "transactionHistory" && activeTab !== "assets" && (

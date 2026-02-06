@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
-import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import { Dropdown } from "@/components/ui/dropdown";
 import { AccountType, TokenOption } from "@/lib/types";
 import { TOKEN_OPTIONS } from "@/lib/constants/perps";
 
@@ -23,12 +22,12 @@ export const TransferTab = forwardRef<TransferTabRef, TransferTabProps>(
   ({ onValidChange }, ref) => {
     // Form state
     const [amount, setAmount] = useState("");
-    const [transferFrom, setTransferFrom] = useState<AccountType>("Portfolio Balance");
+    const [transferFrom, setTransferFrom] =
+      useState<AccountType>("Portfolio Balance");
     const [transferTo, setTransferTo] = useState<AccountType>("Margin Balance");
-    const [selectedToken, setSelectedToken] = useState<TokenOption>(TOKEN_OPTIONS[0]);
-
-    // Dropdown states
-    const [isTokenDropdownOpen, setIsTokenDropdownOpen] = useState(false);
+    const [selectedToken, setSelectedToken] = useState<TokenOption>(
+      TOKEN_OPTIONS[0],
+    );
 
     // Mock balance - replace with actual balance
     const balance = "1000";
@@ -49,6 +48,11 @@ export const TransferTab = forwardRef<TransferTabRef, TransferTabProps>(
         amount,
       }),
     }));
+
+    const handleTokenSelect = (value: string) => {
+      const token = TOKEN_OPTIONS.find((t) => t.symbol === value);
+      if (token) setSelectedToken(token);
+    };
 
     const handleMaxClick = () => {
       setAmount(balance);
@@ -123,77 +127,20 @@ export const TransferTab = forwardRef<TransferTabRef, TransferTabProps>(
             className="flex-1 text-[12px] leading-[18px] font-medium text-[#111111] placeholder:text-[#A7A7A7] outline-none bg-transparent"
           />
           {/* Token Selector */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setIsTokenDropdownOpen(!isTokenDropdownOpen)}
-              className="cursor-pointer flex items-center gap-1 pl-2"
-            >
-              <Image
-                src={selectedToken.icon}
-                width={20}
-                height={20}
-                alt={selectedToken.symbol}
-                className="rounded-full"
-              />
-              <span className="text-[12px] leading-[18px] font-medium text-[#111111]">
-                {selectedToken.symbol}
-              </span>
-              <motion.svg
-                width="12"
-                height="12"
-                viewBox="0 0 12 12"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                animate={{ rotate: isTokenDropdownOpen ? 180 : 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <path
-                  d="M3 4.5L6 7.5L9 4.5"
-                  stroke="#111111"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </motion.svg>
-            </button>
-            <AnimatePresence>
-              {isTokenDropdownOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="absolute z-50 right-0 mt-2 bg-white rounded-lg shadow-lg border border-[#E2E2E2] overflow-hidden min-w-[100px]"
+          <div className="w-fit flex items-center">
+            <Dropdown
+              items={TOKEN_OPTIONS.map((t) => t.symbol)}
+              selectedOption={selectedToken.symbol}
+              setSelectedOption={
+                handleTokenSelect as React.Dispatch<
+                  React.SetStateAction<string>
                 >
-                  {TOKEN_OPTIONS.map((token) => (
-                    <button
-                      key={token.symbol}
-                      type="button"
-                      onClick={() => {
-                        setSelectedToken(token);
-                        setIsTokenDropdownOpen(false);
-                      }}
-                      className={`cursor-pointer w-full px-3 py-2 flex items-center gap-2 text-left hover:bg-[#F1EBFD] hover:text-[#703AE6] transition-colors ${
-                        selectedToken.symbol === token.symbol
-                          ? "bg-[#F1EBFD] text-[#703AE6]"
-                          : "text-[#111111]"
-                      }`}
-                    >
-                      <Image
-                        src={token.icon}
-                        width={16}
-                        height={16}
-                        alt={token.symbol}
-                        className="rounded-full"
-                      />
-                      <span className="text-[12px] leading-[18px] font-medium">
-                        {token.symbol}
-                      </span>
-                    </button>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
+              }
+              classname="gap-1 pl-2 text-[12px] leading-[18px] font-medium"
+              dropdownClassname="text-[12px] leading-[18px] gap-2"
+              menuClassname="right-0 mt-2 min-w-[100px] border border-[#E2E2E2] rounded-lg"
+              arrowClassname="size-4"
+            />
           </div>
         </div>
 
@@ -217,7 +164,7 @@ export const TransferTab = forwardRef<TransferTabRef, TransferTabProps>(
         </div>
       </div>
     );
-  }
+  },
 );
 
 TransferTab.displayName = "TransferTab";

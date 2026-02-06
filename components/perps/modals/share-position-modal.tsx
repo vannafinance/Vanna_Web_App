@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef } from "react";
 import Image from "next/image";
+import html2canvas from "html2canvas";
 import PositionPnlCard from "../position-pnl-card";
 import { Modal } from "../../ui/modal";
 import { Checkbox } from "../../ui/Checkbox";
@@ -31,6 +32,50 @@ export const SharePositionModal = ({
   const [showLeverage, setShowLeverage] = useState(true);
   const [showPnlAmount, setShowPnlAmount] = useState(true);
   const [showPrices, setShowPrices] = useState(true);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const handleDownload = async () => {
+    if (!cardRef.current || isDownloading) return;
+
+    setIsDownloading(true);
+    try {
+      // Wait a bit to ensure all images are loaded
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      const canvas = await html2canvas(cardRef.current, {
+        backgroundColor: null,
+        scale: 2, // Higher quality
+        logging: false,
+        useCORS: true,
+        allowTaint: false,
+      });
+
+      // Convert canvas to blob
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          console.error("Failed to create blob");
+          setIsDownloading(false);
+          return;
+        }
+
+        // Create download link
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `position-pnl-${card.pair}-${Date.now()}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        setIsDownloading(false);
+      }, "image/png");
+    } catch (error) {
+      console.error("Error downloading image:", error);
+      setIsDownloading(false);
+    }
+  };
 
   const shareItems = useMemo(
     () => [
@@ -61,7 +106,7 @@ export const SharePositionModal = ({
 
         {/* preview */}
         <div className="mt-2 flex justify-center">
-          <div className="w-full flex justify-center">
+          <div ref={cardRef} className="w-full flex justify-center">
             <PositionPnlCard
               {...card}
               showLeverage={showLeverage}
@@ -101,10 +146,14 @@ export const SharePositionModal = ({
             <button
               key={item.key}
               type="button"
-              className="cursor-pointer group flex flex-col items-center gap-2"
+              className="cursor-pointer group flex flex-col items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={() => {
-                // UI-only for now; hook up actual share/copy/download when needed.
+                if (item.key === "download") {
+                  handleDownload();
+                }
+                // Other share options can be implemented here
               }}
+              disabled={item.key === "download" && isDownloading}
             >
               <div className="h-10 w-10 rounded-full overflow-hidden">
                 <Image
