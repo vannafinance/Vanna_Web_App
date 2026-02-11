@@ -8,8 +8,9 @@ import { TransactionModal } from "../ui/transaction-modal";
 import { useTheme } from "@/contexts/theme-context";
 import { EarnAsset } from "@/lib/types";
 import { withdraw } from "@/lib/utils/earn/transactions";
-import { useFetchUserVaultPosition, useFetchConvertToAssets, useFetchVaultData } from "@/lib/utils/earn/earnFetchers";
+import { useFetchUserVaultPosition, useFetchConvertToAssets } from "@/lib/utils/earn/earnFetchers";
 import { SUPPORTED_TOKENS_BY_CHAIN } from "@/lib/utils/web3/token";
+import { useVaultData } from "@/lib/hooks/useVaultData";
 
 export const WithdrawLiquidity = () => {
   const { isDark } = useTheme();
@@ -55,14 +56,10 @@ export const WithdrawLiquidity = () => {
     txHash: "",
   });
 
-  // Vault data (local state)
-  const [vaultData, setVaultData] = useState<{
-    exchangeRate: number;
-    supplyAPY: number;
-  } | null>(null);
+  // ✅ Use vault data from store (already cached via multicall)
+  const { vault, loading: vaultLoading } = useVaultData(selectedAsset);
 
   // Fetchers
-  const fetchVaultData = useFetchVaultData(chainId, selectedAsset, publicClient);
   const fetchUserPosition = useFetchUserVaultPosition(
     chainId,
     selectedAsset,
@@ -76,7 +73,7 @@ export const WithdrawLiquidity = () => {
     publicClient
   );
 
-  // Fetch vToken balance and vault data when asset or address changes
+  // Fetch vToken balance when asset or address changes
   useEffect(() => {
     const loadData = async () => {
       if (!isConnected || !address) {
@@ -85,24 +82,17 @@ export const WithdrawLiquidity = () => {
         return;
       }
 
-      // Fetch user position
+      // Fetch user position only (vault data comes from store)
       const positionResult = await fetchUserPosition();
       if (positionResult) {
         setVTokenBalance(positionResult.sharesFormatted);
         setAssetsValue(positionResult.assetsValue);
       }
-
-      // Fetch vault data
-      const vaultResult = await fetchVaultData();
-      if (vaultResult) {
-        setVaultData({
-          exchangeRate: vaultResult.exchangeRate,
-          supplyAPY: 0,
-        });
-      }
     };
     loadData();
-  }, [selectedAsset, address, isConnected, fetchUserPosition, fetchVaultData]);
+
+    // ✅ Removed auto-refresh - store handles caching with 10s refresh
+  }, [selectedAsset, address, isConnected, fetchUserPosition]);
 
   // Preview assets when shares changes
   useEffect(() => {
@@ -202,21 +192,16 @@ export const WithdrawLiquidity = () => {
         setShares("");
         setSelectedPercentage(0);
 
-        // Reload balances
-        const positionResult = await fetchUserPosition();
-        if (positionResult) {
-          setVTokenBalance(positionResult.sharesFormatted);
-          setAssetsValue(positionResult.assetsValue);
-        }
+        // Reload balances with a slight delay to allow blockchain state to update
+        setTimeout(async () => {
+          const positionResult = await fetchUserPosition();
+          if (positionResult) {
+            setVTokenBalance(positionResult.sharesFormatted);
+            setAssetsValue(positionResult.assetsValue);
+          }
 
-        // Reload vault data
-        const vaultResult = await fetchVaultData();
-        if (vaultResult) {
-          setVaultData({
-            exchangeRate: vaultResult.exchangeRate,
-            supplyAPY: 0,
-          });
-        }
+          // ✅ No need to reload vault data - store auto-refreshes
+        }, 2000);
       } else {
         throw new Error(result.error || "Withdraw failed");
       }
@@ -242,9 +227,9 @@ export const WithdrawLiquidity = () => {
     }
   };
 
-  // Calculate info card data
-  const exchangeRate = vaultData?.exchangeRate || 1;
-  const supplyAPY = vaultData?.supplyAPY || 0;
+  // Calculate info card data using vault from store
+  const exchangeRate = vault?.exchangeRate || 1;
+  const supplyAPY = vault?.supplyAPY ? vault.supplyAPY * 100 : 0; // Convert to percentage
 
   const infoData = {
     youGetVETH: assetsPreview,

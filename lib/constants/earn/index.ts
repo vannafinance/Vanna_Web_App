@@ -73,86 +73,13 @@ export const tableHeadings = [
       {
         cell: [
           {
-            chain: "ETH",
-            title: "WBTC",
-         
-            tag: "Active",
-          },
-          {
-            title: "$345.8K",
-            
-            tag: "7.51M USDC",
-          },
-          {
-            title: "22.16%",
-            tag: "22.16%",
-          },
-          {
-            title: "$4.66M USD",
-            tag: "4.66M USDC",
-          },
-          {
-            title: "22.16%",
-            tag: "22.16%",
-          },
-          {
-            title: "62.07%",
-            tag: "62.07%",
-          },
-          {
-            onlyIcons: ["WBTC", "USDC","USDT"],
-            tag: "Collateral",
-            clickable: "toggle",
-          },
-        ],
-      },
-  
-      {
-        cell: [
-          {
-            chain: "ETH",
-            title: "WBTC",
-            
-            tag: "Active",
-          },
-          {
-            title: "$345.8K",
-            
-            tag: "7.51M USDC",
-          },
-          {
-            title: "22.16%",
-            tag: "22.16%",
-          },
-          {
-            title: "$4.66M USD",
-            tag: "4.66M USDC",
-          },
-          {
-            title: "22.16%",
-            tag: "22.16%",
-          },
-          {
-            title: "62.07%",    
-            tag: "62.07%",
-          },
-          {
-            onlyIcons: ["WBTC", "USDC","USDT"],
-            tag: "Collateral",
-            clickable: "toggle",
-          },
-        ],
-      },
-      {
-        cell: [
-          {
-            chain: "ETH",
+            chain: "Base", // Will be dynamically replaced based on connected network
             title: "ETH",
             tag: "Active",
           },
           {
             title: "$892.4K",
-            tag: "12.3M USDC",
+            tag: "12.3M ETH",
           },
           {
             title: "18.45%",
@@ -160,7 +87,7 @@ export const tableHeadings = [
           },
           {
             title: "$6.21M USD",
-            tag: "6.21M USDC",
+            tag: "6.21M ETH",
           },
           {
             title: "15.32%",
@@ -171,7 +98,7 @@ export const tableHeadings = [
             tag: "58.92%",
           },
           {
-            onlyIcons: ["ETH", "USDC"],
+            onlyIcons: ["ETH", "USDC", "USDT"],
             tag: "Collateral",
             clickable: "toggle",
           },
@@ -180,7 +107,7 @@ export const tableHeadings = [
       {
         cell: [
           {
-            chain: "ETH",
+            chain: "Base", // Will be dynamically replaced based on connected network
             title: "USDC",
             tag: "Active",
           },
@@ -205,7 +132,7 @@ export const tableHeadings = [
             tag: "72.15%",
           },
           {
-            onlyIcons: ["USDC", "USDT"],
+            onlyIcons: ["USDC", "ETH", "USDT"],
             tag: "Collateral",
             clickable: "toggle",
           },
@@ -214,13 +141,13 @@ export const tableHeadings = [
       {
         cell: [
           {
-            chain: "ETH",
+            chain: "Base", // Will be dynamically replaced based on connected network
             title: "USDT",
             tag: "Active",
           },
           {
             title: "$567.3K",
-            tag: "9.12M USDC",
+            tag: "9.12M USDT",
           },
           {
             title: "16.78%",
@@ -228,7 +155,7 @@ export const tableHeadings = [
           },
           {
             title: "$3.89M USD",
-            tag: "3.89M USDC",
+            tag: "3.89M USDT",
           },
           {
             title: "11.24%",
@@ -240,176 +167,6 @@ export const tableHeadings = [
           },
           {
             onlyIcons: ["USDT", "USDC", "ETH"],
-            tag: "Collateral",
-            clickable: "toggle",
-          },
-        ],
-      },
-      {
-        cell: [
-          {
-            chain: "ETH",
-            title: "LINK",
-            tag: "Active",
-          },
-          {
-            title: "$234.6K",
-            tag: "4.56M USDC",
-          },
-          {
-            title: "24.32%",
-            tag: "24.32%",
-          },
-          {
-            title: "$1.98M USD",
-            tag: "1.98M USDC",
-          },
-          {
-            title: "19.45%",
-            tag: "19.45%",
-          },
-          {
-            title: "54.21%",
-            tag: "54.21%",
-          },
-          {
-            onlyIcons: ["LINK", "ETH"],
-            tag: "Collateral",
-            clickable: "toggle",
-          },
-        ],
-      },
-      {
-        cell: [
-          {
-            chain: "ETH",
-            title: "UNI",
-            tag: "Active",
-          },
-          {
-            title: "$178.9K",
-            tag: "3.24M USDC",
-          },
-          {
-            title: "20.15%",
-            tag: "20.15%",
-          },
-          {
-            title: "$1.45M USD",
-            tag: "1.45M USDC",
-          },
-          {
-            title: "14.67%",
-            tag: "14.67%",
-          },
-          {
-            title: "51.89%",
-            tag: "51.89%",
-          },
-          {
-            onlyIcons: ["UNI", "USDC", "ETH"],
-            tag: "Collateral",
-            clickable: "toggle",
-          },
-        ],
-      },
-      {
-        cell: [
-          {
-            chain: "ETH",
-            title: "AAVE",
-            tag: "Active",
-          },
-          {
-            title: "$445.7K",
-            tag: "7.89M USDC",
-          },
-          {
-            title: "19.87%",
-            tag: "19.87%",
-          },
-          {
-            title: "$2.67M USD",
-            tag: "2.67M USDC",
-          },
-          {
-            title: "13.45%",
-            tag: "13.45%",
-          },
-          {
-            title: "59.34%",
-            tag: "59.34%",
-          },
-          {
-            onlyIcons: ["AAVE", "ETH", "USDC"],
-            tag: "Collateral",
-            clickable: "toggle",
-          },
-        ],
-      },
-      {
-        cell: [
-          {
-            chain: "ETH",
-            title: "MATIC",
-            tag: "Active",
-          },
-          {
-            title: "$312.4K",
-            tag: "5.67M USDC",
-          },
-          {
-            title: "17.23%",
-            tag: "17.23%",
-          },
-          {
-            title: "$1.89M USD",
-            tag: "1.89M USDC",
-          },
-          {
-            title: "12.34%",
-            tag: "12.34%",
-          },
-          {
-            title: "56.78%",
-            tag: "56.78%",
-          },
-          {
-            onlyIcons: ["MATIC", "USDT"],
-            tag: "Collateral",
-            clickable: "toggle",
-          },
-        ],
-      },
-      {
-        cell: [
-          {
-            chain: "ETH",
-            title: "DAI",
-            tag: "Active",
-          },
-          {
-            title: "$678.2K",
-            tag: "11.45M USDC",
-          },
-          {
-            title: "14.56%",
-            tag: "14.56%",
-          },
-          {
-            title: "$4.23M USD",
-            tag: "4.23M USDC",
-          },
-          {
-            title: "10.89%",
-            tag: "10.89%",
-          },
-          {
-            title: "68.92%",
-            tag: "68.92%",
-          },
-          {
-            onlyIcons: ["DAI", "USDC", "USDT"],
             tag: "Collateral",
             clickable: "toggle",
           },

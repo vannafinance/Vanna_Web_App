@@ -15,6 +15,8 @@ import { SupplyApy } from "./supply-apy";
 import { PieChart } from "../ui/pie-chart";
 import { ProgressBar } from "../ui/progress-bar";
 import { useTheme } from "@/contexts/theme-context";
+import { Dropdown } from '../ui/dropdown';
+import { NetworkDropdown } from "../network-dropdown";
 
 const ITEMS_PER_PAGE = 4;
 
@@ -861,6 +863,8 @@ export const Table = memo((props: TableProps) => {
         </nav>
       )}
 
+      {/* Here is the Network Dropdown list for earn page  */}
+
       {showAllChainDropdown && (
         <header className={`flex ${showFilterTabType && showAllChainDropdown ? "flex-col gap-[16px]" : "justify-between items-center"}`}>
           <div className={`flex ${showFilterTabType && showAllChainDropdown ? "justify-between w-full" : "items-center gap-[12px]"}`}>
@@ -877,6 +881,9 @@ export const Table = memo((props: TableProps) => {
                 value={searchValue}
                 onChange={handleSearchChange}
               />
+
+
+
             </div>
             {showFilterTabType && props.filterTabTypeOptions && (
               <AnimatedTabs

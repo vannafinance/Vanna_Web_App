@@ -19,7 +19,7 @@ import { MARGIN_ACCOUNT_INFO_ITEMS, MARGIN_ACCOUNT_MORE_DETAILS_ITEMS } from "@/
 import { InfoCard } from "@/components/margin/info-card";
 import { motion } from "framer-motion";
 import { AnimatedTabs } from "@/components/ui/animated-tabs";
-import { items } from "@/components/earn/details-tab";
+// import { items } from "@/components/earn/details-tab";
 import { StatsCard } from "@/components/ui/stats-card";
 
 const UI_TABS = [

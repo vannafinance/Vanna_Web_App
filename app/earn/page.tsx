@@ -2,27 +2,37 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useChainId } from "wagmi";
 import { Chart } from "@/components/earn/chart";
 import { Table } from "@/components/earn/table";
 import { AccountStats } from "@/components/margin/account-stats";
-import { tableBody, tableHeadings } from "@/lib/constants/earn";
+import { tableHeadings } from "@/lib/constants/earn";
 import { ACCOUNT_STATS_ITEMS } from "@/lib/constants/margin";
 import { useUserStore } from "@/store/user";
 import { RewardsTable } from "@/components/earn/rewards-table";
 import { useEarnVaultStore } from "@/store/earn-vault-store";
+import { useEarnTableData } from "@/lib/hooks/useEarnTableData";
+import { useOverallDepositHistory, useNetAPYHistory } from "@/lib/hooks/useUserTotalPositions";
 
 export default function Earn() {
   const userAddress = useUserStore((state) => state.address);
   const setSelectedVault = useEarnVaultStore((state) => state.set);
   const router = useRouter();
+  const chainId = useChainId();
   const [activeTab, setActiveTab] = useState("vaults");
-  
+
+  // Fetch real blockchain data for the table
+  const { tableData, loading: tableLoading } = useEarnTableData();
+
+  // Fetch user's overall deposit and APY history
+  const { depositHistory, currentTotal, loading: depositLoading } = useOverallDepositHistory();
+  const { apyHistory, totalEarnings, loading: apyLoading } = useNetAPYHistory();
+
   // Tab-based data - you can pass different data for each tab
   const getTableDataForTab = (tabId: string) => {
-    // For now, using same data for both tabs
-    // You can customize this to return different data based on tabId
     if (tabId === "vaults") {
-      return tableBody;
+      // Return real blockchain data
+      return tableData;
     } else if (tabId === "positions") {
       // Return empty data for positions tab to test empty state
       return { rows: [] };
@@ -81,10 +91,38 @@ export default function Earn() {
         <section className="p-[40px] w-full h-fit flex gap-[24px]" aria-label="User Dashboard">
           <div className="flex gap-[16px] w-full h-fit">
             <article className="w-[437.33px] h-fit">
-              <Chart containerWidth="w-[437.33px]" containerHeight="h-[331px]" type="overall-deposit" />
+              {depositLoading ? (
+                <div className="w-[437.33px] h-[331px] flex items-center justify-center border rounded-[16px]">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#703AE6]"></div>
+                    <p className="text-[#999999] text-xs">Loading deposits...</p>
+                  </div>
+                </div>
+              ) : (
+                <Chart
+                  containerWidth="w-[437.33px]"
+                  containerHeight="h-[331px]"
+                  type="overall-deposit"
+                  customData={depositHistory}
+                />
+              )}
             </article>
             <article className="w-[437.33px] h-fit">
-              <Chart containerWidth="w-[437.33px]" containerHeight="h-[331px]" type="net-apy" />
+              {apyLoading ? (
+                <div className="w-[437.33px] h-[331px] flex items-center justify-center border rounded-[16px]">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#703AE6]"></div>
+                    <p className="text-[#999999] text-xs">Loading APY...</p>
+                  </div>
+                </div>
+              ) : (
+                <Chart
+                  containerWidth="w-[437.33px]"
+                  containerHeight="h-[331px]"
+                  type="net-apy"
+                  customData={apyHistory}
+                />
+              )}
             </article>
             <aside className="w-full h-fit">
               <RewardsTable />
@@ -105,27 +143,36 @@ export default function Earn() {
       </section>
 
       <section className="p-[40px] w-full h-fit" aria-label="Vaults and Positions">
-        <Table
-          filterDropdownPosition="right"
-          filters={{
-            filters: ["Deposit", "Collateral"],
-            allChainDropdown: true,
-            supplyApyTab: true,
-          }}
-          heading={{
-            tabsItems: [
-              { id: "vaults", label: "Vaults" },
-              { id: "positions", label: "Positions" },
-            ],
-            tabType: "underline",
-          }}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          tableHeadings={tableHeadings}
-          tableBody={getTableDataForTab(activeTab)}
-          onRowClick={handleRowClick}
-          hoverBackground="hover:bg-[#F1EBFD]"
-        />
+        {tableLoading && activeTab === "vaults" ? (
+          <div className="w-full h-[400px] flex items-center justify-center">
+            <div className="flex flex-col items-center gap-4">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#703AE6]"></div>
+              <p className="text-[#999999] text-sm">Loading vault data from blockchain...</p>
+            </div>
+          </div>
+        ) : (
+          <Table
+            filterDropdownPosition="right"
+            filters={{
+              filters: ["Deposit", "Collateral"],
+              allChainDropdown: true,
+              supplyApyTab: true,
+            }}
+            heading={{
+              tabsItems: [
+                { id: "vaults", label: "Vaults" },
+                { id: "positions", label: "Positions" },
+              ],
+              tabType: "underline",
+            }}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            tableHeadings={tableHeadings}
+            tableBody={getTableDataForTab(activeTab)}
+            onRowClick={handleRowClick}
+            hoverBackground="hover:bg-[#F1EBFD]"
+          />
+        )}
       </section>
     </main>
   );

@@ -16,6 +16,7 @@ interface ChartProps {
   heading?: string; // Custom heading for farm type
   downtrend?: string; // Downtrend value (e.g., "0.07%") for farm type
   uptrend?: string; // Uptrend value (e.g., "0.07%") for farm type
+  customData?: Array<{ date: string; amount: number }>; // Custom data override
 }
 
 const filterOptions = ["3 Months", "6 Months", "1 Year", "All Time"];
@@ -91,7 +92,7 @@ const filterDataByDays = (
   });
 };
 
-export const Chart = ({ type, currencyTab, height, containerWidth, containerHeight, heading, downtrend, uptrend }: ChartProps) => {
+export const Chart = ({ type, currencyTab, height, containerWidth, containerHeight, heading, downtrend, uptrend, customData }: ChartProps) => {
   const { isDark } = useTheme();
   const [selectedFilter, setSelectedFilter] = useState(filterOptions[0]);
   const [selectedCurrency, setSelectedCurrency] = useState<string>("usd");
@@ -103,6 +104,18 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
   const [dynamicHeight, setDynamicHeight] = useState<number>(height || 206);
   // Get data based on chart type
   const rawData = useMemo(() => {
+    // ✅ FIX: For my-supply, if customData is provided (even if empty), use it
+    // This ensures we show $0 when user has no position instead of mock data
+    if (type === "my-supply" && customData !== undefined) {
+      return customData.length > 0 ? customData : [];
+    }
+
+    // If custom data is provided for other types, use it
+    if (customData && customData.length > 0) {
+      return customData;
+    }
+
+    // Otherwise use default data
     switch (type) {
       case "overall-deposit":
         return depositData;
@@ -111,7 +124,7 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
       case "farm":
         return depositData;
       case "my-supply":
-        return depositData;
+        return []; // ✅ Return empty instead of mock data if no customData
       case "deposit-apy":
         return netApyData;
       case "net-volume":
@@ -121,7 +134,7 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
       default:
         return [];
     }
-  }, [type]);
+  }, [type, customData]);
 
   // Filter data based on selected time range or days
   const filteredData = useMemo(() => {
@@ -497,11 +510,19 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
                   textColor={chartTextColor}
                 />
               ) : (
-                <p className={`w-full h-[450px] flex items-center justify-center text-sm ${
-                  isDark ? "text-gray-500" : "text-gray-400"
-                }`}>
-                  No data available
-                </p>
+                <div className={`w-full h-[450px] flex flex-col items-center justify-center gap-3`}>
+                  <div className={`text-4xl ${isDark ? "text-gray-700" : "text-gray-300"}`}>
+                    📊
+                  </div>
+                  <p className={`text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                    {type === "my-supply" ? "No supply position yet" : "No data available"}
+                  </p>
+                  {type === "my-supply" && (
+                    <p className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>
+                      Supply assets to start earning
+                    </p>
+                  )}
+                </div>
               )}
             </figure>
           </ExpandableModal>
@@ -523,11 +544,19 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
             textColor={chartTextColor}
           />
         ) : (
-          <p className={`w-full ${dynamicHeight?`h-[${dynamicHeight}px]` : "h-[393px]"} flex items-center justify-center text-sm ${
-            isDark ? "text-gray-500" : "text-gray-400"
-          }`}>
-            No data available
-          </p>
+          <div className={`w-full ${dynamicHeight?`h-[${dynamicHeight}px]` : "h-[393px]"} flex flex-col items-center justify-center gap-3`}>
+            <div className={`text-4xl ${isDark ? "text-gray-700" : "text-gray-300"}`}>
+              📊
+            </div>
+            <p className={`text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+              {type === "my-supply" ? "No supply position yet" : "No data available"}
+            </p>
+            {type === "my-supply" && (
+              <p className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>
+                Supply assets to start earning
+              </p>
+            )}
+          </div>
         )}
       </figure>
     </article>

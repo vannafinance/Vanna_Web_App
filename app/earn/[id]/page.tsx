@@ -224,7 +224,7 @@ export default function EarnPage({ params }: { params: Promise<{ id: string }> }
               />
             </nav>
             {activeTab === "your-positions" && <YourPositions />}
-            {activeTab === "details" && <Details />}
+            {activeTab === "details" && <Details selectedAsset={id as any} />}
             {activeTab === "activity" && <ActivityTab />}
             {activeTab === "analytics" && <AnalyticsTab />}
             {activeTab === "margin-managers" && <MarginManagersTab />}

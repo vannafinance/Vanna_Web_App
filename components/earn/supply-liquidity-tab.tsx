@@ -10,8 +10,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/contexts/theme-context";
 import { EarnAsset } from "@/lib/types";
 import { supply } from "@/lib/utils/earn/transactions";
-import { useFetchUserWalletBalance, useFetchConvertToShares, useFetchVaultData } from "@/lib/utils/earn/earnFetchers";
+import { useFetchUserWalletBalance, useFetchConvertToShares } from "@/lib/utils/earn/earnFetchers";
 import { SUPPORTED_TOKENS_BY_CHAIN } from "@/lib/utils/web3/token";
+import { useVaultData } from "@/lib/hooks/useVaultData";
 
 export const SupplyLiquidityTab = () => {
   const { isDark } = useTheme();
@@ -58,14 +59,8 @@ export const SupplyLiquidityTab = () => {
     txHash: "",
   });
 
-  // Vault data (local state instead of store)
-  const [vaultData, setVaultData] = useState<{
-    exchangeRate: number;
-    supplyAPY: number;
-  } | null>(null);
-
-  // Fetch vault data
-  const fetchVaultData = useFetchVaultData(chainId, selectedAsset, publicClient);
+  // ✅ Use vault data from store (already cached via multicall)
+  const { vault, loading: vaultLoading } = useVaultData(selectedAsset);
 
   // Fetchers
   const fetchWalletBalance = useFetchUserWalletBalance(
@@ -81,7 +76,7 @@ export const SupplyLiquidityTab = () => {
     publicClient
   );
 
-  // Fetch wallet balance and vault data when asset or address changes
+  // Fetch wallet balance when asset or address changes
   useEffect(() => {
     const loadData = async () => {
       if (!isConnected || !address) {
@@ -89,23 +84,16 @@ export const SupplyLiquidityTab = () => {
         return;
       }
 
-      // Fetch wallet balance
+      // Fetch wallet balance only (vault data comes from store)
       const balanceResult = await fetchWalletBalance();
       if (balanceResult) {
         setWalletBalance(balanceResult.balanceFormatted);
       }
-
-      // Fetch vault data
-      const vaultResult = await fetchVaultData();
-      if (vaultResult) {
-        setVaultData({
-          exchangeRate: vaultResult.exchangeRate,
-          supplyAPY: 0, // Placeholder - would need utilization data
-        });
-      }
     };
     loadData();
-  }, [selectedAsset, address, isConnected, fetchWalletBalance, fetchVaultData]);
+
+    // ✅ Removed auto-refresh - store handles caching with 10s refresh
+  }, [selectedAsset, address, isConnected, fetchWalletBalance]);
 
   // Preview shares when amount changes
   useEffect(() => {
@@ -203,20 +191,15 @@ export const SupplyLiquidityTab = () => {
         setAmount("");
         setSelectedPercentage(0);
 
-        // Reload balances
-        const balanceResult = await fetchWalletBalance();
-        if (balanceResult) {
-          setWalletBalance(balanceResult.balanceFormatted);
-        }
+        // Reload balances with a slight delay to allow blockchain state to update
+        setTimeout(async () => {
+          const balanceResult = await fetchWalletBalance();
+          if (balanceResult) {
+            setWalletBalance(balanceResult.balanceFormatted);
+          }
 
-        // Reload vault data
-        const vaultResult = await fetchVaultData();
-        if (vaultResult) {
-          setVaultData({
-            exchangeRate: vaultResult.exchangeRate,
-            supplyAPY: 0,
-          });
-        }
+          // ✅ No need to reload vault data - store auto-refreshes
+        }, 2000);
       } else {
         throw new Error(result.error || "Supply failed");
       }
@@ -242,9 +225,9 @@ export const SupplyLiquidityTab = () => {
     }
   };
 
-  // Calculate info card data
-  const exchangeRate = vaultData?.exchangeRate || 1;
-  const supplyAPY = vaultData?.supplyAPY || 0;
+  // Calculate info card data using vault from store
+  const exchangeRate = vault?.exchangeRate || 1;
+  const supplyAPY = vault?.supplyAPY ? vault.supplyAPY * 100 : 0; // Convert to percentage
   const amountNum = parseFloat(amount) || 0;
 
   // Simple earnings calculation (principal * rate * time)

@@ -1,10 +1,15 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useChainId } from "wagmi";
 import { StatsCard } from "../ui/stats-card";
 import { getPercentage } from "@/lib/utils/helper";
 import { formatValue } from "@/lib/utils/format-value";
 import { useTheme } from "@/contexts/theme-context";
+import { formatUsdValue } from "@/lib/utils/prices/priceFeed";
+import { EarnAsset } from "@/lib/types";
+import { vTokenAddressByChain, tokenAddressByChain } from "@/lib/utils/web3/token";
+import { useVaultData } from "@/lib/hooks/useVaultData";
 
-const maxEth = 200000;
+const maxEth = 1;
 const maxUsd = 200000;
 
 const addresses = [
@@ -40,57 +45,106 @@ const addresses = [
   },
 ];
 
-export const items = [
-  {
-    heading: "Available Liquidity",
-    mainInfo: "102.24k ETH",
-    subInfo: "$361.98M",
-    tooltip: "Total ETH available for borrowing",
-  },
-  {
-    heading: "Supply APY",
-    mainInfo: "7.74%",
-    subInfo: "$119.95M of $631.17M",
-    tooltip: "Annual percentage yield for suppliers",
-  },
-  {
-    heading: "Borrow APY",
-    mainInfo: "8.57%",
-    tooltip: "Annual percentage yield for borrowers",
-  },
-  {
-    heading: "Utilization Rate",
-    mainInfo: "24.34%",
-    tooltip: "Ratio of borrowed assets to supplied assets",
-  },
-  {
-    heading: "Liquidation Penalty",
-    mainInfo: "Dynamic Range",
-    subInfo: "0–15%",
-    tooltip: "Penalty applied during liquidation events",
-  },
-  {
-    heading: "Oracle Price",
-    mainInfo: "$3506.48",
-    tooltip: "Current oracle price of ETH",
-  },
-  {
-    heading: "Share Token Exchange Rate",
-    mainInfo: "1.002889",
-    tooltip: "Exchange rate between share token and ETH",
-  },
-];
-
-export const Details = () => {
+export const Details = ({ selectedAsset = "ETH" as EarnAsset }) => {
   const { isDark } = useTheme();
-  const [totalSupplied, setTotalSupplied] = useState({
-    inEth: 100000,
-    inUsd: 4700,
-  });
-  const [totalBorrowed, setTotalBorrowed] = useState({
-    inEth: 134000,
-    inUsd: 4700,
-  });
+  const chainId = useChainId();
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Get vault data from store
+  const { vault: vaultStats, loading } = useVaultData(selectedAsset);
+
+  // Fix hydration error by ensuring client-side rendering
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Calculate totals
+  const totalSupplied = useMemo(() => {
+    if (!vaultStats) return { inAsset: 0, inUsd: 0 };
+    return {
+      inAsset: vaultStats.totalAssetsFormatted,
+      inUsd: vaultStats.totalSupplyUsd,
+    };
+  }, [vaultStats]);
+
+  const totalBorrowed = useMemo(() => {
+    if (!vaultStats) return { inAsset: 0, inUsd: 0 };
+    return {
+      inAsset: vaultStats.totalBorrowsFormatted,
+      inUsd: vaultStats.totalBorrowsUsd,
+    };
+  }, [vaultStats]);
+
+  // Get contract addresses
+  const vTokenAddress = vTokenAddressByChain[chainId || 1]?.[selectedAsset];
+  const tokenAddress = tokenAddressByChain[chainId || 1]?.[selectedAsset];
+
+  // Generate stats items
+  const items = useMemo(() => {
+    if (!vaultStats) return [];
+
+    const availableLiquidityUsd = formatUsdValue(
+      vaultStats.availableLiquidity * vaultStats.priceUsd
+    );
+
+    return [
+      {
+        heading: "Available Liquidity",
+        mainInfo: `${formatValue(vaultStats.availableLiquidity, {
+          type: "number",
+          useLargeFormat: true,
+        })} ${selectedAsset}`,
+        subInfo: availableLiquidityUsd,
+        tooltip: `Total ${selectedAsset} available for borrowing`,
+      },
+      {
+        heading: "Supply APY",
+        mainInfo: `${(vaultStats.supplyAPY * 100).toFixed(2)}%`,
+        subInfo: `${formatValue(totalSupplied.inAsset, {
+          type: "number",
+          useLargeFormat: true,
+        })} ${selectedAsset}`,
+        tooltip: "Annual percentage yield for suppliers",
+      },
+      {
+        heading: "Borrow APY",
+        mainInfo: `${(vaultStats.borrowAPY * 100).toFixed(2)}%`,
+        tooltip: "Annual percentage yield for borrowers",
+      },
+      {
+        heading: "Utilization Rate",
+        mainInfo: `${(vaultStats.utilizationRate * 100).toFixed(2)}%`,
+        tooltip: "Ratio of borrowed assets to supplied assets",
+      },
+      {
+        heading: "Liquidation Penalty",
+        mainInfo: "Dynamic Range",
+        subInfo: "0–15%",
+        tooltip: "Penalty applied during liquidation events",
+      },
+      {
+        heading: "Oracle Price",
+        mainInfo: `$${vaultStats.priceUsd.toFixed(2)}`,
+        tooltip: `Current oracle price of ${selectedAsset}`,
+      },
+      {
+        heading: "Share Token Exchange Rate",
+        mainInfo: vaultStats.exchangeRate.toFixed(6),
+        tooltip: `Exchange rate between v${selectedAsset} and ${selectedAsset}`,
+      },
+    ];
+  }, [vaultStats, selectedAsset, totalSupplied.inAsset]);
+
+  // Fix hydration error: Don't render until mounted on client
+  if (!isMounted) {
+    return (
+      <section className="w-full h-fit flex flex-col gap-[16px] rounded-[20px] border-[1px] bg-[#F4F4F4]" aria-label="Vault Details">
+        <div className="w-full h-[400px] flex items-center justify-center">
+          <div className="text-[14px] text-[#76737B]">Loading...</div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className={`w-full h-fit flex flex-col gap-[16px] rounded-[20px] border-[1px] ${
@@ -103,66 +157,76 @@ export const Details = () => {
         <article className={`w-full h-fit flex items-center rounded-[16px] gap-[12px] ${
           isDark ? "bg-[#222222]" : "bg-[#FFFFFF]"
         }`} aria-label="Supply and Borrow Overview">
-          <StatsCard
-            percentage={getPercentage(totalSupplied.inEth, maxEth)}
-            heading="Total Supplied"
-            mainInfo={`${formatValue(totalSupplied.inEth, {
-              type: "number",
-              useLargeFormat: true,
-            })} ETH of ${formatValue(maxEth, {
-              type: "number",
-              useLargeFormat: true,
-            })} ETH`}
-            subInfo={`${formatValue(totalSupplied.inUsd, {
-              type: "number",
-              useLargeFormat: true,
-            })} USD of ${formatValue(maxUsd, {
-              type: "number",
-              useLargeFormat: true,
-            })} USD`}
-            pie={true}
-          />
-          <StatsCard
-            percentage={getPercentage(totalBorrowed.inEth, maxEth)}
-            heading="Total Borrowed"
-            mainInfo={`${formatValue(totalBorrowed.inEth, {
-              type: "number",
-              useLargeFormat: true,
-            })} ETH of ${formatValue(maxEth, {
-              type: "number",
-              useLargeFormat: true,
-            })} ETH`}
-            subInfo={`${formatValue(totalBorrowed.inUsd, {
-              type: "number",
-              useLargeFormat: true,
-            })} USD of ${formatValue(maxUsd, {
-              type: "number",
-              useLargeFormat: true,
-            })} USD`}
-            pie={true}
-          />
+          {loading ? (
+            <div className={`w-full h-[120px] flex items-center justify-center text-[14px] ${
+              isDark ? "text-[#919191]" : "text-[#76737B]"
+            }`}>
+              Loading vault statistics...
+            </div>
+          ) : (
+            <>
+              <StatsCard
+                percentage={Math.min((totalSupplied.inAsset / maxEth) * 100, 100)}
+                heading="Total Supplied"
+                mainInfo={`${formatValue(totalSupplied.inAsset, {
+                  type: "number",
+                  useLargeFormat: true,
+                })} ${selectedAsset}`}
+                subInfo={formatUsdValue(totalSupplied.inUsd)}
+                pie={true}
+              />
+              <StatsCard
+                percentage={Math.min((totalBorrowed.inAsset / maxEth) * 100, 100)}
+                heading="Total Borrowed"
+                mainInfo={`${formatValue(totalBorrowed.inAsset, {
+                  type: "number",
+                  useLargeFormat: true,
+                })} ${selectedAsset}`}
+                subInfo={formatUsdValue(totalBorrowed.inUsd)}
+                pie={true}
+              />
+            </>
+          )}
         </article>
         <article className="w-full h-full grid grid-cols-3 grid-rows-3 gap-x-[15px]" aria-label="Vault Statistics">
-          {items.map((item, idx) => {
-            return (
-              <StatsCard
-                key={idx}
-                heading={item.heading}
-                mainInfo={item.mainInfo}
-                subInfo={item.subInfo}
-                tooltip={item.tooltip}
-              />
-            );
-          })}
+          {loading ? (
+            <div className={`col-span-3 h-[200px] flex items-center justify-center text-[14px] ${
+              isDark ? "text-[#919191]" : "text-[#76737B]"
+            }`}>
+              Loading statistics...
+            </div>
+          ) : (
+            items.map((item, idx) => {
+              return (
+                <StatsCard
+                  key={idx}
+                  heading={item.heading}
+                  mainInfo={item.mainInfo}
+                  subInfo={item.subInfo}
+                  tooltip={item.tooltip}
+                />
+              );
+            })
+          )}
         </article>
         <article className="w-full h-fit rounded-[20px] pb-[24px]" aria-label="Contract Addresses">
           <h3 className={`text-[20px] font-semibold w-full h-fit ${
             isDark ? "text-white" : ""
           }`}>
-            Adresses
+            Addresses
           </h3>
           <div className="w-full h-full grid grid-cols-3 grid-rows-2">
-            {addresses.map((item, idx) => {
+            <StatsCard
+              heading={`Underlying ${selectedAsset} token`}
+              address={tokenAddress ? `${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)}` : "N/A"}
+              tooltip={`Address of the underlying ${selectedAsset} token`}
+            />
+            <StatsCard
+              heading={`${selectedAsset} vault`}
+              address={vTokenAddress ? `${vTokenAddress.slice(0, 6)}...${vTokenAddress.slice(-4)}` : "N/A"}
+              tooltip={`Vault contract holding ${selectedAsset} liquidity`}
+            />
+            {addresses.slice(2).map((item, idx) => {
               return (
                 <StatsCard
                   key={idx}

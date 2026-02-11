@@ -1,7 +1,7 @@
 import { poolsPlaceholder } from "@/lib/constants";
 import { arbAddressList, arbTokensAddress, baseAddressList, baseTokensAddress, opAddressList, opTokensAddress } from "@/lib/web3Constants";
 
-export const TOKEN_OPTIONS = poolsPlaceholder.map(p=>p.name)  //["WETH", "WBTC", "USDC", "USDT", "DAI"]
+export const TOKEN_OPTIONS = poolsPlaceholder.map(p=>p.name)  //["ETH", "USDC", "USDT"]
 
 
 
@@ -51,10 +51,9 @@ export const tokenAddressByChain: Record<number, Record<string, `0x${string}`>> 
 
 
 export const SUPPORTED_TOKENS_BY_CHAIN: Record<number, TokenSymbol[]> = {
-  42161: ["USDC","ETH", "USDT"],  // Arbitrum - all supported
-  10: ["USDC","ETH", "USDT"],  // Optimism - all supported
-  8453: ["USDC","ETH", "USDT"],  // Base - USDT now supported ✅
-
+  42161: ["ETH", "USDC", "USDT"],  // Arbitrum - all supported
+  10: ["ETH", "USDC", "USDT"],     // Optimism - all supported
+  8453: ["ETH", "USDC", "USDT"],   // Base - USDT now supported ✅
 };
 
 
