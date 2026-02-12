@@ -1,8 +1,10 @@
 import { motion, AnimatePresence } from "framer-motion";
+import { useMemo } from "react";
 import { useTheme } from "@/contexts/theme-context";
 import { Button } from "./button";
 
 type TransactionStatus = "pending" | "success" | "error";
+type TokenSymbol = "ETH" | "USDC" | "USDT";
 
 interface TransactionModalProps {
   isOpen: boolean;
@@ -10,9 +12,38 @@ interface TransactionModalProps {
   title?: string;
   message?: string;
   txHash?: string;
+  tokenSymbol?: TokenSymbol;
   onClose?: () => void;
   onRetry?: () => void;
+  showFloatingTokens?: boolean;
 }
+
+/* ---------------- Token Icons ---------------- */
+
+const TOKEN_ICONS: Record<TokenSymbol, string> = {
+  ETH: "/icons/ethereum-eth-logo.svg",
+  USDC: "/icons/usdc-icon.svg",
+  USDT: "/icons/usdt-icon.svg",
+};
+
+const TOKEN_BG: Record<TokenSymbol, string> = {
+  ETH: "bg-indigo-500/20 border-indigo-400/60",
+  USDC: "bg-sky-500/20 border-sky-400/60",
+  USDT: "bg-emerald-500/20 border-emerald-400/60",
+};
+
+const TokenIcon = ({ symbol }: { symbol?: TokenSymbol }) => {
+  if (!symbol) return null;
+
+  return (
+    <img
+      src={TOKEN_ICONS[symbol]}
+      className="w-8 h-8 object-contain pointer-events-none select-none"
+      alt={symbol}
+      draggable={false}
+    />
+  );
+};
 
 export const TransactionModal = ({
   isOpen,
@@ -20,12 +51,14 @@ export const TransactionModal = ({
   title,
   message,
   txHash,
+  tokenSymbol,
   onClose,
   onRetry,
+  showFloatingTokens = false,
 }: TransactionModalProps) => {
   const { isDark } = useTheme();
 
-  const getStatusConfig = () => {
+  const config = useMemo(() => {
     switch (status) {
       case "pending":
         return {
@@ -49,56 +82,86 @@ export const TransactionModal = ({
           showSpinner: false,
         };
     }
-  };
+  }, [status, title, isDark]);
 
-  const config = getStatusConfig();
+  const floatingTokens = useMemo(
+    () =>
+      [...Array(20)].map(() => ({
+        left: Math.random() * 100,
+        drift: (Math.random() - 0.5) * 120,
+        duration: 3 + Math.random() * 2,
+        rotate: (Math.random() - 0.5) * 20,
+      })),
+    []
+  );
 
   if (!isOpen) return null;
 
   return (
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-[#45454566] backdrop-blur-sm"
+        className="fixed inset-0 z-[1000] flex items-center justify-center bg-[#45454566] backdrop-blur-sm"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
         onClick={status !== "pending" ? onClose : undefined}
       >
         <motion.div
-          className={`${config.bgColor} shadow-2xl rounded-[20px] p-[36px] max-w-[480px] w-full mx-4`}
+          className={`${config.bgColor} shadow-2xl rounded-[20px] p-[36px] max-w-[480px] w-full mx-4 relative overflow-hidden`}
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
           transition={{ duration: 0.3, ease: "easeOut" }}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Icon */}
-          <motion.div
-            className="flex justify-center mb-6"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 0.5, type: "spring", stiffness: 200 }}
-          >
+          {/* Floating Tokens (CRISP SVG animation) */}
+          {showFloatingTokens && status === "success" && tokenSymbol && (
+            <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-[20px]">
+              {floatingTokens.map((t, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute"
+                  style={{ left: `${t.left}%`, bottom: "-10%" }}
+                  initial={{ opacity: 0, y: 0, rotate: -t.rotate }}
+                  animate={{
+                    opacity: [0, 0.9, 0],
+                    y: [-20, -300],
+                    x: [0, t.drift],
+                    rotate: [-t.rotate, t.rotate, -t.rotate / 2],
+                  }}
+                  transition={{
+                    duration: t.duration,
+                    delay: i * 0.08,
+                    ease: "easeOut",
+                  }}
+                >
+                  <div
+                    className={`w-12 h-12 rounded-full border flex items-center justify-center shadow-xl
+  ${TOKEN_BG[tokenSymbol]}`}
+                  >
+                    <TokenIcon symbol={tokenSymbol} />
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+
+          {/* Status Icon */}
+          <div className="flex justify-center mb-6">
             {config.showSpinner ? (
-              // Pending Spinner
               <motion.div
                 className="relative w-20 h-20"
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
               >
-                <svg
-                  className="w-20 h-20"
-                  viewBox="0 0 80 80"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
+                <svg className="w-20 h-20" viewBox="0 0 80 80" fill="none">
                   <circle
                     cx="40"
                     cy="40"
                     r="34"
-                    stroke={isDark ? "#333333" : "#E5E5E5"}
+                    stroke={isDark ? "#333" : "#E5E5E5"}
                     strokeWidth="8"
+                    fill="transparent"   // 👈 add this
                   />
                   <circle
                     cx="40"
@@ -109,134 +172,52 @@ export const TransactionModal = ({
                     strokeLinecap="round"
                     strokeDasharray="160 160"
                     strokeDashoffset="40"
+                    fill="transparent"   // 👈 add this
                   />
                 </svg>
               </motion.div>
-            ) : status === "success" ? (
-              // Success Checkmark
-              <motion.div
-                className="w-20 h-20 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: `${config.iconColor}20` }}
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ duration: 0.5, type: "spring" }}
-              >
-                <motion.svg
-                  className="w-10 h-10"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  initial={{ pathLength: 0 }}
-                  animate={{ pathLength: 1 }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
-                >
-                  <motion.path
-                    d="M5 13l4 4L19 7"
-                    stroke={config.iconColor}
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </motion.svg>
-              </motion.div>
             ) : (
-              // Error X
-              <motion.div
-                className="w-20 h-20 rounded-full flex items-center justify-center"
+              <div
+                className="w-20 h-20 rounded-full flex items-center justify-center text-3xl"
                 style={{ backgroundColor: `${config.iconColor}20` }}
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ duration: 0.5, type: "spring" }}
               >
-                <motion.svg
-                  className="w-10 h-10"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  initial={{ rotate: -90 }}
-                  animate={{ rotate: 0 }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
-                >
-                  <motion.path
-                    d="M6 6l12 12M18 6l-12 12"
-                    stroke={config.iconColor}
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                  />
-                </motion.svg>
-              </motion.div>
+                {status === "success" ? "✅" : "❌"}
+              </div>
             )}
-          </motion.div>
+          </div>
 
           {/* Title */}
-          <motion.h2
-            className={`text-[24px] font-bold text-center mb-4 ${
-              isDark ? "text-white" : "text-[#333333]"
-            }`}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.2 }}
-          >
+          <h2 className={`text-2xl font-bold text-center mb-4 ${isDark ? "text-white" : "text-[#333]"}`}>
             {config.title}
-          </motion.h2>
+          </h2>
 
           {/* Message */}
           {message && (
-            <motion.p
-              className={`text-[16px] font-medium text-center mb-6 ${
-                isDark ? "text-[#919191]" : "text-[#76737B]"
-              }`}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.3 }}
-            >
+            <p className={`text-center mb-6 ${isDark ? "text-[#919191]" : "text-[#76737B]"}`}>
               {message}
-            </motion.p>
+            </p>
           )}
 
-          {/* Transaction Hash */}
+          {/* Tx Hash */}
           {txHash && status === "success" && (
-            <motion.div
-              className={`mb-6 p-4 rounded-[12px] ${
-                isDark ? "bg-[#1A1A1A]" : "bg-[#EEEEEE]"
-              }`}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.4 }}
-            >
-              <p
-                className={`text-[12px] font-medium mb-2 ${
-                  isDark ? "text-[#919191]" : "text-[#76737B]"
-                }`}
-              >
-                Transaction Hash:
-              </p>
+            <div className={`mb-6 p-4 rounded-lg ${isDark ? "bg-[#1A1A1A]" : "bg-[#EEEEEE]"}`}>
+              <p className="text-xs mb-2 opacity-70">Transaction Hash</p>
               <a
                 href={`https://arbiscan.io/tx/${txHash}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[14px] font-mono text-[#703AE6] hover:text-[#5a2eb8] break-all transition-colors"
+                className="text-sm font-mono text-purple-500 break-all"
               >
                 {txHash}
               </a>
-            </motion.div>
+            </div>
           )}
 
-          {/* Action Buttons */}
+          {/* Buttons */}
           {status !== "pending" && (
-            <motion.div
-              className="flex flex-col gap-3"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.5 }}
-            >
+            <div className="flex flex-col gap-3">
               {status === "error" && onRetry && (
-                <Button
-                  type="solid"
-                  size="medium"
-                  text="Try Again"
-                  onClick={onRetry}
-                />
+                <Button type="solid" size="medium" text="Try Again" onClick={onRetry} />
               )}
               <Button
                 type={status === "error" ? "ghost" : "solid"}
@@ -244,25 +225,7 @@ export const TransactionModal = ({
                 text="Close"
                 onClick={onClose}
               />
-            </motion.div>
-          )}
-
-          {/* Pending State - No close button */}
-          {status === "pending" && (
-            <motion.div
-              className="flex justify-center"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3, delay: 0.5 }}
-            >
-              <p
-                className={`text-[14px] font-medium ${
-                  isDark ? "text-[#919191]" : "text-[#76737B]"
-                }`}
-              >
-                Please wait...
-              </p>
-            </motion.div>
+            </div>
           )}
         </motion.div>
       </motion.div>

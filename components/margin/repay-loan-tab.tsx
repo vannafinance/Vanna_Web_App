@@ -25,7 +25,7 @@ export const RepayLoanTab = () => {
   // Repay form state
   // Repay loan statistics
 
-   const { chainId, address } = useAccount();
+  const { chainId, address } = useAccount();
 
   // Transaction Modal State
   const [txModalOpen, setTxModalOpen] = useState(false);
@@ -35,17 +35,17 @@ export const RepayLoanTab = () => {
   const [txModalHash, setTxModalHash] = useState<string | undefined>(undefined);
 
 
-   const supportedTokens = useMemo(() => {
+  const supportedTokens = useMemo(() => {
     return SUPPORTED_TOKENS_BY_CHAIN[chainId ?? 0] ?? [];
   }, [chainId]);
 
   const { data: walletClient } = useWalletClient();
-  
+
 
   const [selectedRepayCurrency, setSelectedRepayCurrency] =
-  useState<string>(supportedTokens[0] || "");
+    useState<string>(supportedTokens[0] || "");
   const [selectedRepayPercentage, setSelectedRepayPercentage] =
-  useState<number>(10);
+    useState<number>(10);
   const [repayAmount, setRepayAmount] = useState<string>("");
   const [repayAmountInUsd, setRepayAmountInUsd] = useState<number>(0);
   const [prices, setPrices] = useState<Record<string, number>>({});
@@ -185,62 +185,63 @@ export const RepayLoanTab = () => {
   const [dataSource, setDataSource] = useState<"positions" | "riskEngine" | "none">("none");
 
 
-
-
-const totalOutstandingUsd = useMemo(() => {
-  // Use direct borrow balances from contract (like test implementation)
+  const totalOutstandingUsd = useMemo(() => {
   const ethPrice = prices["ETH"] || 0;
   const usdcPrice = prices["USDC"] || 1;
   const usdtPrice = prices["USDT"] || 1;
 
-  const ethUSD = Number(directBorrowBalances.borrowedETH.toString()) * ethPrice;
-  const usdcUSD = Number(directBorrowBalances.borrowedUSDC.toString()) * usdcPrice;
-  const usdtUSD = Number(directBorrowBalances.borrowedUSDT.toString()) * usdtPrice;
+  // DIRECT BALANCES ARE ALREADY HUMAN-READABLE (from your fetcher)
+  const ethHuman = Number(directBorrowBalances.borrowedETH.toString());
+  const usdcHuman = Number(directBorrowBalances.borrowedUSDC.toString());
+  const usdtHuman = Number(directBorrowBalances.borrowedUSDT.toString());
 
-  const directTotal = ethUSD + usdcUSD + usdtUSD;
+  const directTotal = ethHuman * ethPrice + usdcHuman * usdcPrice + usdtHuman * usdtPrice;
 
-  // If direct balances exist, use them (contract source of truth)
+  console.log(directTotal, "Here is your direct Total");
+
+  // If direct balances exist, use them
   if (directTotal > 0) {
-    console.log(`[RepayTab] Using direct contract balances - ETH: ${directBorrowBalances.borrowedETH.toString()}, USDC: ${directBorrowBalances.borrowedUSDC.toString()}, USDT: ${directBorrowBalances.borrowedUSDT.toString()}, Total USD: ${directTotal.toFixed(2)}`);
+    console.log(`[RepayTab] Using direct contract balances - Total USD: ${directTotal.toFixed(2)}`);
     return directTotal;
   }
 
-  // Fallback to RiskEngine aggregate if available
+  // Fallback 1: borrowPositions (most accurate per-asset)
+  if (borrowPositions.length > 0) {
+    const positionsTotal = borrowPositions.reduce((sum, p) => {
+      const price = prices[p.asset] || (p.asset === "WETH" ? prices["ETH"] : 0) || 0;
+      return sum + Number(p.amount) * price;
+    }, 0);
+    console.log(`[RepayTab] Using borrowPositions – Total USD: ${positionsTotal.toFixed(2)}`);
+    return positionsTotal;
+  }
+
+  // Fallback 2: RiskEngine aggregate
   const riskEngineValue = marginState?.borrowUsd || 0;
   if (riskEngineValue > 0) {
     console.log(`[RepayTab] Using RiskEngine value: ${riskEngineValue.toFixed(2)}`);
     return riskEngineValue;
   }
 
-  // Fallback to positions calculation
-  if (borrowPositions.length > 0) {
-    const positionsTotal = borrowPositions.reduce((sum, p) => {
-      const price = prices[p.asset] || (p.asset === "WETH" ? prices["ETH"] : 0) || 0;
-      return sum + Number(p.amount) * price;
-    }, 0);
-    console.log(`[RepayTab] Using positions calculation: ${positionsTotal.toFixed(2)}`);
-    return positionsTotal;
-  }
-
   return 0;
 }, [directBorrowBalances, prices, borrowPositions, marginState]);
 
-useEffect(() => {
-  const ethUSD = Number(directBorrowBalances.borrowedETH.toString()) * (prices["ETH"] || 0);
-  const usdcUSD = Number(directBorrowBalances.borrowedUSDC.toString()) * (prices["USDC"] || 1);
-  const usdtUSD = Number(directBorrowBalances.borrowedUSDT.toString()) * (prices["USDT"] || 1);
-  const directTotal = ethUSD + usdcUSD + usdtUSD;
+  
+  useEffect(() => {
+    const ethUSD = Number(directBorrowBalances.borrowedETH.toString()) * (prices["ETH"] || 0);
+    const usdcUSD = Number(directBorrowBalances.borrowedUSDC.toString()) * (prices["USDC"] || 1);
+    const usdtUSD = Number(directBorrowBalances.borrowedUSDT.toString()) * (prices["USDT"] || 1);
+    const directTotal = ethUSD + usdcUSD + usdtUSD;
 
-  if (directTotal > 0) {
-    setDataSource("positions"); // Direct contract fetch (most accurate)
-  } else if ((marginState?.borrowUsd || 0) > 0) {
-    setDataSource("riskEngine");
-  } else if (borrowPositions.length > 0) {
-    setDataSource("positions");
-  } else {
-    setDataSource("none");
-  }
-}, [directBorrowBalances, prices, borrowPositions, marginState]);
+    if (directTotal > 0) {
+      setDataSource("positions"); // Direct contract fetch (most accurate)
+    } else if ((marginState?.borrowUsd || 0) > 0) {
+      setDataSource("riskEngine");
+    } else if (borrowPositions.length > 0) {
+      setDataSource("positions");
+    } else {
+      setDataSource("none");
+    }
+  }, [directBorrowBalances, prices, borrowPositions, marginState]);
 
 
 
@@ -290,7 +291,7 @@ useEffect(() => {
   const handleFlashCloseClick = () => {
     setIsFlashClosePopupOpen(true);
   };
-  
+
 
   // Handler for closing pay now popup
   const handleClosePayNowPopup = () => {
@@ -378,42 +379,42 @@ useEffect(() => {
       setTxModalMessage("Depositing for repayment...");
       // Deposit
       if (selectedRepayCurrency === "ETH") {
-         const tx = await walletClient.writeContract({
-            address: addressList.accountManagerContractAddress as `0x${string}`,
-            abi: AccountManager.abi,
-            functionName: "depositEth",
-            args: [marginAccount],
-            value: parsedAmount
-         });
-         await publicClient.waitForTransactionReceipt({ hash: tx });
+        const tx = await walletClient.writeContract({
+          address: addressList.accountManagerContractAddress as `0x${string}`,
+          abi: AccountManager.abi,
+          functionName: "depositEth",
+          args: [marginAccount],
+          value: parsedAmount
+        });
+        await publicClient.waitForTransactionReceipt({ hash: tx });
       } else {
-         const tx = await walletClient.writeContract({
-            address: addressList.accountManagerContractAddress as `0x${string}`,
-            abi: AccountManager.abi,
-            functionName: "deposit",
-            args: [marginAccount, tokenAddress, parsedAmount]
-         });
-         await publicClient.waitForTransactionReceipt({ hash: tx });
+        const tx = await walletClient.writeContract({
+          address: addressList.accountManagerContractAddress as `0x${string}`,
+          abi: AccountManager.abi,
+          functionName: "deposit",
+          args: [marginAccount, tokenAddress, parsedAmount]
+        });
+        await publicClient.waitForTransactionReceipt({ hash: tx });
       }
 
       setTxModalMessage("Repaying loan...");
       // Repay
       if (selectedRepayCurrency === "ETH") {
-         const tx = await walletClient.writeContract({
-            address: addressList.accountManagerContractAddress as `0x${string}`,
-            abi: AccountManager.abi,
-            functionName: "repayEth",
-            args: [marginAccount, parsedAmount]
-         });
-         await publicClient.waitForTransactionReceipt({ hash: tx });
+        const tx = await walletClient.writeContract({
+          address: addressList.accountManagerContractAddress as `0x${string}`,
+          abi: AccountManager.abi,
+          functionName: "repayEth",
+          args: [marginAccount, parsedAmount]
+        });
+        await publicClient.waitForTransactionReceipt({ hash: tx });
       } else {
-         const tx = await walletClient.writeContract({
-            address: addressList.accountManagerContractAddress as `0x${string}`,
-            abi: AccountManager.abi,
-            functionName: "repay",
-            args: [marginAccount, tokenAddress, parsedAmount]
-         });
-         await publicClient.waitForTransactionReceipt({ hash: tx });
+        const tx = await walletClient.writeContract({
+          address: addressList.accountManagerContractAddress as `0x${string}`,
+          abi: AccountManager.abi,
+          functionName: "repay",
+          args: [marginAccount, tokenAddress, parsedAmount]
+        });
+        await publicClient.waitForTransactionReceipt({ hash: tx });
       }
 
       // Wait for next block to ensure state is updated on RPC
@@ -454,7 +455,7 @@ useEffect(() => {
       setLoading(false);
     }
   };
-  
+
 
   // Check if buttons should be disabled (when input is 0 or empty)
   const isInputEmpty = !repayAmount || Number(repayAmount) === 0;
@@ -484,17 +485,15 @@ useEffect(() => {
             return (
               <motion.article
                 key={key}
-                className={`w-full flex flex-col justify-between h-[120px] rounded-[8px] border-[1px] p-[16px] ${
-                  isDark ? "bg-[#111111]" : "bg-white"
-                }`}
+                className={`w-full flex flex-col justify-between h-[120px] rounded-[8px] border-[1px] p-[16px] ${isDark ? "bg-[#111111]" : "bg-white"
+                  }`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.1 + index * 0.1 }}
               >
                 <motion.div
-                  className={`text-[14px] font-medium max-w-[158.33px] ${
-                    isDark ? "text-[#919191]" : "text-[#9F9F9F]"
-                  }`}
+                  className={`text-[14px] font-medium max-w-[158.33px] ${isDark ? "text-[#919191]" : "text-[#9F9F9F]"
+                    }`}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{
@@ -506,15 +505,14 @@ useEffect(() => {
                   {key === "netOutstandingAmountToPay"
                     ? "Net Outstanding Amount to Repay"
                     : key === "availableBalance"
-                    ? "Borrowed Balance"
-                    : "Frozen Balance"}
+                      ? "Borrowed Balance"
+                      : "Frozen Balance"}
                   {/* Debug badge for Net Outstanding */}
-                 
+
                 </motion.div>
                 <motion.div
-                  className={`text-[24px] font-bold ${
-                    isDark ? "text-white" : "text-[#181822]"
-                  }`}
+                  className={`text-[24px] font-bold ${isDark ? "text-white" : "text-[#181822]"
+                    }`}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{
@@ -523,7 +521,7 @@ useEffect(() => {
                     ease: "easeOut",
                   }}
                 >
-                  ${typeof value === 'number' ? value.toFixed(4) : value}
+                  ${typeof value === 'number' ? value.toFixed(2) : value}
                 </motion.div>
               </motion.article>
             );
@@ -532,9 +530,8 @@ useEffect(() => {
 
         {/* Repay form */}
         <motion.article
-          className={`w-full border-[1px] rounded-[16px] p-[20px] ${
-            isDark ? "bg-[#111111]" : "bg-white"
-          }`}
+          className={`w-full border-[1px] rounded-[16px] p-[20px] ${isDark ? "bg-[#111111]" : "bg-white"
+            }`}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.3 }}
@@ -554,7 +551,7 @@ useEffect(() => {
               className="p-[10px]"
             >
               <Dropdown
-              classname="text-[16px] font-medium gap-[8px]"
+                classname="text-[16px] font-medium gap-[8px]"
                 items={supportedTokens}
                 selectedOption={selectedRepayCurrency}
                 setSelectedOption={setSelectedRepayCurrency}
@@ -577,13 +574,12 @@ useEffect(() => {
                     type="button"
                     key={item}
                     onClick={() => handlePercentageClick(item)}
-                    className={`h-[44px] w-[95px] text-center text-[14px] text-medium cursor-pointer ${
-                      selectedRepayPercentage === item
-                        ? `${PERCENTAGE_COLORS[item]} text-white`
-                        : isDark
+                    className={`h-[44px] w-[95px] text-center text-[14px] text-medium cursor-pointer ${selectedRepayPercentage === item
+                      ? `${PERCENTAGE_COLORS[item]} text-white`
+                      : isDark
                         ? "bg-[#222222] text-white"
                         : "bg-[#F4F4F4]"
-                    } p-[10px] rounded-[12px]`}
+                      } p-[10px] rounded-[12px]`}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     transition={{ duration: 0.1 }}
@@ -616,9 +612,8 @@ useEffect(() => {
               <input
                 id="repay-amount-input"
                 onChange={handleInputChange}
-                className={`w-fit text-[20px] focus:border-[0px] focus:outline-none font-medium transition-transform duration-200 focus:scale-[1.01] placeholder:text-[#C7C7C7] ${
-                  isDark ? "placeholder:text-[#A7A7A7]  text-white bg-[#111111]" : "bg-white"
-                }`}
+                className={`w-fit text-[20px] focus:border-[0px] focus:outline-none font-medium transition-transform duration-200 focus:scale-[1.01] placeholder:text-[#C7C7C7] ${isDark ? "placeholder:text-[#A7A7A7]  text-white bg-[#111111]" : "bg-white"
+                  }`}
                 type="text"
                 placeholder="0.0"
                 value={repayAmount}
@@ -627,9 +622,8 @@ useEffect(() => {
 
             {/* USD value display */}
             <motion.p
-              className={`text-[12px] font-medium ${
-                isDark ? "text-[#919191]" : "text-[#76737B]"
-              }`}
+              className={`text-[12px] font-medium ${isDark ? "text-[#919191]" : "text-[#76737B]"
+                }`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.3, delay: 0.65, ease: "easeOut" }}
@@ -769,9 +763,9 @@ useEffect(() => {
         onRetry={
           txModalStatus === "error"
             ? () => {
-                setTxModalOpen(false);
-                // User can try again
-              }
+              setTxModalOpen(false);
+              // User can try again
+            }
             : undefined
         }
       />

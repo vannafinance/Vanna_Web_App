@@ -77,6 +77,35 @@ export const LeverageAssetsTab = () => {
   const [loading, setLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState("");
 
+  const [error, setError] = useState<string | null>(null);
+  const errorTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const showError = (msg: string, duration = 2500) => {
+    setError(msg);
+
+    if (errorTimerRef.current) {
+      clearTimeout(errorTimerRef.current);
+    }
+
+    errorTimerRef.current = setTimeout(() => {
+      setError(null);
+      errorTimerRef.current = null;
+    }, duration);
+  };
+
+
+  useEffect(() => {
+  return () => {
+    if (errorTimerRef.current) {
+      clearTimeout(errorTimerRef.current);
+    }
+  };
+}, []);
+
+
+
+
+
   // Transaction Modal State
   const [txModalOpen, setTxModalOpen] = useState(false);
   const [txModalStatus, setTxModalStatus] = useState<"pending" | "success" | "error">("pending");
@@ -204,7 +233,7 @@ export const LeverageAssetsTab = () => {
       setLoading(false);
     }
   };
-  
+
 
   const fetchAccountCheck = useFetchAccountCheck(chainId, address as `0x${string}`, publicClient);
   const fetchCollateralState = useFetchCollateralState(chainId, publicClient);
@@ -244,156 +273,6 @@ export const LeverageAssetsTab = () => {
     if (hf < 1.3) return "Low HF";
     return null;
   };
-
-  // const reloadMarginState = useCallback(async () => {
-  //   const accounts = await fetchAccountCheck();
-
-  //   if (!accounts.length) {
-  //     setMarginState(null)
-  //     return null
-  //   }
-
-  //   const acc = accounts[0];
-
-  //   const [col, bor] = await Promise.all([
-  //     fetchCollateralState(acc),
-  //     fetchBorrowState(acc)
-  //   ]);
-
-  //   const cUsd = marginCalc.calcCollateralUsd(col);
-  //   const bUsd = marginCalc.calcBorrowUsd(bor);
-
-  //   const state = {
-  //     collateral: col,
-  //     borrow: bor,
-  //     collateralUsd: cUsd,
-  //     borrowUsd: bUsd,
-  //     hf: marginCalc.calcHF(cUsd, bUsd),
-  //     ltv: marginCalc.calcLTV(cUsd, bUsd),
-  //     maxBorrow: marginCalc.calcMaxBorrow(cUsd, bUsd),
-  //     maxWithdraw: marginCalc.calcMaxWithdraw(cUsd, bUsd),
-  //   }
-  //   setMarginState(state)
-  //   return state;
-  // }, [
-  //   fetchAccountCheck,
-  //   fetchCollateralState,
-  //   fetchBorrowState
-  // ]);
-
-  // Get Approval for ERC-20 token 
-  // const getapproved = async (token: `0x${string}`, parsed: bigint, spender: string) => {
-  //   if (!publicClient || !walletClient || !address) return;
-
-  //   const allowance = await publicClient.readContract({
-  //     address: token,
-  //     abi: erc20Abi,
-  //     functionName: 'allowance',
-  //     args: [address, spender]
-  //   }) as bigint
-
-  //   if (allowance >= parsed) return;
-
-  //   const MAX_UINT256 = BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-
-  //   return walletClient.writeContract({
-  //     address: token,
-  //     abi: erc20Abi,
-  //     functionName: 'approve',
-  //     args: [spender, MAX_UINT256],
-  //   });
-  // }
-
-  // Deposit into Margin Account 
-  // const deposit = async (
-  //   asset: string,
-  //   amount: string,
-  //   marginAccount: string,
-  //   opts?: {
-  //     onStart?: () => void;
-  //     onApproved?: () => void;
-  //     onTxSubmitted?: (hash: string) => void;
-  //     onSuccess?: (hash: string) => void;
-  //     onError?: (err: any) => void;
-  //     onFinally?: () => void;
-  //   }
-  // ) => {
-  //   if (!walletClient || !publicClient || !chainId || !amount) return;
-
-  //   try {
-  //     opts?.onStart?.();
-
-  //     const addresses = getAddressList();
-  //     if (!addresses) throw new Error("Unsupported network");
-
-  //     const token = tokenAddressByChain[chainId]?.[asset];
-  //     const decimals = TOKEN_DECIMALS[asset];
-  //     const parsed = parseUnits(amount, decimals);
-
-  //     opts?.onApproved?.();
-  //     await getapproved(token, parsed, addresses.accountManagerContractAddress);
-
-  //     const txHash = await walletClient.writeContract({
-  //       address: addresses.accountManagerContractAddress,
-  //       abi: AccountManager.abi,
-  //       functionName: "deposit",
-  //       args: [marginAccount, token, parsed],
-  //     });
-
-  //     opts?.onTxSubmitted?.(txHash);
-
-  //     await publicClient.waitForTransactionReceipt({ hash: txHash });
-
-  //     await reloadMarginState();
-
-  //     opts?.onSuccess?.(txHash);
-  //     return txHash;
-  //   } catch (err: any) {
-  //     if (err?.code === 4001) {
-  //       opts?.onError?.({ type: "REJECTED", err });
-  //       return;
-  //     }
-
-  //     opts?.onError?.({ type: "FAILED", err });
-  //     throw err;
-  //   } finally {
-  //     opts?.onFinally?.();
-  //   }
-  // };
-
-  // Withdraw to WB  
-  // we already have executeTransferToWallet ! 
-  // const withdraw = async (asset: string, amount: string) => {
-  //   if (!publicClient || !walletClient || !address) return;
-
-  //   const token = tokenAddressByChain[chainId!]?.[asset] as `0x${string}`;
-  //   const decimals = TOKEN_DECIMALS[asset];
-  //   const parsed = parseUnits(amount, decimals);
-
-  //   const addressList = getAddressList();
-  //   const acc = await fetchAccountCheck();
-  //   const marginaccount = acc[0];
-
-  //   let withdraw_hash;
-
-  //   if (asset === "WETH") {
-  //     withdraw_hash = await walletClient.writeContract({
-  //       address: addressList!.accountManagerContractAddress,
-  //       abi: AccountManager.abi,
-  //       functionName: "withdrawEth",
-  //       args: [marginaccount, parsed]
-  //     });
-  //   } else {
-  //     withdraw_hash = await walletClient.writeContract({
-  //       address: addressList!.accountManagerContractAddress,
-  //       abi: AccountManager.abi,
-  //       functionName: "withdraw",
-  //       args: [marginaccount, token, parsed]
-  //     });
-  //   }
-
-  //   return withdraw_hash;
-  // };
 
   const normalizeBorrowUsd = (asset: string, amount: string): number => {
     const price = prices[asset] || 0;
@@ -975,20 +854,20 @@ export const LeverageAssetsTab = () => {
       }
     }
     else if (mode === "Borrow") {
-        // Calculate effective equity (Collateral - Debt)
-        let equity = marginState?.collateralUsd || 0;
-        // If depositing new collateral in WB mode, add it to equity
-        if (!isMBMode) {
-            equity += totalDepositValue;
-        }
-        
-        // Calculate max borrowing power based on selected leverage
-        // Target Debt = Equity * (Leverage - 1)
-        const targetDebt = equity * (leverage - 1);
-        
-        // Available to borrow = Target Debt - Existing Debt
-        const existingDebt = marginState?.borrowUsd || 0;
-        return Math.max(0, targetDebt - existingDebt);
+      // Calculate effective equity (Collateral - Debt)
+      let equity = marginState?.collateralUsd || 0;
+      // If depositing new collateral in WB mode, add it to equity
+      if (!isMBMode) {
+        equity += totalDepositValue;
+      }
+
+      // Calculate max borrowing power based on selected leverage
+      // Target Debt = Equity * (Leverage - 1)
+      const targetDebt = equity * (leverage - 1);
+
+      // Available to borrow = Target Debt - Existing Debt
+      const existingDebt = marginState?.borrowUsd || 0;
+      return Math.max(0, targetDebt - existingDebt);
     }
     return 0;
   }, [mode, totalDepositValue, borrowAsset, prices, leverage, marginState, isMBMode]);
@@ -1001,31 +880,31 @@ export const LeverageAssetsTab = () => {
 
     // Calculate Borrow Amount
     if (mode === "Deposit") {
-       if (leverage > 1) {
-         additionalBorrowUsd = totalDepositValue * (leverage - 1);
-       }
+      if (leverage > 1) {
+        additionalBorrowUsd = totalDepositValue * (leverage - 1);
+      }
     } else {
-       additionalBorrowUsd = borrowItems.reduce((sum, item) => sum + (item.usdValue || 0), 0);
+      additionalBorrowUsd = borrowItems.reduce((sum, item) => sum + (item.usdValue || 0), 0);
     }
 
     // Calculate Collateral Increase
     if (mode === "Deposit") {
-    if (isMBMode) {
+      if (isMBMode) {
         // MB mode: No new collateral deposit, only using existing
         additionalCollateralUsd = 0;
-    } else {
+      } else {
         // WB mode: Only the deposit adds to collateral, NOT the borrow
         additionalCollateralUsd = totalDepositValue;
+      }
     }
-}
 
     const sim = simulateStrategy(marginState, additionalCollateralUsd, additionalBorrowUsd);
-    
+
     return {
-        netHealthFactor: Number(sim.newHF.toFixed(2)),
-        netLTV: Number(sim.newLTV.toFixed(2)),
-        projectedMaxBorrow: sim.projectedMaxBorrow,
-        newCollateralUsd: sim.newCollateralUsd
+      netHealthFactor: Number(sim.newHF.toFixed(2)),
+      netLTV: Number(sim.newLTV.toFixed(2)),
+      projectedMaxBorrow: sim.projectedMaxBorrow,
+      newCollateralUsd: sim.newCollateralUsd
     };
   }, [marginState, isMBMode, totalDepositValue, mode, leverage, borrowItems, simulateStrategy]);
 
@@ -1062,6 +941,27 @@ export const LeverageAssetsTab = () => {
     // Ensure unifiedBalance is up to date with the store for the selected token
     const type = updatedCollateral.balanceType.toUpperCase() as "WB" | "MB";
     const freshBalance = getBalance(updatedCollateral.asset, type);
+
+    // ✅ VALIDATION: Check if total amount for this asset exceeds wallet balance (WB mode only)
+    if (type === "WB") {
+      // Calculate total amount for this asset across all collaterals (excluding current one being edited)
+      const totalAmountForAsset = currentCollaterals
+        .filter((c, i) => i !== index && c.asset === updatedCollateral.asset && c.balanceType.toLowerCase() === "wb")
+        .reduce((sum, c) => sum + c.amount, 0);
+
+      const newTotalAmount = totalAmountForAsset + updatedCollateral.amount;
+
+      if (newTotalAmount > freshBalance) {
+        showError(
+          `Total deposit amount exceeds your wallet balance. Please reduce the amount.`
+        );
+        return;
+      }
+
+
+
+
+    }
 
     const collateralWithFreshBalance = {
       ...updatedCollateral,
@@ -1107,7 +1007,7 @@ export const LeverageAssetsTab = () => {
   const handleModeToggle = () => {
     setMode((prev) => {
       const newMode = prev === "Borrow" ? "Deposit" : "Borrow";
-      
+
       // When switching to Borrow mode, limit to 1 collateral
       if (newMode === "Borrow") {
         setCurrentCollaterals((prev) => {
@@ -1118,7 +1018,7 @@ export const LeverageAssetsTab = () => {
           return prev;
         });
       }
-      
+
       return newMode;
     });
   };
@@ -1206,7 +1106,7 @@ export const LeverageAssetsTab = () => {
       };
 
       let next = [...currentCollaterals];
-      
+
       next[index] = updated;
 
       next = next.filter((c) => c.balanceType.toLowerCase() !== "mb");
@@ -1590,8 +1490,8 @@ export const LeverageAssetsTab = () => {
         deposits.length > 0 && borrowsCompleted > 0
           ? `Deposited ${deposits.length} asset(s) and borrowed ${borrowsCompleted} asset(s)`
           : deposits.length > 0
-          ? `Deposited ${deposits.length} asset(s)`
-          : `Borrowed ${borrowsCompleted} asset(s)`
+            ? `Deposited ${deposits.length} asset(s)`
+            : `Borrowed ${borrowsCompleted} asset(s)`
       );
 
       setActiveDialogue("none");
@@ -1665,9 +1565,8 @@ export const LeverageAssetsTab = () => {
       >
         {/* Mode toggle: Deposit / Borrow */}
         <motion.header
-          className={`w-full flex justify-end text-[14px] font-medium gap-2 items-center ${
-            isDark ? "text-white" : ""
-          }`}
+          className={`w-full flex justify-end text-[14px] font-medium gap-2 items-center ${isDark ? "text-white" : ""
+            }`}
           initial={{ opacity: 0, x: 20 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
@@ -1707,9 +1606,8 @@ export const LeverageAssetsTab = () => {
                   <h3 className={`text-[20px] font-medium py-[10px] ${isDark ? "text-white" : ""}`}>
                     {mbTotalUsd} USD
                   </h3>
-                  <div className={`py-[4px] pr-[4px] pl-[8px] rounded-[8px] ${
-                    isDark ? "bg-[#222222] " : "bg-[#F2EBFE]"
-                  }`}>
+                  <div className={`py-[4px] pr-[4px] pl-[8px] rounded-[8px] ${isDark ? "bg-[#222222] " : "bg-[#F2EBFE]"
+                    }`}>
                     <Dropdown
                       classname="text-[16px] font-medium gap-[8px]"
                       items={[...BALANCE_TYPE_OPTIONS]}
@@ -1856,6 +1754,20 @@ export const LeverageAssetsTab = () => {
             )}
           </div>
 
+
+          {error && (
+            <motion.div
+              animate={{ x: error ? [0, -5, 5, -5, 0] : 0 }}
+              transition={{ duration: 0.25 }}
+              className="mt-2"
+            >
+              <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-400">
+                ⚠️ {error}
+              </div>
+            </motion.div>
+          )}
+
+
           {/* Add Collateral button */}
           <motion.button
             type="button"
@@ -1956,7 +1868,7 @@ export const LeverageAssetsTab = () => {
               hfWarning: getHFWarning(netHealthFactor),
               ltv: netLTV,
               maxBorrow: projectedMaxBorrow,
-              
+
               // Current Margin State (Already available)
               currentHealthFactor: marginState?.hf ?? 0,
               currentLTV: marginState?.ltv ?? 0,
@@ -1971,7 +1883,7 @@ export const LeverageAssetsTab = () => {
             }}
             showExpandable={true}
             expandableSections={[
-            
+
               {
                 title: "Transaction Details",
                 items: [
@@ -2187,7 +2099,7 @@ export const LeverageAssetsTab = () => {
               onClick={(e) => e.stopPropagation()}
             >
               <Dialogue
-                buttonOnClick={async() => {
+                buttonOnClick={async () => {
                   await handleExecuteStrategy()
                 }}
                 buttonText="Proceed to Deposit & Earn"
@@ -2225,9 +2137,9 @@ export const LeverageAssetsTab = () => {
         onRetry={
           txModalStatus === "error"
             ? () => {
-                setTxModalOpen(false);
-                // User can try again
-              }
+              setTxModalOpen(false);
+              // User can try again
+            }
             : undefined
         }
       />

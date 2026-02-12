@@ -15,7 +15,7 @@ import { SUPPORTED_TOKENS_BY_CHAIN } from "@/lib/utils/web3/token";
 import { useVaultData } from "@/lib/hooks/useVaultData";
 
 export const SupplyLiquidityTab = () => {
-  const { isDark } = useTheme();
+   const { isDark } = useTheme();
 
   // Wagmi hooks
   const { address, isConnected } = useAccount();
@@ -38,6 +38,7 @@ export const SupplyLiquidityTab = () => {
       setSelectedAsset(supportedAssets[0] || "ETH");
     }
   }, [chainId, supportedAssets, selectedAsset]);
+
   const [amount, setAmount] = useState<string>("");
   const [selectedPercentage, setSelectedPercentage] = useState<number>(0);
   const [selectedBalance, setSelectedBalance] = useState<string>("WB");
@@ -46,56 +47,37 @@ export const SupplyLiquidityTab = () => {
   const [loading, setLoading] = useState(false);
   const [sharesPreview, setSharesPreview] = useState<number>(0);
 
-  // Transaction modal state
   const [txModal, setTxModal] = useState<{
     isOpen: boolean;
     status: "pending" | "success" | "error";
     message?: string;
     txHash?: string;
+    showFloatingTokens?: boolean;
+    tokenSymbol?: "ETH" | "USDC" | "USDT";
   }>({
     isOpen: false,
     status: "pending",
-    message: "",
-    txHash: "",
   });
 
   // ✅ Use vault data from store (already cached via multicall)
-  const { vault, loading: vaultLoading } = useVaultData(selectedAsset);
+  const { vault } = useVaultData(selectedAsset);
 
   // Fetchers
-  const fetchWalletBalance = useFetchUserWalletBalance(
-    chainId,
-    selectedAsset,
-    address,
-    publicClient
-  );
+  const fetchWalletBalance = useFetchUserWalletBalance(chainId, selectedAsset, address, publicClient);
+  const fetchConvertToShares = useFetchConvertToShares(chainId, selectedAsset, publicClient);
 
-  const fetchConvertToShares = useFetchConvertToShares(
-    chainId,
-    selectedAsset,
-    publicClient
-  );
-
-  // Fetch wallet balance when asset or address changes
   useEffect(() => {
     const loadData = async () => {
       if (!isConnected || !address) {
         setWalletBalance(0);
         return;
       }
-
-      // Fetch wallet balance only (vault data comes from store)
       const balanceResult = await fetchWalletBalance();
-      if (balanceResult) {
-        setWalletBalance(balanceResult.balanceFormatted);
-      }
+      if (balanceResult) setWalletBalance(balanceResult.balanceFormatted);
     };
     loadData();
-
-    // ✅ Removed auto-refresh - store handles caching with 10s refresh
   }, [selectedAsset, address, isConnected, fetchWalletBalance]);
 
-  // Preview shares when amount changes
   useEffect(() => {
     const previewShares = async () => {
       if (!amount || parseFloat(amount) <= 0) {
@@ -103,22 +85,17 @@ export const SupplyLiquidityTab = () => {
         return;
       }
       const result = await fetchConvertToShares(amount);
-      if (result) {
-        setSharesPreview(result.sharesFormatted);
-      }
+      if (result) setSharesPreview(result.sharesFormatted);
     };
     previewShares();
   }, [amount, fetchConvertToShares]);
 
-  // Format number to avoid scientific notation (e.g., 5.49669311e-10)
   const formatAmount = (value: number): string => {
     if (value === 0) return "0";
-    // Use toFixed with enough decimals, then trim trailing zeros
     const decimals = selectedAsset === "ETH" ? 18 : 6;
     return value.toFixed(decimals).replace(/\.?0+$/, "");
   };
 
-  // Handle percentage button click
   const handlePercentageClick = (percent: number) => {
     setSelectedPercentage(percent);
     if (walletBalance > 0) {
@@ -127,38 +104,24 @@ export const SupplyLiquidityTab = () => {
     }
   };
 
-  // Reset form when asset changes
   useEffect(() => {
     setAmount("");
     setSelectedPercentage(0);
   }, [selectedAsset]);
 
-  // Handle supply transaction
   const handleSupply = async () => {
     if (!walletClient || !publicClient || !chainId || !address) {
-      setTxModal({
-        isOpen: true,
-        status: "error",
-        message: "Please connect your wallet",
-      });
+      setTxModal({ isOpen: true, status: "error", message: "Please connect your wallet" });
       return;
     }
 
     if (!amount || parseFloat(amount) <= 0) {
-      setTxModal({
-        isOpen: true,
-        status: "error",
-        message: "Please enter an amount",
-      });
+      setTxModal({ isOpen: true, status: "error", message: "Please enter an amount" });
       return;
     }
 
     if (parseFloat(amount) > walletBalance) {
-      setTxModal({
-        isOpen: true,
-        status: "error",
-        message: "Insufficient balance",
-      });
+      setTxModal({ isOpen: true, status: "error", message: "Insufficient balance" });
       return;
     }
 
@@ -167,17 +130,11 @@ export const SupplyLiquidityTab = () => {
       isOpen: true,
       status: "pending",
       message: `Supplying ${amount} ${selectedAsset}...`,
+      tokenSymbol: selectedAsset,              
     });
 
     try {
-      const result = await supply({
-        walletClient,
-        publicClient,
-        chainId,
-        asset: selectedAsset,
-        amount,
-        userAddress: address,
-      });
+      const result = await supply({ walletClient, publicClient, chainId, asset: selectedAsset, amount, userAddress: address });
 
       if (result.success) {
         setTxModal({
@@ -185,28 +142,21 @@ export const SupplyLiquidityTab = () => {
           status: "success",
           message: `Successfully supplied ${amount} ${selectedAsset}`,
           txHash: result.txHash,
+          showFloatingTokens: true,
+          tokenSymbol: selectedAsset,          // ✅ PASS TOKEN
         });
 
-        // Reset form
         setAmount("");
         setSelectedPercentage(0);
 
-        // Reload balances with a slight delay to allow blockchain state to update
         setTimeout(async () => {
           const balanceResult = await fetchWalletBalance();
-          if (balanceResult) {
-            setWalletBalance(balanceResult.balanceFormatted);
-          }
-
-          // ✅ No need to reload vault data - store auto-refreshes
+          if (balanceResult) setWalletBalance(balanceResult.balanceFormatted);
         }, 2000);
       } else {
         throw new Error(result.error || "Supply failed");
       }
     } catch (error: any) {
-      console.error("Supply error:", error);
-
-      // Check if user rejected
       const isUserRejection =
         error?.code === 4001 ||
         error?.message?.includes("User rejected") ||
@@ -216,23 +166,20 @@ export const SupplyLiquidityTab = () => {
       setTxModal({
         isOpen: true,
         status: "error",
-        message: isUserRejection
-          ? "Transaction cancelled"
-          : error.message || "Supply failed",
+        message: isUserRejection ? "Transaction cancelled" : error.message || "Supply failed",
+        tokenSymbol: selectedAsset,            // ✅ PASS TOKEN (optional)
       });
     } finally {
       setLoading(false);
     }
   };
 
-  // Calculate info card data using vault from store
   const exchangeRate = vault?.exchangeRate || 1;
-  const supplyAPY = vault?.supplyAPY ? vault.supplyAPY * 100 : 0; // Convert to percentage
+  const supplyAPY = vault?.supplyAPY ? vault.supplyAPY * 100 : 0;
   const amountNum = parseFloat(amount) || 0;
 
-  // Simple earnings calculation (principal * rate * time)
-  const monthlyEarnings = amountNum * (supplyAPY / 100) / 12;
-  const yearlyEarnings = amountNum * (supplyAPY / 100);
+  const monthlyEarnings = (amountNum * supplyAPY) / 100 / 12;
+  const yearlyEarnings = (amountNum * supplyAPY) / 100;
 
   const infoData = {
     youGetVETH: sharesPreview,
@@ -271,7 +218,6 @@ export const SupplyLiquidityTab = () => {
     showExpandable: true,
   };
 
-  // Button text
   const getButtonText = () => {
     if (!isConnected) return "Connect Wallet";
     if (loading) return "Supplying...";
@@ -280,19 +226,12 @@ export const SupplyLiquidityTab = () => {
     return "Supply Liquidity";
   };
 
-  // Button disabled state
   const isButtonDisabled =
-    !isConnected ||
-    loading ||
-    !amount ||
-    parseFloat(amount) <= 0 ||
-    parseFloat(amount) > walletBalance;
-
+    !isConnected || loading || !amount || parseFloat(amount) <= 0 || parseFloat(amount) > walletBalance;
   return (
     <>
-      <form className={`flex gap-[16px] items-center w-full h-fit border-[1px] rounded-[16px] p-[16px] ${
-        isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"
-      }`}>
+      <form className={`flex gap-[16px] items-center w-full h-fit border-[1px] rounded-[16px] p-[16px] ${isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"
+        }`}>
         <div className="w-full h-full flex flex-col gap-[44px] justify-between">
           <div className="w-full h-fit">
             <label htmlFor="asset-select" className="sr-only">
@@ -323,15 +262,13 @@ export const SupplyLiquidityTab = () => {
                 min="0"
                 placeholder="Enter amount"
                 disabled={loading}
-                className={`w-full h-fit placeholder:text-[#C7C7C7] text-[16px] font-medium outline-none ${
-                  isDark ? "text-white bg-[#111111]" : "bg-white"
-                } ${loading ? "opacity-50" : ""}`}
+                className={`w-full h-fit placeholder:text-[#C7C7C7] text-[16px] font-medium outline-none ${isDark ? "text-white bg-[#111111]" : "bg-white"
+                  } ${loading ? "opacity-50" : ""}`}
                 aria-describedby="usd-value"
               />
             </div>
-            <output id="usd-value" className={`w-full h-fit text-[10px] font-medium ${
-              isDark ? "text-[#919191]" : "text-[#76737B]"
-            }`}>
+            <output id="usd-value" className={`w-full h-fit text-[10px] font-medium ${isDark ? "text-[#919191]" : "text-[#76737B]"
+              }`}>
               ≈ {sharesPreview.toFixed(4)} v{selectedAsset}
             </output>
           </div>
@@ -345,13 +282,12 @@ export const SupplyLiquidityTab = () => {
                 onClick={() => handlePercentageClick(item)}
                 key={item}
                 disabled={loading || walletBalance <= 0}
-                className={`flex justify-center items-center cursor-pointer text-[14px] font-semibold w-fit h-[44px] rounded-[12px] p-[10px] ${
-                  selectedPercentage === item
-                    ? `${PERCENTAGE_COLORS[item]} text-white`
-                    : isDark
+                className={`flex justify-center items-center cursor-pointer text-[14px] font-semibold w-fit h-[44px] rounded-[12px] p-[10px] ${selectedPercentage === item
+                  ? `${PERCENTAGE_COLORS[item]} text-white`
+                  : isDark
                     ? "bg-[#222222] text-white"
                     : "bg-[#F4F4F4] text-black"
-                } ${loading || walletBalance <= 0 ? "opacity-50 cursor-not-allowed" : ""}`}
+                  } ${loading || walletBalance <= 0 ? "opacity-50 cursor-not-allowed" : ""}`}
                 aria-pressed={selectedPercentage === item}
               >
                 {item}%
@@ -364,13 +300,12 @@ export const SupplyLiquidityTab = () => {
               <button
                 type="button"
                 onClick={() => setSelectedBalance("PB")}
-                className={`w-[28px] h-fit rounded-[4px] p-[4px] text-[12px] font-medium cursor-pointer ${
-                  selectedBalance === "PB"
-                    ? "bg-[#F1EBFD] text-[#703AE6]"
-                    : isDark
+                className={`w-[28px] h-fit rounded-[4px] p-[4px] text-[12px] font-medium cursor-pointer ${selectedBalance === "PB"
+                  ? "bg-[#F1EBFD] text-[#703AE6]"
+                  : isDark
                     ? "bg-[#222222] text-white"
                     : "bg-[#F4F4F4] text-black"
-                }`}
+                  }`}
                 aria-pressed={selectedBalance === "PB"}
                 aria-label="Protocol Balance"
               >
@@ -393,13 +328,12 @@ export const SupplyLiquidityTab = () => {
               <button
                 type="button"
                 onClick={() => setSelectedBalance("WB")}
-                className={`w-[28px] h-fit rounded-[4px] p-[4px] text-[12px] font-medium cursor-pointer ${
-                  selectedBalance === "WB"
-                    ? "bg-[#F1EBFD] text-[#703AE6]"
-                    : isDark
+                className={`w-[28px] h-fit rounded-[4px] p-[4px] text-[12px] font-medium cursor-pointer ${selectedBalance === "WB"
+                  ? "bg-[#F1EBFD] text-[#703AE6]"
+                  : isDark
                     ? "bg-[#222222] text-white"
                     : "bg-[#F4F4F4] text-black"
-                }`}
+                  }`}
                 aria-pressed={selectedBalance === "WB"}
                 aria-label="Wallet Balance"
               >
@@ -410,9 +344,8 @@ export const SupplyLiquidityTab = () => {
               <button
                 type="button"
                 onClick={() => selectedBalance === "WB" && setIsBalanceBreakdownOpen(true)}
-                className={`${selectedBalance === "WB" ? "underline cursor-pointer" : ""} ${
-                  isDark ? "text-white" : "text-[#111111]"
-                } text-[10px] font-semibold`}
+                className={`${selectedBalance === "WB" ? "underline cursor-pointer" : ""} ${isDark ? "text-white" : "text-[#111111]"
+                  } text-[10px] font-semibold`}
                 disabled={selectedBalance !== "WB"}
               >
                 {selectedBalance === "WB" ? "Wallet Balance:" : "Balance:"}
@@ -440,6 +373,8 @@ export const SupplyLiquidityTab = () => {
         disabled={isButtonDisabled}
         onClick={handleSupply}
       />
+
+
 
       <AnimatePresence>
         {isBalanceBreakdownOpen && (
@@ -476,14 +411,19 @@ export const SupplyLiquidityTab = () => {
       </AnimatePresence>
 
       {/* Transaction Modal */}
+     
       <TransactionModal
+        key={`${txModal.txHash}-${txModal.status}`}
         isOpen={txModal.isOpen}
         status={txModal.status}
         message={txModal.message}
         txHash={txModal.txHash}
+        showFloatingTokens={txModal.showFloatingTokens}
+        tokenSymbol={txModal.tokenSymbol}
         onClose={() => setTxModal({ ...txModal, isOpen: false })}
         onRetry={txModal.status === "error" ? handleSupply : undefined}
       />
+
     </>
   );
 };

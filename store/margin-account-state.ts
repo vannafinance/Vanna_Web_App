@@ -75,7 +75,7 @@ export const useMarginStore = create<MarginStore>((set, get) => ({
 
     // If requesting too soon and past cache, silently return old data
     if (!forceRefresh && timeSinceLastFetch < MIN_FETCH_INTERVAL) {
-      const waitTime = Math.ceil((MIN_FETCH_INTERVAL - timeSinceLastFetch) / 1000);
+      const waitTime =(MIN_FETCH_INTERVAL - timeSinceLastFetch) / 1000;
       console.log(`[MarginStore] Rate limited, returning cached data. Next refresh in ${waitTime}s`);
       // Don't set error - just return cached data
       return state.marginState;

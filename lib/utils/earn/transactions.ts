@@ -267,7 +267,7 @@ export const withdrawToken = async ({
     const vTokenAddress = getVTokenAddress(chainId, asset);
     // vToken shares for all assets are standardized to 18 decimals,
     // similar to vETH. The underlying asset's decimals are not used for shares.
-    const vTokenDecimals = 18;
+    const vTokenDecimals = TOKEN_DECIMALS[asset];
     const parsedShares = parseUnits(shares, vTokenDecimals);
 
     // Call redeem(shares, receiver, owner)

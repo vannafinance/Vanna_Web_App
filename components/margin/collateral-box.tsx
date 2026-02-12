@@ -89,7 +89,7 @@ export const Collateral = (props: CollateralProps) => {
   const formatAmount = (value: number, asset: string): string => {
     if (value === 0) return "0";
     const decimals = asset === "ETH" ? 18 : 6;
-    return value.toFixed(decimals).replace(/\.?0+$/, "");
+    return value.toFixed(6)
   };
 
   // Sync form with props when entering editing mode from standard view
