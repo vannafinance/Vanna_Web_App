@@ -24,6 +24,8 @@ import { useTheme } from "@/contexts/theme-context";
 import { useMarginStore } from "@/store/margin-account-state";
 import { usePublicClient, useChainId } from "wagmi";
 import { useFetchAccountCheck, useFetchCollateralState, useFetchBorrowState } from "@/lib/utils/margin/marginFetchers";
+import BorrowDashboard from "@/components/margin/TestBorrowedDashboard";
+import { DebugBorrowComparison } from "@/components/margin/debug-borrow-comparison";
 
 const Margin = () => {
   const { isDark } = useTheme();
@@ -243,6 +245,9 @@ const Margin = () => {
   return (
     <main className="w-full">
       {/* Error banner for margin data loading issues */}
+      {/* <BorrowDashboard/> */}
+
+
       <AnimatePresence>
         {marginError && (
           <motion.div
@@ -314,6 +319,13 @@ const Margin = () => {
           />
         </motion.section>
       )}
+
+      {/* Debug Component - Remove after debugging
+      // {userAddress && (
+      //   <section className="px-[80px] w-full">
+      //     <DebugBorrowComparison />
+      //   </section>
+      // )} */}
 
       {/* Main leverage section */}
       <section className=" w-full p-[80px]  flex flex-col gap-[48px]">

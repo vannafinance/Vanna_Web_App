@@ -14,6 +14,7 @@ import {
   polygon,
   zora,
 } from "wagmi/chains";
+import { fallback } from "viem";
 
 
 const config = getDefaultConfig({
@@ -38,7 +39,12 @@ const config = getDefaultConfig({
      [mainnet.id]: http(),
     [arbitrum.id]: http(),
     [avalanche.id]: http(),
-    [base.id]: http(),
+    [base.id]: fallback([
+      http("https://base-mainnet.g.alchemy.com/v2/6GTerb8N0X0IiWOQviJsc"),
+     
+    ]),
+
+    // [base.id]:http("https://base.blockpi.network/v1/rpc/public"),
     [bsc.id]: http(),
     [fantom.id]: http(),
     [gnosis.id]: http(),

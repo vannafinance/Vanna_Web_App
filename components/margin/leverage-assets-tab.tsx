@@ -512,17 +512,15 @@ export const LeverageAssetsTab = () => {
     const decimals = TOKEN_DECIMALS[asset] ?? 18;
     const parsed = parseUnits(amount, decimals);
 
+    // Get token address (use WETH for ETH)
+    let token: `0x${string}`;
     if (asset === "ETH" || asset === "WETH") {
-      return walletClient!.writeContract({
-        address: addressList.accountManagerContractAddress as `0x${string}`,
-        abi: AccountManager.abi,
-        functionName: "borrowEth",
-        args: [marginAccount, parsed],
-      });
+      token = addressList.wethTokenAddress as `0x${string}`;
+    } else {
+      const tokenAddr = tokenAddressByChain[chainId!]?.[asset];
+      if (!tokenAddr) throw new Error(`Token mapping not found for ${asset}`);
+      token = tokenAddr;
     }
-
-    const token = tokenAddressByChain[chainId!]?.[asset];
-    if (!token) throw new Error(`Token mapping not found for ${asset}`);
 
     return walletClient!.writeContract({
       address: addressList.accountManagerContractAddress as `0x${string}`,
@@ -1540,31 +1538,25 @@ export const LeverageAssetsTab = () => {
 
           setTxModalMessage(`Borrowing ${item.amount} ${item.asset}...`);
 
-          let txHash: `0x${string}`;
-
-          if (item.asset === "ETH") {
-            // Borrow native ETH
-            txHash = await walletClient.writeContract({
-              address: addressList.accountManagerContractAddress as `0x${string}`,
-              abi: AccountManager.abi,
-              functionName: "borrowEth",
-              args: [targetAccount, amountBigInt]
-            });
+          // Get token address (use WETH for ETH)
+          let tokenAddress: `0x${string}`;
+          if (item.asset === "ETH" || item.asset === "WETH") {
+            tokenAddress = addressList.wethTokenAddress as `0x${string}`;
           } else {
-            // Borrow ERC20 token
-            const tokenAddress = tokenAddressByChain[chainId]?.[item.asset];
-            if (!tokenAddress) {
+            const tokenAddr = tokenAddressByChain[chainId]?.[item.asset];
+            if (!tokenAddr) {
               console.warn(`Token address not found for ${item.asset}`);
               continue;
             }
-
-            txHash = await walletClient.writeContract({
-              address: addressList.accountManagerContractAddress as `0x${string}`,
-              abi: AccountManager.abi,
-              functionName: "borrow",
-              args: [targetAccount, tokenAddress, amountBigInt]
-            });
+            tokenAddress = tokenAddr;
           }
+
+          const txHash = await walletClient.writeContract({
+            address: addressList.accountManagerContractAddress as `0x${string}`,
+            abi: AccountManager.abi,
+            functionName: "borrow",
+            args: [targetAccount, tokenAddress, amountBigInt]
+          });
 
           await publicClient.waitForTransactionReceipt({ hash: txHash });
           borrowsCompleted++;

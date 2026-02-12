@@ -16,7 +16,7 @@ import { getAddressList } from "@/lib/utils/web3/addressList";
 import { tokenAddressByChain, TOKEN_DECIMALS } from "@/lib/utils/web3/token";
 import AccountManager from "../../abi/vanna/out/out/AccountManager.sol/AccountManager.json";
 import { erc20Abi, parseUnits } from "viem";
-import { useFetchAccountCheck, useFetchCollateralState, useFetchBorrowState, useFetchBorrowPositions } from "@/lib/utils/margin/marginFetchers";
+import { useFetchAccountCheck, useFetchCollateralState, useFetchBorrowState, useFetchBorrowPositions, useFetchDirectBorrowBalances } from "@/lib/utils/margin/marginFetchers";
 import { useTheme } from "@/contexts/theme-context";
 import { TransactionModal } from "@/components/ui/transaction-modal";
 
@@ -58,7 +58,16 @@ export const RepayLoanTab = () => {
   const fetchCollateralState = useFetchCollateralState(chainId, publicClient);
   const fetchBorrowState = useFetchBorrowState(chainId, publicClient);
   const fetchBorrowPositions = useFetchBorrowPositions(chainId, publicClient);
+  const fetchDirectBorrowBalances = useFetchDirectBorrowBalances(chainId, publicClient);
   const [loading, setLoading] = useState(false);
+  const [directBorrowBalances, setDirectBorrowBalances] = useState<{
+    borrowedETH: bigint;
+    borrowedUSDC: bigint;
+    borrowedUSDT: bigint;
+    borrowedETHRaw?: bigint;
+    borrowedUSDCRaw?: bigint;
+    borrowedUSDTRaw?: bigint;
+  }>({ borrowedETH: 0n, borrowedUSDC: 0n, borrowedUSDT: 0n });
 
   // Inject fresh fetchers into the store to ensure state reloads use current closures
   const fetchers = useMemo(() => ({
@@ -120,12 +129,19 @@ export const RepayLoanTab = () => {
           const accounts = await fetchAccountCheck();
           const marginAccount = accounts[0];
 
-          // Fetch borrow positions (balances are handled globally)
-          const positions = marginAccount
-            ? await fetchBorrowPositions(marginAccount)
-            : [];
+          if (marginAccount) {
+            // Fetch both borrow positions and direct borrow balances from contract
+            const [positions, directBalances] = await Promise.all([
+              fetchBorrowPositions(marginAccount),
+              fetchDirectBorrowBalances(marginAccount)
+            ]);
 
-          setBorrowPositions(positions);
+            setBorrowPositions(positions);
+            setDirectBorrowBalances(directBalances);
+          } else {
+            setBorrowPositions([]);
+            setDirectBorrowBalances({ borrowedETH: 0n, borrowedUSDC: 0n, borrowedUSDT: 0n });
+          }
 
           hasLoadedRepayRef.current = true;
           lastChainRepayRef.current = chainId;
@@ -141,55 +157,92 @@ export const RepayLoanTab = () => {
     } else {
       console.log('[RepayLoanTab] Using cached borrow positions');
     }
-  }, [chainId, address, publicClient, fetchAccountCheck, fetchBorrowPositions]);
+  }, [chainId, address, publicClient, fetchAccountCheck, fetchBorrowPositions, fetchDirectBorrowBalances]);
 
-  // Get borrowed amount for a specific asset
+  // Get borrowed amount for a specific asset (using direct contract balances)
   const getBorrowedAmount = useCallback((asset: string): number => {
+    // Use direct contract balances first (source of truth)
+    if (asset === "ETH" || asset === "WETH") {
+      const ethBorrowed = Number(directBorrowBalances.borrowedETH.toString());
+      if (ethBorrowed > 0) return ethBorrowed;
+    }
+    if (asset === "USDC") {
+      const usdcBorrowed = Number(directBorrowBalances.borrowedUSDC.toString());
+      if (usdcBorrowed > 0) return usdcBorrowed;
+    }
+    if (asset === "USDT") {
+      const usdtBorrowed = Number(directBorrowBalances.borrowedUSDT.toString());
+      if (usdtBorrowed > 0) return usdtBorrowed;
+    }
+
+    // Fallback to positions
     const position = borrowPositions.find(p => p.asset === asset || (p.asset === "WETH" && asset === "ETH"));
     return position ? Number(position.amount) : 0;
-  }, [borrowPositions]);
+  }, [directBorrowBalances, borrowPositions]);
 
   // Calculate total outstanding from borrow positions (more accurate than RiskEngine aggregate)
   // Track where the data is coming from for debugging
   const [dataSource, setDataSource] = useState<"positions" | "riskEngine" | "none">("none");
 
-  const totalOutstandingUsd = useMemo(() => {
-    if (!borrowPositions || borrowPositions.length === 0) {
-      const riskEngineValue = marginState?.borrowUsd || 0;
-      if (riskEngineValue > 0) {
-        setDataSource("riskEngine");
-        console.log(`[Repay Stats] Using RiskEngine: $${riskEngineValue.toFixed(2)}`);
-      } else {
-        setDataSource("none");
-        console.log(`[Repay Stats] No borrow data available`);
-      }
-      return riskEngineValue;
-    }
 
-    // Sum up all borrowed assets in USD
-    const total = borrowPositions.reduce((sum, position) => {
-      const price = prices[position.asset] || (position.asset === "WETH" ? prices["ETH"] : 0) || 0;
-      const amountUsd = Number(position.amount) * price;
-      console.log(`[Repay Stats] ${position.asset}: ${position.amount} × $${price} = $${amountUsd.toFixed(2)}`);
-      return sum + amountUsd;
+
+
+const totalOutstandingUsd = useMemo(() => {
+  // Use direct borrow balances from contract (like test implementation)
+  const ethPrice = prices["ETH"] || 0;
+  const usdcPrice = prices["USDC"] || 1;
+  const usdtPrice = prices["USDT"] || 1;
+
+  const ethUSD = Number(directBorrowBalances.borrowedETH.toString()) * ethPrice;
+  const usdcUSD = Number(directBorrowBalances.borrowedUSDC.toString()) * usdcPrice;
+  const usdtUSD = Number(directBorrowBalances.borrowedUSDT.toString()) * usdtPrice;
+
+  const directTotal = ethUSD + usdcUSD + usdtUSD;
+
+  // If direct balances exist, use them (contract source of truth)
+  if (directTotal > 0) {
+    console.log(`[RepayTab] Using direct contract balances - ETH: ${directBorrowBalances.borrowedETH.toString()}, USDC: ${directBorrowBalances.borrowedUSDC.toString()}, USDT: ${directBorrowBalances.borrowedUSDT.toString()}, Total USD: ${directTotal.toFixed(2)}`);
+    return directTotal;
+  }
+
+  // Fallback to RiskEngine aggregate if available
+  const riskEngineValue = marginState?.borrowUsd || 0;
+  if (riskEngineValue > 0) {
+    console.log(`[RepayTab] Using RiskEngine value: ${riskEngineValue.toFixed(2)}`);
+    return riskEngineValue;
+  }
+
+  // Fallback to positions calculation
+  if (borrowPositions.length > 0) {
+    const positionsTotal = borrowPositions.reduce((sum, p) => {
+      const price = prices[p.asset] || (p.asset === "WETH" ? prices["ETH"] : 0) || 0;
+      return sum + Number(p.amount) * price;
     }, 0);
+    console.log(`[RepayTab] Using positions calculation: ${positionsTotal.toFixed(2)}`);
+    return positionsTotal;
+  }
 
-    const riskEngineValue = marginState?.borrowUsd || 0;
-    console.log(`[Repay Stats] Calculated from positions: $${total.toFixed(2)} (${borrowPositions.length} positions)`);
-    console.log(`[Repay Stats] RiskEngine value: $${riskEngineValue.toFixed(2)}`);
+  return 0;
+}, [directBorrowBalances, prices, borrowPositions, marginState]);
 
-    // Prefer calculated total over marginState if we have positions
-    if (total > 0) {
-      setDataSource("positions");
-      return total;
-    } else if (riskEngineValue > 0) {
-      setDataSource("riskEngine");
-      return riskEngineValue;
-    } else {
-      setDataSource("none");
-      return 0;
-    }
-  }, [borrowPositions, prices, marginState]);
+useEffect(() => {
+  const ethUSD = Number(directBorrowBalances.borrowedETH.toString()) * (prices["ETH"] || 0);
+  const usdcUSD = Number(directBorrowBalances.borrowedUSDC.toString()) * (prices["USDC"] || 1);
+  const usdtUSD = Number(directBorrowBalances.borrowedUSDT.toString()) * (prices["USDT"] || 1);
+  const directTotal = ethUSD + usdcUSD + usdtUSD;
+
+  if (directTotal > 0) {
+    setDataSource("positions"); // Direct contract fetch (most accurate)
+  } else if ((marginState?.borrowUsd || 0) > 0) {
+    setDataSource("riskEngine");
+  } else if (borrowPositions.length > 0) {
+    setDataSource("positions");
+  } else {
+    setDataSource("none");
+  }
+}, [directBorrowBalances, prices, borrowPositions, marginState]);
+
+
 
   // Derive stats directly from store state to ensure instant updates
   const repayStats = useMemo(() => ({
@@ -366,14 +419,16 @@ export const RepayLoanTab = () => {
       // Wait for next block to ensure state is updated on RPC
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-      // Refresh Margin State, Wallet Balances, and Borrow Positions
-      const [, , positions] = await Promise.all([
-        reloadMarginState(),
+      // Refresh Margin State, Wallet Balances, Borrow Positions, and Direct Balances
+      const [, , positions, directBalances] = await Promise.all([
+        reloadMarginState(true),
         refreshBalances({ chainId, address, publicClient, marginAccount }),
-        fetchBorrowPositions(marginAccount)
+        fetchBorrowPositions(marginAccount),
+        fetchDirectBorrowBalances(marginAccount)
       ]);
 
       setBorrowPositions(positions);
+      setDirectBorrowBalances(directBalances);
 
       // Show success modal
       setTxModalStatus("success");
@@ -454,30 +509,7 @@ export const RepayLoanTab = () => {
                     ? "Borrowed Balance"
                     : "Frozen Balance"}
                   {/* Debug badge for Net Outstanding */}
-                  {key === "netOutstandingAmountToPay" && (
-                    <span
-                      className={`ml-2 px-2 py-1 text-[10px] font-medium rounded ${
-                        dataSource === "positions"
-                          ? "bg-green-100 text-green-700"
-                          : dataSource === "riskEngine"
-                          ? "bg-blue-100 text-blue-700"
-                          : "bg-gray-100 text-gray-700"
-                      }`}
-                      title={
-                        dataSource === "positions"
-                          ? "Calculated from borrow positions"
-                          : dataSource === "riskEngine"
-                          ? "From RiskEngine contract"
-                          : "No borrow data"
-                      }
-                    >
-                      {dataSource === "positions"
-                        ? "📊 From Positions"
-                        : dataSource === "riskEngine"
-                        ? "⚙️ From RiskEngine"
-                        : "⚠️ No Data"}
-                    </span>
-                  )}
+                 
                 </motion.div>
                 <motion.div
                   className={`text-[24px] font-bold ${
@@ -491,7 +523,7 @@ export const RepayLoanTab = () => {
                     ease: "easeOut",
                   }}
                 >
-                  ${typeof value === 'number' ? value.toFixed(2) : value}
+                  ${typeof value === 'number' ? value.toFixed(4) : value}
                 </motion.div>
               </motion.article>
             );

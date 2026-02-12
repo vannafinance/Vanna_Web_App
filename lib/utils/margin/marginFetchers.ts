@@ -6,17 +6,9 @@ import RiskEngine from "@/abi/vanna/out/out/RiskEngine.sol/RiskEngine.json";
 import Account from "@/abi/vanna/out/out/Account.sol/Account1.json";
 import { getAddressList } from "@/lib/utils/web3/addressList";
 import { vTokenAddressByChain } from "@/lib/utils/web3/token";
+import VToken from "@/abi/vanna/out/out/VToken.sol/VToken.json";
+import VEther from '@/abi/vanna/out/out/VEther.sol/VEther.json';
 
-// Minimal ABI to get borrow balance from vToken/DebtToken
-const VTokenABI = [
-  {
-    inputs: [{ internalType: "address", name: "account", type: "address" }],
-    name: "getBorrowBalance",
-    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-    stateMutability: "view",
-    type: "function",
-  },
-] as const;
 
 // Fetcher 1: Get account addresses
 export const useFetchAccountCheck = (
@@ -41,7 +33,7 @@ export const useFetchAccountCheck = (
   }, [address, publicClient, chainId]);
 };
 
-// Fetcher 2: Get collateral state
+// Fetcher 2: Get collateral state (using manual calculation for accuracy)
 export const useFetchCollateralState = (chainId?: number, publicClient?: any) => {
   return useCallback(async (acc: `0x${string}`) => {
     if (!publicClient || !chainId) return [];
@@ -49,31 +41,89 @@ export const useFetchCollateralState = (chainId?: number, publicClient?: any) =>
     const addressList = getAddressList(chainId);
     if (!addressList) return [];
 
-    // Get latest block number to ensure fresh read
-    const blockNumber = await publicClient.getBlockNumber();
+    // ✅ NEW APPROACH: Fetch individual collateral positions
+    try {
+      // Get list of collateral asset addresses
+      const assetAddresses = await publicClient.readContract({
+        address: acc,
+        abi: Account.abi,
+        functionName: "getAssets",
+      }) as `0x${string}`[];
 
-    const raw = await publicClient.readContract({
-      address: addressList.riskEngineContractAddress,
-      abi: RiskEngine.abi,
-      functionName: "getBalance",
-      args: [acc],
-      blockNumber: blockNumber,
-    }) as bigint;  // ✅ Fixed: Returns single bigint, not array
+      if (assetAddresses.length === 0) {
+        console.log(`[CollateralState] No collateral deposited`);
+        return [{ token: "USD", amount: 0, usd: 0 }];
+      }
 
-    // RiskEngine returns values in 18 decimals (1e18)
-    const collateralUsd = Number(raw) / 1e18;
+      // Fetch prices from API
+      let prices: Record<string, number> = {};
+      try {
+        const pricesRes = await fetch("/api/prices");
+        prices = await pricesRes.json();
+      } catch (err) {
+        console.warn("[CollateralState] Failed to fetch prices, using defaults");
+        prices = { USDC: 1, USDT: 1, DAI: 1, ETH: 3000 }; // Fallback prices
+      }
 
-    // Dust threshold: Treat values below $0.01 as zero
-    const DUST_THRESHOLD = 0.01;
-    const cleanCollateralUsd = collateralUsd < DUST_THRESHOLD ? 0 : collateralUsd;
+      // Fetch balance for each collateral asset
+      const collateralPositions = await Promise.all(
+        assetAddresses.map(async (tokenAddr) => {
+          try {
+            const [symbol, decimals, balance] = await Promise.all([
+              publicClient.readContract({ address: tokenAddr, abi: erc20Abi, functionName: 'symbol' }),
+              publicClient.readContract({ address: tokenAddr, abi: erc20Abi, functionName: 'decimals' }),
+              publicClient.readContract({
+                address: tokenAddr,
+                abi: erc20Abi,
+                functionName: 'balanceOf',
+                args: [acc]
+              }),
+            ]);
 
-    console.log(`[RiskEngine] Raw balance: ${raw.toString()}, USD: ${collateralUsd.toFixed(6)}, Clean: ${cleanCollateralUsd}`);
+            const amount = Number(formatUnits(balance as bigint, Number(decimals)));
+            const lookupSym = symbol === "WETH" ? "ETH" : symbol;
+            const price = prices[lookupSym] || 0;
+            const usd = amount * price;
 
-    return [{ token: "USD", amount: cleanCollateralUsd, usd: cleanCollateralUsd }];
+            console.log(`[CollateralState] ${symbol}: ${amount.toFixed(6)} @ $${price} = $${usd.toFixed(2)}`);
+
+            return {
+              token: symbol,
+              amount,
+              usd,
+            };
+          } catch (err) {
+            console.error(`[CollateralState] Error fetching balance for token ${tokenAddr}:`, err);
+            return null;
+          }
+        })
+      );
+
+      // Filter out nulls and zero balances
+      const validPositions = collateralPositions.filter(
+        (p) => p !== null && p.amount > 0
+      ) as { token: string; amount: number; usd: number }[];
+
+      // Dust threshold: Treat values below $0.01 as zero
+      const DUST_THRESHOLD = 0.01;
+      const cleanedPositions = validPositions.map(p => ({
+        ...p,
+        usd: p.usd < DUST_THRESHOLD ? 0 : p.usd
+      })).filter(p => p.usd > 0);
+
+      const totalUsd = cleanedPositions.reduce((sum, p) => sum + p.usd, 0);
+      console.log(`[CollateralState] Total collateral: $${totalUsd.toFixed(2)} across ${cleanedPositions.length} assets`);
+
+      // Return individual positions for transparency
+      return cleanedPositions.length > 0 ? cleanedPositions : [{ token: "USD", amount: 0, usd: 0 }];
+    } catch (error) {
+      console.error("[CollateralState] Failed to fetch collateral state:", error);
+      return [{ token: "USD", amount: 0, usd: 0 }];
+    }
   }, [publicClient, chainId]);
 };
 
-// Fetcher 3: Get borrow state
+// Fetcher 3: Get borrow state (using manual VToken calculation for accuracy)
 export const useFetchBorrowState = (chainId?: number, publicClient?: any) => {
   return useCallback(async (acc: `0x${string}`) => {
     if (!publicClient || !chainId) return [];
@@ -81,46 +131,87 @@ export const useFetchBorrowState = (chainId?: number, publicClient?: any) => {
     const addressList = getAddressList(chainId);
     if (!addressList) return [];
 
-    // Get latest block number to ensure fresh read
-    const blockNumber = await publicClient.getBlockNumber();
+    // ✅ NEW APPROACH: Fetch individual borrow positions from VToken contracts
+    // This is more accurate than RiskEngine.getBorrows() which has decimal/price issues
+    try {
+      // Get list of borrowed token addresses
+      const borrowedAddresses = await publicClient.readContract({
+        address: acc,
+        abi: Account.abi,
+        functionName: "getBorrows",
+      }) as `0x${string}`[];
 
-    console.log(`[RiskEngine getBorrows] Fetching for account: ${acc}`);
-    console.log(`[RiskEngine getBorrows] RiskEngine address: ${addressList.riskEngineContractAddress}`);
+      if (borrowedAddresses.length === 0) {
+        console.log(`[BorrowState] No active borrows`);
+        return [{ token: "USD", amount: 0, usd: 0 }];
+      }
 
-    const raw = await publicClient.readContract({
-      address: addressList.riskEngineContractAddress,
-      abi: RiskEngine.abi,
-      functionName: "getBorrows",
-      args: [acc],
-      blockNumber: blockNumber,
-    });
+      // Fetch prices from API
+      let prices: Record<string, number> = {};
+      try {
+        const pricesRes = await fetch("/api/prices");
+        prices = await pricesRes.json();
+      } catch (err) {
+        console.warn("[BorrowState] Failed to fetch prices, using defaults");
+        prices = { USDC: 1, USDT: 1, DAI: 1 }; // Stablecoin fallbacks
+      }
 
-    console.log(`[RiskEngine getBorrows] Raw response type: ${typeof raw}`);
-    console.log(`[RiskEngine getBorrows] Raw response value:`, raw);
+      // Fetch borrow balance for each token
+      const borrowPositions = await Promise.all(
+        borrowedAddresses.map(async (tokenAddr) => {
+          try {
+            const [symbol, decimals] = await Promise.all([
+              publicClient.readContract({ address: tokenAddr, abi: erc20Abi, functionName: 'symbol' }),
+              publicClient.readContract({ address: tokenAddr, abi: erc20Abi, functionName: 'decimals' }),
+            ]);
 
-    // Handle different return types
-    let borrowUsd = 0;
-    if (typeof raw === "bigint") {
-      // RiskEngine returns values in 18 decimals (1e18)
-      borrowUsd = Number(raw) / 1e18;
-      console.log(`[RiskEngine getBorrows] Parsed as bigint: ${borrowUsd}`);
-    } else if (typeof raw === "number") {
-      borrowUsd = raw;
-      console.log(`[RiskEngine getBorrows] Parsed as number: ${borrowUsd}`);
-    } else if (Array.isArray(raw)) {
-      console.warn(`[RiskEngine getBorrows] Unexpected array response:`, raw);
-      borrowUsd = 0;
-    } else {
-      console.warn(`[RiskEngine getBorrows] Unexpected response type:`, typeof raw, raw);
+            const lookupSym = symbol === "WETH" ? "ETH" : symbol;
+            const vTokenAddr = vTokenAddressByChain[chainId]?.[lookupSym];
+
+            if (!vTokenAddr) {
+              console.warn(`[BorrowState] No vToken address for ${symbol}`);
+              return null;
+            }
+
+            const rawBalance = await publicClient.readContract({
+              address: vTokenAddr,
+              abi: VToken.abi,
+              functionName: "getBorrowBalance",
+              args: [acc],
+            }) as bigint;
+
+            const amount = Number(formatUnits(rawBalance, Number(decimals)));
+            const price = prices[lookupSym] || 0;
+            const usd = amount * price;
+
+            console.log(`[BorrowState] ${symbol}: ${amount.toFixed(6)} @ $${price} = $${usd.toFixed(2)}`);
+
+            return {
+              token: symbol,
+              amount,
+              usd,
+            };
+          } catch (err) {
+            console.error(`[BorrowState] Error fetching borrow for token ${tokenAddr}:`, err);
+            return null;
+          }
+        })
+      );
+
+      // Filter out nulls and zero balances
+      const validPositions = borrowPositions.filter(
+        (p) => p !== null && p.amount > 0
+      ) as { token: string; amount: number; usd: number }[];
+
+      const totalUsd = validPositions.reduce((sum, p) => sum + p.usd, 0);
+      console.log(`[BorrowState] Total borrowed: $${totalUsd.toFixed(2)} across ${validPositions.length} assets`);
+
+      // Return individual positions for transparency
+      return validPositions.length > 0 ? validPositions : [{ token: "USD", amount: 0, usd: 0 }];
+    } catch (error) {
+      console.error("[BorrowState] Failed to fetch borrow state:", error);
+      return [{ token: "USD", amount: 0, usd: 0 }];
     }
-
-    // Dust threshold: Treat values below $0.01 as zero
-    const DUST_THRESHOLD = 0.01;
-    const cleanBorrowUsd = borrowUsd < DUST_THRESHOLD ? 0 : borrowUsd;
-
-    console.log(`[RiskEngine getBorrows] Final: Raw=${raw.toString()}, USD=${borrowUsd.toFixed(6)}, Clean=${cleanBorrowUsd}`);
-
-    return [{ token: "USD", amount: cleanBorrowUsd, usd: cleanBorrowUsd }];
   }, [publicClient, chainId]);
 };
 
@@ -129,53 +220,119 @@ export const useFetchBorrowPositions = (chainId?: number, publicClient?: any) =>
   return useCallback(async (marginAccount: `0x${string}`) => {
     if (!publicClient || !chainId || !marginAccount) return [];
 
+    const borrowedAddresses = await publicClient.readContract({
+      address: marginAccount,
+      abi: Account.abi,
+      functionName: "getBorrows",
+    }) as `0x${string}`[];
+
+    const positions = await Promise.all(borrowedAddresses.map(async (tokenAddr) => {
+      const [symbol, decimals] = await Promise.all([
+        publicClient.readContract({ address: tokenAddr, abi: erc20Abi, functionName: 'symbol' }),
+        publicClient.readContract({ address: tokenAddr, abi: erc20Abi, functionName: 'decimals' }),
+      ]);
+
+      const lookupSym = symbol === "WETH" ? "ETH" : symbol;
+      const vTokenAddr = vTokenAddressByChain[chainId]?.[lookupSym];
+
+      if (!vTokenAddr) return null;
+
+      const rawBalance = await publicClient.readContract({
+        address: vTokenAddr,
+        abi: VToken.abi,
+        functionName: "getBorrowBalance",
+        args: [marginAccount],
+      }) as bigint;
+
+      const amount = formatUnits(rawBalance, Number(decimals));
+
+      return { asset: symbol, address: tokenAddr, decimals: Number(decimals), amount };
+    }));
+
+    return positions.filter(Boolean).filter(p => Number(p!.amount) > 0);
+  }, [publicClient, chainId]);
+};
+
+// Fetcher 5: Get borrow balances directly from VToken contracts (like test implementation)
+// Fetches ETH, USDC, and USDT (if available on the chain)
+export const useFetchDirectBorrowBalances = (chainId?: number, publicClient?: any) => {
+  return useCallback(async (marginAccount: `0x${string}`) => {
+    if (!publicClient || !chainId || !marginAccount) {
+      return { borrowedETH: 0n, borrowedUSDC: 0n, borrowedUSDT: 0n };
+    }
+
+    const addressList = getAddressList(chainId);
+    if (!addressList) {
+      return { borrowedETH: 0n, borrowedUSDC: 0n, borrowedUSDT: 0n };
+    }
+
     try {
-      // 1. Get list of borrowed token addresses from the Margin Account
-      const borrowedAddresses = await publicClient.readContract({
-        address: marginAccount,
-        abi: Account.abi,
-        functionName: "getBorrows",
-      }) as `0x${string}`[];
+      // Fetch borrowed ETH from VEther contract
+      let borrowedETHRaw = 0n;
+      try {
+        borrowedETHRaw = await publicClient.readContract({
+          address: addressList.vEtherContractAddress,
+          abi: VEther.abi,
+          functionName: "getBorrowBalance",
+          args: [marginAccount],
+        }) as bigint;
+      } catch (error) {
+        console.error("Failed to fetch ETH borrow balance:", error);
+      }
 
-      if (!borrowedAddresses || borrowedAddresses.length === 0) return [];
+      // Fetch borrowed USDC from VToken contract
+      let borrowedUSDCRaw = 0n;
+      try {
+        borrowedUSDCRaw = await publicClient.readContract({
+          address: addressList.vUSDCContractAddress,
+          abi: VToken.abi,
+          functionName: "getBorrowBalance",
+          args: [marginAccount],
+        }) as bigint;
+      } catch (error) {
+        console.error("Failed to fetch USDC borrow balance:", error);
+      }
 
-      // 2. Fetch details for each token
-      const positions = await Promise.all(borrowedAddresses.map(async (tokenAddr) => {
-        const [symbol, decimals] = await Promise.all([
-          publicClient.readContract({ address: tokenAddr, abi: erc20Abi, functionName: 'symbol' }),
-          publicClient.readContract({ address: tokenAddr, abi: erc20Abi, functionName: 'decimals' })
-        ]);
-
-        const sym = symbol as string;
-        // Handle WETH -> ETH mapping for vToken lookup
-        const lookupSym = sym === "WETH" ? "ETH" : sym;
-        let amount = "0";
-
-        // 3. Get the vToken (Debt Token) address for this asset
-        const vTokenAddr = vTokenAddressByChain[chainId]?.[lookupSym];
-
-        if (vTokenAddr) {
-          try {
-            const rawBalance = await publicClient.readContract({
-              address: vTokenAddr,
-              abi: VTokenABI,
-              functionName: "getBorrowBalance",
-              args: [marginAccount],
-            }) as bigint;
-            amount = formatUnits(rawBalance, Number(decimals));
-          } catch (err) {
-            console.warn(`Failed to fetch borrow balance for ${lookupSym}`, err);
-          }
+      // Fetch borrowed USDT from VToken contract (optional - only if configured)
+      let borrowedUSDTRaw = 0n;
+      if (addressList.vUSDTContractAddress) {
+        try {
+          borrowedUSDTRaw = await publicClient.readContract({
+            address: addressList.vUSDTContractAddress,
+            abi: VToken.abi,
+            functionName: "getBorrowBalance",
+            args: [marginAccount],
+          }) as bigint;
+        } catch (error) {
+          console.warn("Failed to fetch USDT borrow balance (may not be configured):", error);
         }
+      }
 
-        return { asset: sym, address: tokenAddr, decimals: Number(decimals), amount };
-      }));
+      // Convert to display units (ETH: 18 decimals, USDC: 6 decimals, USDT: 6 decimals)
+      const borrowedETH = borrowedETHRaw / (10n ** 18n);
+      const borrowedUSDC = borrowedUSDCRaw / (10n ** 6n);
+      const borrowedUSDT = borrowedUSDTRaw / (10n ** 6n);
 
-      // Filter out positions that have no debt (just in case)
-      return positions.filter(p => Number(p.amount) > 0);
-    } catch (e) {
-      console.error("Error fetching borrow positions:", e);
-      return [];
+      console.log(`[DirectBorrow] ETH: ${borrowedETH.toString()}, USDC: ${borrowedUSDC.toString()}, USDT: ${borrowedUSDT.toString()}`);
+
+      return {
+        borrowedETH,
+        borrowedUSDC,
+        borrowedUSDT,
+        borrowedETHRaw,
+        borrowedUSDCRaw,
+        borrowedUSDTRaw
+      };
+    } catch (error) {
+      console.error("Failed to fetch direct borrow balances:", error);
+      return {
+        borrowedETH: 0n,
+        borrowedUSDC: 0n,
+        borrowedUSDT: 0n,
+        borrowedETHRaw: 0n,
+        borrowedUSDCRaw: 0n,
+        borrowedUSDTRaw: 0n
+      };
     }
   }, [publicClient, chainId]);
 };
