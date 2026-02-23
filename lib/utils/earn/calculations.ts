@@ -1,7 +1,7 @@
 // Calculation utilities for Earn vaults (ETH, USDC, USDT)
 
 
-const SECONDS_PER_YEAR = 31536000; // 365 days
+const SECONDS_PER_YEAR = 31556952; // 365.2425 days (matches on-chain DefaultRateModel)
 const SECONDS_PER_MONTH = 2628000; // ~30.4 days
 
 // Rate model parameters (should match on-chain RateModel contract)
@@ -129,6 +129,36 @@ const calcAPYFromRate = (ratePerSecond: number): number => {
  */
 const calcAPRFromRate = (ratePerSecond: number): number => {
   return ratePerSecond * SECONDS_PER_YEAR;
+};
+
+// ============================================
+// ON-CHAIN RATE MODEL APY (DefaultRateModel)
+// ============================================
+
+// Protocol fee: 1% of borrow interest goes to protocol (matches on-chain)
+const ON_CHAIN_PROTOCOL_FEE = 0.01;
+
+/**
+ * @notice Calculate borrow APY from on-chain getBorrowRatePerSecond result
+ * @dev Matches old codebase formula: parseFloat(formatUnits(rate)) * SECS_PER_YEAR * 100
+ * @param ratePerSecond The raw rate from formatUnits(getBorrowRatePerSecond result)
+ * @returns Borrow APY as decimal (0.05 = 5%)
+ */
+const calcBorrowAPYFromRate = (ratePerSecond: number): number => {
+  if (ratePerSecond <= 0) return 0;
+  // Simple APR: rate * seconds_per_year (matches on-chain derivation)
+  return ratePerSecond * SECONDS_PER_YEAR;
+};
+
+/**
+ * @notice Calculate supply APY from on-chain borrow APY
+ * @dev Matches old codebase: supplyApy = borrowApy - (borrowApy * FEES)
+ * @param borrowAPY Borrow APY as decimal (from calcBorrowAPYFromRate)
+ * @param protocolFee Protocol fee as decimal (default 0.01 = 1%)
+ * @returns Supply APY as decimal
+ */
+const calcSupplyAPYFromRate = (borrowAPY: number, protocolFee: number = ON_CHAIN_PROTOCOL_FEE): number => {
+  return borrowAPY * (1 - protocolFee);
 };
 
 // ============================================
@@ -296,12 +326,17 @@ const earnCalc = {
   calcUtilizationRate,
   calcUtilizationPercent,
 
-  // APY
+  // APY (client-side fallback)
   calcBorrowAPY,
   calcSupplyAPY,
   calcSupplyAPYPercent,
   calcAPYFromRate,
   calcAPRFromRate,
+
+  // APY (on-chain DefaultRateModel — preferred)
+  calcBorrowAPYFromRate,
+  calcSupplyAPYFromRate,
+  ON_CHAIN_PROTOCOL_FEE,
 
   // Earnings
   calcProjectedEarnings,

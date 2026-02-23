@@ -2,8 +2,9 @@
 import { PublicClient, formatUnits } from "viem";
 import VToken from "@/abi/vanna/out/out/VToken.sol/VToken.json";
 import VEther from "@/abi/vanna/out/out/VEther.sol/VEther.json";
+import DefaultRateModel from "@/abi/vanna/out/out/DefaultRateModel.sol/DefaultRateModel.json";
 import { EarnAsset } from "@/lib/types";
-import { vTokenAddressByChain, TOKEN_DECIMALS } from "@/lib/utils/web3/token";
+import { vTokenAddressByChain, TOKEN_DECIMALS, rateModelAddressByChain } from "@/lib/utils/web3/token";
 import earnCalc from "./calculations";
 import { VaultStats } from "./earnFetchers";
 
@@ -121,7 +122,8 @@ export function buildVaultMulticallContracts(
 export function parseVaultMulticallResults(
   results: any[],
   chainId: number,
-  assets: EarnAsset[] = ["ETH", "USDC", "USDT"]
+  assets: EarnAsset[] = ["ETH", "USDC", "USDT"],
+  onChainRates?: Record<EarnAsset, number | null>
 ): Record<EarnAsset, VaultStats | null> {
   const vaultStats: Record<EarnAsset, VaultStats | null> = {
     ETH: null,
@@ -184,8 +186,20 @@ export function parseVaultMulticallResults(
       totalSupplyFormatted
     );
 
-    const supplyAPY = earnCalc.calcSupplyAPY(utilizationRate, 0.1);
-    const borrowAPY = earnCalc.calcBorrowAPY(utilizationRate);
+    // Use on-chain rate if available, otherwise fall back to client-side calculation
+    const onChainRate = onChainRates?.[asset];
+    let borrowAPY: number;
+    let supplyAPY: number;
+
+    if (onChainRate != null && onChainRate > 0) {
+      // On-chain DefaultRateModel rate (preferred — matches actual contract)
+      borrowAPY = earnCalc.calcBorrowAPYFromRate(onChainRate);
+      supplyAPY = earnCalc.calcSupplyAPYFromRate(borrowAPY);
+    } else {
+      // Client-side fallback
+      borrowAPY = earnCalc.calcBorrowAPY(utilizationRate);
+      supplyAPY = earnCalc.calcSupplyAPY(utilizationRate, 0.1);
+    }
 
     vaultStats[asset] = {
       totalAssets,
@@ -211,13 +225,62 @@ export function parseVaultMulticallResults(
  */
 
 
+/**
+ * Build 2nd multicall for on-chain borrow rates from DefaultRateModel
+ * Needs raw bigint results (available liquidity, total borrows) from 1st multicall
+ */
+export function buildRateModelMulticallContracts(
+  chainId: number,
+  vaultResults: any[],
+  assets: EarnAsset[] = ["ETH", "USDC", "USDT"]
+) {
+  const rateModelAddress = rateModelAddressByChain[chainId];
+  if (!rateModelAddress) return { contracts: [], orderedAssets: [] as EarnAsset[] };
+
+  const contracts: any[] = [];
+  const orderedAssets: EarnAsset[] = [];
+
+  for (const { asset } of EARN_TOKEN_CONFIG) {
+    if (!assets.includes(asset)) continue;
+
+    const indices = getAssetIndices(asset);
+    const totalAssetsResult = vaultResults[indices.totalAssets];
+    const totalBorrowsResult = vaultResults[indices.totalBorrows];
+
+    // Skip if vault data fetch failed
+    if (
+      totalAssetsResult?.status === "failure" ||
+      totalBorrowsResult?.status === "failure"
+    ) continue;
+
+    const totalAssets = totalAssetsResult?.result as bigint;
+    const totalBorrows = totalBorrowsResult?.result as bigint;
+    if (!totalAssets || !totalBorrows) continue;
+
+    // Available liquidity = totalAssets - totalBorrows (raw bigint for contract call)
+    const availableLiquidity = totalAssets > totalBorrows
+      ? totalAssets - totalBorrows
+      : BigInt(0);
+
+    contracts.push({
+      address: rateModelAddress,
+      abi: DefaultRateModel.abi,
+      functionName: "getBorrowRatePerSecond",
+      args: [availableLiquidity, totalBorrows],
+    });
+    orderedAssets.push(asset);
+  }
+
+  return { contracts, orderedAssets };
+}
+
 export async function fetchAllVaultsMulticall(
   chainId: number,
   publicClient: PublicClient,
   assets: EarnAsset[] = ["ETH", "USDC", "USDT"]
 ): Promise<Record<EarnAsset, VaultStats | null>> {
   try {
-    // Build multicall contracts
+    // Phase 1: Fetch vault data (totalAssets, totalSupply, getBorrows)
     const contracts = buildVaultMulticallContracts(chainId, assets);
 
     if (contracts.length === 0) {
@@ -226,27 +289,54 @@ export async function fetchAllVaultsMulticall(
     }
 
     console.log(
-      `🚀 Fetching ${assets.length} vaults with ${contracts.length} calls in 1 RPC request`
+      `Fetching ${assets.length} vaults with ${contracts.length} calls in 1 RPC request`
     );
 
-    // Execute multicall with error handling
-    const results = await publicClient.multicall({
+    const vaultResults = await publicClient.multicall({
       contracts,
-      allowFailure: true, // ✅ Handle individual failures gracefully
+      allowFailure: true,
     });
 
-    console.log(`✅ Multicall completed, parsing results...`);
+    // Phase 2: Fetch on-chain borrow rates from DefaultRateModel
+    let onChainRates: Record<EarnAsset, number | null> = {
+      ETH: null,
+      USDC: null,
+      USDT: null,
+    };
 
-    // Parse results
-    const vaultStats = parseVaultMulticallResults(results, chainId, assets);
+    try {
+      const { contracts: rateContracts, orderedAssets } =
+        buildRateModelMulticallContracts(chainId, vaultResults, assets);
 
-    // Log success
+      if (rateContracts.length > 0) {
+        const rateResults = await publicClient.multicall({
+          contracts: rateContracts,
+          allowFailure: true,
+        });
+
+        for (let i = 0; i < orderedAssets.length; i++) {
+          const result = rateResults[i];
+          if (result?.status !== "failure" && result?.result != null) {
+            // formatUnits converts the raw rate to a decimal number
+            onChainRates[orderedAssets[i]] = Number(
+              formatUnits(result.result as bigint, 18)
+            );
+          }
+        }
+      }
+    } catch (rateError) {
+      console.warn("Rate model multicall failed, using client-side APY fallback:", rateError);
+    }
+
+    // Parse results with on-chain rates
+    const vaultStats = parseVaultMulticallResults(vaultResults, chainId, assets, onChainRates);
+
     const successCount = Object.values(vaultStats).filter((v) => v !== null).length;
-    console.log(`✅ Successfully fetched ${successCount}/${assets.length} vaults`);
+    console.log(`Successfully fetched ${successCount}/${assets.length} vaults with on-chain APY`);
 
     return vaultStats;
   } catch (error) {
-    console.error("❌ Multicall failed:", error);
+    console.error("Multicall failed:", error);
     return { ETH: null, USDC: null, USDT: null };
   }
 }

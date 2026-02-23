@@ -4,7 +4,8 @@ import { formatUnits } from "viem";
 import { erc20Abi } from "viem";
 import VToken from "@/abi/vanna/out/out/VToken.sol/VToken.json";
 import VEther from "@/abi/vanna/out/out/VEther.sol/VEther.json";
-import { TOKEN_DECIMALS, vTokenAddressByChain, tokenAddressByChain } from "@/lib/utils/web3/token";
+import DefaultRateModel from "@/abi/vanna/out/out/DefaultRateModel.sol/DefaultRateModel.json";
+import { TOKEN_DECIMALS, vTokenAddressByChain, tokenAddressByChain, rateModelAddressByChain } from "@/lib/utils/web3/token";
 import { EarnAsset } from "@/lib/types";
 import earnCalc from "./calculations";
 
@@ -371,9 +372,37 @@ export const useFetchCompleteVaultStats = (
         totalSupplyFormatted
       );
 
-      // Calculate APYs based on utilization
-      const supplyAPY = earnCalc.calcSupplyAPY(utilizationRate, 0.1); // 10% protocol fee
-      const borrowAPY = earnCalc.calcBorrowAPY(utilizationRate);
+      // Fetch on-chain borrow rate from DefaultRateModel (preferred)
+      let borrowAPY: number;
+      let supplyAPY: number;
+
+      const rateModelAddress = rateModelAddressByChain[chainId];
+      if (rateModelAddress) {
+        try {
+          const availableLiquidityRaw = totalAssets > totalBorrows
+            ? totalAssets - totalBorrows
+            : BigInt(0);
+
+          const ratePerSecond = await publicClient.readContract({
+            address: rateModelAddress,
+            abi: DefaultRateModel.abi,
+            functionName: "getBorrowRatePerSecond",
+            args: [availableLiquidityRaw, totalBorrows],
+          }) as bigint;
+
+          const rateFormatted = Number(formatUnits(ratePerSecond, 18));
+          borrowAPY = earnCalc.calcBorrowAPYFromRate(rateFormatted);
+          supplyAPY = earnCalc.calcSupplyAPYFromRate(borrowAPY);
+        } catch {
+          // Fallback to client-side calculation
+          borrowAPY = earnCalc.calcBorrowAPY(utilizationRate);
+          supplyAPY = earnCalc.calcSupplyAPY(utilizationRate, 0.1);
+        }
+      } else {
+        // No rate model for this chain, use client-side
+        borrowAPY = earnCalc.calcBorrowAPY(utilizationRate);
+        supplyAPY = earnCalc.calcSupplyAPY(utilizationRate, 0.1);
+      }
 
       return {
         totalAssets,
@@ -473,8 +502,36 @@ export const useFetchAllVaultsData = (
           totalSupplyFormatted
         );
 
-        const supplyAPY = earnCalc.calcSupplyAPY(utilizationRate, 0.1);
-        const borrowAPY = earnCalc.calcBorrowAPY(utilizationRate);
+        // On-chain rate model APY (preferred), with client-side fallback
+        let borrowAPY: number;
+        let supplyAPY: number;
+
+        const rateModelAddress = rateModelAddressByChain[chainId];
+        if (rateModelAddress && includeAdvancedStats && totalBorrows != null) {
+          try {
+            const availableLiquidityRaw = totalAssets > totalBorrows
+              ? totalAssets - totalBorrows
+              : BigInt(0);
+
+            const ratePerSecond = await publicClient.readContract({
+              address: rateModelAddress,
+              abi: DefaultRateModel.abi,
+              functionName: "getBorrowRatePerSecond",
+              args: [availableLiquidityRaw, totalBorrows],
+            }) as bigint;
+
+            const rateFormatted = Number(formatUnits(ratePerSecond, 18));
+            borrowAPY = earnCalc.calcBorrowAPYFromRate(rateFormatted);
+            supplyAPY = earnCalc.calcSupplyAPYFromRate(borrowAPY);
+          } catch {
+            // Fallback to client-side calculation
+            borrowAPY = earnCalc.calcBorrowAPY(utilizationRate);
+            supplyAPY = earnCalc.calcSupplyAPY(utilizationRate, 0.1);
+          }
+        } else {
+          borrowAPY = earnCalc.calcBorrowAPY(utilizationRate);
+          supplyAPY = earnCalc.calcSupplyAPY(utilizationRate, 0.1);
+        }
 
         return {
           asset,
@@ -569,14 +626,38 @@ export const useFetchUserCompletePosition = (
         currentValueFormatted = Number(formatUnits(currentValue, decimals));
       }
 
-      // Calculate current APY
+      // Calculate current APY (on-chain preferred, client-side fallback)
       const totalAssetsFormatted = Number(formatUnits(totalAssets, decimals));
       const totalBorrowsFormatted = Number(formatUnits(totalBorrows, decimals));
       const utilizationRate = earnCalc.calcUtilizationRate(
         totalBorrowsFormatted,
         totalAssetsFormatted
       );
-      const currentAPY = earnCalc.calcSupplyAPY(utilizationRate, 0.1);
+
+      let currentAPY: number;
+      const rateModelAddress = rateModelAddressByChain[chainId];
+      if (rateModelAddress) {
+        try {
+          const availableLiquidityRaw = totalAssets > totalBorrows
+            ? totalAssets - totalBorrows
+            : BigInt(0);
+
+          const ratePerSecond = await publicClient.readContract({
+            address: rateModelAddress,
+            abi: DefaultRateModel.abi,
+            functionName: "getBorrowRatePerSecond",
+            args: [availableLiquidityRaw, totalBorrows],
+          }) as bigint;
+
+          const rateFormatted = Number(formatUnits(ratePerSecond, 18));
+          const borrowAPY = earnCalc.calcBorrowAPYFromRate(rateFormatted);
+          currentAPY = earnCalc.calcSupplyAPYFromRate(borrowAPY);
+        } catch {
+          currentAPY = earnCalc.calcSupplyAPY(utilizationRate, 0.1);
+        }
+      } else {
+        currentAPY = earnCalc.calcSupplyAPY(utilizationRate, 0.1);
+      }
 
       // Note: To calculate true earned interest, we'd need to track initial deposit
       // This would require reading historical events or maintaining state

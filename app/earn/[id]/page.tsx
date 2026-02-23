@@ -226,9 +226,9 @@ export default function EarnPage({ params }: { params: Promise<{ id: string }> }
             {activeTab === "your-positions" && <YourPositions />}
             {activeTab === "details" && <Details selectedAsset={id as any} />}
             {activeTab === "activity" && <ActivityTab />}
-            {activeTab === "analytics" && <AnalyticsTab />}
-            {activeTab === "margin-managers" && <MarginManagersTab />}
-            {activeTab === "collateral-limits" && <CollateralLimitsTab />}
+            {activeTab === "analytics" && <AnalyticsTab selectedAsset={id as any} />}
+            {activeTab === "margin-managers" && <MarginManagersTab selectedAsset={id as any} />}
+            {activeTab === "collateral-limits" && <CollateralLimitsTab selectedAsset={id as any} />}
           </article>
           <aside aria-label="Transaction Form">
             <Form />

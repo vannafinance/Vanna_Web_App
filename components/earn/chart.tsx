@@ -17,11 +17,13 @@ interface ChartProps {
   downtrend?: string; // Downtrend value (e.g., "0.07%") for farm type
   uptrend?: string; // Uptrend value (e.g., "0.07%") for farm type
   customData?: Array<{ date: string; amount: number }>; // Custom data override
+  supplyAPY?: number; // Live on-chain supply APY (decimal, e.g. 0.2394 = 23.94%)
+  borrowAPY?: number; // Live on-chain borrow APY (decimal, e.g. 0.2418 = 24.18%)
 }
 
 const filterOptions = ["3 Months", "6 Months", "1 Year", "All Time"];
 const dayOptions = ["1D", "7D", "30D", "1Y"];
-const depositApyOptions = ["Deposit APY", "Net APY"];
+const depositApyOptions = ["Deposit APY", "Borrow APY"];
 
 // Helper function to format date for display
 const formatDate = (dateString: string): string => {
@@ -92,7 +94,7 @@ const filterDataByDays = (
   });
 };
 
-export const Chart = ({ type, currencyTab, height, containerWidth, containerHeight, heading, downtrend, uptrend, customData }: ChartProps) => {
+export const Chart = ({ type, currencyTab, height, containerWidth, containerHeight, heading, downtrend, uptrend, customData, supplyAPY, borrowAPY }: ChartProps) => {
   const { isDark } = useTheme();
   const [selectedFilter, setSelectedFilter] = useState(filterOptions[0]);
   const [selectedCurrency, setSelectedCurrency] = useState<string>("usd");
@@ -294,9 +296,24 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
           )}
           {type === "deposit-apy" && (
             <div className="w-full h-fit flex flex-col gap-[4px]">
-              <p className={`text-[16px] font-semibold ${isDark ? "text-white" : ""}`}>0%</p>
-              <time className={`text-[12px] font-medium ${isDark ? "text-gray-400" : "text-[#5C5B5B]"}`} dateTime="2025-03-11T15:14:00">
-                03/11/2025 15:14
+              <p className={`text-[16px] font-semibold ${isDark ? "text-white" : ""}`}>
+                {selectedDepositApy === "Deposit APY"
+                  ? supplyAPY != null && supplyAPY > 0
+                    ? `${(supplyAPY * 100).toFixed(2)}%`
+                    : "0%"
+                  : borrowAPY != null && borrowAPY > 0
+                    ? `${(borrowAPY * 100).toFixed(2)}%`
+                    : "0%"}
+              </p>
+              <time className={`text-[12px] font-medium ${isDark ? "text-gray-400" : "text-[#5C5B5B]"}`} dateTime={new Date().toISOString()}>
+                {new Date().toLocaleString("en-US", {
+                  month: "2-digit",
+                  day: "2-digit",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12: false,
+                })}
               </time>
             </div>
           )}

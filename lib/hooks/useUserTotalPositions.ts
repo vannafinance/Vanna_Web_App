@@ -1,10 +1,8 @@
-// Hook to fetch user's total positions across all vaults
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { usePublicClient, useChainId, useAccount } from "wagmi";
-import { useFetchUserVaultPosition } from "@/lib/utils/earn/earnFetchers";
+// Hook to fetch protocol-level total deposits and APY across all vaults
+import { useMemo } from "react";
+import { useChainId } from "wagmi";
 import { useAllVaults } from "./useVaultData";
-import { EarnAsset } from "@/lib/types";
-import { SUPPORTED_TOKENS_BY_CHAIN } from "@/lib/utils/web3/token";
+import type { EarnAsset } from "@/lib/types";
 
 export interface TotalPositionData {
   totalDepositsUsd: number;
@@ -22,112 +20,17 @@ export interface TotalPositionData {
 }
 
 /**
- * Hook to get user's total positions across all vaults
+ * Hook to get protocol-level totals across all vaults
+ * Overall Deposit = sum of totalSupplyUsd across all vaults
+ * Net APY = weighted average supply APY across all vaults
  */
 export const useUserTotalPositions = () => {
-  const { address } = useAccount();
   const chainId = useChainId();
-  const publicClient = usePublicClient();
+  const { vaults, loading } = useAllVaults(chainId);
 
-  // Get all vaults data for prices and APY
-  const { vaults } = useAllVaults(chainId);
-
-  const [totalPosition, setTotalPosition] = useState<TotalPositionData>({
-    totalDepositsUsd: 0,
-    totalEarningsUsd: 0,
-    weightedAPY: 0,
-    positionsByAsset: {} as any,
-    loading: true,
-  });
-
-  const loadTotalPositions = useCallback(async () => {
-    if (!address || !publicClient || !chainId || vaults.length === 0) {
-      setTotalPosition((prev) => ({ ...prev, loading: false }));
-      return;
-    }
-
-    setTotalPosition((prev) => ({ ...prev, loading: true }));
-
-    try {
-      // Get supported assets for current chain
-      const supportedAssets = (
-        SUPPORTED_TOKENS_BY_CHAIN[chainId] || ["ETH", "USDC", "USDT"]
-      ).filter((t): t is EarnAsset => ["ETH", "USDC", "USDT"].includes(t));
-
-      // Fetch positions for all assets in parallel
-      const positionPromises = supportedAssets.map(async (asset) => {
-        const vault = vaults.find((v) => v.asset === asset);
-        if (!vault) return null;
-
-        // Dynamically import the hook function
-        const { useFetchUserVaultPosition } = await import(
-          "@/lib/utils/earn/earnFetchers"
-        );
-
-        try {
-          const positionFetcher = useFetchUserVaultPosition(
-            chainId,
-            asset,
-            address,
-            publicClient,
-            vault.priceUsd
-          );
-
-          const position = await positionFetcher();
-
-          if (!position || position.assetsValue === 0) {
-            return null;
-          }
-
-          return {
-            asset,
-            assetsValue: position.assetsValue,
-            assetsValueUsd: position.assetsValueUsd,
-            supplyAPY: vault.supplyAPY || 0,
-          };
-        } catch (error) {
-          console.error(`Error fetching position for ${asset}:`, error);
-          return null;
-        }
-      });
-
-      const positions = (await Promise.all(positionPromises)).filter(
-        (p): p is NonNullable<typeof p> => p !== null
-      );
-
-      // Calculate totals
-      let totalDepositsUsd = 0;
-      let weightedAPYSum = 0;
-      const positionsByAsset: TotalPositionData["positionsByAsset"] = {
-        ETH: { assetsValue: 0, assetsValueUsd: 0, supplyAPY: 0 },
-        USDC: { assetsValue: 0, assetsValueUsd: 0, supplyAPY: 0 },
-        USDT: { assetsValue: 0, assetsValueUsd: 0, supplyAPY: 0 },
-      };
-
-      positions.forEach((pos) => {
-        totalDepositsUsd += pos.assetsValueUsd;
-        weightedAPYSum += pos.assetsValueUsd * pos.supplyAPY;
-        positionsByAsset[pos.asset] = {
-          assetsValue: pos.assetsValue,
-          assetsValueUsd: pos.assetsValueUsd,
-          supplyAPY: pos.supplyAPY,
-        };
-      });
-
-      // Calculate weighted average APY
-      const weightedAPY =
-        totalDepositsUsd > 0 ? weightedAPYSum / totalDepositsUsd : 0;
-
-      setTotalPosition({
-        totalDepositsUsd,
-        totalEarningsUsd: 0, // Would need historical data to calculate actual earnings
-        weightedAPY,
-        positionsByAsset,
-        loading: false,
-      });
-    } catch (error) {
-      console.error("Error loading total positions:", error);
-      setTotalPosition({
+  const totalPosition = useMemo<TotalPositionData>(() => {
+    if (loading || vaults.length === 0) {
+      return {
         totalDepositsUsd: 0,
         totalEarningsUsd: 0,
         weightedAPY: 0,
@@ -136,25 +39,53 @@ export const useUserTotalPositions = () => {
           USDC: { assetsValue: 0, assetsValueUsd: 0, supplyAPY: 0 },
           USDT: { assetsValue: 0, assetsValueUsd: 0, supplyAPY: 0 },
         },
-        loading: false,
-      });
+        loading,
+      };
     }
-  }, [address, chainId, publicClient, vaults]);
 
-  // Load positions when dependencies change
-  useEffect(() => {
-    loadTotalPositions();
-  }, [loadTotalPositions]);
+    let totalDepositsUsd = 0;
+    let weightedAPYSum = 0;
+    const positionsByAsset: TotalPositionData["positionsByAsset"] = {
+      ETH: { assetsValue: 0, assetsValueUsd: 0, supplyAPY: 0 },
+      USDC: { assetsValue: 0, assetsValueUsd: 0, supplyAPY: 0 },
+      USDT: { assetsValue: 0, assetsValueUsd: 0, supplyAPY: 0 },
+    };
+
+    for (const vault of vaults) {
+      const supplyUsd = vault.totalSupplyUsd || 0;
+      const supplyAPY = vault.supplyAPY || 0;
+
+      totalDepositsUsd += supplyUsd;
+      weightedAPYSum += supplyUsd * supplyAPY;
+
+      positionsByAsset[vault.asset] = {
+        assetsValue: vault.totalAssetsFormatted || 0,
+        assetsValueUsd: supplyUsd,
+        supplyAPY,
+      };
+    }
+
+    const weightedAPY =
+      totalDepositsUsd > 0 ? weightedAPYSum / totalDepositsUsd : 0;
+
+    return {
+      totalDepositsUsd,
+      totalEarningsUsd: 0,
+      weightedAPY,
+      positionsByAsset,
+      loading: false,
+    };
+  }, [vaults, loading]);
 
   return {
     totalPosition,
-    refetch: loadTotalPositions,
+    refetch: () => {},
   };
 };
 
 /**
  * Generate historical deposit data for Overall Deposit chart
- * Simulates growth based on current total position
+ * Simulates growth based on current total protocol deposits
  */
 export const useOverallDepositHistory = () => {
   const { totalPosition } = useUserTotalPositions();
@@ -203,7 +134,7 @@ export const useOverallDepositHistory = () => {
 
 /**
  * Generate Net APY earnings history
- * Shows accumulated earnings based on weighted APY
+ * Shows accumulated earnings based on weighted APY across all vaults
  */
 export const useNetAPYHistory = () => {
   const { totalPosition } = useUserTotalPositions();
@@ -225,7 +156,7 @@ export const useNetAPYHistory = () => {
       const monthsPassed = 12 - i;
       const yearsPassed = monthsPassed / 12;
 
-      // Simulate earnings: principal * APY * time
+      // Simulate earnings: totalDeposits * weightedAPY * time
       const earnings =
         totalPosition.totalDepositsUsd *
         totalPosition.weightedAPY *

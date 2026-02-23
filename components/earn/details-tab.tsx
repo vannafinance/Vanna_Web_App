@@ -6,44 +6,29 @@ import { formatValue } from "@/lib/utils/format-value";
 import { useTheme } from "@/contexts/theme-context";
 import { formatUsdValue } from "@/lib/utils/prices/priceFeed";
 import { EarnAsset } from "@/lib/types";
-import { vTokenAddressByChain, tokenAddressByChain } from "@/lib/utils/web3/token";
+import {
+  vTokenAddressByChain,
+  tokenAddressByChain,
+  rateModelAddressByChain,
+  riskEngineAddressByChain,
+  brokerAddressByChain,
+  oracleAddressByChain,
+} from "@/lib/utils/web3/token";
 import { useVaultData } from "@/lib/hooks/useVaultData";
 
 const maxEth = 1;
 const maxUsd = 200000;
 
-const addresses = [
-  {
-    heading: "Underlying ETH token",
-    address: "0x8292...17eD",
-    tooltip: "Address of the underlying ETH token",
-  },
-  {
-    heading: "ETH vault",
-    address: "0xaf53...9BB2",
-    tooltip: "Vault contract holding ETH liquidity",
-  },
-  {
-    heading: "Risk Curator",
-    address: "0x9453...5685",
-    tooltip: "Manages protocol risk parameters",
-  },
-  {
-    heading: "Fee Receiver",
-    address: "0xbE6b...EDF3",
-    tooltip: "Receives protocol fees",
-  },
-  {
-    heading: "Oracle router address",
-    address: "0xD188...2F47",
-    tooltip: "Routes price data from oracles",
-  },
-  {
-    heading: "Interest rate model address",
-    address: "0xfBae...8BcC",
-    tooltip: "Defines borrowing and lending interest rates",
-  },
-];
+const shortenAddress = (addr: `0x${string}` | undefined): string => {
+  if (!addr) return "N/A";
+  return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+};
+
+const BLOCK_EXPLORER_BY_CHAIN: Record<number, string> = {
+  42161: "https://arbiscan.io",
+  10: "https://optimistic.etherscan.io",
+  8453: "https://basescan.org",
+};
 
 export const Details = ({ selectedAsset = "ETH" as EarnAsset }) => {
   const { isDark } = useTheme();
@@ -75,9 +60,15 @@ export const Details = ({ selectedAsset = "ETH" as EarnAsset }) => {
     };
   }, [vaultStats]);
 
-  // Get contract addresses
-  const vTokenAddress = vTokenAddressByChain[chainId || 1]?.[selectedAsset];
-  const tokenAddress = tokenAddressByChain[chainId || 1]?.[selectedAsset];
+  // Get contract addresses (dynamic per chain)
+  const cid = chainId || 8453;
+  const vTokenAddress = vTokenAddressByChain[cid]?.[selectedAsset];
+  const tokenAddress = tokenAddressByChain[cid]?.[selectedAsset];
+  const riskCuratorAddress = riskEngineAddressByChain[cid];
+  const feeReceiverAddress = brokerAddressByChain[cid];
+  const oracleRouterAddress = oracleAddressByChain[cid];
+  const rateModelAddress = rateModelAddressByChain[cid];
+  const explorerUrl = BLOCK_EXPLORER_BY_CHAIN[cid];
 
   // Generate stats items
   const items = useMemo(() => {
@@ -218,24 +209,46 @@ export const Details = ({ selectedAsset = "ETH" as EarnAsset }) => {
           <div className="w-full h-full grid grid-cols-3 grid-rows-2">
             <StatsCard
               heading={`Underlying ${selectedAsset} token`}
-              address={tokenAddress ? `${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)}` : "N/A"}
+              address={shortenAddress(tokenAddress)}
+              fullAddress={tokenAddress}
+              explorerUrl={explorerUrl}
               tooltip={`Address of the underlying ${selectedAsset} token`}
             />
             <StatsCard
               heading={`${selectedAsset} vault`}
-              address={vTokenAddress ? `${vTokenAddress.slice(0, 6)}...${vTokenAddress.slice(-4)}` : "N/A"}
+              address={shortenAddress(vTokenAddress)}
+              fullAddress={vTokenAddress}
+              explorerUrl={explorerUrl}
               tooltip={`Vault contract holding ${selectedAsset} liquidity`}
             />
-            {addresses.slice(2).map((item, idx) => {
-              return (
-                <StatsCard
-                  key={idx}
-                  heading={item.heading}
-                  address={item.address}
-                  tooltip={item.tooltip}
-                />
-              );
-            })}
+            <StatsCard
+              heading="Risk Curator"
+              address={shortenAddress(riskCuratorAddress)}
+              fullAddress={riskCuratorAddress}
+              explorerUrl={explorerUrl}
+              tooltip="Manages protocol risk parameters"
+            />
+            <StatsCard
+              heading="Fee Receiver"
+              address={shortenAddress(feeReceiverAddress)}
+              fullAddress={feeReceiverAddress}
+              explorerUrl={explorerUrl}
+              tooltip="Receives protocol fees"
+            />
+            <StatsCard
+              heading="Oracle router address"
+              address={shortenAddress(oracleRouterAddress)}
+              fullAddress={oracleRouterAddress}
+              explorerUrl={explorerUrl}
+              tooltip="Routes price data from oracles"
+            />
+            <StatsCard
+              heading="Interest rate model address"
+              address={shortenAddress(rateModelAddress)}
+              fullAddress={rateModelAddress}
+              explorerUrl={explorerUrl}
+              tooltip="Defines borrowing and lending interest rates"
+            />
           </div>
         </article>
       </div>

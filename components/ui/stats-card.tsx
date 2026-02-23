@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { PieChart } from "./pie-chart";
 import { useTheme } from "@/contexts/theme-context";
 
@@ -9,6 +10,8 @@ interface StatsCardProps {
   pie?: boolean;
   tooltip?: string;
   address?: string;
+  fullAddress?: string;
+  explorerUrl?: string;
 }
 
 export const StatsCard = ({
@@ -18,8 +21,37 @@ export const StatsCard = ({
   subInfo,
   pie,
   address,
+  fullAddress,
+  explorerUrl,
 }: StatsCardProps) => {
   const { isDark } = useTheme();
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    const addrToCopy = fullAddress || address;
+    if (!addrToCopy || addrToCopy === "N/A") return;
+    try {
+      await navigator.clipboard.writeText(addrToCopy);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // Fallback for older browsers
+      const textArea = document.createElement("textarea");
+      textArea.value = addrToCopy;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textArea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    }
+  };
+
+  const handleOpenExplorer = () => {
+    const addr = fullAddress || address;
+    if (!addr || addr === "N/A" || !explorerUrl) return;
+    window.open(`${explorerUrl}/address/${addr}`, "_blank", "noopener,noreferrer");
+  };
   if (pie && percentage) {
     return (
       <div className={`w-full h-fit rounded-[12px] py-[32px] px-[20px] flex ${
@@ -113,10 +145,14 @@ export const StatsCard = ({
               <div className={`text-[14px] font-semibold ${
                 isDark ? "text-white" : "text-[#111111]"
               }`}>
-                {address.slice(0, 6)}...{address.slice(-4)}
+                {address}
               </div>
               <div className="w-fit h-fit flex gap-[5px]">
-                <div className="cursor-pointer w-[12px] h-[12px] flex items-center  ">
+                <div
+                  className="cursor-pointer w-[12px] h-[12px] flex items-center"
+                  onClick={handleOpenExplorer}
+                  title="View on block explorer"
+                >
                   <svg
                     width="9"
                     height="9"
@@ -130,25 +166,47 @@ export const StatsCard = ({
                     />
                   </svg>
                 </div>
-                <div className="cursor-pointer w-[12px] h-[12px] flex items-center  ">
-                  <svg
-                    width="10"
-                    height="11"
-                    viewBox="0 0 10 11"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M1.875 4.875C1.875 3.461 1.875 2.7535 2.3145 2.3145C2.7535 1.875 3.461 1.875 4.875 1.875H6.375C7.789 1.875 8.4965 1.875 8.9355 2.3145C9.375 2.7535 9.375 3.461 9.375 4.875V7.375C9.375 8.789 9.375 9.4965 8.9355 9.9355C8.4965 10.375 7.789 10.375 6.375 10.375H4.875C3.461 10.375 2.7535 10.375 2.3145 9.9355C1.875 9.4965 1.875 8.789 1.875 7.375V4.875Z"
-                      stroke={isDark ? "#FFFFFF" : "#111111"}
-                      strokeWidth="0.75"
-                    />
-                    <path
-                      d="M1.875 8.875C1.47718 8.875 1.09564 8.71696 0.81434 8.43566C0.533035 8.15436 0.375 7.77282 0.375 7.375V4.375C0.375 2.4895 0.375 1.5465 0.961 0.961C1.547 0.3755 2.4895 0.375 4.375 0.375H6.375C6.77282 0.375 7.15436 0.533035 7.43566 0.81434C7.71696 1.09564 7.875 1.47718 7.875 1.875"
-                      stroke={isDark ? "#FFFFFF" : "#111111"}
-                      strokeWidth="0.75"
-                    />
-                  </svg>
+                <div
+                  className="cursor-pointer w-[12px] h-[12px] flex items-center"
+                  onClick={handleCopy}
+                  title={copied ? "Copied!" : "Copy address"}
+                >
+                  {copied ? (
+                    <svg
+                      width="10"
+                      height="10"
+                      viewBox="0 0 10 10"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M1.5 5.5L4 8L8.5 2"
+                        stroke="#22C55E"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  ) : (
+                    <svg
+                      width="10"
+                      height="11"
+                      viewBox="0 0 10 11"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M1.875 4.875C1.875 3.461 1.875 2.7535 2.3145 2.3145C2.7535 1.875 3.461 1.875 4.875 1.875H6.375C7.789 1.875 8.4965 1.875 8.9355 2.3145C9.375 2.7535 9.375 3.461 9.375 4.875V7.375C9.375 8.789 9.375 9.4965 8.9355 9.9355C8.4965 10.375 7.789 10.375 6.375 10.375H4.875C3.461 10.375 2.7535 10.375 2.3145 9.9355C1.875 9.4965 1.875 8.789 1.875 7.375V4.875Z"
+                        stroke={isDark ? "#FFFFFF" : "#111111"}
+                        strokeWidth="0.75"
+                      />
+                      <path
+                        d="M1.875 8.875C1.47718 8.875 1.09564 8.71696 0.81434 8.43566C0.533035 8.15436 0.375 7.77282 0.375 7.375V4.375C0.375 2.4895 0.375 1.5465 0.961 0.961C1.547 0.3755 2.4895 0.375 4.375 0.375H6.375C6.77282 0.375 7.15436 0.533035 7.43566 0.81434C7.71696 1.09564 7.875 1.47718 7.875 1.875"
+                        stroke={isDark ? "#FFFFFF" : "#111111"}
+                        strokeWidth="0.75"
+                      />
+                    </svg>
+                  )}
                 </div>
               </div>
             </div>

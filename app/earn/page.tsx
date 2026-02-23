@@ -87,49 +87,47 @@ export default function Earn() {
   );
   return (
     <main>
-      {userAddress && (
-        <section className="p-[40px] w-full h-fit flex gap-[24px]" aria-label="User Dashboard">
-          <div className="flex gap-[16px] w-full h-fit">
-            <article className="w-[437.33px] h-fit">
-              {depositLoading ? (
-                <div className="w-[437.33px] h-[331px] flex items-center justify-center border rounded-[16px]">
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#703AE6]"></div>
-                    <p className="text-[#999999] text-xs">Loading deposits...</p>
-                  </div>
+      <section className="p-[40px] w-full h-fit flex gap-[24px]" aria-label="Protocol Dashboard">
+        <div className="flex gap-[16px] w-full h-fit">
+          <article className="w-[437.33px] h-fit">
+            {depositLoading ? (
+              <div className="w-[437.33px] h-[331px] flex items-center justify-center border rounded-[16px]">
+                <div className="flex flex-col items-center gap-3">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#703AE6]"></div>
+                  <p className="text-[#999999] text-xs">Loading deposits...</p>
                 </div>
-              ) : (
-                <Chart
-                  containerWidth="w-[437.33px]"
-                  containerHeight="h-[331px]"
-                  type="overall-deposit"
-                  customData={depositHistory}
-                />
-              )}
-            </article>
-            <article className="w-[437.33px] h-fit">
-              {apyLoading ? (
-                <div className="w-[437.33px] h-[331px] flex items-center justify-center border rounded-[16px]">
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#703AE6]"></div>
-                    <p className="text-[#999999] text-xs">Loading APY...</p>
-                  </div>
+              </div>
+            ) : (
+              <Chart
+                containerWidth="w-[437.33px]"
+                containerHeight="h-[331px]"
+                type="overall-deposit"
+                customData={depositHistory}
+              />
+            )}
+          </article>
+          <article className="w-[437.33px] h-fit">
+            {apyLoading ? (
+              <div className="w-[437.33px] h-[331px] flex items-center justify-center border rounded-[16px]">
+                <div className="flex flex-col items-center gap-3">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#703AE6]"></div>
+                  <p className="text-[#999999] text-xs">Loading APY...</p>
                 </div>
-              ) : (
-                <Chart
-                  containerWidth="w-[437.33px]"
-                  containerHeight="h-[331px]"
-                  type="net-apy"
-                  customData={apyHistory}
-                />
-              )}
-            </article>
-            <aside className="w-full h-fit">
-              <RewardsTable />
-            </aside>
-          </div>
-        </section>
-      )}
+              </div>
+            ) : (
+              <Chart
+                containerWidth="w-[437.33px]"
+                containerHeight="h-[331px]"
+                type="net-apy"
+                customData={apyHistory}
+              />
+            )}
+          </article>
+          <aside className="w-full h-fit">
+            <RewardsTable />
+          </aside>
+        </div>
+      </section>
 
       <section className="h-[206px] w-full pt-[40px] px-[40px]" aria-label="Account Statistics">
         <AccountStats

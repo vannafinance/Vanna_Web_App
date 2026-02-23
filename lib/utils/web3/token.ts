@@ -1,6 +1,39 @@
 import { poolsPlaceholder } from "@/lib/constants";
 import { arbAddressList, arbTokensAddress, baseAddressList, baseTokensAddress, opAddressList, opTokensAddress } from "@/lib/web3Constants";
 
+// DefaultRateModel contract address per chain (for on-chain APY calculation)
+export const rateModelAddressByChain: Record<number, `0x${string}`> = {
+  42161: arbAddressList.rateModelContractAddress as `0x${string}`,   // Arbitrum
+  10:    opAddressList.rateModelContractAddress as `0x${string}`,    // Optimism
+  8453:  baseAddressList.rateModelContractAddress as `0x${string}`,  // Base
+};
+
+// Risk Engine (Risk Curator) contract address per chain
+export const riskEngineAddressByChain: Record<number, `0x${string}`> = {
+  42161: arbAddressList.riskEngineContractAddress as `0x${string}`,  // Arbitrum
+  10:    opAddressList.riskEngineContractAddress as `0x${string}`,   // Optimism
+  8453:  baseAddressList.riskEngineContractAddress as `0x${string}`, // Base
+};
+
+// Broker (Fee Receiver) address per chain
+export const brokerAddressByChain: Record<number, `0x${string}`> = {
+  42161: arbAddressList.broker as `0x${string}`,  // Arbitrum
+  10:    opAddressList.broker as `0x${string}`,    // Optimism
+  8453:  baseAddressList.broker as `0x${string}`,  // Base
+};
+
+// Oracle router address per chain (where available)
+export const oracleAddressByChain: Record<number, `0x${string}`> = {
+  10: opAddressList.OracleFacade as `0x${string}`, // Optimism (only chain with oracle facade)
+};
+
+// AccountManager contract address per chain
+export const accountManagerAddressByChain: Record<number, `0x${string}`> = {
+  42161: arbAddressList.accountManagerContractAddress as `0x${string}`,  // Arbitrum
+  10:    opAddressList.accountManagerContractAddress as `0x${string}`,   // Optimism
+  8453:  baseAddressList.accountManagerContractAddress as `0x${string}`, // Base
+};
+
 export const TOKEN_OPTIONS = poolsPlaceholder.map(p=>p.name)  //["ETH", "USDC", "USDT"]
 
 
