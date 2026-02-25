@@ -44,6 +44,17 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(
            /////////////////////////////////
             */}
 
+
+
+        <input
+          ref={inputRef}
+          type="radio"
+          {...rest}
+          className="peer absolute opacity-0 h-5 w-5"
+        />
+
+        {/* //////////////////////
+            Visual radio button
            ////////////////////// */
         }
 
@@ -99,6 +110,23 @@ export interface RadioGroupProps {
   className?: string;
 }
 
+
+
+export const RadioGroup = ({
+  name,
+  value,
+  onChange,
+  children,
+  error = false,
+  className = "",
+}: RadioGroupProps) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (onChange) {
+      onChange(e.target.value);
+    }
+  };
+
+  return (
     <div className={`space-y-3 ${className}`}>
       {React.Children.map(children, (child) => {
         if (React.isValidElement<RadioProps>(child)) {

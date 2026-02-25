@@ -1,6 +1,23 @@
 "use client";
 
 import React, { useState } from "react";
+import { useTheme } from "@/contexts/theme-context";
+
+// Toggle Props
+interface ToggleProps {
+  onToggle: (state: boolean) => void;
+  defaultChecked?: boolean;
+  size?: "small" | "medium" | "large";
+  disabled?: boolean;
+}
+
+// Circle size
+const circleSize = {
+  small: "w-4 h-4",
+  medium: "w-5 h-5",
+  large: "w-6 h-6",
+};
+
 // Wrapper size (Figma: 48×24 for small)
 const wrapperSize = {
     small: "w-12 h-6", // 48×24px - matches Figma design

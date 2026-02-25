@@ -9,6 +9,14 @@ import {
 } from "@/lib/constants";
 import Image from "next/image";
 import { AmountBreakdownDialogue } from "../ui/amount-breakdown-dialogue";
+
+import {
+  DEPOSIT_PERCENTAGES,
+  PERCENTAGE_COLORS,
+  DEPOSIT_AMOUNT_BREAKDOWN_DATA,
+  UNIFIED_BALANCE_BREAKDOWN_DATA,
+  BALANCE_TYPE_OPTIONS,
+} from "@/lib/constants/margin";
 import { useTheme } from "@/contexts/theme-context";
 
 import { usePublicClient, useAccount } from "wagmi";

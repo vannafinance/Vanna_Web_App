@@ -125,6 +125,31 @@ export default function OrderPlacementForm({
   const orderSide: OrderSide = watch("orderSide");
   const isLoopOn = watch("loopEnabled");
   const noOfLoops = watch("noOfLoops");
+  const triggerMode = watch("triggerMode");
+  const takeProfitEnabled = watch("takeProfitEnabled");
+  const multiTpEnabled = watch("multipleTpEnabled");
+  const stopLossEnabled = watch("stopLossEnabled");
+  const rrRatio = watch("stopLoss.rrRatio");
+  const customRR = watch("stopLoss.customRR");
+  const timeInForce = watch("timeInForce");
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "multipleTakeProfits",
+  });
+
+  // ✅ MAX 3 ROWS GUARD
+  const handleAddTp = () => {
+    // if (fields.length >= MAX_TP_ROWS) return;
+    append(EMPTY_TP_ROW);
+  };
+
+  useEffect(() => {
+    if (mode === "edit" && initialValues) {
+      reset(initialValues);
+    }
+  }, [mode, initialValues, reset]);
+
   // as soon as multiTP is enabled, add a row if none exist
   useEffect(() => {
     if (multiTpEnabled && fields.length === 0) {

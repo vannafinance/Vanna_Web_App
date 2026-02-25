@@ -667,7 +667,7 @@ export const LeverageAssetsTab = () => {
     }
 
     // For now, let's repay the first found debt (or loop through them)
-    const debt = activeBorrows[0];
+    const debt = activeBorrows[0]!;
 
     await executeRepay({
       asset: debt.asset, // 2. Use the actual borrowed asset

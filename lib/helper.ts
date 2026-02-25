@@ -162,6 +162,54 @@ export const formatStringToUnits = (coin: string, balance: number) => {
 };
 
 
+// Order book helpers for spot trading
+export interface OrderBookEntry {
+  price: number;
+  amount: number;
+  total: number;
+  side: "buy" | "sell";
+}
+
+export function groupOrdersByTick(
+  orders: OrderBookEntry[],
+  tick: number
+): OrderBookEntry[] {
+  if (!orders.length || tick <= 0) return orders;
+
+  const grouped = new Map<number, OrderBookEntry>();
+
+  for (const order of orders) {
+    const bucket = Math.floor(order.price / tick) * tick;
+    const key = parseFloat(bucket.toFixed(10));
+
+    if (grouped.has(key)) {
+      const existing = grouped.get(key)!;
+      existing.amount += order.amount;
+      existing.total += order.total;
+    } else {
+      grouped.set(key, { ...order, price: key });
+    }
+  }
+
+  return Array.from(grouped.values());
+}
+
+export function calculateRatio(
+  buys: OrderBookEntry[],
+  sells: OrderBookEntry[]
+): { buyRatio: number; sellRatio: number } {
+  const buyTotal = buys.reduce((sum, o) => sum + o.amount, 0);
+  const sellTotal = sells.reduce((sum, o) => sum + o.amount, 0);
+  const total = buyTotal + sellTotal;
+
+  if (total === 0) return { buyRatio: 50, sellRatio: 50 };
+
+  return {
+    buyRatio: Math.round((buyTotal / total) * 100),
+    sellRatio: Math.round((sellTotal / total) * 100),
+  };
+}
+
 export const ceilWithPrecision = (n: string, precision = 3) => {
   const num = parseFloat(n);
   // Check if the conversion was successful

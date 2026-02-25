@@ -2,6 +2,25 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useTheme } from "@/contexts/theme-context";
+
+interface LeverageSliderProps {
+  min?: number;
+  max?: number;
+  step?: number;
+  value: number;
+  onChange: (value: number) => void;
+  markers?: number[];
+}
+
+export const LeverageSlider = ({
+  min = 0,
+  max = 10,
+  step = 0.1,
+  value,
+  onChange,
+  markers = [0,  2, 4, 6, 8, 10],
+}: LeverageSliderProps) => {
   const { isDark } = useTheme();
   const [isDragging, setIsDragging] = useState(false);
   const sliderRef = useRef<HTMLDivElement>(null);

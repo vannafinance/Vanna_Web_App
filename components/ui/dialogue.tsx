@@ -2,6 +2,21 @@ import { Button } from "./button";
 import { Checkbox } from "./Checkbox";
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { useTheme } from "@/contexts/theme-context";
+
+interface Dialogue {
+  description?: string;
+  heading: string;
+  content: {
+    line: string;
+    points?: string[];
+  }[];
+  checkboxContent?: string;
+  buttonText: string;
+  onClose?: () => void;
+  onOpen?: () => void;
+  buttonOnClick: () => void;
+  onCheckboxChange?: (checked: boolean) => void;
   buttonDisabled?: boolean;
   loadingMessage?: string;
 }
@@ -104,6 +119,32 @@ export const Dialogue = (props: Dialogue) => {
         </motion.div>
       )}
 
+      {props.loadingMessage && (
+        <motion.div
+          className={`text-[14px] font-medium text-center ${
+            isDark ? "text-[#919191]" : "text-[#76737B]"
+          }`}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.2 }}
+        >
+          {props.loadingMessage}
+        </motion.div>
+      )}
+
+      <motion.div
+        className="flex flex-col gap-[12px] flex-shrink-0 mt-[24px]"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{
+          duration: 0.3,
+          delay: 0.35 + props.content.length * 0.05,
+        }}
+      >
+        <Button
+          type="solid"
+          size="medium"
+          text={props.buttonText}
           disabled={props.buttonDisabled || (props.checkboxContent ? !isChecked : false)}
           onClick={props.buttonOnClick}
         />

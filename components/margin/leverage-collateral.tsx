@@ -7,6 +7,17 @@ import { RepayLoanTab } from "./repay-loan-tab";
 import { TransferCollateral } from "./transfer-collateral";
 import { AnimatedTabs, TabItem } from "../ui/animated-tabs";
 import { LEVERAGE_TABS } from "@/lib/constants/margin";
+import { useTheme } from "@/contexts/theme-context";
+
+interface LeverageCollateralProps {
+  switchToRepayTab?: boolean;
+  onTabSwitched?: () => void;
+}
+
+export const LeverageCollateral = ({
+  switchToRepayTab,
+  onTabSwitched,
+}: LeverageCollateralProps = {}) => {
   const { isDark } = useTheme();
   const [activeTab, setActiveTab] = useState<string>("leverage-assets");
 

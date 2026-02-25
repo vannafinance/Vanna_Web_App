@@ -4,6 +4,12 @@ import { iconPaths } from "@/lib/constants";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
+import { useTheme } from "@/contexts/theme-context";
+
+interface Dropdown {
+  items: string[];
+  setSelectedOption: React.Dispatch<React.SetStateAction<string>>;
+  selectedOption: string;
   classname:string
   dropdownClassname:string
 }

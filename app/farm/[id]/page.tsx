@@ -19,7 +19,15 @@ import { MARGIN_ACCOUNT_INFO_ITEMS, MARGIN_ACCOUNT_MORE_DETAILS_ITEMS } from "@/
 import { InfoCard } from "@/components/margin/info-card";
 import { motion } from "framer-motion";
 import { AnimatedTabs } from "@/components/ui/animated-tabs";
-// import { items } from "@/components/earn/details-tab";
+// Statistics items for farm vault details
+const items = [
+  { heading: "Total Value Locked", mainInfo: "$0.00", subInfo: "0 tokens", tooltip: "Total value locked in this vault" },
+  { heading: "APR", mainInfo: "0.00%", subInfo: "Annual", tooltip: "Annual percentage rate" },
+  { heading: "Daily APR", mainInfo: "0.00%", subInfo: "Daily", tooltip: "Daily percentage rate" },
+  { heading: "Your Deposit", mainInfo: "$0.00", subInfo: "0 tokens", tooltip: "Your deposited amount" },
+  { heading: "Your Earnings", mainInfo: "$0.00", subInfo: "0 tokens", tooltip: "Your earned rewards" },
+  { heading: "Pool Share", mainInfo: "0.00%", subInfo: "of total", tooltip: "Your share of the pool" },
+];
 import { StatsCard } from "@/components/ui/stats-card";
 
 const UI_TABS = [

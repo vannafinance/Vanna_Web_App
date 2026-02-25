@@ -4,6 +4,23 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { FIELD_FORMAT_MAP, LARGE_FORMAT_FIELDS } from "@/lib/constants/margin";
 import { formatValue, FormatType } from "@/lib/utils/format-value";
+import { useTheme } from "@/contexts/theme-context";
+
+interface InfoItem {
+  id: string;
+  name: string;
+}
+
+interface ExpandableSection {
+  title: string;
+  headingBold?: boolean;
+  items?: InfoItem[];
+  defaultExpanded?: boolean;
+  delay?: number;
+}
+
+interface InfoProps {
+  data: {
     [key: string]: number | string | null | undefined;
   };
   items?: InfoItem[];
@@ -43,6 +60,26 @@ export const InfoCard = ({
   expandableSections = [],
   showExpandable = false,
 }: InfoProps) => {
+  const { isDark } = useTheme();
+  // Track expanded state for each section
+  const [expandedStates, setExpandedStates] = useState<Record<string, boolean>>(
+    expandableSections.reduce(
+      (acc, section) => ({
+        ...acc,
+        [section.title]: section.defaultExpanded ?? false,
+      }),
+      {}
+    )
+  );
+
+  const toggleExpanded = (title: string) => {
+    setExpandedStates((prev) => ({ ...prev, [title]: !prev[title] }));
+  };
+
+  // Render a single info item
+  const renderItem = (item: InfoItem, idx: number, useAnimate = false) => (
+    <motion.div
+      key={item.id}
       className={`flex justify-between ${isDark ? "text-white" : ""}`}
       initial={{ opacity: 0, x: -10 }}
       {...(useAnimate

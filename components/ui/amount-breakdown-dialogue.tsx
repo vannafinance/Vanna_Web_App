@@ -2,6 +2,22 @@ import { iconPaths } from "@/lib/constants";
 import Image from "next/image";
 import { Button } from "./button";
 import { motion } from "framer-motion";
+import { useTheme } from "@/contexts/theme-context";
+
+interface AmountBreakdownDialogueProps {
+  heading: string;
+  asset: string;
+  totalDeposit: number;
+  breakdown: {
+    name: string;
+    value: number;
+  }[];
+  onClose?: () => void;
+}
+
+export const AmountBreakdownDialogue = (
+  props: AmountBreakdownDialogueProps
+) => {
   const { isDark } = useTheme();
   
   return (

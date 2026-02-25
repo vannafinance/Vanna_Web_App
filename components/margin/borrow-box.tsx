@@ -18,6 +18,19 @@ interface BorrowBoxProps {
   setLeverage: (value: number) => void;
   totalDeposit: number;
   onBorrowItemsChange?: (items: BorrowInfo[]) => void;
+  onAssetChange?: (asset: string) => void;
+  borrowAmount?: number;
+  maxBorrowAmount?: number;
+  assetPrice?: number;
+  supportedTokens?: string[];
+}
+
+export const BorrowBox = ({
+  mode = "Deposit",
+  leverage,
+  setLeverage,
+  totalDeposit,
+  onBorrowItemsChange,
   onAssetChange,
   borrowAmount,
   maxBorrowAmount,
@@ -39,6 +52,31 @@ interface BorrowBoxProps {
   const [percentageInputValues, setPercentageInputValues] = useState<Record<number, number>>({});
   const [usdInputValues, setUsdInputValues] = useState<Record<number, number>>({});
 
+  // Update input values when borrowAmount prop changes (for Deposit mode)
+  useEffect(() => {
+    if (mode === "Deposit" && borrowAmount !== undefined) {
+      setInputValues((prev) => ({
+        ...prev,
+        0: borrowAmount,
+      }));
+    }
+  }, [mode, borrowAmount]);
+
+  // Combined useEffect: Create BorrowInfo items and notify parent
+  useEffect(() => {
+    const newBorrowItems: BorrowInfo[] = [];
+
+    for (let idx = 0; idx < config.maxItems; idx++) {
+      const selectedOption = selectedOptions[idx];
+      const inputValue = inputValues[idx] || 0;
+
+      if (selectedOption && inputValue > 0) {
+        // Calculate percentage of total deposit
+        const percentage =
+          totalDeposit > 0 ? (inputValue / totalDeposit) * 100 : 0;
+
+        newBorrowItems.push({
+          assetData: {
             asset: selectedOption,
             amount: inputValue.toString(),
           },
@@ -104,6 +142,37 @@ interface BorrowBoxProps {
   const handleInputChange = useCallback((idx: number) => {
     return (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = Number(e.target.value) || 0;
+      
+      // Validation: Check if new total exceeds maxBorrowAmount
+      if (mode === "Borrow" && maxBorrowAmount && maxBorrowAmount > 0) {
+        const otherValue = idx === 0 ? (inputValues[1] || 0) : (inputValues[0] || 0);
+        if (value + otherValue > maxBorrowAmount) {
+           // Don't update if exceeding limit
+           return;
+        }
+      }
+
+      setInputValues((prev) => ({
+        ...prev,
+        [idx]: value,
+      }));
+    };
+  }, []);
+
+  const handlePercentageInputChange = useCallback((idx: number) => {
+    return (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = Number(e.target.value) || 0;
+      setPercentageInputValues((prev) => ({
+        ...prev,
+        [idx]: value,
+      }));
+    };
+  }, []);
+
+  const handleLeverageChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = e.target.value;
+    // Allow empty string for better UX while typing
+    if (inputValue === "") {
       setLeverage(1);
       return;
     }
@@ -323,6 +392,16 @@ interface BorrowBoxProps {
                     maximumFractionDigits: 2,
                   })}
                 </div>
+                <div className="text-[12px] font-medium text-[#76737B]">
+                    Max Borrowable: ${maxBorrowAmount?.toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    }) || "0.00"}
+                </div>
+              </div>
+            )}
+          </motion.div>
+        )}
       </header>
 
       {/* Input boxes for borrow items */}

@@ -1,5 +1,18 @@
 import Image from "next/image"
 import { Button } from "./button"
+import { useTheme } from "@/contexts/theme-context"
+
+interface Popup {
+    icon:string,
+    description:string
+    buttonText?:string
+    buttonOnClick:()=>void
+    closeButtonText?:string
+    closeButtonOnClick?:()=>void
+    iconBgColor?:string
+}
+
+export const Popup = (props:Popup)=>{
     const { isDark } = useTheme();
     
     return <div className={`w-[353px] shadow-md w-[336px] rounded-[16px] py-[20px] px-[16px] flex flex-col justify-center items-center gap-[16px] ${

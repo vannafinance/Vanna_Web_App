@@ -458,6 +458,20 @@ export const TransferCollateral = () => {
                 type="text"
                 placeholder="0.0"
                 value={valueInput}
+                disabled={isLoading}
+              />
+            </div>
+            <motion.div
+              className="text-[12px] font-medium text-[#76737B]"
+              aria-live="polite"
+              key={valueInUsd}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.2 }}
+            >
+              {valueInUsd} USD
+            </motion.div>
+          </motion.div>
           <motion.div
             className="flex flex-col gap-[8px] items-end"
             initial={{ opacity: 0, x: 10 }}

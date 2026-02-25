@@ -292,6 +292,17 @@ export const RepayLoanTab = () => {
     setIsFlashClosePopupOpen(true);
   };
 
+
+  // Handler for closing pay now popup
+  const handleClosePayNowPopup = () => {
+    setIsPayNowPopupOpen(false);
+  };
+
+  // Handler for closing flash close popup
+  const handleCloseFlashClosePopup = () => {
+    setIsFlashClosePopupOpen(false);
+  };
+
   const executeRepay = async () => {
     if (!walletClient || !publicClient || !chainId || !address) {
       setTxModalStatus("error");
@@ -550,6 +561,13 @@ export const RepayLoanTab = () => {
 
             {/* Percentage buttons */}
             <motion.div
+              className="flex gap-[8px]"
+              role="group"
+              aria-label="Repay percentage"
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3, delay: 0.4, ease: "easeOut" }}
+            >
               {DEPOSIT_PERCENTAGES.map((item: number, idx: number) => {
                 return (
                   <motion.button
