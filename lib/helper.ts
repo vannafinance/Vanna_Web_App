@@ -1,4 +1,4 @@
-import { OrderBookRowType } from "@/components/spot/OrderBook";
+import { formatUnits, parseUnits } from "viem";
 import {
   ActivePositionType,
   OpenOrderType,
@@ -132,50 +132,41 @@ export function mapOrderToOpenOrder(
   };
 }
 
-// for rounding the number to a particular number of decimal places
-export function roundTo(value: number, decimals = 2) {
-  return Number(value.toFixed(decimals));
-}
 
-export function groupOrdersByTick(
-  orders: OrderBookRowType[],
-  tick: number
-): OrderBookRowType[] {
-  const map = new Map<number, OrderBookRowType>();
+export const sleep = (duration: number) => {
+  // duration = 1000 => 1 second
+  return new Promise<void>(function (resolve) {
+    setTimeout(() => {
+      resolve();
+    }, duration);
+  });
+};
 
-  for (const o of orders) {
-    const price = Math.floor(o.price / tick) * tick;
 
-    const key = roundTo(price, 8);
-    const existing = map.get(key);
-
-    if (existing) {
-      existing.amount += o.amount;
-      existing.total += o.total;
-    } else {
-      map.set(key, {
-        ...o,
-        price: key,
-      });
-    }
+export const formatBignumberToUnits = (coin: string, balance: number) => {
+  let units = 18;
+  if (coin == "USDC" || coin == "USDT") {
+    units = 6;
   }
 
-  return Array.from(map.values()).sort((a, b) =>
-    orders[0]?.side === "sell" ? b.price - a.price : a.price - b.price
-  );
-}
+  return formatUnits(balance, units);
+};
 
-export function calculateRatio(
-  buys: OrderBookRowType[],
-  sells: OrderBookRowType[]
-) {
-  const buy = buys.reduce((s, o) => s + o.total, 0);
-  const sell = sells.reduce((s, o) => s + o.total, 0);
+export const formatStringToUnits = (coin: string, balance: number) => {
+  let units = 18;
+  if (coin == "USDC" || coin == "USDT") {
+    units = 6;
+  }
 
-  const total = buy + sell || 1;
+  return parseUnits(String(balance), units);
+};
 
-  return {
-    buyRatio: Math.round((buy / total) * 100),
-    sellRatio: Math.round((sell / total) * 100),
-  };
-}
+
+export const ceilWithPrecision = (n: string, precision = 3) => {
+  const num = parseFloat(n);
+  // Check if the conversion was successful
+  if (isNaN(num)) {
+    return n;
+  }
+  return num.toFixed(precision);
+};

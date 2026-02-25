@@ -1,5 +1,8 @@
 import createNewStore from "@/zustand/index";
 
+
+// has margin account? + config/info
+
 // Types
 export interface MarginAccountInfoStateType {
   totalBorrowedValue: number;

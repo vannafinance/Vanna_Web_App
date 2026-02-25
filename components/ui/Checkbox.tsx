@@ -1,20 +1,24 @@
 "use client";
 
 import React, { useRef } from "react";
+import { useTheme } from "@/contexts/theme-context";
 
 export interface CheckboxProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: boolean;
   className?: string;
+  borderColor?: string;
 }
 
 export const Checkbox = ({
   label,
   error = false,
   className = "",
+  borderColor,
   ...rest
 }: CheckboxProps) => {
+  const { isDark } = useTheme();
   const inputRef = useRef<HTMLInputElement>(null);
   const isDisabled = rest.disabled;
 
@@ -22,10 +26,19 @@ export const Checkbox = ({
     inputRef.current?.focus();
   };
 
+  // Determine default border color based on theme
+  const defaultBorderColor = error 
+    ? "border-[#FC5457]" 
+    : borderColor 
+    ? "" 
+    : isDark 
+    ? "" 
+    : "border-gray-300";
+
   return (
     <label
       onClick={handleFocusForward}
-      className={`flex items-center gap-2 select-none
+      className={`flex items-center gap-3 select-none
         ${isDisabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"}
       `}
     >
@@ -38,8 +51,8 @@ export const Checkbox = ({
 
       <span
         className={`
-          w-5 h-5 rounded-md flex items-center justify-center border-2 transition-all
-          ${error ? "border-[#FC5457]" : "border-gray-300"}
+          w-6 h-6 rounded-md flex items-center justify-center border-2 transition-all
+          ${defaultBorderColor}
 
           peer-hover:border-[#703AE6]
           peer-focus:border-[#F845FC]
@@ -51,6 +64,7 @@ export const Checkbox = ({
 
           ${className}
         `}
+        style={borderColor ? { borderColor } : {}}
       >
         <svg
           className="w-4 h-4 text-white opacity-0 transition"
@@ -64,7 +78,9 @@ export const Checkbox = ({
       </span>
 
       {label && (
-        <span className={`${error ? "text-[#FC5457]" : ""}`}>{label}</span>
+        <span className={`${error ? "text-[#FC5457]" : isDark ? "text-white" : ""}`}>
+          {label}
+        </span>
       )}
     </label>
   );

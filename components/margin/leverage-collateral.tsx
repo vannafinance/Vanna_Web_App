@@ -7,16 +7,7 @@ import { RepayLoanTab } from "./repay-loan-tab";
 import { TransferCollateral } from "./transfer-collateral";
 import { AnimatedTabs, TabItem } from "../ui/animated-tabs";
 import { LEVERAGE_TABS } from "@/lib/constants/margin";
-
-interface LeverageCollateralProps {
-  switchToRepayTab?: boolean;
-  onTabSwitched?: () => void;
-}
-
-export const LeverageCollateral = ({
-  switchToRepayTab,
-  onTabSwitched,
-}: LeverageCollateralProps = {}) => {
+  const { isDark } = useTheme();
   const [activeTab, setActiveTab] = useState<string>("leverage-assets");
 
   // Handle external repay click trigger - change tab when repay is clicked
@@ -52,21 +43,25 @@ export const LeverageCollateral = ({
   };
 
   return (
-    <motion.div
-      className="flex flex-col justify-between rounded-[26px] bg-[#F7F7F7] border-[1px] border-[#E2E2E2] py-[36px] px-[16px] min-w-[691px] h-full"
+    <motion.section
+      className={`flex flex-col justify-between rounded-[26px] border-[1px] py-[36px] px-[16px] min-w-[691px] h-full ${
+        isDark ? "bg-[#222222]" : "bg-[#F7F7F7]"
+      }`}
       initial={{ opacity: 0, scale: 0.95 }}
       whileInView={{ opacity: 1, scale: 1 }}
       viewport={{ once: true }}
       transition={{ duration: 0.4, ease: "easeOut" }}
     >
-      <AnimatedTabs
-        tabs={tabs}
-        activeTab={activeTab}
-        onTabChange={handleTabChange}
-        type="gradient"
-      />
+      <nav>
+        <AnimatedTabs
+          tabs={tabs}
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          type="gradient"
+        />
+      </nav>
       {/* Tab content */}
-      <div className="mt-6">{renderContent()}</div>
-    </motion.div>
+      <section className="mt-6">{renderContent()}</section>
+    </motion.section>
   );
 };

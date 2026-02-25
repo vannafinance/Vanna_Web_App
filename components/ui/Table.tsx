@@ -2,12 +2,6 @@
 
 import cn from "classnames";
 import React, { useRef, useState, useEffect } from "react";
-
-export type Align = "left" | "center" | "right";
-
-export type Column<T> = {
-  // header label
-  header: React.ReactNode;
   // unique id for each column
   id: string;
   // which field to show (optional if you use render)
@@ -18,53 +12,6 @@ export type Column<T> = {
   align?: Align;
   // sticky column (right side)
   sticky?: boolean;
-};
-
-export interface TableProps<T> {
-  columns: Column<T>[];
-  data: T[];
-  // Unique key for each row
-  getRowKey: (row: T, index: number) => string;
-  className?: string;
-  emptyText?: string;
-}
-
-export function Table<T>({
-  columns,
-  data,
-  getRowKey,
-  className,
-  emptyText = "",
-}: TableProps<T>) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [isScrolledToRight, setIsScrolledToRight] = useState(true);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const checkScroll = () => {
-      const { scrollLeft, scrollWidth, clientWidth } = container;
-      // Consider "at right" if within 2px of the end
-      const atRight = scrollLeft + clientWidth >= scrollWidth - 2;
-      setIsScrolledToRight(atRight);
-    };
-
-    // Check initial state
-    checkScroll();
-
-    container.addEventListener("scroll", checkScroll);
-    window.addEventListener("resize", checkScroll);
-
-    return () => {
-      container.removeEventListener("scroll", checkScroll);
-      window.removeEventListener("resize", checkScroll);
-    };
-  }, []);
-
-  return (
-    <div
-      ref={containerRef}
       className={cn(
         "w-full h-[340px]     overflow-x-auto overflow-y-auto scrollbar-hide ",
         className

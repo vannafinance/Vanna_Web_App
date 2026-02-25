@@ -6,11 +6,6 @@ import { useState } from "react";
 import { Modal } from "../ui/modal";
 import { LimitBracketModal } from "./LimitBracketModal";
 import { EditBracketModal } from "./EditBracketModal";
-
-export default function OpenOrdersTable() {
-  const openOrders = useSpotTradeStore((state) => state.openOrders);
-  const [openLimitBracket, setOpenLimitBracket] = useState(false);
-  const [openEditBracket, setOpenEditBracket] = useState(false);
   const openOrderColumns: Column<OpenOrderType>[] = [
     {
       id: "view",

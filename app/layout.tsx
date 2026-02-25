@@ -4,6 +4,8 @@ import "./globals.css";
 import { Navbar } from "@/components/navbar";
 import { navbarItems } from "@/lib/constants";
 import { ThemeProvider } from "@/contexts/theme-context";
+import { Providers } from '../Provider/wagmi-provider'
+import { Toaster } from "@/components/ui/toaster";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -28,10 +30,13 @@ export default function RootLayout({
         className={`${plusJakartaSans.variable} antialiased`}
         style={{ fontFamily: 'var(--font-plus-jakarta-sans)' }}
       >
-        <ThemeProvider>
-        <Navbar items={navbarItems}/>
-        {children}
-        </ThemeProvider>
+        <Providers>
+          <ThemeProvider>
+            <Navbar items={navbarItems} />
+            <Toaster/>
+            {children}
+          </ThemeProvider>
+        </Providers>
       </body>
     </html>
   );

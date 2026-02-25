@@ -2,30 +2,21 @@ import { iconPaths } from "@/lib/constants";
 import Image from "next/image";
 import { Button } from "./button";
 import { motion } from "framer-motion";
-
-interface AmountBreakdownDialogueProps {
-  heading: string;
-  asset: string;
-  totalDeposit: number;
-  breakdown: {
-    name: string;
-    value: number;
-  }[];
-  onClose?: () => void;
-}
-
-export const AmountBreakdownDialogue = (
-  props: AmountBreakdownDialogueProps
-) => {
+  const { isDark } = useTheme();
+  
   return (
     <motion.div
-      className="flex flex-col gap-[16px] w-[448px] bg-white rounded-[24px] p-[24px] relative"
+      className={`flex flex-col gap-[16px] w-[448px] rounded-[24px] p-[24px] relative ${
+        isDark ? "bg-[#111111]" : "bg-white"
+      }`}
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
     >
       <motion.div
-        className="text-[20px] font-semibold text-center"
+        className={`text-[20px] font-semibold text-center ${
+          isDark ? "text-white" : ""
+        }`}
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.1 }}
@@ -34,7 +25,9 @@ export const AmountBreakdownDialogue = (
       </motion.div>
 
       <motion.div
-        className="flex justify-between items-center"
+        className={`flex justify-between items-center ${
+          isDark ? "text-white" : ""
+        }`}
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.3, delay: 0.15 }}
@@ -64,7 +57,11 @@ export const AmountBreakdownDialogue = (
 
       <div className="flex flex-col gap-[4px]">
         <motion.div
-          className="rounded-[12px] bg-[#F6F6F6] py-[12px] px-[12px] text-[14px] font-medium text-[#131313A1]"
+          className={`rounded-[12px] py-[12px] px-[12px] text-[14px] font-medium ${
+            isDark 
+              ? " text-[#919191]" 
+              : "bg-[#F6F6F6] text-[#131313A1]"
+          }`}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.2 }}
@@ -75,11 +72,16 @@ export const AmountBreakdownDialogue = (
           return (
             <motion.div
               key={idx}
-              className="flex justify-between items-center py-[20px] px-[12px] bg-[#FBFBFB] rounded-[12px]"
+              className={`flex justify-between items-center py-[20px] px-[12px] rounded-[12px] ${
+                isDark ? "bg-[#222222] text-white" : "bg-[#FBFBFB]"
+              }`}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.3, delay: 0.25 + idx * 0.05 }}
-              whileHover={{ scale: 1.02, backgroundColor: "#F0F0F0" }}
+              whileHover={{ 
+                scale: 1.02, 
+                backgroundColor: isDark ? "#2A2A2A" : "#F0F0F0" 
+              }}
             >
               <motion.div
                 className="w-full flex gap-[4px] items-center text-[12px]"

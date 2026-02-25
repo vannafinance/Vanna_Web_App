@@ -2,28 +2,31 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-
-interface LeverageSliderProps {
-  min?: number;
-  max?: number;
-  step?: number;
-  value: number;
-  onChange: (value: number) => void;
-  markers?: number[];
-}
-
-export const LeverageSlider = ({
-  min = 0,
-  max = 10,
-  step = 0.1,
-  value,
-  onChange,
-  markers = [0,  2, 4, 6, 8, 10],
-}: LeverageSliderProps) => {
+  const { isDark } = useTheme();
   const [isDragging, setIsDragging] = useState(false);
   const sliderRef = useRef<HTMLDivElement>(null);
 
-  const percentage = ((value - min) / (max - min)) * 100;
+  // Logarithmic scale helpers
+  // Ensure we don't take log of <= 0. For leverage, min is usually 1.
+  const safeMin = Math.max(min, 1);
+
+  const toPercentage = (val: number) => {
+    if (max <= safeMin) return 0;
+    const minLog = Math.log(safeMin);
+    const maxLog = Math.log(max);
+    const valLog = Math.log(Math.max(val, safeMin));
+    return ((valLog - minLog) / (maxLog - minLog)) * 100;
+  };
+
+  const toValue = (percent: number) => {
+    if (max <= safeMin) return safeMin;
+    const minLog = Math.log(safeMin);
+    const maxLog = Math.log(max);
+    const valLog = (percent / 100) * (maxLog - minLog) + minLog;
+    return Math.exp(valLog);
+  };
+
+  const percentage = toPercentage(value);
 
   // Generate all dividers from min to max (all integers)
   const allDividers = Array.from({ length: max - min + 1 }, (_, i) => min + i);
@@ -37,8 +40,15 @@ export const LeverageSlider = ({
       0,
       Math.min(100, (offsetX / rect.width) * 100)
     );
-    const newValue = (newPercentage / 100) * (max - min) + min;
-    const steppedValue = Math.round(newValue / step) * step;
+    const newValue = toValue(newPercentage);
+    
+    let steppedValue = Math.round(newValue / step) * step;
+    
+    // Fix floating point precision
+    if (step < 1) {
+      const decimals = step.toString().split(".")[1]?.length || 0;
+      steppedValue = Number(steppedValue.toFixed(decimals));
+    }
 
     onChange(Math.max(min, Math.min(max, steppedValue)));
   };
@@ -83,7 +93,9 @@ export const LeverageSlider = ({
 
         {/* Track Background */}
         <motion.div
-          className="relative h-1 bg-[#F4F4F4] rounded-full cursor-pointer overflow-visible"
+          className={`relative h-1 rounded-full cursor-pointer overflow-visible ${
+            isDark ? "bg-[#333333]" : "bg-[#F4F4F4]"
+          }`}
           onMouseDown={handleMouseDown}
         >
           {/* Progress Fill */}
@@ -101,7 +113,7 @@ export const LeverageSlider = ({
 
           {/* Dividers on track - all integers from min to max */}
           {allDividers.map((divider, index) => {
-            const dividerPercentage = ((divider - min) / (max - min)) * 100;
+            const dividerPercentage = toPercentage(divider);
             const isPassed = percentage >= dividerPercentage;
             return (
               <motion.div
@@ -113,10 +125,10 @@ export const LeverageSlider = ({
                   height: isPassed ? "12px" : "8px",
                   backgroundColor: isPassed
                     ? "rgba(255, 255, 255, 0.95)"
-                    : "rgba(196, 181, 253, 0.4)",
+                    : isDark ? "#333333" : "rgba(196, 181, 253, 0.4)",
                   border: isPassed
                     ? "none"
-                    : "1px solid rgba(196, 181, 253, 0.6)",
+                    : isDark ? "none" : "1px solid rgba(196, 181, 253, 0.6)",
                   boxShadow: isPassed
                     ? "0 0 4px rgba(255, 255, 255, 0.5)"
                     : "0 1px 2px rgba(0, 0, 0, 0.1)",
@@ -184,7 +196,7 @@ export const LeverageSlider = ({
         {/* Marker Labels */}
         <div className="relative mt-6">
           {markers.map((marker, index) => {
-            const markerPercentage = ((marker - min) / (max - min)) * 100;
+            const markerPercentage = toPercentage(marker);
             const isActive = Math.abs(value - marker) < 0.5;
             const isFirst = index === 0;
             const isLast = index === markers.length - 1;
@@ -205,7 +217,7 @@ export const LeverageSlider = ({
                   opacity: 1,
                   y: 0,
                   scale: isActive ? 1.2 : 1,
-                  color: isActive ? "#703AE6" : "#6B7280",
+                  color: isActive ? "#703AE6" : isDark ? "#FFFFFF" : "#6B7280",
                   fontWeight: isActive ? 600 : 500,
                 }}
                 transition={{ delay: 0.3 + index * 0.05, duration: 0.3 }}

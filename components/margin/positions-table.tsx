@@ -4,54 +4,94 @@ import Image from "next/image";
 import { Button } from "../ui/button";
 import { useCollateralBorrowStore } from "@/store/collateral-borrow-store";
 import { AnimatedTabs } from "../ui/animated-tabs";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useMarginAccountInfoStore } from "@/store/margin-account-info-store";
 import { TABLE_ROW_HEADINGS, COIN_ICONS } from "@/lib/constants/margin";
+import { useTheme } from "@/contexts/theme-context";
 
 interface PositionstableProps {
   onRepayClick?: () => void;
   onOpenPositionClick?: () => void;
 }
 
+const ITEMS_PER_PAGE = 3;
+
 export const Positionstable = ({ onRepayClick, onOpenPositionClick }: PositionstableProps) => {
+  const { isDark } = useTheme();
   const positions = useCollateralBorrowStore((state) => state.position);
   const [activeTab, setActiveTab] = useState<string>("currentPositions");
+  const [currentPage, setCurrentPage] = useState<number>(1);
   const hasMarginAccount = useMarginAccountInfoStore((state) => state.hasMarginAccount);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Filter positions based on active tab
   const filteredPositions = useMemo(() => {
     if (activeTab === "currentPositions") {
-      return positions.filter((pos) => pos.isOpen === true);
+      return positions.filter((pos: Position) => pos.isOpen === true);
     } else {
-      return positions.filter((pos) => pos.isOpen === false);
+      return positions.filter((pos: Position) => pos.isOpen === false);
     }
   }, [positions, activeTab]);
 
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredPositions.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedPositions: Position[] = filteredPositions.slice(startIndex, endIndex);
+
+  // Reset to page 1 when tab changes
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    setCurrentPage(1);
+  };
+
+  // Scroll to top when page changes
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [currentPage, activeTab]);
+
+  // Pagination handlers
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
 
   return (
-    <div className="w-full flex flex-col gap-[16px]">
+    <section className="w-full flex flex-col gap-[16px]">
       {/* Table title */}
-      <motion.div
-        className="text-[24px] font-bold"
+      <motion.h2
+        className={`text-[24px] font-bold ${isDark ? "text-white" : ""}`}
         initial={{ opacity: 0, y: -20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.4, ease: "easeOut" }}
       >
         Positions
-      </motion.div>
+      </motion.h2>
 
-      <div className="w-fit h-fit">
-        <AnimatedTabs type="solid" tabs={[{id:"currentPositions",label:"Current Positions"},{id:"positionsHistory",label:"Positions History"}]} activeTab={activeTab} onTabChange={setActiveTab}/>
-      </div>
+      <nav className="w-fit h-fit">
+        <AnimatedTabs type="solid" tabs={[{id:"currentPositions",label:"Current Positions"},{id:"positionsHistory",label:"Positions History"}]} activeTab={activeTab} onTabChange={handleTabChange}/>
+      </nav>
 
-      {hasMarginAccount && filteredPositions.length > 0 ? <div className="rounded-[12px] w-full ">
+      {hasMarginAccount && filteredPositions.length > 0 ? <section className="rounded-[12px] w-full ">
         {/* Table headers */}
-        <ul className="flex ">
+        <ul className="flex " role="row">
           {TABLE_ROW_HEADINGS.map((item, idx) => {
             return (
               <motion.li
-                className="  w-full pt-[11.25px] px-[12px] pb-[12px] text-[#464545] font-medium text-[14px]"
+                className={`w-full pt-[11.25px] px-[12px] pb-[12px] font-medium text-[14px] ${
+                  isDark ? "text-[#999999]" : "text-[#464545]"
+                }`}
                 key={item}
                 initial={{ opacity: 0, y: -10 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -65,12 +105,17 @@ export const Positionstable = ({ onRepayClick, onOpenPositionClick }: Positionst
         </ul>
 
         {/* Table rows */}
-        <div className="flex flex-col gap-[10px]">
-          {filteredPositions.map((item, idx) => {
+        <section 
+          ref={scrollContainerRef}
+          className="flex flex-col gap-[10px] max-h-[400px] overflow-y-auto pr-[4px] thin-scrollbar"
+        >
+          {paginatedPositions.map((item, idx) => {
             return (
-              <motion.div
+              <motion.article
                 key={item.positionId}
-                className="flex  border-[1px] border-[#E2E2E2] bg-[#F7F7F7] rounded-[12px] w-full"
+                className={`flex border-[1px] rounded-[12px] w-full ${
+                  isDark ? "bg-[#222222]" : "bg-[#F7F7F7]"
+                }`}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -115,11 +160,11 @@ export const Positionstable = ({ onRepayClick, onOpenPositionClick }: Positionst
                     viewport={{ once: true }}
                     transition={{ duration: 0.3, delay: idx * 0.1 + 0.15 }}
                   >
-                    <div className="text-[14px] font-medium">
+                    <div className={`text-[14px] font-medium ${isDark ? "text-white" : ""}`}>
                       ${item.collateral.amount}{" "}
                       {item.collateral.asset.split("0x")}
                     </div>
-                    <div className="text-[12px] font-medium">
+                    <div className={`text-[12px] font-medium ${isDark ? "text-white" : ""}`}>
                       ${item.collateralUsdValue}
                     </div>
                   </motion.div>
@@ -175,11 +220,11 @@ export const Positionstable = ({ onRepayClick, onOpenPositionClick }: Positionst
                             delay: idx * 0.1 + borrowedIdx * 0.05 + 0.3,
                           }}
                         >
-                          <div className="text-[14px] font-medium">
+                          <div className={`text-[14px] font-medium ${isDark ? "text-white" : ""}`}>
                             ${borrowedItem.assetData.amount}{" "}
                             {borrowedItem.assetData.asset.split("0x")}
                           </div>
-                          <div className="text-[12px] font-medium">
+                          <div className={`text-[12px] font-medium ${isDark ? "text-white" : ""}`}>
                             ${borrowedItem.usdValue}
                           </div>
                         </motion.div>
@@ -206,7 +251,9 @@ export const Positionstable = ({ onRepayClick, onOpenPositionClick }: Positionst
 
                 {/* Leverage column */}
                 <motion.div
-                  className="flex flex-col justify-center w-full py-[20px] px-[12px] text-[14px] font-medium"
+                  className={`flex flex-col justify-center w-full py-[20px] px-[12px] text-[14px] font-medium ${
+                    isDark ? "text-white" : ""
+                  }`}
                   initial={{ opacity: 0 }}
                   whileInView={{ opacity: 1 }}
                   viewport={{ once: true }}
@@ -217,7 +264,9 @@ export const Positionstable = ({ onRepayClick, onOpenPositionClick }: Positionst
 
                 {/* Interest accrued column */}
                 <motion.div
-                  className="w-full  flex gap-[4px] items-center text-[14px] font-medium py-[20px] px-[12px] "
+                  className={`w-full flex gap-[4px] items-center text-[14px] font-medium py-[20px] px-[12px] ${
+                    isDark ? "text-white" : ""
+                  }`}
                   initial={{ opacity: 0, x: 10 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
@@ -235,7 +284,7 @@ export const Positionstable = ({ onRepayClick, onOpenPositionClick }: Positionst
                     >
                       <path
                         d="M6 3.33333H7.33333V4.66667H6V3.33333ZM6 6H7.33333V10H6V6ZM6.66667 0C2.98667 0 0 2.98667 0 6.66667C0 10.3467 2.98667 13.3333 6.66667 13.3333C10.3467 13.3333 13.3333 10.3467 13.3333 6.66667C13.3333 2.98667 10.3467 0 6.66667 0ZM6.66667 12C3.72667 12 1.33333 9.60667 1.33333 6.66667C1.33333 3.72667 3.72667 1.33333 6.66667 1.33333C9.60667 1.33333 12 3.72667 12 6.66667C12 9.60667 9.60667 12 6.66667 12Z"
-                        fill="black"
+                        fill={isDark ? "#FFFFFF" : "black"}
                       />
                     </svg>
                   )}
@@ -260,20 +309,94 @@ export const Positionstable = ({ onRepayClick, onOpenPositionClick }: Positionst
                     />
                   </div>
                 </motion.div>
-              </motion.div>
+              </motion.article>
             );
           })}
-        </div>
-      </div>:<div className="w-full h-[402px] bg-[#F7F7F7] border-[1px] border-[#E2E2E2] rounded-[8px] flex flex-col items-center justify-center">
+        </section>
+
+        {/* Pagination controls */}
+        {totalPages > 1 && (
+          <motion.div
+            className="flex items-center justify-center gap-[16px] py-[16px]"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <button
+              type="button"
+              onClick={handlePreviousPage}
+              disabled={currentPage === 1}
+              className={`flex items-center justify-center w-[40px] h-[40px] transition-colors ${
+                currentPage === 1
+                  ? "cursor-not-allowed opacity-30"
+                  : "cursor-pointer hover:opacity-70"
+              } ${isDark ? "text-white" : "text-[#111111]"}`}
+              aria-label="Previous page"
+            >
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 12 12"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M7.5 9L4.5 6L7.5 3"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+
+            <span className="px-[24px] py-[8px] rounded-full bg-[#F1EBFD] text-[#703AE6] text-[14px] font-semibold">
+              {currentPage} of {totalPages}
+            </span>
+
+            <button
+              type="button"
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages}
+              className={`flex items-center justify-center w-[40px] h-[40px] transition-colors ${
+                currentPage === totalPages
+                  ? "cursor-not-allowed opacity-30"
+                  : "cursor-pointer hover:opacity-70"
+              } ${isDark ? "text-white" : "text-[#111111]"}`}
+              aria-label="Next page"
+            >
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 12 12"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M4.5 9L7.5 6L4.5 3"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          </motion.div>
+        )}
+      </section>:<section className={`w-full h-[402px] border-[1px] rounded-[8px] flex flex-col items-center justify-center ${
+        isDark ? "bg-[#222222]" : "bg-[#F7F7F7]"
+      }`}>
         <div className="w-fit h-fit">
           {activeTab === "currentPositions" ? (
             <Button size="small" type="ghost" text="Open Position" onClick={onOpenPositionClick} disabled={false}/>
           ) : (
-            <div className="text-[14px] font-medium text-[#76737B]">No positions history available</div>
+            <p className={`text-[14px] font-medium ${
+              isDark ? "text-[#919191]" : "text-[#76737B]"
+            }`}>No positions history available</p>
           )}
         </div>
         
-        </div>}
-    </div>
+        </section>}
+    </section>
   );
 };

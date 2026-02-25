@@ -11,6 +11,17 @@ export interface BorrowInfo {
   usdValue: number;
 }
 
+export type MarginState = {
+  collateral: { token: string; amount: number; usd: number }[];
+  borrow: { token: string; amount: number; usd: number }[];
+  collateralUsd: number;
+  borrowUsd: number;
+  hf: number;
+  ltv: number;
+  maxBorrow: number;
+  maxWithdraw: number;
+};
+
 export interface Position {
   positionId: number;
 
@@ -29,6 +40,7 @@ export interface Position {
 export type PositionsArray = Position[];
 
 export interface Collaterals {
+  id?: string;
   asset: string;
   amount: number;
   amountInUsd: number;
@@ -163,7 +175,7 @@ export interface OrderPlacementFormValues {
 
   // loop
   loopEnabled?: boolean;
-  noOfLoops?: number | null; // null = ∞
+  noOfLoops?: number | string | null; // null = ∞
 
   // prices & size
   triggerPrice?: number | null;
@@ -193,6 +205,7 @@ export interface OrderPlacementFormValues {
   gainPercent?: number;
 }
 
+// Perps types
 export type PerpsOrderAction = "open" | "close";
 export type PerpsOrderSide = "long" | "short";
 export type PerpsOrderType =
@@ -340,4 +353,64 @@ export interface TpSlPositionData {
   entryPrice: string;
   markPrice: string;
   estLiquidationPrice: string;
+}
+
+// Earn types
+export type EarnAsset = "ETH" | "USDC" | "USDT";
+
+export type EarnChild = 8453 | 1 | 42161;
+
+export interface ValutInfo {
+  asset: EarnAsset;
+  vTokenAddress: `0x${string}`;
+  chainId: EarnChild;
+  totalAsset: bigint;
+  totalSupply: bigint;
+  totalAssetFormated: number;
+  totalSupplyFormated: number;
+  exchangeRate: number;
+  supplyApy: number;
+  utilizationRate: number;
+}
+
+export interface UserValutPosition {
+  asset: EarnAsset;
+  chainId: EarnChild;
+  shares: bigint;
+  sharesFormated: number;
+  assetValue: number;
+  assetValueinUsd: number;
+}
+
+export interface SupplyParams {
+  asset: EarnAsset;
+  amount: string;
+  receiver?: `0x${string}`;
+}
+
+export interface WithdrawParams {
+  asset: EarnAsset;
+  amount: string;
+  receiver?: `0x${string}`;
+}
+
+export interface SupplyResult {
+  success: boolean;
+  txHash?: `0x${string}`;
+  sharesReceived?: bigint;
+  error?: string;
+}
+
+export interface WithdrawResult {
+  success: boolean;
+  txHash?: `0x${string}`;
+  assetsReceived?: bigint;
+  error?: string;
+}
+
+export interface EarnVaultState {
+  vault: ValutInfo | null;
+  userPosition: UserValutPosition | null;
+  loading: boolean;
+  error: string | null;
 }

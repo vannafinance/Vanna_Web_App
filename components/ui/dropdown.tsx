@@ -4,18 +4,12 @@ import { iconPaths } from "@/lib/constants";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
-
-interface Dropdown {
-  items: string[];
-  setSelectedOption: React.Dispatch<React.SetStateAction<string>>;
-  selectedOption: string;
-  classname: string;
-  dropdownClassname: string;
-  menuClassname?: string;
-  arrowClassname?: string;
+  classname:string
+  dropdownClassname:string
 }
 
 export const Dropdown = (props: Dropdown) => {
+  const { isDark } = useTheme();
   const [isHover, setIsHover] = useState(false);
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -58,36 +52,36 @@ export const Dropdown = (props: Dropdown) => {
 
   return (
     <div
-      className={`relative inline-block w-full ${isHover ? "z-100" : "z-0"}`}
+      className="relative inline-block z-[100] w-full"
     >
       <button
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         type="button"
-        className={`w-fit rounded-[8px] z-[10] ${props.classname} cursor-pointer flex justify-center items-center `}
+        className={`w-[80px] rounded-[8px] ${props.classname} cursor-pointer flex justify-center items-center ${
+          isDark ? "text-white bg-transparent" : ""
+        }`}
         aria-label={`Selected: ${props.selectedOption}. Click to change option`}
         aria-expanded={isHover}
         aria-haspopup="listbox"
       >
-        <span className="flex items-center gap-2">
-          {iconPaths[props.selectedOption] && (
-            <Image
-              src={iconPaths[props.selectedOption]}
-              width={20}
-              height={20}
-              alt={props.selectedOption}
-              aria-hidden="true"
-            />
-          )}
-          {props.selectedOption}
-        </span>
+        {iconPaths[props.selectedOption] && (
+          <Image
+            src={iconPaths[props.selectedOption]}
+            width={20}
+            height={20}
+            alt={props.selectedOption}
+            aria-hidden="true"
+          />
+        )}{" "}
+        {props.selectedOption}
         <motion.svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
           strokeWidth={1.5}
           stroke="currentColor"
-          className={props.arrowClassname || "size-5"}
+          className="size-5"
           aria-hidden="true"
           animate={{ rotate: isHover ? 180 : 0 }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
@@ -108,8 +102,10 @@ export const Dropdown = (props: Dropdown) => {
             transition={{ duration: 0.2, ease: "easeOut" }}
             onMouseEnter={handleDropdownMouseEnter}
             onMouseLeave={handleDropdownMouseLeave}
-            className={`absolute z-100 bg-white p-2 shadow-lg rounded-[6px] ${
-              props.menuClassname || "top-8 -left-4"
+            className={`min-w-[144px] absolute z-[100] p-2 top-8 -left-4 shadow-lg rounded-[6px] thin-scrollbar ${
+              isDark
+                ? "bg-[#222222] border-[1px]"
+                : "bg-white"
             } ${props.items.length > 4 ? "max-h-48 overflow-y-auto" : ""}`}
             role="listbox"
             aria-label="Options"
@@ -119,7 +115,11 @@ export const Dropdown = (props: Dropdown) => {
                 <motion.button
                   type="button"
                   whileTap={{ scale: 0.85 }}
-                  className={` ${props.dropdownClassname} hover:text-[#7C35F8] flex  font-medium rounded-[6px]  cursor-pointer py-2 px-8  hover:bg-[#F2EBFE] w-full text-left`}
+                  className={`${props.dropdownClassname} flex font-medium rounded-[6px] cursor-pointer py-2 px-8 w-full text-left ${
+                    isDark
+                      ? "text-white hover:bg-[#333333]"
+                      : "hover:text-[#7C35F8] hover:bg-[#F2EBFE]"
+                  }`}
                   key={item}
                   role="option"
                   aria-selected={props.selectedOption === item}
