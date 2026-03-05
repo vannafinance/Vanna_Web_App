@@ -1,12 +1,27 @@
 "use client";
 
+/**
+ * Earn Vault Detail Page
+ *
+ * WHAT CHANGED:
+ * - OLD: Stats came from useEarnVaultStore (lost on refresh since persist=false)
+ * - NEW: Fetches real vault stats from blockchain on mount via useFetchCompleteVaultStats
+ *        Falls back to store data if available, then to loading state
+ *
+ * DATA FLOW:
+ * 1. Asset name from URL param (e.g. /earn/USDC -> asset = "USDC")
+ * 2. useFetchCompleteVaultStats(chainId, asset, publicClient) -> VaultStats
+ * 3. Prices from /api/prices for USD conversion of token amounts
+ * 4. Stats displayed: Total Supply, Available Liquidity, Utilization Rate, Supply APY
+ */
+
 import { AccountStatsGhost } from "@/components/earn/account-stats-ghost";
 import { Form } from "@/components/earn/form";
 import { Details } from "@/components/earn/details-tab";
 import { YourPositions } from "@/components/earn/your-positions";
 import { AnimatedTabs } from "@/components/ui/animated-tabs";
 import Image from "next/image";
-import { useState, use, useMemo } from "react";
+import { useState, use, useMemo, useEffect } from "react";
 import { ActivityTab } from "@/components/earn/acitivity-tab";
 import { AnalyticsTab } from "@/components/earn/analytics-tab";
 import { MarginManagersTab } from "@/components/earn/margin-managers-tab";
@@ -16,29 +31,9 @@ import { iconPaths } from "@/lib/constants";
 import { formatNumber } from "@/lib/utils/format-value";
 import { useRouter } from "next/navigation";
 import { useTheme } from "@/contexts/theme-context";
-
-// Helper function to parse values with K/M/B suffixes
-const parseAmountValue = (value?: string): number => {
-  if (!value) return 0;
-  
-  // Remove $ and commas
-  const cleaned = value.replace(/[$,]/g, '').trim();
-  
-  // Check for suffix
-  const lastChar = cleaned.slice(-1).toUpperCase();
-  const numPart = cleaned.slice(0, -1);
-  
-  if (lastChar === 'K') {
-    return parseFloat(numPart) * 1000;
-  } else if (lastChar === 'M') {
-    return parseFloat(numPart) * 1000000;
-  } else if (lastChar === 'B') {
-    return parseFloat(numPart) * 1000000000;
-  } else {
-    // No suffix, just parse the number
-    return parseFloat(cleaned) || 0;
-  }
-};
+import { useAccount, usePublicClient } from "wagmi";
+import { useFetchCompleteVaultStats, VaultStats } from "@/lib/utils/earn/earnFetchers";
+import { EarnAsset } from "@/lib/types";
 
 const tabs = [
   { id: "your-positions", label: "Your Positions" },
@@ -55,7 +50,48 @@ export default function EarnPage({ params }: { params: Promise<{ id: string }> }
   const router = useRouter();
   const selectedVault = useEarnVaultStore((state) => state.selectedVault);
   const [activeTab, setActiveTab] = useState<string>("details");
-  
+
+  // Wagmi hooks for fetching real vault data
+  const { chainId } = useAccount();
+  const publicClient = usePublicClient();
+
+  // Resolve asset from URL id (e.g. "USDC", "ETH", "USDT")
+  const asset = useMemo(() => {
+    const upper = id.toUpperCase();
+    if (["ETH", "USDC", "USDT"].includes(upper)) return upper as EarnAsset;
+    if (selectedVault?.title) return selectedVault.title.toUpperCase() as EarnAsset;
+    return "ETH" as EarnAsset;
+  }, [id, selectedVault]);
+
+  // Fetch real vault stats from blockchain on mount
+  const fetchVaultStats = useFetchCompleteVaultStats(chainId, asset, publicClient);
+  const [vaultStats, setVaultStats] = useState<VaultStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [prices, setPrices] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadStats = async () => {
+      setStatsLoading(true);
+
+      // Fetch prices and vault stats in parallel
+      const [stats, pricesData] = await Promise.all([
+        fetchVaultStats().catch(() => null),
+        fetch("/api/prices").then(r => r.json()).catch(() => ({ ETH: 2000, USDC: 1, USDT: 1 })),
+      ]);
+
+      if (cancelled) return;
+
+      setVaultStats(stats);
+      setPrices(pricesData);
+      setStatsLoading(false);
+    };
+
+    loadStats();
+    return () => { cancelled = true; };
+  }, [fetchVaultStats]);
+
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
   };
@@ -64,74 +100,78 @@ export default function EarnPage({ params }: { params: Promise<{ id: string }> }
     router.push("/earn");
   };
 
-  // Get vault data - either from store or use id as fallback
+  // Get vault metadata from store or fallback
   const vaultData = useMemo(() => {
     if (selectedVault && selectedVault.id === id) {
       return selectedVault;
     }
-    // Fallback data if store is empty (e.g., direct URL access)
     return {
       id: id,
-      chain: "ETH",
-      title: id,
+      chain: asset,
+      title: asset,
       tag: "Active",
     };
-  }, [selectedVault, id]);
+  }, [selectedVault, id, asset]);
 
   // Get icon path for the asset
   const iconPath = useMemo(() => {
-    // Try to get icon from iconPaths, fallback to eth-icon
     const assetName = vaultData.title.toUpperCase();
     return iconPaths[assetName] || "/icons/eth-icon.png";
   }, [vaultData.title]);
 
-  // Prepare account stats items
+  // Build account stats from REAL blockchain data
   const accountStatsItems = useMemo(() => {
     const assetName = vaultData.title;
-    
-    // Parse amounts from vault data
-    const totalSupplyAmount = parseAmountValue(
-      'assetsSupplied' in vaultData ? vaultData.assetsSupplied?.title : undefined
-    );
-    const totalBorrowedAmount = parseAmountValue(
-      'assetsBorrowed' in vaultData ? vaultData.assetsBorrowed?.title : undefined
-    );
-    
-    // Calculate Available Liquidity = Total Supply - Total Borrowed
-    const availableLiquidity = totalSupplyAmount - totalBorrowedAmount;
-    
-    const utilizationRate = parseFloat(
-      ('utilizationRate' in vaultData ? vaultData.utilizationRate?.title?.replace('%', '') : undefined) || "6.5"
-    );
-    const supplyApy = parseFloat(
-      ('supplyApy' in vaultData ? vaultData.supplyApy?.title?.replace('%', '') : undefined) || "2.5"
-    );
+    const tokenPrice = prices[asset] || (asset === "ETH" ? prices["ETH"] || 0 : 1);
 
+    if (vaultStats) {
+      const totalSupplyUsd = vaultStats.totalAssetsFormatted * tokenPrice;
+      const availableLiquidityUsd = vaultStats.availableLiquidity * tokenPrice;
+
+      return [
+        {
+          id: "1",
+          name: "Total Supply",
+          amount: `$${formatNumber(totalSupplyUsd)}`,
+          amountInToken: `${formatNumber(vaultStats.totalAssetsFormatted)} ${assetName}`,
+        },
+        {
+          id: "2",
+          name: "Available Liquidity",
+          amount: `$${formatNumber(availableLiquidityUsd)}`,
+          amountInToken: `${formatNumber(vaultStats.availableLiquidity)} ${assetName}`,
+        },
+        {
+          id: "3",
+          name: "Utilization Rate",
+          amount: `${formatNumber(vaultStats.utilizationRate * 100)}%`,
+        },
+        {
+          id: "4",
+          name: "Supply APY",
+          amount: `${formatNumber(vaultStats.supplyAPY)}%`,
+        },
+      ];
+    }
+
+    // Loading state
+    if (statsLoading) {
+      return [
+        { id: "1", name: "Total Supply", amount: "...", amountInToken: `-- ${assetName}` },
+        { id: "2", name: "Available Liquidity", amount: "...", amountInToken: `-- ${assetName}` },
+        { id: "3", name: "Utilization Rate", amount: "..." },
+        { id: "4", name: "Supply APY", amount: "..." },
+      ];
+    }
+
+    // Fallback: no data
     return [
-      {
-        id: "1",
-        name: "Total Supply",
-        amount: `$${formatNumber(totalSupplyAmount || 1000)}`,
-        amountInToken: `${formatNumber(20)} ${assetName}`,
-      },
-      {
-        id: "2",
-        name: "Available Liquidity",
-        amount: `$${formatNumber(availableLiquidity || 3400)}`,
-        amountInToken: `${formatNumber(30.4)} ${assetName}`,
-      },
-      {
-        id: "3",
-        name: "Utilization Rate",
-        amount: `${formatNumber(utilizationRate)}%`,
-      },
-      {
-        id: "4",
-        name: "Supply APY",
-        amount: `${formatNumber(supplyApy)}%`,
-      },
+      { id: "1", name: "Total Supply", amount: "$0.00", amountInToken: `0 ${assetName}` },
+      { id: "2", name: "Available Liquidity", amount: "$0.00", amountInToken: `0 ${assetName}` },
+      { id: "3", name: "Utilization Rate", amount: "0%" },
+      { id: "4", name: "Supply APY", amount: "0%" },
     ];
-  }, [vaultData]);
+  }, [vaultData.title, vaultStats, statsLoading, prices, asset]);
 
   return (
     <main className="flex flex-col gap-[40px]">
@@ -205,7 +245,7 @@ export default function EarnPage({ params }: { params: Promise<{ id: string }> }
           </div>
         </div>
       </header>
-      
+
       <section className="px-[80px]" aria-label="Vault Statistics">
         <AccountStatsGhost items={accountStatsItems} />
       </section>
@@ -225,7 +265,7 @@ export default function EarnPage({ params }: { params: Promise<{ id: string }> }
             </nav>
             {activeTab === "your-positions" && <YourPositions />}
             {activeTab === "details" && <Details selectedAsset={id as any} />}
-            {activeTab === "activity" && <ActivityTab />}
+            {activeTab === "activity" && <ActivityTab selectedAsset={asset} />}
             {activeTab === "analytics" && <AnalyticsTab selectedAsset={id as any} />}
             {activeTab === "margin-managers" && <MarginManagersTab selectedAsset={id as any} />}
             {activeTab === "collateral-limits" && <CollateralLimitsTab selectedAsset={id as any} />}

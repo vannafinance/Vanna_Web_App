@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { useChainId } from "wagmi";
+import { useChainId, usePublicClient } from "wagmi";
 import { StatsCard } from "../ui/stats-card";
-import { getPercentage } from "@/lib/utils/helper";
 import { formatValue } from "@/lib/utils/format-value";
 import { useTheme } from "@/contexts/theme-context";
 import { formatUsdValue } from "@/lib/utils/prices/priceFeed";
@@ -15,9 +14,7 @@ import {
   oracleAddressByChain,
 } from "@/lib/utils/web3/token";
 import { useVaultData } from "@/lib/hooks/useVaultData";
-
-const maxEth = 1;
-const maxUsd = 200000;
+import { useVaultDataStore } from "@/store/vault-data-store";
 
 const shortenAddress = (addr: `0x${string}` | undefined): string => {
   if (!addr) return "N/A";
@@ -33,15 +30,20 @@ const BLOCK_EXPLORER_BY_CHAIN: Record<number, string> = {
 export const Details = ({ selectedAsset = "ETH" as EarnAsset }) => {
   const { isDark } = useTheme();
   const chainId = useChainId();
+  const publicClient = usePublicClient();
   const [isMounted, setIsMounted] = useState(false);
 
   // Get vault data from store
   const { vault: vaultStats, loading } = useVaultData(selectedAsset);
+  const fetchVaultData = useVaultDataStore((state) => state.fetchVaultData);
 
-  // Fix hydration error by ensuring client-side rendering
+  // Fetch vault data on mount (needed for page refresh when store is empty)
   useEffect(() => {
     setIsMounted(true);
-  }, []);
+    if (publicClient && chainId) {
+      fetchVaultData({ chainId, publicClient });
+    }
+  }, [chainId, publicClient, fetchVaultData]);
 
   // Calculate totals
   const totalSupplied = useMemo(() => {
@@ -157,7 +159,7 @@ export const Details = ({ selectedAsset = "ETH" as EarnAsset }) => {
           ) : (
             <>
               <StatsCard
-                percentage={Math.min((totalSupplied.inAsset / maxEth) * 100, 100)}
+                percentage={100}
                 heading="Total Supplied"
                 mainInfo={`${formatValue(totalSupplied.inAsset, {
                   type: "number",
@@ -167,7 +169,11 @@ export const Details = ({ selectedAsset = "ETH" as EarnAsset }) => {
                 pie={true}
               />
               <StatsCard
-                percentage={Math.min((totalBorrowed.inAsset / maxEth) * 100, 100)}
+                percentage={
+                  totalSupplied.inAsset > 0
+                    ? Math.round((totalBorrowed.inAsset / totalSupplied.inAsset) * 10000) / 100
+                    : 0
+                }
                 heading="Total Borrowed"
                 mainInfo={`${formatValue(totalBorrowed.inAsset, {
                   type: "number",

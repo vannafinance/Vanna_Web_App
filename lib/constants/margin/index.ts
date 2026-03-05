@@ -11,11 +11,25 @@ export const TABLE_ROW_HEADINGS = [
   "Action",
 ] as const;
 
-export const COIN_ICONS = {
+export const HISTORY_TABLE_HEADINGS = [
+  "Date",
+  "Type",
+  "Token",
+  "Amount",
+  "Tx Hash",
+] as const;
+
+export const COIN_ICONS: Record<string, string> = {
+  // Real token symbols (from chain)
+  "WETH": "/icons/eth-icon.png",
+  "ETH": "/icons/eth-icon.png",
+  "USDC": "/icons/usdc-icon.svg",
+  "USDT": "/icons/usdt-icon.svg",
+  // Legacy keys (for hardcoded/fallback data)
   "0xETH": "/icons/eth-icon.png",
   "0xUSDC": "/icons/usdc-icon.svg",
   "0xUSDT": "/icons/usdt-icon.svg",
-} as const;
+};
 
 // ============================================
 // Collateral Box Constants
