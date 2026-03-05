@@ -1,3 +1,4 @@
+import { useTheme } from "@/contexts/theme-context";
 import { useUserStore } from "@/store/user";
 import { useState, useMemo } from "react";
 import OpenOrdersTable from "./position-tables/open-orders-table";
@@ -29,6 +30,7 @@ import { PreferencesDropdown } from "./position-tables/preferences-dropdown";
 import ColumnPreferencesPopup from "./position-tables/column-preference-popup";
 
 const PositionTables = () => {
+  const { isDark } = useTheme();
   const userAddress = useUserStore((state) => state.address);
   const [activeTab, setActiveTab] = useState<MainTabType>("position");
   const [activeFilterTab, setActiveFilterTab] =
@@ -145,8 +147,14 @@ const PositionTables = () => {
   return (
     <div
       className={`w-full rounded-lg ${
-        !userAddress ? "bg-white" : "bg-[#F7F7F7]"
-      }    flex flex-col gap-1 p-2`}
+        !userAddress
+          ? isDark
+            ? "bg-[#222222]"
+            : "bg-white"
+          : isDark
+            ? "bg-[#222222]"
+            : "bg-[#F7F7F7]"
+      } flex flex-col gap-1 p-2`}
     >
       {/* Tabs */}
       <div className="flex p-0.5 gap-6 justify-between">
@@ -184,7 +192,7 @@ const PositionTables = () => {
       {/* Order Tabs - show for openOrders & orderHistory */}
       {(activeTab === "openOrders" || activeTab === "orderHistory") && (
         <div className="flex gap-2 items-center">
-          <div className="flex h-[47px] bg-[#FFFFFF] p-1  rounded-lg border border-[#E2E2E2] ">
+          <div className={`flex h-[47px] p-1 rounded-lg border ${isDark ? "bg-[#111111] border-[#333333]" : "bg-[#FFFFFF] border-[#E2E2E2]"}`}>
             {ORDER_TABS.map((tab) => (
               <button
                 key={tab.id}
@@ -192,7 +200,9 @@ const PositionTables = () => {
                 className={`cursor-pointer px-4 py-3 text-[12px] leading-[100%] font-semibold rounded-lg transition-colors ${
                   activeFilterTab === tab.id
                     ? "bg-[#703AE6] text-white"
-                    : "text-[#111111] hover:bg-gray-100"
+                    : isDark
+                      ? "text-[#FFFFFF] hover:bg-[#333333]"
+                      : "text-[#111111] hover:bg-gray-100"
                 }`}
               >
                 {tab.label}
@@ -277,8 +287,8 @@ const PositionTables = () => {
       )}
 
       {!userAddress ? (
-        <div className="flex-1 flex  items-center justify-center bg-gray-50 border border-[#E2E2E2] rounded-lg">
-          <button className="px-4 py-2 bg-[#F1EBFD] text-[#703AE6] font-semibold rounded-lg ">
+        <div className={`flex-1 flex items-center justify-center rounded-lg border ${isDark ? "bg-[#222222] border-[#333333]" : "bg-gray-50 border-[#E2E2E2]"}`}>
+          <button className={`px-4 py-2 font-semibold rounded-lg ${isDark ? "bg-[#3D2A6E] text-[#703AE6]" : "bg-[#F1EBFD] text-[#703AE6]"}`}>
             Connect your Wallet
           </button>
         </div>

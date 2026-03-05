@@ -30,6 +30,7 @@ import {
 import { Checkbox } from "../ui/Checkbox";
 import { Dropdown } from "../ui/dropdown";
 import { useUserStore } from "@/store/user";
+import { useTheme } from "@/contexts/theme-context";
 import { Button } from "../ui/button";
 import PerpsOrderTypeTabs from "../ui/PerpsOrderTypeTabs";
 import { Radio } from "../ui/radio-button";
@@ -38,6 +39,7 @@ import { QuantitySlider } from "../ui/quantity-slider";
 import PerpsModals from "./modals/perps-modals";
 
 const PerpsOrderPlacementForm = () => {
+  const { isDark } = useTheme();
   const [activeModal, setActiveModal] = useState<PerpsModalType>(null);
 
   const userAddress = useUserStore((state) => state.address);
@@ -185,20 +187,22 @@ const PerpsOrderPlacementForm = () => {
 
   return (
     <>
-      <form className="w-[316px] bg-[#F7F7F7] border border-[#E2E2E2] rounded-2xl p-4 flex flex-col gap-5 text-[10px] leading-[15px] text-[#111111] font-medium">
+      <form
+        className={`w-[316px] rounded-2xl p-4 flex flex-col gap-5 text-[10px] leading-[15px] font-medium ${isDark ? "bg-[#222222] border border-[#333333] text-[#FFFFFF]" : "bg-[#F7F7F7] border border-[#E2E2E2] text-[#111111]"}`}
+      >
         {/* top buttons */}
         <div className="flex gap-2">
           <button
             type="button"
             onClick={() => setActiveModal("marginMode")}
-            className="flex-1 cursor-pointer h-[39px] py-2.5 rounded-lg bg-[#E2E2E2] text-[12px] leading-[100%] font-semibold"
+            className={`flex-1 cursor-pointer h-[39px] py-2.5 rounded-lg text-[12px] leading-[100%] font-semibold ${isDark ? "bg-[#333333]" : "bg-[#E2E2E2]"}`}
           >
             {marginMode === "cross" ? "Cross" : "Isolated"}
           </button>
           <button
             type="button"
             onClick={() => setActiveModal("leverage")}
-            className="flex-1 cursor-pointer h-[39px] py-2.5 rounded-lg bg-[#E2E2E2] text-[12px] leading-[100%] font-semibold"
+            className={`flex-1 cursor-pointer h-[39px] py-2.5 rounded-lg text-[12px] leading-[100%] font-semibold ${isDark ? "bg-[#333333]" : "bg-[#E2E2E2]"}`}
           >
             {leverage}x
           </button>
@@ -206,7 +210,7 @@ const PerpsOrderPlacementForm = () => {
           <button
             type="button"
             onClick={() => setActiveModal("assetMode")}
-            className="flex-1 cursor-pointer h-[39px] py-2.5 rounded-lg bg-[#E2E2E2] text-[12px] leading-[100%] font-semibold"
+            className={`flex-1 cursor-pointer h-[39px] py-2.5 rounded-lg text-[12px] leading-[100%] font-semibold ${isDark ? "bg-[#333333]" : "bg-[#E2E2E2]"}`}
           >
             {assetMode === "single" ? "S" : "M"}
           </button>
@@ -214,7 +218,7 @@ const PerpsOrderPlacementForm = () => {
           <button
             type="button"
             onClick={() => setActiveModal("positionMode")}
-            className="flex-1 cursor-pointer h-[39px] py-2.5 rounded-lg bg-[#E2E2E2] text-[12px] leading-[100%] font-semibold"
+            className={`flex-1 cursor-pointer h-[39px] py-2.5 rounded-lg text-[12px] leading-[100%] font-semibold ${isDark ? "bg-[#333333]" : "bg-[#E2E2E2]"}`}
           >
             {positionMode === "hedge" ? "Hedge" : "One-Way"}
           </button>
@@ -304,7 +308,9 @@ const PerpsOrderPlacementForm = () => {
                       className={`flex-1 min-w-0 cursor-pointer  h-9 rounded-lg p-2.5  text-[12px] leading-[18px] font-medium  ${
                         noOfLoops === n
                           ? "bg-[#F1EBFD] text-[#703AE6]"
-                          : "bg-white text-[#111111]"
+                          : isDark
+                            ? "bg-[#111111] text-[#FFFFFF]"
+                            : "bg-white text-[#111111]"
                       }`}
                     >
                       {n}
@@ -316,7 +322,9 @@ const PerpsOrderPlacementForm = () => {
                     className={`flex-1 min-w-0 flex items-center justify-center cursor-pointer h-9 rounded-lg p-2.5 text-[20px] leading-[22px] font-medium ${
                       noOfLoops === null
                         ? "bg-[#703AE6] text-white"
-                        : "bg-white text-[#111111]"
+                        : isDark
+                          ? "bg-[#111111] text-[#FFFFFF]"
+                          : "bg-white text-[#111111]"
                     }`}
                   >
                     <Image
@@ -336,7 +344,9 @@ const PerpsOrderPlacementForm = () => {
         {perpsOrderType === "market" && (
           <div className="flex flex-col gap-1">
             <label>Price</label>
-            <div className="h-9 flex items-center p-2 rounded-lg bg-[#E2E2E2] border border-[#E2E2E2] text-[12px] leading-[18px] font-medium">
+            <div
+              className={`h-9 flex items-center p-2 rounded-lg text-[12px] leading-[18px] font-medium ${isDark ? "bg-[#111111] border border-[#333333] text-[#FFFFFF]" : "bg-[#E2E2E2] border border-[#E2E2E2]"}`}
+            >
               Fill at market price
               <span className="ml-auto text-[8px] leading-3 font-medium">
                 USDT
@@ -433,7 +443,7 @@ const PerpsOrderPlacementForm = () => {
                     <button
                       key={n}
                       type="button"
-                      className="flex-1 min-w-0 cursor-pointer h-9 rounded-lg p-2.5 text-[12px] leading-[18px] font-medium bg-white"
+                      className={`flex-1 min-w-0 cursor-pointer h-9 rounded-lg p-2.5 text-[12px] leading-[18px] font-medium ${isDark ? "bg-[#111111] text-[#FFFFFF]" : "bg-white"}`}
                     >
                       {n}%
                     </button>
@@ -477,14 +487,16 @@ const PerpsOrderPlacementForm = () => {
         {/* quantity */}
         <div className="flex flex-col gap-2.5">
           <div className="flex flex-col gap-1">
-            <label className="text-[10px] leading-[15px] font-medium text-[#111111]">
+            <label className={`text-[10px] leading-[15px] font-medium ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
               Quantity
             </label>
-            <div className="h-9 flex items-center gap-2 p-2 rounded-lg bg-white border border-[#E2E2E2]">
+            <div
+              className={`h-9 flex items-center gap-2 p-2 rounded-lg ${isDark ? "bg-[#111111] border border-[#333333]" : "bg-white border border-[#E2E2E2]"}`}
+            >
               <input
                 type="number"
                 placeholder="Enter Amount"
-                className="flex-1 min-w-0 bg-transparent text-[12px] leading-[18px] font-medium outline-none placeholder:text-[#C6C6C6]"
+                className={`flex-1 min-w-0 bg-transparent text-[12px] leading-[18px] font-medium outline-none ${isDark ? "text-[#FFFFFF] placeholder:text-[#333333]" : "placeholder:text-[#C6C6C6]"}`}
                 {...register("quantity")}
               />
               <button
@@ -518,11 +530,11 @@ const PerpsOrderPlacementForm = () => {
             markers={[0, 25, 50, 75, 100]}
           />
 
-          {/* cost */}
+          {/* cost
           <div className="flex text-[#5C5B5B] justify-between">
             <span>Cost:</span>
             <span>0.00/0.00 USDT</span>
-          </div>
+          </div> */}
         </div>
 
         {/* scaled order: size Distribution and preview */}
@@ -579,7 +591,9 @@ const PerpsOrderPlacementForm = () => {
             </div>
             <div className="flex flex-col gap-1">
               <label>Average Price</label>
-              <div className="h-9 flex items-center p-2 rounded-lg bg-[#E2E2E2] border border-[#E2E2E2] text-[12px] leading-[18px] font-medium">
+              <div
+                className={`h-9 flex items-center p-2 rounded-lg text-[12px] leading-[18px] font-medium ${isDark ? "bg-[#111111] border border-[#333333] text-[#FFFFFF]" : "bg-[#E2E2E2] border border-[#E2E2E2]"}`}
+              >
                 {/* average price will be calculated based on the size distribution */}
                 --
                 <span className="ml-auto text-[8px] leading-3 font-medium">
@@ -605,7 +619,7 @@ const PerpsOrderPlacementForm = () => {
                 <button
                   type="button"
                   onClick={() => setActiveModal("splitSettings")}
-                  className="cursor-pointer flex items-center justify-center gap-0.5 h-9 w-[120px] rounded-lg border border-[#E2E2E2] bg-[#FFFFFF]  py-2 px-4"
+                  className={`cursor-pointer flex items-center justify-center gap-0.5 h-9 w-[120px] rounded-lg py-2 px-4 ${isDark ? "border border-[#333333] bg-[#111111] text-[#FFFFFF]" : "border border-[#E2E2E2] bg-[#FFFFFF]"}`}
                 >
                   <span className="text-[10px] leading-[15px] font-medium truncate">
                     {splitSettings === "qty-per-order"
@@ -633,7 +647,7 @@ const PerpsOrderPlacementForm = () => {
                 <button
                   type="button"
                   onClick={() => setActiveModal("orderPreference")}
-                  className="cursor-pointer flex items-center justify-center gap-0.5 h-9 w-[120px] rounded-lg border border-[#E2E2E2] bg-[#FFFFFF] py-2 px-4"
+                  className={`cursor-pointer flex items-center justify-center gap-0.5 h-9 w-[120px] rounded-lg py-2 px-4 ${isDark ? "border border-[#333333] bg-[#111111] text-[#FFFFFF]" : "border border-[#E2E2E2] bg-[#FFFFFF]"}`}
                 >
                   <span className="text-[10px] leading-[15px] font-medium truncate">
                     {orderPreference === "faster-execution"
@@ -712,7 +726,9 @@ const PerpsOrderPlacementForm = () => {
                       className={`flex-1 min-w-0 cursor-pointer h-9 rounded-lg p-2.5 text-[12px] leading-[18px] font-medium ${
                         twapHours === h
                           ? "bg-[#F1EBFD] text-[#703AE6]"
-                          : "bg-white text-[#111111]"
+                          : isDark
+                            ? "bg-[#111111] text-[#FFFFFF]"
+                            : "bg-white text-[#111111]"
                       }`}
                     >
                       {h}h
@@ -727,7 +743,9 @@ const PerpsOrderPlacementForm = () => {
                       className={`flex-1 min-w-0 cursor-pointer h-9 rounded-lg p-2.5 text-[12px] leading-[18px] font-medium ${
                         twapMinutes === m
                           ? "bg-[#F1EBFD] text-[#703AE6]"
-                          : "bg-white text-[#111111]"
+                          : isDark
+                            ? "bg-[#111111] text-[#FFFFFF]"
+                            : "bg-white text-[#111111]"
                       }`}
                     >
                       {m}m
@@ -755,7 +773,9 @@ const PerpsOrderPlacementForm = () => {
             {/* per order */}
             <div className="flex flex-col gap-1">
               <label>Per Order</label>
-              <div className="h-9 flex items-center p-2 rounded-lg bg-[#E2E2E2] border border-[#E2E2E2] text-[12px] leading-[18px] font-medium">
+              <div
+                className={`h-9 flex items-center p-2 rounded-lg text-[12px] leading-[18px] font-medium ${isDark ? "bg-[#111111] border border-[#333333] text-[#FFFFFF]" : "bg-[#E2E2E2] border border-[#E2E2E2]"}`}
+              >
                 {/* per order will be calculated  */}
                 ≈0.000/0.000 SBTC
               </div>
@@ -806,7 +826,7 @@ const PerpsOrderPlacementForm = () => {
             <button
               type="button"
               onClick={() => setActiveModal("advanceTpSl")}
-              className="cursor-pointer flex font-semibold text-[#333333] underline decoration-solid"
+              className={`cursor-pointer flex font-semibold underline decoration-solid ${isDark ? "text-[#A7A7A7]" : "text-[#333333]"}`}
             >
               Advance TP/SL
             </button>
@@ -816,7 +836,7 @@ const PerpsOrderPlacementForm = () => {
         {/* Time in Force Dropdown */}
         {perpsOrderType === "limit" && (
           <div className="flex items-center gap-2 ">
-            <div className="text-[#6F6F6F] text-[12px]  font-medium leading-[18px] whitespace-nowrap ">
+            <div className="text-[#A7A7A7] text-[12px]  font-medium leading-[18px] whitespace-nowrap ">
               Time in Force
             </div>
             <Dropdown
@@ -854,22 +874,38 @@ const PerpsOrderPlacementForm = () => {
               {/* long side stats */}
               <div className="flex flex-col px-3">
                 <p className="flex gap-0.5">
-                  <span className="text-[#8E8E92] font-semibold">
+                  <span className="text-[#919191] font-semibold">
                     Liq Price:{" "}
                   </span>
-                  <span className="text-[#000000]">-- USDT</span>
+                  <span
+                    className={isDark ? "text-[#FFFFFF]" : "text-[#111111]"}
+                  >
+                    -- USDT
+                  </span>
                 </p>
                 <p className="flex gap-0.5">
-                  <span className="text-[#8E8E92] font-semibold">Cost: </span>
-                  <span className="text-[#000000]">-- USDT</span>
+                  <span className="text-[#919191] font-semibold">Cost: </span>
+                  <span
+                    className={isDark ? "text-[#FFFFFF]" : "text-[#111111]"}
+                  >
+                    -- USDT
+                  </span>
                 </p>
                 <p className="flex gap-0.5">
-                  <span className="text-[#8E8E92] font-semibold">Max: </span>
-                  <span className="text-[#000000]">-- USDT</span>
+                  <span className="text-[#919191] font-semibold">Max: </span>
+                  <span
+                    className={isDark ? "text-[#FFFFFF]" : "text-[#111111]"}
+                  >
+                    -- USDT
+                  </span>
                 </p>
                 <p className="flex gap-0.5">
-                  <span className="text-[#8E8E92] font-semibold">Fees: </span>
-                  <span className="text-[#000000]">-- USDT</span>
+                  <span className="text-[#919191] font-semibold">Fees: </span>
+                  <span
+                    className={isDark ? "text-[#FFFFFF]" : "text-[#111111]"}
+                  >
+                    -- USDT
+                  </span>
                 </p>
               </div>
             </div>
@@ -884,22 +920,38 @@ const PerpsOrderPlacementForm = () => {
               {/* short side stats */}
               <div className="flex flex-col px-3 items-end">
                 <p className="flex gap-0.5">
-                  <span className="text-[#8E8E92] font-semibold">
+                  <span className="text-[#919191] font-semibold">
                     Liq Price:{" "}
                   </span>
-                  <span className="text-[#000000]">-- USDT</span>
+                  <span
+                    className={isDark ? "text-[#FFFFFF]" : "text-[#111111]"}
+                  >
+                    -- USDT
+                  </span>
                 </p>
                 <p className="flex gap-0.5">
-                  <span className="text-[#8E8E92] font-semibold">Cost: </span>
-                  <span className="text-[#000000]">-- USDT</span>
+                  <span className="text-[#919191] font-semibold">Cost: </span>
+                  <span
+                    className={isDark ? "text-[#FFFFFF]" : "text-[#111111]"}
+                  >
+                    -- USDT
+                  </span>
                 </p>
                 <p className="flex gap-0.5">
-                  <span className="text-[#8E8E92] font-semibold">Max: </span>
-                  <span className="text-[#000000]">-- USDT</span>
+                  <span className="text-[#919191] font-semibold">Max: </span>
+                  <span
+                    className={isDark ? "text-[#FFFFFF]" : "text-[#111111]"}
+                  >
+                    -- USDT
+                  </span>
                 </p>
                 <p className="flex gap-0.5">
-                  <span className="text-[#8E8E92] font-semibold">Fees: </span>
-                  <span className="text-[#000000]">-- USDT</span>
+                  <span className="text-[#919191] font-semibold">Fees: </span>
+                  <span
+                    className={isDark ? "text-[#FFFFFF]" : "text-[#111111]"}
+                  >
+                    -- USDT
+                  </span>
                 </p>
               </div>
             </div>

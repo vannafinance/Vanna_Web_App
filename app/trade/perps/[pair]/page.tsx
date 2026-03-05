@@ -9,11 +9,13 @@ import TradingViewChart from "@/components/ui/trading-view-chart";
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { NonOrderBook } from "@/components/perps/non-orderbook";
+import { useTheme } from "@/contexts/theme-context";
 
 const PROTCOL_OPTIONS = ["Aster", "Avantis"];
 const NET_RATE_INTERVALS = ["1h", "4h", "8h", "24h"];
 
 const Perps = () => {
+  const { isDark } = useTheme();
   const params = useParams<{ pair: string }>();
   const rawPair = params.pair;
   const base = rawPair.replace("usdc", "").toUpperCase();
@@ -72,7 +74,7 @@ const Perps = () => {
   }, [isTradingPairSelectorOpen]);
 
   return (
-    <main className="w-full min-h-screen px-5 pt-5 bg-[#FFFFFF] grid grid-cols-[minmax(0,1fr)_316px] gap-2">
+    <main className={`w-full min-h-screen px-5 pt-5 grid grid-cols-[minmax(0,1fr)_316px] gap-2 ${isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"}`}>
       {/* left  */}
       <div className="flex flex-col flex-1 gap-2">
         {/* top: TradingPairInfo, charts & orderbook */}
@@ -107,7 +109,7 @@ const Perps = () => {
             </div>
 
             {/* dex navigation dropdown */}
-            <div className="bg-[#F7F7F7] border border-[#E2E2E2]  rounded-lg p-4 flex gap-5">
+            <div className={`rounded-lg p-4 flex gap-5 ${isDark ? "bg-[#222222] border border-[#333333]" : "bg-[#F7F7F7] border border-[#E2E2E2]"}`}>
               <div className="flex flex-col gap-1">
                 <div className="text-[#A7A7A7] font-medium text-[12px] leading-[18px]">
                   Protocol
@@ -116,7 +118,7 @@ const Perps = () => {
                   items={PROTCOL_OPTIONS}
                   selectedOption={protocol}
                   setSelectedOption={(val) => setProtocol(val)}
-                  classname=" gap-2 text-[#111111] font-medium text-[12px] leading-[18px] "
+                  classname={` gap-2 font-medium text-[12px] leading-[18px] ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}
                   dropdownClassname="text-[12px] leading-[18px] font-medium "
                 />
               </div>
@@ -128,7 +130,7 @@ const Perps = () => {
             <div className="flex-1 rounded-lg ">
               <TradingViewChart />
             </div>
-            <div className=" w-[224px]  h-[541px] p-2 bg-[#F7F7F7] border border-[#E2E2E2] rounded-xl">
+            <div className={`w-[224px] h-[541px] p-2 rounded-xl ${isDark ? "bg-[#222222] border border-[#333333]" : "bg-[#F7F7F7] border border-[#E2E2E2]"}`}>
               <NonOrderBook />
             </div>
           </div>

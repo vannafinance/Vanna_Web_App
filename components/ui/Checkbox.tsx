@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef } from "react";
+import { useTheme } from "@/contexts/theme-context";
 
 export interface CheckboxProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -16,6 +17,7 @@ export const Checkbox = ({
   ...rest
 }: CheckboxProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
+  const { isDark } = useTheme();
   const isDisabled = rest.disabled;
 
   const handleFocusForward = () => {
@@ -39,7 +41,7 @@ export const Checkbox = ({
       <span
         className={`
           w-5 h-5 rounded-md flex items-center justify-center border-2 transition-all
-          ${error ? "border-[#FC5457]" : "border-gray-300"}
+          ${error ? "border-[#FC5457]" : isDark ? "border-[#555555]" : "border-gray-300"}
 
           peer-hover:border-[#703AE6]
           peer-focus:border-[#F845FC]
@@ -64,7 +66,7 @@ export const Checkbox = ({
       </span>
 
       {label && (
-        <span className={`${error ? "text-[#FC5457]" : ""}`}>{label}</span>
+        <span className={`${error ? "text-[#FC5457]" : isDark ? "text-[#FFFFFF]" : ""}`}>{label}</span>
       )}
     </label>
   );

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useTheme } from "@/contexts/theme-context";
 
 interface QuantitySliderProps {
   min?: number;
@@ -20,6 +21,7 @@ export const QuantitySlider = ({
   onChange,
   markers = [0, 25, 50, 75, 100],
 }: QuantitySliderProps) => {
+  const { isDark } = useTheme();
   const [isDragging, setIsDragging] = useState(false);
   const sliderRef = useRef<HTMLDivElement>(null);
 
@@ -83,7 +85,7 @@ export const QuantitySlider = ({
       >
         {/* Track Background */}
         <motion.div
-          className="relative h-1 bg-[#F4F4F4] rounded-full cursor-pointer overflow-visible"
+          className={`relative h-1 rounded-full cursor-pointer overflow-visible ${isDark ? "bg-[#333333]" : "bg-[#F4F4F4]"}`}
           onMouseDown={handleMouseDown}
         >
           {/* Progress Fill with Gradient */}
@@ -138,8 +140,8 @@ export const QuantitySlider = ({
                   left: `${dividerPercentage}%`,
                   width: "15px",
                   height: "15px",
-                  backgroundColor: isPassed ? gradientColor : "#E5E7EB",
-                  border: isPassed ? "none" : "2px solid #D1D5DB",
+                  backgroundColor: isPassed ? gradientColor : isDark ? "#555555" : "#E5E7EB",
+                  border: isPassed ? "none" : isDark ? "2px solid #666666" : "2px solid #D1D5DB",
                   boxShadow: isPassed ? `0 0 8px ${gradientColor}80` : "none",
                   transition: "all 0.3s ease",
                 }}
@@ -213,7 +215,7 @@ export const QuantitySlider = ({
             return (
               <motion.div
                 key={marker}
-                className={`absolute text-[10px] leading-[15px] text-[#111111] font-medium ${
+                className={`absolute text-[10px] leading-[15px] font-medium ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"} ${
                   isFirst
                     ? "left-0"
                     : isLast
@@ -228,7 +230,7 @@ export const QuantitySlider = ({
                   opacity: 1,
                   y: 0,
                   scale: isActive ? 1.2 : 1,
-                  color: isActive ? "#703AE6" : "#111111",
+                  color: isActive ? "#703AE6" : isDark ? "#FFFFFF" : "#111111",
                   fontWeight: isActive ? 600 : 500,
                 }}
                 transition={{ delay: 0.3 + index * 0.05, duration: 0.3 }}

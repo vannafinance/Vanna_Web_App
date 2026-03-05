@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useTheme } from "@/contexts/theme-context";
 
 interface Button {
   text: string;
@@ -14,6 +15,8 @@ interface Button {
 }
 
 export const Button = (props: Button) => {
+  const { isDark } = useTheme();
+  
   return (
     <motion.button
       whileTap={{ scale: 0.95 }}
@@ -35,6 +38,8 @@ export const Button = (props: Button) => {
           ? props.disabled
             ? "bg-[#A7A7A7] text-white"
             : "bg-gradient text-white hover:bg-gradient active:bg-gradient"
+          : isDark
+          ? `disabled:text-[#A7A7A7] text-[#FFFFFF] hover:bg-[#333333] hover:text-[#703AE6] active:bg-[#333333] active:text-[#703AE6] focus:text-[#703AE6]`
           : " disabled:text-[#A7A7A7] text-black hover:bg-[#F1EBFD] hover:text-[#703AE6] active:bg-[#F1EBFD] active:text-[#703AE6] focus:text-[#703AE6]"
       }`}
     >

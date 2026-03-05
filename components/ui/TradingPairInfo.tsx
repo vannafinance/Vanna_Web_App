@@ -1,5 +1,6 @@
 import { TradingPairInfoStats } from "@/lib/types";
 import Image from "next/image";
+import { useTheme } from "@/contexts/theme-context";
 import { Dropdown } from "./dropdown";
 
 interface TradingPairInfoProps {
@@ -19,8 +20,10 @@ const TradingPairInfo = ({
   icon,
   stats,
 }: TradingPairInfoProps) => {
+  const { isDark } = useTheme();
+  
   return (
-    <div className="bg-[#F7F7F7] border border-[#E2E2E2]  rounded-lg p-4 flex flex-1 gap-5">
+    <div className={`border rounded-lg p-4 flex flex-1 gap-5 ${isDark ? "bg-[#222222] border-[#333333]" : "bg-[#F7F7F7] border-[#E2E2E2]"}`}>
       <button
         type="button"
         onClick={onOpenPairSelector}
@@ -28,10 +31,10 @@ const TradingPairInfo = ({
       >
         <Image src={icon} alt={pair} height={24} width={24} />
         <div>
-          <div className="text-[#151517] text-[16px] leading-6 font-semibold">
+          <div className={`${isDark ? "text-[#FFFFFF]" : "text-[#111111]"} text-[16px] leading-6 font-semibold`}>
             {pair.toUpperCase()}
           </div>
-          <div className=" text-[#57585C]  text-[12px] leading-[18px] font-medium text-left">
+          <div className={`text-[12px] leading-[18px] font-medium text-left ${isDark ? "text-[#919191]" : "text-[#57585C]"}`}>
             {market}
           </div>
         </div>
@@ -64,13 +67,13 @@ const TradingPairInfo = ({
                 items={stat.dropdown.items}
                 selectedOption={stat.dropdown.selectedOption}
                 setSelectedOption={stat.dropdown.onSelect}
-                classname="gap-0.5 text-[#111111] font-medium text-[12px] leading-[18px] bg-white border border-[#E2E2E2] rounded px-1  "
+                classname={`gap-0.5 font-medium text-[12px] leading-[18px] rounded px-1 ${isDark ? "text-[#FFFFFF] bg-[#222222] border border-[#333333]" : "text-[#111111] bg-white border border-[#E2E2E2]"}`}
                 dropdownClassname="text-[10px] leading-[12px] font-medium"
                 arrowClassname="size-3"
               />
             )}
           </div>
-          <div className="text-[#111111] font-medium text-[12px] leading-[18px]">
+          <div className={`font-medium text-[12px] leading-[18px] ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
             {stat.value}
           </div>
         </div>

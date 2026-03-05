@@ -86,7 +86,7 @@ export const AnimatedTabs = ({
   if (type === "segment") {
     return (
       <div
-        className={`flex gap-4 rounded-xl border border-[#E2E2E2] p-1.5 bg-white ${containerClassName}`}
+        className={`flex gap-4 rounded-xl p-1.5 ${isDark ? "border border-[#333333] bg-[#111111]" : "border border-[#E2E2E2] bg-white"} ${containerClassName}`}
       >
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
@@ -102,7 +102,7 @@ export const AnimatedTabs = ({
                   : "bg-transparent"
               }`}
             >
-              <div className="rounded-lg bg-white p-3 text-black">
+              <div className={`rounded-lg p-3 ${isDark ? "bg-[#111111] text-[#FFFFFF]" : "bg-white text-black"}`}>
                 {tab.label}
               </div>
             </button>

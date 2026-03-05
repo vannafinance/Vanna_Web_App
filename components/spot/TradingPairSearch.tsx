@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { useMemo, useState } from "react";
+import { useTheme } from "@/contexts/theme-context";
 import { Dropdown } from "../ui/dropdown";
 
 type MarketType = "all" | "perps" | "spot";
@@ -163,6 +164,7 @@ const getSubTabs = (market: MarketType, category: CategoryTab): SubTab[] => {
 export default function TradingPairSearch({
   onSelectPair,
 }: TradingPairSearchProps) {
+  const { isDark } = useTheme();
   const [marketType, setMarketType] = useState<MarketType>("all");
   const [search, setSearch] = useState("");
   const [categoryTab, setCategoryTab] = useState<CategoryTab>("all");
@@ -240,10 +242,10 @@ export default function TradingPairSearch({
     }
 
     return data;
-  }, [marketType, categoryTab, subTab, rwaStatus, search, sortKey, sortOrder]);
+  }, [marketType, categoryTab, subTab, rwaStatus, search, sortKey, sortOrder, favorites]);
 
   return (
-    <div className="w-[880px] rounded-2xl flex bg-[#F4F4F4] border border-[#E2E2E2] shadow">
+    <div className={`w-[880px] rounded-2xl flex border shadow ${isDark ? "bg-[#222222] border-[#333333]" : "bg-[#F4F4F4] border-[#E2E2E2]"}`}>
       {/* left: market type tabs*/}
       <div className="flex flex-col p-2 gap-2 text-[12px]  leading-[18px] font-semibold  items-center">
         {(["all", "perps", "spot"] as MarketType[]).map((market) => (
@@ -253,7 +255,7 @@ export default function TradingPairSearch({
             className={`cursor-pointer w-[92px] h-9 p-2.5 rounded-lg text-left ${
               marketType === market
                 ? "bg-[#F1EBFD] text-[#703AE6]"
-                : "bg-transparent text-[#111111]"
+                : isDark ? "bg-transparent text-[#FFFFFF]" : "bg-transparent text-[#111111]"
             }`}
           >
             {market === "all" ? "All" : market === "perps" ? "Perps" : "Spot"}
@@ -264,7 +266,7 @@ export default function TradingPairSearch({
       <div className="h-80 w-5xl flex flex-1 flex-col p-2 gap-2">
         {/* search & main category tabs */}
         <div className="flex  gap-2">
-          <div className="flex flex-1 gap-[9px] py-2 px-5 rounded-lg bg-[#FFFFFF]">
+          <div className={`flex flex-1 gap-[9px] py-2 px-5 rounded-lg ${isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"}`}>
             <Image
               src="/icons/search.svg"
               alt="search"
@@ -276,7 +278,7 @@ export default function TradingPairSearch({
               placeholder="Search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="flex-1 placeholder:text-[#A7A7A7]  outline-none text-[14px] leading-[21px] font-medium"
+              className={`flex-1 placeholder:text-[#A7A7A7] outline-none text-[14px] leading-[21px] font-medium ${isDark ? "text-[#FFFFFF] bg-transparent" : ""}`}
             />
           </div>
 
@@ -292,7 +294,7 @@ export default function TradingPairSearch({
                 className={`cursor-pointer w-20 py-2 px-3  text-[12px] leading-[18px] font-semibold ${
                   categoryTab === category
                     ? "text-[#703AE6] border-b-2 border-[#703AE6]"
-                    : "text-[#111111]"
+                    : isDark ? "text-[#FFFFFF]" : "text-[#111111]"
                 }`}
               >
                 {category[0].toUpperCase() + category.slice(1)}
@@ -311,7 +313,7 @@ export default function TradingPairSearch({
                   className={`cursor-pointer  py-2 px-3  text-[12px] leading-[18px] font-semibold ${
                     subTab === s
                       ? "text-[#703AE6] border-b-2 border-[#703AE6]"
-                      : "text-[#111111]"
+                      : isDark ? "text-[#FFFFFF]" : "text-[#111111]"
                   }`}
                 >
                   {s === "prelaunch"
@@ -326,7 +328,7 @@ export default function TradingPairSearch({
                   items={RWASTATUS_OPTIONS}
                   selectedOption={rwaStatus}
                   setSelectedOption={(val) => setRwaStatus(val)}
-                  classname=" gap-2 text-[#111111] font-medium text-[12px] leading-[18px] "
+                  classname={`gap-2 font-medium text-[12px] leading-[18px] ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}
                   dropdownClassname="text-[12px] leading-[18px] font-medium "
                 />
               )}
@@ -360,7 +362,11 @@ export default function TradingPairSearch({
               <div
                 key={row.id}
                 onClick={() => onSelectPair?.(row)}
-                className={`cursor-pointer grid text-[12px] text-[#111111] leading-[18px] font-medium items-center hover:bg-[#F1EBFD] transition-colors duration-150 ${
+                className={`cursor-pointer grid text-[12px] leading-[18px] font-medium items-center transition-colors duration-150 ${
+                  isDark 
+                    ? "text-[#FFFFFF] hover:bg-[#333333]" 
+                    : "text-[#111111] hover:bg-[#F1EBFD]"
+                } ${
                   showPerpCols
                     ? "grid-cols-[2.5fr_1fr_1fr_1.2fr_1.2fr_1fr]"
                     : "grid-cols-[2.5fr_1fr_1fr_1.2fr]"
