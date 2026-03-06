@@ -13,32 +13,30 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAccount, usePublicClient, useChainId } from "wagmi";
-import { formatUnits, parseAbiItem, keccak256, toBytes } from "viem";
+import { formatUnits, keccak256, toBytes } from "viem";
 import { vTokenAddressByChain, TOKEN_DECIMALS } from "@/lib/utils/web3/token";
 import VToken from "@/abi/vanna/out/out/VToken.sol/VToken.json";
 import VEther from "@/abi/vanna/out/out/VEther.sol/VEther.json";
 import { EarnAsset } from "@/lib/types";
 
-const DEPOSIT_EVENT = parseAbiItem(
-  "event Deposit(address indexed caller, address indexed owner, uint256 assets, uint256 shares)"
-);
-const WITHDRAW_EVENT = parseAbiItem(
-  "event Withdraw(address indexed caller, address indexed receiver, address indexed owner, uint256 assets, uint256 shares)"
-);
-
-// Event topic hashes for Explorer API
+// Event topic hashes
 const DEPOSIT_TOPIC0 = keccak256(toBytes("Deposit(address,address,uint256,uint256)"));
 const WITHDRAW_TOPIC0 = keccak256(toBytes("Withdraw(address,address,address,uint256,uint256)"));
 
-// Blockscout API endpoints (Etherscan V1 is deprecated, Blockscout still works)
+// Public RPCs that support larger getLogs ranges (10K blocks)
+const PUBLIC_RPC: Record<number, string> = {
+  8453: "https://mainnet.base.org",
+  42161: "https://arb1.arbitrum.io/rpc",
+  10: "https://mainnet.optimism.io",
+};
+
+// Blockscout API (fallback for older history)
 const EXPLORER_API: Record<number, string> = {
   8453: "https://base.blockscout.com/api",
   42161: "https://arbitrum.blockscout.com/api",
   10: "https://optimism.blockscout.com/api",
 };
 
-const MIN_EVENTS = 10;
-const MAX_LOOKBACK = BigInt(2_000_000);
 const CACHE_PREFIX = "vanna_vault_tx_";
 
 export interface UserDistributionItem {
@@ -111,6 +109,8 @@ async function fetchExplorerLogs(
   const baseUrl = EXPLORER_API[chainId];
   if (!baseUrl) return [];
 
+  // Blockscout returns logs ascending (oldest first).
+  // Fetch large batch then sort descending to get latest events.
   const params = new URLSearchParams({
     module: "logs",
     action: "getLogs",
@@ -119,15 +119,21 @@ async function fetchExplorerLogs(
     fromBlock: "0",
     toBlock: "99999999",
     page: "1",
-    offset: "20",
+    offset: "1000",
   });
 
   try {
     const res = await withTimeout(fetch(`${baseUrl}?${params}`), 15_000, "vault-explorer-api");
     const data = await res.json();
     console.log(`[useVaultActivityData] Explorer API response:`, data.status, data.message, "results:", data.result?.length || 0);
-    if (data.status === "1" && Array.isArray(data.result)) {
-      return data.result;
+    if ((data.message === "OK" || data.status === "1") && Array.isArray(data.result)) {
+      // Sort descending by blockNumber (newest first) and return top 20
+      const sorted = data.result.sort((a: any, b: any) => {
+        const blockA = parseInt(a.blockNumber || "0", 16);
+        const blockB = parseInt(b.blockNumber || "0", 16);
+        return blockB - blockA;
+      });
+      return sorted.slice(0, 20);
     }
     return [];
   } catch (err) {
@@ -214,106 +220,6 @@ function saveCache(chainId: number, asset: string, items: TransactionItem[], lat
     };
     localStorage.setItem(getCacheKey(chainId, asset), JSON.stringify(cached));
   } catch {}
-}
-
-async function fetchLogsWithPagination(
-  client: any,
-  vTokenAddress: `0x${string}`,
-  event: any,
-  currentBlock: bigint,
-  minEvents: number
-): Promise<any[]> {
-  const chunkSizes = [BigInt(100000), BigInt(10000), BigInt(2000), BigInt(500), BigInt(100), BigInt(10)];
-  let workingChunk: bigint | null = null;
-
-  for (const chunk of chunkSizes) {
-    try {
-      const from = currentBlock > chunk ? currentBlock - chunk : BigInt(0);
-      await withTimeout(
-        client.getLogs({ address: vTokenAddress, event, fromBlock: from, toBlock: currentBlock }),
-        15_000,
-        `probe(chunk=${chunk})`
-      ) as any[];
-      workingChunk = chunk;
-      break;
-    } catch {
-      continue;
-    }
-  }
-
-  if (!workingChunk) {
-    console.warn("[useVaultActivityData] All chunk sizes failed for", vTokenAddress);
-    return [];
-  }
-
-  console.log(`[useVaultActivityData] Working chunk size: ${workingChunk}`);
-
-  const allLogs: any[] = [];
-  let toBlock = currentBlock;
-  // Scale iterations by chunk size: small chunks need more iterations to cover enough history
-  // chunk=100000 → 20 iter (2M blocks), chunk=10000 → 100, chunk=100 → 200, chunk=10 → 500
-  const maxIterations = Math.min(Number(MAX_LOOKBACK / workingChunk), 500);
-  const minBlock = currentBlock > MAX_LOOKBACK ? currentBlock - MAX_LOOKBACK : BigInt(0);
-  let iterations = 0;
-  const paginationStart = Date.now();
-  const MAX_PAGINATION_MS = 60_000; // 60s total time limit
-
-  while (toBlock > minBlock && iterations < maxIterations) {
-    if (Date.now() - paginationStart > MAX_PAGINATION_MS) {
-      console.warn("[useVaultActivityData] Pagination time limit reached");
-      break;
-    }
-
-    const fromBlock = toBlock > workingChunk ? toBlock - workingChunk : BigInt(0);
-    iterations++;
-
-    try {
-      const logs = await withTimeout(
-        client.getLogs({ address: vTokenAddress, event, fromBlock, toBlock }),
-        15_000,
-        `getLogs(${fromBlock}-${toBlock})`
-      ) as any[];
-      if (logs.length > 0) {
-        allLogs.push(...logs);
-      }
-    } catch (err) {
-      console.warn(`[useVaultActivityData] getLogs failed for ${fromBlock}-${toBlock}:`, err);
-    }
-
-    if (allLogs.length >= minEvents) break;
-
-    toBlock = fromBlock > BigInt(0) ? fromBlock - BigInt(1) : BigInt(0);
-    if (fromBlock === BigInt(0)) break;
-  }
-
-  console.log(`[useVaultActivityData] Collected ${allLogs.length} events in ${iterations} iterations (chunk: ${workingChunk}, ${Date.now() - paginationStart}ms)`);
-  return allLogs;
-}
-
-function buildTxItems(
-  logs: any[],
-  type: "Vault Deposit" | "Vault Withdraw",
-  decimals: number,
-  tokenPrice: number,
-  asset: string
-): TransactionItem[] {
-  return logs.map((log) => {
-    const amount = Number(formatUnits((log.args as any).assets as bigint, decimals));
-    return {
-      date: "",
-      time: "",
-      type,
-      amount: Math.round(amount * 1000) / 1000,
-      amountUsd: Math.round(amount * tokenPrice * 100) / 100,
-      userAddress: shortenAddress((log.args as any).owner as string),
-      fullAddress: (log.args as any).owner as string,
-      asset,
-      txHash: log.transactionHash,
-      icon: getAssetIcon(asset),
-      userIcon: "/icons/user.png",
-      blockNumber: log.blockNumber.toString(),
-    };
-  });
 }
 
 async function fillTimestamps(items: TransactionItem[], client: any): Promise<void> {
@@ -506,53 +412,112 @@ export function useVaultActivityData(asset: EarnAsset): UseVaultActivityDataRetu
       setUserDistribution(distributionData);
 
       // =====================================================
-      // ALL TRANSACTIONS - Explorer API first, then RPC fallback
+      // ALL TRANSACTIONS - Public RPC first, then Blockscout fallback
       // =====================================================
       let txItems: TransactionItem[] = [];
 
-      // STRATEGY 1: Block Explorer API (most reliable)
+      // STRATEGY 1: Direct public RPC (always up-to-date, 10K block range)
       try {
-        console.log("[useVaultActivityData] Strategy 1: Explorer API for", asset, "vault", vTokenAddress);
-        const depositLogs = await fetchExplorerLogs(chainId, vTokenAddress, DEPOSIT_TOPIC0);
-        await new Promise(r => setTimeout(r, 300)); // rate limit delay
-        const withdrawLogs = await fetchExplorerLogs(chainId, vTokenAddress, WITHDRAW_TOPIC0);
+        const rpcUrl = PUBLIC_RPC[chainId];
+        if (rpcUrl) {
+          console.log("[useVaultActivityData] Strategy 1: Public RPC for", asset, "vault", vTokenAddress);
+          const blockRes = await withTimeout(
+            fetch(rpcUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_blockNumber", params: [] }),
+            }),
+            10_000,
+            "rpc-blockNumber"
+          );
+          const blockData = await blockRes.json();
+          const currentBlock = parseInt(blockData.result, 16);
 
-        txItems = [
-          ...explorerLogsToTxItems(depositLogs, "Vault Deposit", decimals, tokenPrice, asset),
-          ...explorerLogsToTxItems(withdrawLogs, "Vault Withdraw", decimals, tokenPrice, asset),
-        ];
-        console.log(`[useVaultActivityData] Explorer API: ${txItems.length} vault events (${depositLogs.length} deposits, ${withdrawLogs.length} withdraws)`);
+          // Try progressively smaller ranges
+          const ranges = [9999, 5000, 2000];
+          for (const range of ranges) {
+            try {
+              const fromBlock = Math.max(0, currentBlock - range);
+              const res = await withTimeout(
+                fetch(rpcUrl, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    jsonrpc: "2.0", id: 2,
+                    method: "eth_getLogs",
+                    params: [{
+                      address: vTokenAddress,
+                      topics: [[DEPOSIT_TOPIC0, WITHDRAW_TOPIC0]],
+                      fromBlock: "0x" + fromBlock.toString(16),
+                      toBlock: "0x" + currentBlock.toString(16),
+                    }],
+                  }),
+                }),
+                20_000,
+                `rpc-getLogs(range=${range})`
+              );
+              const data = await res.json();
+              if (data.result && Array.isArray(data.result)) {
+                console.log(`[useVaultActivityData] Public RPC range=${range}: ${data.result.length} events`);
+                for (const log of data.result) {
+                  const topic0 = log.topics?.[0] || "";
+                  const isDeposit = topic0 === DEPOSIT_TOPIC0;
+                  const type = isDeposit ? "Vault Deposit" as const : "Vault Withdraw" as const;
+
+                  let assets = BigInt(0);
+                  if (log.data && log.data.length >= 66) {
+                    assets = BigInt("0x" + log.data.slice(2, 66));
+                  }
+                  const amount = Number(formatUnits(assets, decimals));
+
+                  const ownerTopic = isDeposit ? log.topics?.[2] : log.topics?.[3];
+                  const owner = extractAddress(ownerTopic || "");
+                  const ts = log.blockTimestamp ? parseInt(log.blockTimestamp, 16) : 0;
+                  const dateObj = ts > 0 ? new Date(ts * 1000) : new Date();
+
+                  txItems.push({
+                    date: ts > 0 ? dateObj.toISOString().split("T")[0] : "",
+                    time: ts > 0 ? dateObj.toTimeString().split(" ")[0] : "",
+                    type,
+                    amount: Math.round(amount * 1000) / 1000,
+                    amountUsd: Math.round(amount * tokenPrice * 100) / 100,
+                    userAddress: shortenAddress(owner),
+                    fullAddress: owner,
+                    asset,
+                    txHash: log.transactionHash || "",
+                    icon: getAssetIcon(asset),
+                    userIcon: "/icons/user.png",
+                    blockNumber: BigInt(log.blockNumber || "0").toString(),
+                  });
+                }
+                break;
+              }
+              if (data.error) {
+                console.warn(`[useVaultActivityData] Public RPC range=${range}:`, data.error.message);
+              }
+            } catch { continue; }
+          }
+          console.log(`[useVaultActivityData] Strategy 1: ${txItems.length} events from public RPC`);
+        }
       } catch (err) {
-        console.warn("[useVaultActivityData] Strategy 1 (Explorer) failed:", err);
+        console.warn("[useVaultActivityData] Strategy 1 (Public RPC) failed:", err);
       }
 
-      // STRATEGY 2: RPC getLogs (fallback)
+      // STRATEGY 2: Blockscout API (fallback / older history)
       if (txItems.length === 0) {
         try {
-          const currentBlock = await withTimeout(
-            publicClient.getBlockNumber(),
-            10_000,
-            "getBlockNumber"
-          ) as bigint;
-
-          console.log("[useVaultActivityData] Strategy 2: RPC getLogs for", asset);
-          const [depositLogs, withdrawLogs] = await Promise.all([
-            fetchLogsWithPagination(publicClient, vTokenAddress, DEPOSIT_EVENT, currentBlock, MIN_EVENTS),
-            fetchLogsWithPagination(publicClient, vTokenAddress, WITHDRAW_EVENT, currentBlock, MIN_EVENTS),
-          ]);
+          console.log("[useVaultActivityData] Strategy 2: Blockscout API for", asset);
+          const depositLogs = await fetchExplorerLogs(chainId, vTokenAddress, DEPOSIT_TOPIC0);
+          await new Promise(r => setTimeout(r, 300));
+          const withdrawLogs = await fetchExplorerLogs(chainId, vTokenAddress, WITHDRAW_TOPIC0);
 
           txItems = [
-            ...buildTxItems(depositLogs, "Vault Deposit", decimals, tokenPrice, asset),
-            ...buildTxItems(withdrawLogs, "Vault Withdraw", decimals, tokenPrice, asset),
+            ...explorerLogsToTxItems(depositLogs, "Vault Deposit", decimals, tokenPrice, asset),
+            ...explorerLogsToTxItems(withdrawLogs, "Vault Withdraw", decimals, tokenPrice, asset),
           ];
-
-          // Fill timestamps from RPC (explorer items already have them)
-          if (txItems.length > 0) {
-            await fillTimestamps(txItems.slice(0, 10), publicClient);
-          }
-          console.log(`[useVaultActivityData] RPC: ${txItems.length} vault events`);
+          console.log(`[useVaultActivityData] Blockscout: ${txItems.length} events`);
         } catch (err) {
-          console.warn("[useVaultActivityData] Strategy 2 (RPC) failed:", err);
+          console.warn("[useVaultActivityData] Strategy 2 (Blockscout) failed:", err);
         }
       }
 
@@ -560,6 +525,8 @@ export function useVaultActivityData(asset: EarnAsset): UseVaultActivityDataRetu
       if (txItems.length > 0) {
         txItems.sort((a, b) => Number(BigInt(b.blockNumber || "0") - BigInt(a.blockNumber || "0")));
         const recent = txItems.slice(0, 10);
+        // Fill timestamps for items missing them
+        await fillTimestamps(recent.filter(t => !t.date), publicClient);
         setTransactions(recent);
         try {
           const latestBlock = BigInt(recent[0].blockNumber || "0");
