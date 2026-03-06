@@ -14,6 +14,7 @@ import {
 import { useFetchAccountCheck } from "@/lib/utils/margin/marginFetchers";
 import { useMarginAccountInfoStore } from "@/store/margin-account-info-store";
 import { useTheme } from "@/contexts/theme-context";
+import { ChevronDownIcon } from "@/components/icons";
 
 export const NetworkDropdown = () => {
   const { isDark } = useTheme();
@@ -125,22 +126,13 @@ export const NetworkDropdown = () => {
             <>Unsupported Network</>
           )}
 
-          <motion.svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={1.5}
-            stroke="currentColor"
-            className="size-5"
+          <motion.div
+            aria-hidden="true"
             animate={{ rotate: isHover ? 180 : 0 }}
-            transition={{ duration: 0.25 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="m19.5 8.25-7.5 7.5-7.5-7.5"
-            />
-          </motion.svg>
+            <ChevronDownIcon className="size-5" />
+          </motion.div>
         </button>
 
         {/* Dropdown List */}
@@ -156,6 +148,7 @@ export const NetworkDropdown = () => {
               `}
               style={{ width: "max-content", minWidth: "100%" }}
               role="listbox"
+              aria-label="Network selection"
             >
               {networkOptions.map((item) => (
                 <motion.button

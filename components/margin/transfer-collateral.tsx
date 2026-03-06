@@ -365,7 +365,7 @@ export const TransferCollateral = () => {
       transition={{ duration: 0.4, ease: "easeOut" }}
     >
       <motion.div
-        className="flex flex-col gap-[24px] rounded-[16px] p-[20px] bg-[#FFFFFF] border-[1px] border-[#E2E2E2]"
+        className={`flex flex-col gap-[24px] rounded-[16px] p-[20px] border-[1px] ${isDark ? "bg-[#1C1C1C] border-[#333333]" : "bg-[#FFFFFF] border-[#E2E2E2]"}`}
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3, delay: 0.1 }}
@@ -418,7 +418,7 @@ export const TransferCollateral = () => {
                         onClick={() => handlePercentageClick(item)}
                         className={`h-[44px] w-[95px] text-center text-[14px] text-medium cursor-pointer ${percentage === item
                             ? `${PERCENTAGE_COLORS[item]} text-white`
-                            : "bg-[#F4F4F4]"
+                            : isDark ? "bg-[#333333] text-white" : "bg-[#F4F4F4]"
                           } p-[10px] rounded-[12px]`}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
@@ -454,7 +454,7 @@ export const TransferCollateral = () => {
               <input
                 id={`collateral-amount-input`}
                 onChange={handleInputChange}
-                className="w-full text-[20px] focus:border-[0px] focus:outline-none font-medium"
+                className={`w-full text-[20px] focus:border-[0px] focus:outline-none font-medium ${isDark ? "bg-transparent text-white placeholder-gray-500" : ""}`}
                 type="text"
                 placeholder="0.0"
                 value={valueInput}
@@ -481,7 +481,7 @@ export const TransferCollateral = () => {
             <p className={`text-[10px] font-medium ${isDark ? "text-white" : ""}`}>
               Transfer To: <span className="font-semibold">WB</span>
             </p>
-            <div className="text-[20px] font-medium ">{maxBalance.toFixed(4)} {selectedCurrency}</div>
+            <div className={`text-[20px] font-medium ${isDark ? "text-white" : ""}`}>{maxBalance.toFixed(4)} {selectedCurrency}</div>
 
             <motion.button
               onClick={handleMaxValueClick}

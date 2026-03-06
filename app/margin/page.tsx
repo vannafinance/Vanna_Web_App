@@ -104,21 +104,7 @@ const Margin = () => {
     return () => clearTimeout(timer);
   }, [publicClient, chainId, userAddress, reloadMarginState]);
 
-  // Derived Account Stats from real marginState
-  // ============================================
-  // Account Stats Semantic Mapping:
-  // 1. Net Health Factor: Health ratio (∞ = safe, 1.0 = liquidation threshold)
-  // 2. Collateral Left Before Liquidation: Equity (Collateral - Debt)
-  // 3. Net Available Collateral: TOTAL collateral value in margin account
-  // 4. Net Amount Borrowed: Total current debt
-  // 5. Net P&L: Not yet implemented (needs historical tracking)
-  //
-  // NOTE: "Net Available Collateral" represents your TOTAL deposited collateral,
-  // NOT the additional borrowing capacity. This makes semantic sense as it shows
-  // "what collateral is available in your account".
-  // ============================================
   const accountStats = useMemo(() => {
-    // Return null for loading state to differentiate from actual zero values
     if (!marginState) {
       console.log('[Account Stats] No margin state available');
       return null;
@@ -127,17 +113,8 @@ const Margin = () => {
     const hf = marginState.hf || 0;
     const collateral = marginState.collateralUsd || 0;
     const borrow = marginState.borrowUsd || 0;
-    const maxBorrow = marginState.maxBorrow || 0;
-    const maxWithdraw = marginState.maxWithdraw || 0;
 
-    // Collateral Left Before Liquidation = Equity (safety buffer)
-    // This is the net value: Collateral - Debt
-    // Represents the value that would remain after paying off all debt
     const collateralLeft = Math.max(0, collateral - borrow);
-
-    // Net Available Collateral = Total collateral value in margin account
-    // This represents the TOTAL amount of collateral you have deposited
-    // NOT the borrowing capacity (that would be maxBorrow)
     const netAvailableCollateral = collateral;
 
     const stats = {
@@ -145,7 +122,7 @@ const Margin = () => {
       collateralLeftBeforeLiquidation: collateralLeft,
       netAvailableCollateral: netAvailableCollateral,
       netAmountBorrowed: borrow,
-      netProfitAndLoss: 0, // TODO: Needs historical data for PnL
+      netProfitAndLoss: 0,
     };
 
     console.log('[Account Stats] Calculated:', stats);
@@ -154,7 +131,6 @@ const Margin = () => {
 
   // Format data for InfoCard component
   const marginAccountInfo = useMemo(() => {
-    // Show loading or zero state
     if (isLoadingMargin || !marginState) {
       return {
         totalBorrowedValue: 0,
@@ -188,25 +164,22 @@ const Margin = () => {
     };
   }, [marginState, isLoadingMargin]);
 
-  // Format account stats value - defined outside rendering
+  // Format account stats value
   const formatAccountStatValue = (itemId: string, value: number) => {
     if (itemId === "netHealthFactor") {
-      // Handle Infinity for health factor (no debt = infinite health)
-      // Also treat very high HF (>999) as infinity for display
       if (value === Infinity || !isFinite(value) || value >= 999) {
         return "∞";
       }
       return formatValue(value, {
         type: "health-factor",
-        showZeroAsDash: true, // Show dash for zero health factor (unusual state)
+        showZeroAsDash: true,
       });
     }
 
-    // For monetary values, show $0.00 instead of dashes
     return `$${formatValue(value, {
       type: "number",
       useLargeFormat: true,
-      showZeroAsDash: false, // Show 0.00 instead of --
+      showZeroAsDash: false,
     })}`;
   };
 
@@ -424,7 +397,6 @@ const Margin = () => {
                   <h2 className={`text-[24px] font-bold ${isDark ? "text-white" : ""}`}>
                     Margin Account Info
                   </h2>
-                  {/* Small loading spinner for info card */}
                   {isLoadingMargin && (
                     <motion.svg
                       className="animate-spin h-5 w-5 text-[#703AE6]"

@@ -9,7 +9,7 @@ export interface TabItem {
   label: string;
 }
 
-type TabType = "gradient" | "solid" | "underline" | "segment" | "ghost" | "ghost-compact";
+type TabType = "gradient" | "solid" | "underline" | "ghost" | "ghost-compact" | "segment";
 
 interface AnimatedTabsProps {
   tabs: TabItem[];
@@ -22,8 +22,7 @@ interface AnimatedTabsProps {
   customTabWidth?: string; // Custom width for tabs (e.g., "w-[200px]")
 }
 
-const HOVER_GRADIENT =
-  "linear-gradient(135deg, rgba(112, 58, 230, 0.08) 0%, rgba(112, 58, 230, 0.04) 100%)";
+const HOVER_GRADIENT = "linear-gradient(135deg, rgba(112, 58, 230, 0.08) 0%, rgba(112, 58, 230, 0.04) 100%)";
 const SPRING_CONFIG = {
   type: "spring" as const,
   stiffness: 300,
@@ -82,35 +81,7 @@ export const AnimatedTabs = ({
     return "transparent";
   };
 
-  // render segment type for orderPlacement form
-  if (type === "segment") {
-    return (
-      <div
-        className={`flex gap-4 rounded-xl border border-[#E2E2E2] p-1.5 bg-white ${containerClassName}`}
-      >
-        {tabs.map((tab) => {
-          const isActive = activeTab === tab.id;
-
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => onTabChange(tab.id)}
-              className={`cursor-pointer flex-1 rounded-lg p-0.5 text-[12px] font-semibold transition-colors ${
-                isActive
-                  ? "bg-linear-to-r from-[#FC5457] to-[#703AE6]"
-                  : "bg-transparent"
-              }`}
-            >
-              <div className="rounded-lg bg-white p-3 text-black">
-                {tab.label}
-              </div>
-            </button>
-          );
-        })}
-      </div>
-    );
-  }
+  
 
   // Render underline type
   if (type === "underline") {
@@ -144,42 +115,7 @@ export const AnimatedTabs = ({
     );
   }
 
-  // Render ghost-compact type
-  if (type === "ghost-compact") {
-    return (
-      <div
-        className={`flex gap-1 bg-white p-1 rounded-lg ${containerClassName}`}
-        onMouseLeave={() => setHoveredTab(null)}
-      >
-        {tabs.map((tab) => {
-          const isActive = activeTab === tab.id;
-          const isHovered = hoveredTab === tab.id;
-
-          return (
-            <motion.button
-              key={tab.id}
-              type="button"
-              onClick={() => onTabChange(tab.id)}
-              onMouseEnter={() => setHoveredTab(tab.id)}
-              className={`cursor-pointer px-4 h-[39px] rounded-lg text-[12px] font-semibold ${tabClassName}`}
-              animate={{
-                backgroundColor: isActive
-                  ? "#F1EBFD"
-                  : isHovered
-                    ? "rgba(241, 235, 253, 0.5)"
-                    : "transparent",
-                color: isActive ? "#703AE6" : "#111111",
-              }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-            >
-              {tab.label}
-            </motion.button>
-          );
-        })}
-      </div>
-    );
-  }
+  
 
   // Render gradient/solid/ghost types
   const containerPadding = (type === "solid" || type === "ghost") ? "p-[4px] w-fit h-fit" : "p-[6px]";
@@ -194,7 +130,7 @@ export const AnimatedTabs = ({
   return (
     <div className={containerClassName}>
       <div
-        className={`border ${isDark ? "border-[#2A2A2A]" : "border-[#E2E2E2]"} ${containerWidth} flex gap-[16px] ${containerPadding} rounded-[12px] h-fit relative overflow-hidden ${
+        className={`border-[1px] ${containerWidth} flex gap-[16px] ${containerPadding} rounded-[12px] h-fit relative overflow-hidden ${
           isDark ? "bg-[#111111]" : "bg-white"
         }`}
         onMouseLeave={() => setHoveredTab(null)}

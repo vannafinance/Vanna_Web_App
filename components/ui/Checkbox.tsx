@@ -2,6 +2,7 @@
 
 import React, { useRef } from "react";
 import { useTheme } from "@/contexts/theme-context";
+import { CheckmarkIcon } from "@/components/icons";
 
 export interface CheckboxProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -66,15 +67,7 @@ export const Checkbox = ({
         `}
         style={borderColor ? { borderColor } : {}}
       >
-        <svg
-          className="w-4 h-4 text-white opacity-0 transition"
-          stroke="currentColor"
-          strokeWidth="3"
-          fill="none"
-          viewBox="0 0 24 24"
-        >
-          <path d="M5 13l4 4L19 7" />
-        </svg>
+        <CheckmarkIcon className="w-4 h-4 text-white opacity-0 transition" />
       </span>
 
       {label && (

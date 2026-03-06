@@ -16,7 +16,7 @@ export const AmountBreakdownDropDown = (
   const isGrid = props.breakdownData.length > 3;
 
   return (
-    <div className="w-fit rounded-[12px] bg-[#F7F7F7] border-[1px] border-[#E2E2E2]">
+    <div className="w-fit rounded-[12px] bg-[#F7F7F7] border-[1px]">
       <div className="text-[12px] font-medium text-black px-[12px] pt-[16px] pb-[4px] border-b-[1px] border-b-[#E5E5E5]">
         Total Breakdown:
       </div>

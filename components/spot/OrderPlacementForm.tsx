@@ -559,8 +559,8 @@ export default function OrderPlacementForm({
 
             {/*Risk Reward */}
             <RiskRewardSelector
-              value={rrRatio}
-              customValue={customRR}
+              value={rrRatio ?? "NA"}
+              customValue={customRR ?? null}
               onChange={(v) => setValue("stopLoss.rrRatio", v)}
               onCustomChange={(v) => setValue("stopLoss.customRR", v)}
             />
