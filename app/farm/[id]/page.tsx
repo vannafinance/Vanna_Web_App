@@ -11,10 +11,14 @@ import { AccountStatsGhost } from "@/components/earn/account-stats-ghost";
 import { LEVERAGE_HEALTH_STATS_ITEMS } from "@/lib/constants/farm";
 import { Chart } from "@/components/earn/chart";
 import { Table } from "@/components/earn/table";
-import { transactionTableBody, transactionTableHeadings } from "@/components/earn/acitivity-tab";
+import { transactionTableHeadings } from "@/components/earn/acitivity-tab";
+import { useVaultActivityData } from "@/lib/hooks/useVaultActivityData";
+import { EarnAsset } from "@/lib/types";
+import { formatNumber } from "@/lib/utils/format-value";
 import { Form } from "@/components/farm/form";
 import { farmTableBody, singleAssetTableBody } from "@/lib/constants/farm";
 import { useMarginAccountInfoStore } from "@/store/margin-account-info-store";
+import { usePositionHistory } from "@/lib/hooks/usePositionHistory";
 import { MARGIN_ACCOUNT_INFO_ITEMS, MARGIN_ACCOUNT_MORE_DETAILS_ITEMS } from "@/lib/constants/margin";
 import { InfoCard } from "@/components/margin/info-card";
 import { motion } from "framer-motion";
@@ -189,6 +193,21 @@ export default function FarmDetailPage() {
   // Check if multi-asset type
   const isMultiAsset = rowData?.tabType === "multi" && farmData.titles && farmData.titles.length > 1;
 
+  // Derive vault asset from farm data for live transaction fetching
+  const vaultAsset = useMemo((): EarnAsset => {
+    const raw = farmData.titles?.[0]?.toUpperCase() || farmData.title?.split(" / ")[0]?.toUpperCase() || "ETH";
+    if (raw === "ETH" || raw === "WETH") return "ETH";
+    if (raw === "USDC") return "USDC";
+    if (raw === "USDT") return "USDT";
+    return "ETH";
+  }, [farmData.titles, farmData.title]);
+
+  // Fetch REAL vault activity from blockchain
+  const { transactions: vaultTxs } = useVaultActivityData(vaultAsset);
+
+  // Fetch position history (Borrow/Repay events) for the Position History tab
+  const { history: positionHistory, isLoading: historyLoading } = usePositionHistory();
+
   // Tab state for table
   const [activeTab, setActiveTab] = useState<string>("current-position");
 
@@ -197,13 +216,68 @@ export default function FarmDetailPage() {
     setActiveTab(tabId);
   }, []);
 
-  // Get table body based on active tab
+  // Build table body from live vault transactions or position history
   const tableBodyData = useMemo(() => {
     if (activeTab === "position-history") {
-      return { rows: [] }; // No data for position history
+      // Show Borrow/Repay history if available
+      if (positionHistory.length > 0) {
+        return {
+          rows: positionHistory.map((item) => ({
+            cell: [
+              { title: item.date, description: item.time },
+              { title: item.type },
+              {
+                icon: item.tokenSymbol === "USDC" ? "/icons/usdc-icon.svg"
+                  : item.tokenSymbol === "USDT" ? "/icons/usdt-icon.svg"
+                  : "/icons/eth-icon.png",
+                title: `${formatNumber(item.amount)} ${item.tokenSymbol === "WETH" ? "ETH" : item.tokenSymbol}`,
+                description: `$${formatNumber(item.amountUsd)}`,
+              },
+              {
+                icon: "/icons/user.png",
+                title: `${item.account.slice(0, 6)}...${item.account.slice(-4)}`,
+              },
+            ],
+          })),
+        };
+      }
+      // Fallback: show vault deposit/withdraw events as history
+      if (vaultTxs.length > 0) {
+        return {
+          rows: vaultTxs.map((tx) => ({
+            cell: [
+              { title: tx.date, description: tx.time },
+              { title: tx.type },
+              {
+                icon: tx.icon,
+                title: `${formatNumber(tx.amount)} ${tx.asset}`,
+                description: `$${formatNumber(tx.amountUsd)}`,
+              },
+              { icon: tx.userIcon, title: tx.userAddress },
+            ],
+          })),
+        };
+      }
+      return { rows: [] };
     }
-    return transactionTableBody; // Show data for current position
-  }, [activeTab]);
+    if (vaultTxs.length === 0) {
+      return { rows: [] };
+    }
+    return {
+      rows: vaultTxs.map((tx) => ({
+        cell: [
+          { title: tx.date, description: tx.time },
+          { title: tx.type },
+          {
+            icon: tx.icon,
+            title: `${formatNumber(tx.amount)} ${tx.asset}`,
+            description: `$${formatNumber(tx.amountUsd)}`,
+          },
+          { icon: tx.userIcon, title: tx.userAddress },
+        ],
+      })),
+    };
+  }, [activeTab, vaultTxs, positionHistory]);
 
   const handleBackToPools = () => {
     router.push("/farm");

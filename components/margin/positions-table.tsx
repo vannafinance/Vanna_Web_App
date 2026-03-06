@@ -24,12 +24,20 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { Button } from "../ui/button";
 import { usePositionsData } from "@/lib/hooks/usePositionsData";
-import { usePositionHistory } from "@/lib/hooks/usePositionHistory";
+import { usePositionHistory, PositionHistoryItem } from "@/lib/hooks/usePositionHistory";
+import { useVaultActivityData } from "@/lib/hooks/useVaultActivityData";
 import { AnimatedTabs } from "../ui/animated-tabs";
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useMarginAccountInfoStore } from "@/store/margin-account-info-store";
 import { TABLE_ROW_HEADINGS, HISTORY_TABLE_HEADINGS, COIN_ICONS } from "@/lib/constants/margin";
 import { useTheme } from "@/contexts/theme-context";
+import { useChainId } from "wagmi";
+
+const EXPLORER_URL: Record<number, string> = {
+  8453: "https://basescan.org",
+  42161: "https://arbiscan.io",
+  10: "https://optimistic.etherscan.io",
+};
 
 interface PositionstableProps {
   onRepayClick?: () => void;
@@ -50,16 +58,32 @@ const formatTokenName = (symbol: string): string => {
   return symbol;
 };
 
+// Helper: get color classes for event type badge
+const getEventTypeStyle = (type: string, isDark: boolean): string => {
+  switch (type) {
+    case "Borrow":
+      return "bg-[#FFF0F0] text-[#E53935]";
+    case "Repay":
+      return "bg-[#E8F5E9] text-[#2E7D32]";
+    case "Account Opened":
+      return "bg-[#E3F2FD] text-[#1565C0]";
+    case "Vault Deposit":
+      return "bg-[#F3E5F5] text-[#7B1FA2]";
+    case "Vault Withdraw":
+      return "bg-[#FFF3E0] text-[#E65100]";
+    default:
+      return isDark ? "bg-[#333333] text-[#CCCCCC]" : "bg-[#F0F0F0] text-[#666666]";
+  }
+};
+
 export const Positionstable = ({ onRepayClick, onOpenPositionClick }: PositionstableProps) => {
   const { isDark } = useTheme();
+  const connectedChainId = useChainId();
 
-  // =====================================================
-  // KEY CHANGE: Using real blockchain data instead of store
-  // OLD: const positions = useCollateralBorrowStore((state) => state.position);
-  // NEW: usePositionsData() fetches from chain
-  // =====================================================
   const { positions, isLoading, error, refetch } = usePositionsData();
   const { history, isLoading: historyLoading, error: historyError, refetch: refetchHistory } = usePositionHistory();
+  // Vault activity as fallback when no borrow/repay history
+  const { transactions: vaultTxs } = useVaultActivityData("ETH");
 
   const [activeTab, setActiveTab] = useState<string>("currentPositions");
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -74,6 +98,28 @@ export const Positionstable = ({ onRepayClick, onOpenPositionClick }: Positionst
       return positions.filter((pos: Position) => pos.isOpen === false);
     }
   }, [positions, activeTab]);
+
+  // Combined history: borrow/repay events + vault deposit/withdraw as fallback
+  const combinedHistory = useMemo(() => {
+    if (history.length > 0) return history;
+    // Fallback: convert vault transactions to PositionHistoryItem format
+    if (vaultTxs.length > 0) {
+      return vaultTxs.map((tx): PositionHistoryItem => ({
+        date: tx.date,
+        time: tx.time,
+        type: tx.type as any, // "Vault Deposit" | "Vault Withdraw"
+        token: "",
+        tokenSymbol: tx.asset,
+        amount: tx.amount,
+        amountUsd: tx.amountUsd,
+        account: tx.fullAddress || tx.userAddress,
+        owner: tx.fullAddress || tx.userAddress,
+        txHash: tx.txHash,
+        blockNumber: BigInt(tx.blockNumber || "0"),
+      }));
+    }
+    return [];
+  }, [history, vaultTxs]);
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredPositions.length / ITEMS_PER_PAGE);
@@ -186,7 +232,7 @@ export const Positionstable = ({ onRepayClick, onOpenPositionClick }: Positionst
             <Button size="small" type="ghost" text="Retry" onClick={refetchHistory} disabled={false}/>
           </section>
         ) :
-        history.length > 0 ? (
+        combinedHistory.length > 0 ? (
           <section className="rounded-[12px] w-full">
             {/* History table headers */}
             <ul className="flex" role="row">
@@ -208,7 +254,7 @@ export const Positionstable = ({ onRepayClick, onOpenPositionClick }: Positionst
 
             {/* History table rows */}
             <section className="flex flex-col gap-[10px] max-h-[400px] overflow-y-auto pr-[4px] thin-scrollbar">
-              {history.map((item, idx) => (
+              {combinedHistory.map((item, idx) => (
                 <motion.article
                   key={`${item.txHash}-${idx}`}
                   className={`flex border-[1px] rounded-[12px] w-full ${
@@ -221,45 +267,45 @@ export const Positionstable = ({ onRepayClick, onOpenPositionClick }: Positionst
                 >
                   {/* Date */}
                   <div className={`w-full flex flex-col justify-center py-[16px] px-[12px] ${isDark ? "text-white" : ""}`}>
-                    <div className="text-[14px] font-medium">{item.date}</div>
-                    <div className={`text-[12px] ${isDark ? "text-[#919191]" : "text-[#76737B]"}`}>{item.time}</div>
+                    <div className="text-[14px] font-medium">{item.date || "-"}</div>
+                    <div className={`text-[12px] ${isDark ? "text-[#919191]" : "text-[#76737B]"}`}>{item.time || ""}</div>
                   </div>
 
-                  {/* Type */}
+                  {/* Type - colored badge */}
                   <div className="w-full flex items-center py-[16px] px-[12px]">
-                    <span className={`px-[10px] py-[4px] rounded-[6px] text-[13px] font-medium ${
-                      item.type === "Borrow"
-                        ? "bg-[#FFF0F0] text-[#E53935]"
-                        : "bg-[#E8F5E9] text-[#2E7D32]"
-                    }`}>
+                    <span className={`px-[10px] py-[4px] rounded-[6px] text-[13px] font-medium ${getEventTypeStyle(item.type, isDark)}`}>
                       {item.type}
                     </span>
                   </div>
 
                   {/* Token */}
                   <div className="w-full flex gap-[8px] items-center py-[16px] px-[12px]">
-                    <Image
-                      src={getTokenIcon(item.tokenSymbol)}
-                      alt={item.tokenSymbol}
-                      width={20}
-                      height={20}
-                      className="rounded-[10px] flex-shrink-0"
-                    />
+                    {item.tokenSymbol && item.tokenSymbol !== "-" && (
+                      <Image
+                        src={getTokenIcon(item.tokenSymbol)}
+                        alt={item.tokenSymbol}
+                        width={20}
+                        height={20}
+                        className="rounded-[10px] flex-shrink-0"
+                      />
+                    )}
                     <span className={`text-[14px] font-medium ${isDark ? "text-white" : ""}`}>
-                      {item.tokenSymbol === "WETH" ? "ETH" : item.tokenSymbol}
+                      {item.tokenSymbol === "WETH" ? "ETH" : (item.tokenSymbol || "-")}
                     </span>
                   </div>
 
                   {/* Amount */}
                   <div className={`w-full flex flex-col justify-center py-[16px] px-[12px] ${isDark ? "text-white" : ""}`}>
-                    <div className="text-[14px] font-medium">{item.amount}</div>
-                    <div className={`text-[12px] ${isDark ? "text-[#919191]" : "text-[#76737B]"}`}>${item.amountUsd}</div>
+                    <div className="text-[14px] font-medium">{item.amount || "-"}</div>
+                    <div className={`text-[12px] ${isDark ? "text-[#919191]" : "text-[#76737B]"}`}>
+                      {item.amountUsd ? `$${item.amountUsd}` : ""}
+                    </div>
                   </div>
 
                   {/* Tx Hash */}
                   <div className="w-full flex items-center py-[16px] px-[12px]">
                     <a
-                      href={`https://basescan.org/tx/${item.txHash}`}
+                      href={`${EXPLORER_URL[connectedChainId] || "https://basescan.org"}/tx/${item.txHash}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-[13px] font-medium text-[#703AE6] hover:underline"
@@ -276,7 +322,10 @@ export const Positionstable = ({ onRepayClick, onOpenPositionClick }: Positionst
             isDark ? "bg-[#222222]" : "bg-[#F7F7F7]"
           }`}>
             <p className={`text-[14px] font-medium ${isDark ? "text-[#919191]" : "text-[#76737B]"}`}>
-              No borrow/repay history found
+              No transaction history found
+            </p>
+            <p className={`text-[12px] mt-[4px] ${isDark ? "text-[#666666]" : "text-[#A0A0A0]"}`}>
+              Borrow, repay, or deposit to see activity here
             </p>
           </section>
         )

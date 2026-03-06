@@ -129,6 +129,7 @@ export function usePositionsData(): UsePositionsDataReturn {
           let collateralToken = "USD";
           let collateralAmount = 0;
           let collateralUsdValue = 0;
+          let displayedCollUsd = 0; // USD value of the displayed token only
 
           if (assetAddresses.length > 0) {
             // Build multicall for all collateral tokens: symbol, decimals, balanceOf
@@ -172,10 +173,13 @@ export function usePositionsData(): UsePositionsDataReturn {
                   maxCollUsd = usd;
                   collateralToken = sym;
                   collateralAmount = bal;
+                  displayedCollUsd = usd;
                 }
               }
             }
 
+            // Use displayed token's USD for the collateral label,
+            // but keep totalCollUsd for leverage calculation
             collateralUsdValue = totalCollUsd;
           }
 
@@ -246,10 +250,14 @@ export function usePositionsData(): UsePositionsDataReturn {
 
                 if (usd > 0.01) {
                   totalBorrowUsd += usd;
+                  // Round amount: 6 decimals for small values (ETH), 4 for larger (USDC)
+                  const roundedBal = bal < 1
+                    ? Math.round(bal * 1_000_000) / 1_000_000
+                    : Math.round(bal * 10_000) / 10_000;
                   borrowed.push({
-                    assetData: { asset: sym, amount: String(bal) },
+                    assetData: { asset: sym, amount: String(roundedBal) },
                     percentage: 0, // calculated below
-                    usdValue: usd,
+                    usdValue: Math.round(usd * 100) / 100,
                   });
                 }
               }
@@ -296,7 +304,7 @@ export function usePositionsData(): UsePositionsDataReturn {
               asset: collateralToken,
               amount: String(Math.round(collateralAmount * 1000) / 1000),
             },
-            collateralUsdValue: Math.round(collateralUsdValue * 100) / 100,
+            collateralUsdValue: Math.round(displayedCollUsd * 100) / 100,
             borrowed,
             leverage,
             interestAccrued,
