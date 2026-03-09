@@ -41,8 +41,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-<<<<<<< HEAD
-=======
 
 # Auto Claude generated files
 .auto-claude/
@@ -55,4 +53,3 @@ logs/security/
 
 
 ./claude
->>>>>>> 8f96c46 (chore: fresh setup with margin and earn flow)

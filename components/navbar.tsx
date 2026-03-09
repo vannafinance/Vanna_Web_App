@@ -22,6 +22,7 @@ import { useMarginAccountInfoStore } from "@/store/margin-account-info-store";
 import { toast } from "sonner";
 import { SunIcon, MoonIcon } from "@/components/icons";
 import { gsap } from "gsap";
+import { DepositModal } from "./ui/deposit-modal";
 
 
 interface Navbar {
@@ -41,6 +42,7 @@ export const Navbar = (props: Navbar) => {
   const setUserAddress = useUserStore((state) => state.set);
   const userAddress = useUserStore((state) => state.address);
   const [open, setOpen] = useState(false)
+  const [depositModalOpen, setDepositModalOpen] = useState(false)
   const hasMarginAccount = useMarginAccountInfoStore((state) => state.hasMarginAccount);
   const setHasMarginAccount = useMarginAccountInfoStore((state) => state.set);
 
@@ -436,9 +438,7 @@ export const Navbar = (props: Navbar) => {
               size="small"
               type="navbar"
               disabled={false}
-              onClick={() => {
-                // TODO: Implement deposit logic
-              }}
+              onClick={() => setDepositModalOpen(true)}
               text="DEPOSIT"
               ariaLabel="Deposit to your account"
             ></Button>
@@ -543,6 +543,12 @@ export const Navbar = (props: Navbar) => {
           })}
         </div>
       )}
+
+      {/* Deposit Modal */}
+      <DepositModal
+        isOpen={depositModalOpen}
+        onClose={() => setDepositModalOpen(false)}
+      />
     </div>
   );
 };
