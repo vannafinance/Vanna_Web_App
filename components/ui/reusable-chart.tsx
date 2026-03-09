@@ -50,9 +50,11 @@ export const ReusableChart = ({
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<"Area"> | null>(null);
+  const formatYAxisLabelRef = useRef(formatYAxisLabel);
 
+  // Create chart only once when container is ready
   useEffect(() => {
-    if (!chartContainerRef.current) return;
+    if (!chartContainerRef.current || chartRef.current) return;
 
     // Create chart
     const chart = createChart(chartContainerRef.current, {
@@ -78,10 +80,10 @@ export const ReusableChart = ({
           top: 0.1,
           bottom: 0.1,
         },
-        ...(formatYAxisLabel && {
+        ...(formatYAxisLabelRef.current && {
           priceFormat: {
-            type: "custom",
-            formatter: (price: number) => formatYAxisLabel(price),
+            type: "custom" as const,
+            formatter: (price: number) => formatYAxisLabelRef.current!(price),
           },
         }),
       },
@@ -108,6 +110,21 @@ export const ReusableChart = ({
     chartRef.current = chart;
     seriesRef.current = areaSeries;
 
+    // Set initial data if available
+    if (data && Object.keys(data).length > 0) {
+      const chartData = Object.entries(data)
+        .map(([dateStr, value]) => ({
+          time: dateStr as any,
+          value: value,
+        }))
+        .sort((a, b) => a.time.localeCompare(b.time));
+      
+      if (chartData.length > 0) {
+        areaSeries.setData(chartData);
+        chart.timeScale().fitContent();
+      }
+    }
+
     // Handle resize
     const handleResize = () => {
       if (chartContainerRef.current && chartRef.current) {
@@ -121,13 +138,59 @@ export const ReusableChart = ({
 
     return () => {
       window.removeEventListener("resize", handleResize);
-      chart.remove();
+      if (chartRef.current) {
+        chartRef.current.remove();
+        chartRef.current = null;
+        seriesRef.current = null;
+      }
     };
-  }, [gradientColors, lineColor, height, showGrid, formatYAxisLabel, textColor]);
+  }, []); // Only run once on mount
+
+  // Update chart options when they change (without recreating chart)
+  useEffect(() => {
+    if (!chartRef.current) return;
+
+    chartRef.current.applyOptions({
+      layout: {
+        textColor: textColor,
+      },
+      grid: {
+        vertLines: {
+          visible: showGrid,
+        },
+        horzLines: {
+          visible: showGrid,
+        },
+      },
+      height: height,
+    });
+
+    if (chartContainerRef.current) {
+      chartRef.current.applyOptions({
+        width: chartContainerRef.current.clientWidth,
+      });
+    }
+  }, [textColor, showGrid, height]);
+
+  // Update formatYAxisLabel ref when it changes
+  useEffect(() => {
+    formatYAxisLabelRef.current = formatYAxisLabel;
+  }, [formatYAxisLabel]);
+
+  // Update series colors when they change
+  useEffect(() => {
+    if (!seriesRef.current) return;
+
+    seriesRef.current.applyOptions({
+      lineColor: lineColor,
+      topColor: gradientColors[0],
+      bottomColor: gradientColors[1],
+    });
+  }, [lineColor, gradientColors]);
 
   // Update data when it changes
   useEffect(() => {
-    if (!seriesRef.current || !data) return;
+    if (!seriesRef.current || !data || Object.keys(data).length === 0) return;
 
     // Convert data object to array format {time, value}
     // Lightweight Charts accepts time as string in YYYY-MM-DD format
@@ -143,11 +206,13 @@ export const ReusableChart = ({
         return a.time.localeCompare(b.time);
       });
 
-    seriesRef.current.setData(chartData);
+    if (chartData.length > 0) {
+      seriesRef.current.setData(chartData);
 
-    // Fit content to show all data
-    if (chartRef.current) {
-      chartRef.current.timeScale().fitContent();
+      // Fit content to show all data
+      if (chartRef.current) {
+        chartRef.current.timeScale().fitContent();
+      }
     }
   }, [data]);
 

@@ -34,6 +34,7 @@ export const Navbar = (props: Navbar) => {
   };
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const dropdownItemsRef = useRef<HTMLDivElement[]>([]);
@@ -213,8 +214,8 @@ export const Navbar = (props: Navbar) => {
           />
         </motion.a>
 
-        {/* Navigation items */}
-        <div className="flex gap-[20px] items-center ">
+        {/* Navigation items - hidden below lg, shown on lg+ */}
+        <div className="hidden lg:flex gap-[20px] items-center">
           {groupedItems.primary.map((item, idx) => {
             // Check if current item is active
             const isActive = pathname === item.link;
@@ -422,22 +423,25 @@ export const Navbar = (props: Navbar) => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
         >
+          {/* Deposit button - hidden below 550px, shown on 550px+ */}
           {userAddress && (
-            <Button
-              size="small"
-              type="navbar"
-              disabled={false}
-              onClick={() => {
-                // TODO: Implement deposit logic
-              }}
-              text="DEPOSIT"
-              ariaLabel="Deposit to your account"
-            ></Button>
+            <div className="hidden min-[550px]:block">
+              <Button
+                size="small"
+                type="navbar"
+                disabled={false}
+                onClick={() => {
+                  // TODO: Implement deposit logic
+                }}
+                text="DEPOSIT"
+                ariaLabel="Deposit to your account"
+              ></Button>
+            </div>
           )}
-          {/* Theme toggle button */}
+          {/* Theme toggle button - hidden below lg, shown on lg+ */}
           <button
             type="button"
-            className="flex flex-col justify-center items-center rounded-[8px] py-[12px] px-[10px] h-[44px] border-[1px] cursor-pointer"
+            className="hidden lg:flex flex-col justify-center items-center rounded-[8px] py-[12px] px-[10px] h-[44px] border-[1px] cursor-pointer"
             onClick={toggleTheme}
             aria-label={
               isDark ? "Switch to light theme" : "Switch to dark theme"
@@ -462,34 +466,288 @@ export const Navbar = (props: Navbar) => {
               )}
             </motion.div>
           </button>
-          {/* Login button */}
+          {/* Login button - hidden below lg, shown on lg+ */}
           {!userAddress ? (
-            <Button
-              size="small"
-              type="navbar"
-              disabled={false}
-              onClick={() => {
-                setUserAddress({
-                  address: "0x1234567890123456789012345678901234567890",
-                });
-              }}
-              text="Login"
-              ariaLabel="Login to your account"
-            ></Button>
+            <div className="hidden lg:block">
+              <Button
+                size="small"
+                type="navbar"
+                disabled={false}
+                onClick={() => {
+                  setUserAddress({
+                    address: "0x1234567890123456789012345678901234567890",
+                  });
+                }}
+                text="Login"
+                ariaLabel="Login to your account"
+              ></Button>
+            </div>
           ) : (
             <div
               onClick={() => {
                 setUserAddress({ address: null });
               }}
-              className={`cursor-pointer py-[12px] px-[24px] text-[16px] font-semibold rounded-[8px] h-full w-fit ${
+              className={`hidden lg:block cursor-pointer py-[12px] px-[24px] text-[16px] font-semibold rounded-[8px] h-full w-fit ${
                 isDark ? "bg-[#222222] text-white" : "bg-[#F4F4F4]"
               }`}
             >
               {userAddress.slice(0, 6) + "..." + userAddress.slice(-4)}
             </div>
           )}
+          {/* Hamburger menu button - shown below lg, hidden on lg+ */}
+          <motion.button
+            type="button"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="lg:hidden flex flex-col justify-center items-center rounded-[8px] py-[12px] px-[10px] h-[44px] border-[1px] cursor-pointer"
+            aria-label="Toggle mobile menu"
+            aria-expanded={isMobileMenuOpen}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <div className="w-[24px] h-[24px] flex flex-col justify-center items-center gap-[4px]">
+              <motion.span
+                className={`w-full h-[2px] rounded-full ${
+                  isDark ? "bg-white" : "bg-black"
+                }`}
+                animate={{
+                  rotate: isMobileMenuOpen ? 45 : 0,
+                  y: isMobileMenuOpen ? 6 : 0,
+                }}
+                transition={{ duration: 0.2 }}
+              />
+              <motion.span
+                className={`w-full h-[2px] rounded-full ${
+                  isDark ? "bg-white" : "bg-black"
+                }`}
+                animate={{ opacity: isMobileMenuOpen ? 0 : 1 }}
+                transition={{ duration: 0.2 }}
+              />
+              <motion.span
+                className={`w-full h-[2px] rounded-full ${
+                  isDark ? "bg-white" : "bg-black"
+                }`}
+                animate={{
+                  rotate: isMobileMenuOpen ? -45 : 0,
+                  y: isMobileMenuOpen ? -6 : 0,
+                }}
+                transition={{ duration: 0.2 }}
+              />
+            </div>
+          </motion.button>
         </motion.div>
       </motion.div>
+
+      {/* Mobile Menu - Slide in from right */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            {/* Slide-in menu */}
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className={`fixed top-0 right-0 h-full w-[320px] max-w-[85vw] z-50 lg:hidden overflow-y-auto ${
+                isDark ? "bg-[#111111]" : "bg-white"
+              } shadow-2xl`}
+            >
+              <div className="flex flex-col h-full">
+                {/* Header with close button */}
+                <div className="flex justify-between items-center p-[20px] border-b-[1px] border-[#333]">
+                  <h2 className={`text-[18px] font-semibold ${isDark ? "text-white" : "text-black"}`}>
+                    Menu
+                  </h2>
+                  <motion.button
+                    type="button"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`p-[8px] rounded-[8px] ${isDark ? "hover:bg-[#222222]" : "hover:bg-[#F4F4F4]"}`}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    aria-label="Close menu"
+                  >
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      className={isDark ? "stroke-white" : "stroke-black"}
+                    >
+                      <path
+                        d="M18 6L6 18M6 6l12 12"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </motion.button>
+                </div>
+
+                {/* Menu Content */}
+                <div className="flex-1 p-[20px] flex flex-col gap-[16px]">
+                  {/* Primary nav items */}
+                  {groupedItems.primary.map((item) => {
+                    const isActive = pathname === item.link;
+                    return (
+                      <motion.button
+                        key={item.link}
+                        onClick={() => {
+                          handleNavItemClickWithLink(item);
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className={`text-left rounded-[8px] py-[12px] px-[16px] text-[14px] font-medium transition-colors ${
+                          isActive
+                            ? "bg-[#FFE6F2] text-[#FF007A]"
+                            : isDark
+                            ? "text-white hover:bg-[#222222]"
+                            : "text-black hover:bg-[#F4F4F4]"
+                        }`}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        {item.title}
+                      </motion.button>
+                    );
+                  })}
+
+                  {/* Bordered nav items */}
+                  {groupedItems.bordered.map((item) => {
+                    const isActive =
+                      item.title === "Trade"
+                        ? pathname === item.link ||
+                          tradeItems.some((tradeItem) => pathname === tradeItem.link)
+                        : pathname === item.link;
+                    return (
+                      <motion.button
+                        key={item.link}
+                        onClick={() => {
+                          handleNavItemClickWithLink(item);
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className={`text-left rounded-[8px] py-[12px] px-[16px] text-[14px] font-medium transition-colors ${
+                          isActive
+                            ? "bg-[#FFE6F2] text-[#FF007A]"
+                            : isDark
+                            ? "text-white hover:bg-[#222222]"
+                            : "text-black hover:bg-[#F4F4F4]"
+                        }`}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        {item.title}
+                      </motion.button>
+                    );
+                  })}
+
+                  {/* Secondary nav items */}
+                  {groupedItems.secondary.map((item) => {
+                    const isActive = pathname === item.link;
+                    return (
+                      <motion.button
+                        key={item.link}
+                        onClick={() => {
+                          handleNavItemClickWithLink(item);
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className={`text-left rounded-[8px] py-[12px] px-[16px] text-[14px] font-medium transition-colors ${
+                          isActive
+                            ? "bg-[#FFE6F2] text-[#FF007A]"
+                            : isDark
+                            ? "text-white hover:bg-[#222222]"
+                            : "text-black hover:bg-[#F4F4F4]"
+                        }`}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        {item.title}
+                      </motion.button>
+                    );
+                  })}
+
+                  {/* Divider */}
+                  <div className={`h-[1px] ${isDark ? "bg-[#333]" : "bg-[#E2E2E2]"}`} />
+
+                  {/* Deposit button */}
+                  {userAddress && (
+                    <div className="w-full">
+                      <Button
+                        size="small"
+                        type="navbar"
+                        disabled={false}
+                        onClick={() => {
+                          // TODO: Implement deposit logic
+                          setIsMobileMenuOpen(false);
+                        }}
+                        text="DEPOSIT"
+                        ariaLabel="Deposit to your account"
+                      ></Button>
+                    </div>
+                  )}
+
+                  {/* Theme toggle */}
+                  <button
+                    type="button"
+                    onClick={toggleTheme}
+                    className={`w-full flex items-center justify-between rounded-[8px] py-[12px] px-[16px] text-[14px] font-medium transition-colors ${
+                      isDark
+                        ? "text-white hover:bg-[#222222]"
+                        : "text-black hover:bg-[#F4F4F4]"
+                    }`}
+                    aria-label={
+                      isDark ? "Switch to light theme" : "Switch to dark theme"
+                    }
+                  >
+                    <span>{isDark ? "Light Mode" : "Dark Mode"}</span>
+                    <div className="w-[24px] h-[24px] flex items-center justify-center">
+                      {isDark ? <SunIcon /> : <MoonIcon />}
+                    </div>
+                  </button>
+
+                  {/* Login button or Address */}
+                  {!userAddress ? (
+                    <div className="w-full">
+                      <Button
+                        size="small"
+                        type="navbar"
+                        disabled={false}
+                        onClick={() => {
+                          setUserAddress({
+                            address: "0x1234567890123456789012345678901234567890",
+                          });
+                          setIsMobileMenuOpen(false);
+                        }}
+                        text="Login"
+                        ariaLabel="Login to your account"
+                      ></Button>
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => {
+                        setUserAddress({ address: null });
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={`cursor-pointer py-[12px] px-[24px] text-[16px] font-semibold rounded-[8px] text-center ${
+                        isDark ? "bg-[#222222] text-white" : "bg-[#F4F4F4] text-black"
+                      }`}
+                    >
+                      {userAddress.slice(0, 6) + "..." + userAddress.slice(-4)}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
       {isDropdownOpen && (
         <div
           ref={dropdownRef}

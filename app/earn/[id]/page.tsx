@@ -22,14 +22,14 @@ import { ChevronLeftIcon } from "@/components/icons";
 // Helper function to parse values with K/M/B suffixes
 const parseAmountValue = (value?: string): number => {
   if (!value) return 0;
-  
+
   // Remove $ and commas
   const cleaned = value.replace(/[$,]/g, '').trim();
-  
+
   // Check for suffix
   const lastChar = cleaned.slice(-1).toUpperCase();
   const numPart = cleaned.slice(0, -1);
-  
+
   if (lastChar === 'K') {
     return parseFloat(numPart) * 1000;
   } else if (lastChar === 'M') {
@@ -105,7 +105,7 @@ export default function EarnPage({ params }: { params: Promise<{ id: string }> }
   const router = useRouter();
   const selectedVault = useEarnVaultStore((state) => state.selectedVault);
   const [activeTab, setActiveTab] = useState<string>("details");
-  
+
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
   };
@@ -138,7 +138,7 @@ export default function EarnPage({ params }: { params: Promise<{ id: string }> }
   // Prepare account stats items
   const accountStatsItems = useMemo(() => {
     const assetName = vaultData.title;
-    
+
     // Parse amounts from vault data
     const totalSupplyAmount = parseAmountValue(
       'assetsSupplied' in vaultData ? vaultData.assetsSupplied?.title : undefined
@@ -146,10 +146,10 @@ export default function EarnPage({ params }: { params: Promise<{ id: string }> }
     const totalBorrowedAmount = parseAmountValue(
       'assetsBorrowed' in vaultData ? vaultData.assetsBorrowed?.title : undefined
     );
-    
+
     // Calculate Available Liquidity = Total Supply - Total Borrowed
     const availableLiquidity = totalSupplyAmount - totalBorrowedAmount;
-    
+
     const utilizationRate = parseFloat(
       ('utilizationRate' in vaultData ? vaultData.utilizationRate?.title?.replace('%', '') : undefined) || "6.5"
     );
@@ -196,9 +196,8 @@ export default function EarnPage({ params }: { params: Promise<{ id: string }> }
             <motion.button
               type="button"
               onClick={handleBackToPools}
-              className={`w-fit h-fit flex gap-[12px] items-center cursor-pointer text-[16px] font-medium hover:text-[#703AE6] transition-colors ${
-                isDark ? "text-white" : "text-[#5A5555]"
-              }`}
+              className={`w-fit h-fit flex gap-[12px] items-center cursor-pointer text-[16px] font-medium hover:text-[#703AE6] transition-colors ${isDark ? "text-white" : "text-[#5A5555]"
+                }`}
               whileHover={{ x: -4 }}
               transition={{ duration: 0.2 }}
             >
@@ -223,28 +222,24 @@ export default function EarnPage({ params }: { params: Promise<{ id: string }> }
                 />
               </motion.div>
               <div className="w-fit h-fit flex gap-[8px] items-center">
-                <h1 className={`w-fit h-fit text-[24px] font-bold ${
-                  isDark ? "text-white" : "text-[#181822]"
-                }`}>
+                <h1 className={`w-fit h-fit text-[24px] font-bold ${isDark ? "text-white" : "text-[#181822]"
+                  }`}>
                   {vaultData.title}
                 </h1>
                 <div className="w-fit h-fit flex gap-[8px] items-center">
-                  <span className={`text-[12px] font-semibold text-center w-fit h-fit rounded-[4px] py-[2px] px-[6px] ${
-                    isDark ? "bg-[#222222] text-white" : "bg-[#F4F4F4] text-[#0C0C0C]"
-                  }`}>
+                  <span className={`text-[12px] font-semibold text-center w-fit h-fit rounded-[4px] py-[2px] px-[6px] ${isDark ? "bg-[#222222] text-white" : "bg-[#F4F4F4] text-[#0C0C0C]"
+                    }`}>
                     V3
                   </span>
-                  <span className={`text-[12px] font-semibold text-center w-fit h-fit rounded-[4px] py-[2px] px-[6px] ${
-                    isDark ? "bg-[#222222] text-white" : "bg-[#F4F4F4] text-[#0C0C0C]"
-                  }`}>
+                  <span className={`text-[12px] font-semibold text-center w-fit h-fit rounded-[4px] py-[2px] px-[6px] ${isDark ? "bg-[#222222] text-white" : "bg-[#F4F4F4] text-[#0C0C0C]"
+                    }`}>
                     {vaultData.tag}
                   </span>
                 </div>
               </div>
             </div>
-            <div className={`text-[16px] font-semibold w-fit h-[48px] rounded-[12px] py-[12px] pr-[16px] pl-[8px] flex gap-[4px] ${
-              isDark ? "bg-[#222222] text-white" : "bg-[#F4F4F4]"
-            }`}>
+            <div className={`text-[16px] font-semibold w-fit h-[48px] rounded-[12px] py-[12px] pr-[16px] pl-[8px] flex gap-[4px] ${isDark ? "bg-[#222222] text-white" : "bg-[#F4F4F4]"
+              }`}>
               Network:{" "}
               <Image
                 src={iconPath}
@@ -256,7 +251,7 @@ export default function EarnPage({ params }: { params: Promise<{ id: string }> }
           </motion.div>
         </div>
       </motion.header>
-      
+
       <motion.section
         className="px-[80px]"
         aria-label="Vault Statistics"
@@ -265,19 +260,19 @@ export default function EarnPage({ params }: { params: Promise<{ id: string }> }
         animate="visible"
         transition={{ delay: 0.2 }}
       >
-        <AccountStatsGhost items={accountStatsItems} />
+        <AccountStatsGhost items={accountStatsItems} gridCols="lg:grid-cols-4 grid-cols-2" gridRows="lg:grid-rows-1 grid-rows-2" />
       </motion.section>
 
       <motion.section
-        className="px-[80px] pb-[80px] w-full h-fit"
+        className="px-[40px] lg:px-[80px] pb-[80px] w-full h-fit"
         aria-label="Vault Details and Actions"
         variants={contentVariants}
         initial="hidden"
         animate="visible"
       >
-        <motion.div className="flex gap-[20px] w-full h-fit" variants={contentVariants}>
+        <motion.div className="flex flex-col  lg:flex-row  gap-[20px] w-full h-fit" variants={contentVariants}>
           <motion.article
-            className="w-[700px] h-full flex flex-col gap-[24px]"
+            className="w-full lg:w-[700px] h-full flex flex-col gap-[24px]"
             variants={itemVariants}
             whileHover={{ scale: 1.005 }}
             transition={{ duration: 0.2 }}
@@ -288,7 +283,7 @@ export default function EarnPage({ params }: { params: Promise<{ id: string }> }
                 activeTab={activeTab}
                 onTabChange={handleTabChange}
                 type="underline"
-                tabClassName="w-[130px] h-[48px] text-[12px]"
+                tabClassName="w-[130px] lg:w-[130px]  h-[48px] text-[12px]"
                 containerClassName="w-full"
               />
             </nav>
@@ -304,6 +299,7 @@ export default function EarnPage({ params }: { params: Promise<{ id: string }> }
             variants={itemVariants}
             whileHover={{ scale: 1.01 }}
             transition={{ duration: 0.2 }}
+            className="mt-[24px] lg:mt-0"
           >
             <Form />
           </motion.aside>

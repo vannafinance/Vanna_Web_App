@@ -14,6 +14,7 @@ interface AccountStatsProps {
   items: readonly AccountStatItem[];
   values: Record<string, string | number | null | undefined>;
   gridCols?: string; // e.g., "grid-cols-3", "grid-cols-2", etc.
+  gridRows?: string; // e.g., "grid-rows-1", "grid-rows-2", "grid-rows-3", etc.
   backgroundColor?: string;
   darkBackgroundColor?: string;
 }
@@ -22,15 +23,16 @@ export const AccountStats = ({
   items,
   values,
   gridCols = "grid-cols-3",
+  gridRows,
   backgroundColor = "#F7F7F7",
   darkBackgroundColor = "#222222",
 }: AccountStatsProps) => {
   const { isDark } = useTheme();
-  // Use grid-rows-1 if 3 or fewer items, otherwise grid-rows-2
-  const gridRows = items.length <= 3 ? "grid-rows-1" : "grid-rows-2";
+  // Use provided gridRows or calculate based on items length
+  const calculatedGridRows = gridRows || (items.length <= 3 ? "grid-rows-1" : "grid-rows-2");
   
   return (
-    <div className={`border-[1px] rounded-[24px] w-full h-full grid ${gridCols} ${gridRows} gap-x-[20px] gap-y-[0] place-items-center ${
+    <div className={`border-[1px] rounded-[24px] w-full h-full grid ${gridCols} ${calculatedGridRows} gap-x-[20px] gap-y-[0] place-items-center ${
       isDark
         ? darkBackgroundColor ? `bg-[${darkBackgroundColor}]` : "bg-[#222222]"
         : backgroundColor ? `bg-[${backgroundColor}]` : "bg-[#F7F7F7]"
@@ -41,7 +43,7 @@ export const AccountStats = ({
         
         return (
           <motion.article
-            className="px-[20px]  flex flex-col justify-center   w-full h-[160.5px] rounded-[10px]  col-span-1 row-span-1 "
+            className="px-[20px] flex flex-col justify-start w-full h-[160.5px] rounded-[10px] col-span-1 row-span-1"
             key={item.id}
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -52,9 +54,9 @@ export const AccountStats = ({
               ease: "easeOut",
             }}
           >
-            <div className="w-full h-fit flex items-start gap-[16px] ">
+            <div className="w-full h-fit flex flex-col min-[550px]:flex-row items-start gap-[8px] min-[550px]:gap-[16px]">
               <motion.div
-                className={`w-[52px] h-[52px] flex flex-col justify-center items-center p-[2.89px] rounded-[69.33px] flex-shrink-0 ${
+                className={`w-[52px] h-[52px] flex flex-col justify-center items-center p-[2.89px] rounded-[69.33px]  ${
                   isDark ? "bg-black" : "bg-white"
                 }`}
                 initial={{ scale: 0 }}
@@ -74,7 +76,7 @@ export const AccountStats = ({
                   src={item.icon}
                 />
               </motion.div>
-              <div className=" flex flex-col gap-[32px] w-full ">
+              <div className="flex flex-col gap-[24px] min-[550px]:gap-[32px] w-full">
                 <div className={`w-full text-[20px] font-medium ${
                   isDark ? "text-white" : ""
                 }`}>

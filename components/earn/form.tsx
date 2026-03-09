@@ -28,7 +28,7 @@ export const Form = () => {
   const [activeTab, setActiveTab] = useState<string>("supply-liquidity");
   return (
     <motion.section 
-      className={`w-[480px] h-fit rounded-[20px] border-[1px] p-[20px] flex flex-col gap-[20px] ${
+      className={`w-full lg:w-[480px] h-fit rounded-[20px] border-[1px] p-[20px] flex flex-col gap-[20px] ${
         isDark ? "bg-[#222222]" : "bg-[#F4F4F4]"
       }`}
       aria-label="Liquidity Management"

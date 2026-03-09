@@ -122,19 +122,21 @@ export default function Earn() {
           initial="hidden"
           animate="visible"
         >
-          <motion.div className="flex gap-[16px] w-full h-fit" variants={containerVariants}>
-            <motion.article 
-              className="w-[437.33px] h-fit"
-              variants={itemVariants}
-            >
-              <Chart containerWidth="w-[437.33px]" containerHeight="h-[331px]" type="overall-deposit" />
-            </motion.article>
-            <motion.article 
-              className="w-[437.33px] h-fit"
-              variants={itemVariants}
-            >
-              <Chart containerWidth="w-[437.33px]" containerHeight="h-[331px]" type="net-apy" />
-            </motion.article>
+          <motion.div className="flex flex-col xl:flex-row gap-[16px] w-full h-fit" variants={containerVariants}>
+            <div className="flex flex-col md:flex-row gap-[16px] w-full xl:w-fit">
+              <motion.article 
+                className="w-full min-w-[220px] sm:min-w-[336px] lg:min-w-[437.33px] h-fit"
+                variants={itemVariants}
+              >
+                <Chart containerWidth="w-full"  containerHeight="md:h-[331px] h-[331px] " type="overall-deposit" />
+              </motion.article>
+              <motion.article 
+                className="w-full min-w-[220px] sm:min-w-[336px] lg:min-w-[437.33px] h-fit"
+                variants={itemVariants}
+              >
+                <Chart containerWidth="w-full" containerHeight="md:h-[331px] h-[331px]" type="net-apy" />
+              </motion.article>
+            </div>
             <motion.aside 
               className="w-full h-fit"
               variants={itemVariants}
@@ -146,7 +148,7 @@ export default function Earn() {
       )}
 
       <motion.section
-        className="h-[206px] w-full pt-[40px] px-[40px]"
+        className="h-[800px] sm:h-[730px] md:h-[300px]  w-full pt-[40px] px-[40px]"
         aria-label="Account Statistics"
         variants={fadeInVariants}
         initial="hidden"
@@ -159,6 +161,9 @@ export default function Earn() {
             collateralLeftBeforeLiquidation: !userAddress ? "-" : 1000,
             netAvailableCollateral: !userAddress ? "-" : 1000,
           }}
+          gridCols="grid-cols-1 md:grid-cols-3 "
+          gridRows="grid-rows-3 md:grid-rows-1"
+
         />
       </motion.section>
 

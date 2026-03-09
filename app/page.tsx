@@ -5,14 +5,12 @@ import { AmountBreakdownDropDown } from "@/components/ui/amount-breakdown-dropdo
 import { Dropdown } from "@/components/ui/dropdown";
 import { useState } from "react";
 import { SupplyApyPopup } from "@/components/earn/supply-apy-popup";
+import { ProfitLossCalender } from "@/components/ui/profit-loss-calender";
 
 export default function Home() {
   const [selectedOrderType, setSelectedOrderType] = useState<string>("GTC");
   return (
     <>
-    <SupplyApyPopup />
-
-
 
     </>
 

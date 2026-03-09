@@ -3,6 +3,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  useRef,
   memo,
 } from "react";
 import { motion } from "framer-motion";
@@ -372,7 +373,7 @@ const CellContent = ({
 
   if (cell.onlyIcons) {
     return (
-      <div className="w-fit h-fit flex justify-end items-center">
+      <div className="w-fit h-fit flex justify-start items-center">
         {cell.onlyIcons.map((icon: string, iconIdx: number) => (
           <Image
             key={iconIdx}
@@ -572,9 +573,9 @@ const TableRow = memo(
             key={idx}
             className={`flex flex-col gap-[6px] h-full ${
               visibleHeadings.length - 1 === idx && !showProgressBar
-                ? "w-[120px] min-w-[120px] items-end"
+                ? "w-[120px] min-w-[120px] items-start"
                 : visibleHeadings.length - 1 === idx && showProgressBar
-                ? "w-full min-w-[120px] items-end"
+                ? "w-full min-w-[120px] items-start"
                 : "w-full min-w-[120px] items-start"
             }`}
           >
@@ -625,6 +626,9 @@ export const Table = memo((props: TableProps) => {
     columnId: null,
     direction: "asc",
   });
+  const [showLeftShadow, setShowLeftShadow] = useState(false);
+  const [showRightShadow, setShowRightShadow] = useState(true);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
   const supplyApyColumnIndex = useMemo(() => {
     // If custom label is provided, find column by label match
@@ -638,6 +642,14 @@ export const Table = memo((props: TableProps) => {
   }, [props.tableHeadings, props.filters?.supplyApyLabel]);
   
   const hasSupplyApyColumn = supplyApyColumnIndex !== -1;
+
+  // Handle scroll to show/hide shadow indicators
+  const handleScroll = useCallback(() => {
+    if (!scrollContainerRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+    setShowLeftShadow(scrollLeft > 0);
+    setShowRightShadow(scrollLeft < scrollWidth - clientWidth - 1);
+  }, []);
 
   const debouncedSearchHandler = useDebounce((value: string) => {
     setDebouncedSearchValue(value);
@@ -796,6 +808,32 @@ export const Table = memo((props: TableProps) => {
 
   const hasData = sortedData.length > 0;
 
+  // Handle scroll to show/hide shadow indicators
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container || !hasData) return;
+
+    // Initial check with small delay to ensure DOM is ready
+    const timeoutId = setTimeout(() => {
+      handleScroll();
+    }, 100);
+
+    // Add scroll listener
+    container.addEventListener("scroll", handleScroll);
+    
+    // Check on resize
+    const resizeObserver = new ResizeObserver(() => {
+      handleScroll();
+    });
+    resizeObserver.observe(container);
+
+    return () => {
+      clearTimeout(timeoutId);
+      container.removeEventListener("scroll", handleScroll);
+      resizeObserver.disconnect();
+    };
+  }, [handleScroll, hasData, sortedData.length]);
+
   return (
     <section className="w-full h-fit flex flex-col gap-[24px]" aria-label={props.heading.heading || "Data Table"}>
       {hasHeadingTitle && (
@@ -919,21 +957,21 @@ export const Table = memo((props: TableProps) => {
 
       {showAllChainDropdown && (
         <motion.header
-          className={`flex ${showFilterTabType && showAllChainDropdown ? "flex-col gap-[16px]" : "justify-between items-center"}`}
+          className={`flex flex-wrap ${showFilterTabType && showAllChainDropdown ? "flex-col gap-[16px]" : "min-[550px]:justify-between min-[550px]:items-center gap-[16px] min-[550px]:gap-0"}`}
           variants={headerVariants}
           initial="hidden"
           animate="visible"
           transition={{ delay: 0.15 }}
         >
-          <div className={`flex ${showFilterTabType && showAllChainDropdown ? "justify-between w-full" : "items-center gap-[12px]"}`}>
-            <div className="flex items-center gap-[12px]" role="search" aria-label="Table Search and Filters">
-              <FilterDropdown
-                dropdownOptions={FILTER_OPTIONS.allChains}
-                dropdownOptionsFilters={FILTER_OPTIONS.allChainsFilters}
-                currentDropdownItem={filtersState.allChains}
-                dropDownType="all-chains"
-                onDropdownItemChange={updateFilter("allChains")}
-              />
+          <div className="flex items-center gap-[12px] flex-wrap w-full min-[550px]:w-auto">
+            <FilterDropdown
+              dropdownOptions={FILTER_OPTIONS.allChains}
+              dropdownOptionsFilters={FILTER_OPTIONS.allChainsFilters}
+              currentDropdownItem={filtersState.allChains}
+              dropDownType="all-chains"
+              onDropdownItemChange={updateFilter("allChains")}
+            />
+            <div className="w-full min-[550px]:w-auto" role="search" aria-label="Table Search">
               <SearchBar
                 placeholder="Pools"
                 value={searchValue}
@@ -952,7 +990,7 @@ export const Table = memo((props: TableProps) => {
               />
             )}
           </div>
-          <div className="flex items-center gap-[16px]" role="toolbar" aria-label="Additional Table Filters">
+          <div className="flex items-center gap-[16px] flex-wrap w-full min-[550px]:w-auto mt-4 min-[550px]:mt-4" role="toolbar" aria-label="Additional Table Filters">
             {hasCollateral && (
               <FilterDropdown
                 dropdownOptions={FILTER_OPTIONS.collateral}
@@ -1035,82 +1073,114 @@ export const Table = memo((props: TableProps) => {
               />
             )}
             {filters?.supplyApyTab && (
-              <SupplyApy
-                setSupplyApyFilter={setSupplyApyFilter}
-                supplyApy={supplyApyFilter}
-                supplyApyLabel={filters?.supplyApyLabel}
-                anythingLabel={filters?.anythingLabel}
-              />
+              <div className="w-full min-[550px]:w-auto mt-4 min-[550px]:mt-0">
+                <SupplyApy
+                  setSupplyApyFilter={setSupplyApyFilter}
+                  supplyApy={supplyApyFilter}
+                  supplyApyLabel={filters?.supplyApyLabel}
+                  anythingLabel={filters?.anythingLabel}
+                />
+              </div>
             )}
           </div>
         </motion.header>
       )}
 
       {hasData ? (
-        <motion.table
-          className="w-full h-fit rounded-[12px] flex flex-col gap-[8px]"
-          variants={tableContainerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          <thead>
-            <tr className="w-full h-fit rounded-[12px] px-[20px] flex gap-[16px]">
-              {visibleHeadings.map((item, idx) => {
-                const isLast = visibleHeadings.length - 1 === idx;
-                const isSorted = sortConfig.columnId === item.id;
-                const isDesc = isSorted && sortConfig.direction === "desc";
+        <div className="relative w-full">
+          {/* Left Shadow Indicator */}
+          {showLeftShadow && (
+            <div
+              className={`absolute left-0 top-0 bottom-0 w-[40px] pointer-events-none z-10 bg-gradient-to-r ${
+                isDark ? "from-[#111111] via-[#111111]/40" : "from-white via-white/40"
+              } to-transparent transition-opacity duration-300`}
+            />
+          )}
+          
+          {/* Right Shadow Indicator */}
+          {showRightShadow && (
+            <div
+              className={`absolute right-0 top-0 bottom-0 w-[40px] pointer-events-none z-10 bg-gradient-to-l ${
+                isDark ? "from-[#111111] via-[#111111]/40" : "from-white via-white/40"
+              } to-transparent transition-opacity duration-300`}
+            />
+          )}
 
-                return (
-                  <th
-                    key={item.id}
-                    className={`whitespace-nowrap text-[14px] font-medium ${
-                      props.tableHeadingTextColor || "text-[#999999]"
-                    } min-w-[120px] h-fit flex ${
-                      isLast ? "justify-end w-[120px]" : "justify-start w-full whitespace-nowrap"
-                    } gap-[4px] items-center`}
-                  >
-                    {item.icon && (
-                      <motion.button
-                        type="button"
-                        onClick={() => handleSort(item.id)}
-                        className={`w-[20px] h-[20px] flex flex-col justify-center items-center cursor-pointer hover:opacity-70 transition-all ${
-                          isDesc ? "rotate-180" : ""
-                        }`}
-                        aria-label={`Sort by ${item.label}`}
-                        whileHover={{ scale: 1.15 }}
-                        whileTap={{ scale: 0.9 }}
-                        transition={{ duration: 0.15 }}
-                      >
-                        <SortVerticalIcon fill={props.tableHeadingTextColor || "#999999"} />
-                      </motion.button>
-                    )}
-                    {item.label}
-                  </th>
-                );
-              })}
-            </tr>
-          </thead>
-          <motion.tbody
-            className="flex flex-col gap-[8px] w-full"
-            variants={tableContainerVariants}
+          {/* Scrollable Container */}
+          <div
+            ref={scrollContainerRef}
+            className="w-full overflow-x-auto"
+            style={{
+              scrollbarWidth: "thin",
+              scrollbarColor: isDark ? "#444444 transparent" : "#E2E2E2 transparent",
+            }}
           >
-            {paginatedData.map((row, idx) => (
-              <TableRow
-                key={idx}
-                row={row}
-                visibleHeadings={visibleHeadings}
-                tableBodyBackground={props.tableBodyBackground}
-                tableHeadings={props.tableHeadings}
-                onRowClick={props.onRowClick}
-                hoverBackground={props.hoverBackground}
-                rowIndex={idx}
-                showPieChart={props.showPieChart}
-                showProgressBar={props.showProgressBar}
-                isDark={isDark}
-              />
-            ))}
-          </motion.tbody>
-        </motion.table>
+            <motion.table
+              className="w-full h-fit rounded-[12px] flex flex-col gap-[8px] min-w-[1024px] lg:min-w-0"
+              variants={tableContainerVariants}
+              initial="hidden"
+              animate="visible"
+            >
+              <thead>
+                <tr className="w-full h-fit rounded-[12px] px-[20px] flex gap-[16px]">
+                  {visibleHeadings.map((item, idx) => {
+                    const isLast = visibleHeadings.length - 1 === idx;
+                    const isSorted = sortConfig.columnId === item.id;
+                    const isDesc = isSorted && sortConfig.direction === "desc";
+
+                    return (
+                      <th
+                        key={item.id}
+                        className={`whitespace-nowrap text-[14px] font-medium ${
+                          props.tableHeadingTextColor || "text-[#999999]"
+                        } min-w-[120px] h-fit flex ${
+                          isLast ? "justify-start w-[120px]" : "justify-start w-full whitespace-nowrap"
+                        } gap-[4px] items-center`}
+                      >
+                        {item.icon && (
+                          <motion.button
+                            type="button"
+                            onClick={() => handleSort(item.id)}
+                            className={`w-[20px] h-[20px] flex flex-col justify-center items-center cursor-pointer hover:opacity-70 transition-all ${
+                              isDesc ? "rotate-180" : ""
+                            }`}
+                            aria-label={`Sort by ${item.label}`}
+                            whileHover={{ scale: 1.15 }}
+                            whileTap={{ scale: 0.9 }}
+                            transition={{ duration: 0.15 }}
+                          >
+                            <SortVerticalIcon fill={props.tableHeadingTextColor || "#999999"} />
+                          </motion.button>
+                        )}
+                        {item.label}
+                      </th>
+                    );
+                  })}
+                </tr>
+              </thead>
+              <motion.tbody
+                className="flex flex-col gap-[8px] w-full"
+                variants={tableContainerVariants}
+              >
+                {paginatedData.map((row, idx) => (
+                  <TableRow
+                    key={idx}
+                    row={row}
+                    visibleHeadings={visibleHeadings}
+                    tableBodyBackground={props.tableBodyBackground}
+                    tableHeadings={props.tableHeadings}
+                    onRowClick={props.onRowClick}
+                    hoverBackground={props.hoverBackground}
+                    rowIndex={idx}
+                    showPieChart={props.showPieChart}
+                    showProgressBar={props.showProgressBar}
+                    isDark={isDark}
+                  />
+                ))}
+              </motion.tbody>
+            </motion.table>
+          </div>
+        </div>
       ) : (
         <motion.section
           className={`w-full h-[402px] border-[1px] rounded-[8px] flex flex-col items-center justify-center ${

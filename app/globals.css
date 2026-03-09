@@ -2,6 +2,11 @@
 
 @theme {
   --font-family: var(--font-plus-jakarta-sans), system-ui, sans-serif;
+  
+  /* Custom breakpoints */
+  --breakpoint-mobile: 550px;
+  --breakpoint-tablet: 768px;
+  --breakpoint-desktop: 1024px;
 }
 
 :root {
