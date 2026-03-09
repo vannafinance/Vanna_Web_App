@@ -13,10 +13,9 @@ import { AmountBreakdownDialogue } from "../ui/amount-breakdown-dialogue";
 import {
   DEPOSIT_PERCENTAGES,
   PERCENTAGE_COLORS,
-  DEPOSIT_AMOUNT_BREAKDOWN_DATA,
-  UNIFIED_BALANCE_BREAKDOWN_DATA,
   BALANCE_TYPE_OPTIONS,
 } from "@/lib/constants/margin";
+import { SUPPORTED_CHAIN_NAMES } from "@/lib/chains/chains";
 import { useTheme } from "@/contexts/theme-context";
 
 import { usePublicClient, useAccount } from "wagmi";
@@ -44,6 +43,10 @@ interface CollateralProps {
   supportedTokens: string[];
   getBalance?: (asset: string, type: "WB" | "MB") => number;
   prices?: Record<string, number>;
+  // Nexus cross-chain balance data
+  nexusBreakdown?: { chainId: number; chainName: string; balance: string; value: number }[];
+  nexusTotal?: number;
+  nexusReady?: boolean;
 }
 
 export const Collateral = (props: CollateralProps) => {
@@ -122,6 +125,33 @@ export const Collateral = (props: CollateralProps) => {
     return 0;
   })();
 
+  // Current-chain wallet balance (used to decide if bridging is needed)
+  const currentChainBalance = (() => {
+    if (props.getBalance && selectedCurrency) {
+      return props.getBalance(selectedCurrency, "WB");
+    }
+    return 0;
+  })();
+
+  // Determine if bridging is actually needed:
+  // Only need bridging when WB mode, nexus ready, and current chain balance < deposit amount
+  const depositAmount = parseFloat(valueInput) || 0;
+  const needsBridging =
+    isWBSelected &&
+    props.nexusReady === true &&
+    depositAmount > currentChainBalance &&
+    currentChainBalance < (props.nexusTotal ?? 0);
+
+  // Effective balance to display:
+  // If on same chain with enough funds, show current chain balance
+  // If nexus is ready and WB mode, show unified balance (nexusTotal) only when it provides more
+  const effectiveBalance = (() => {
+    if (isWBSelected && props.nexusReady && (props.nexusTotal ?? 0) > currentChainBalance) {
+      return props.nexusTotal ?? liveUnifiedBalance;
+    }
+    return liveUnifiedBalance;
+  })();
+
   // Calculate USD value from input using prices map
   useEffect(() => {
     if (isEditing && valueInput) {
@@ -157,7 +187,7 @@ export const Collateral = (props: CollateralProps) => {
       amount: parseFloat(valueInput) || 0,
       amountInUsd: parseFloat(valueInUsd) || 0,
       balanceType: selectedBalanceType.toLowerCase(),
-      unifiedBalance: liveUnifiedBalance,
+      unifiedBalance: effectiveBalance,
     };
     props.onSave(saveId, updatedCollateral);
   };
@@ -177,7 +207,7 @@ export const Collateral = (props: CollateralProps) => {
   const handlePercentageClick = (item: number) => {
     setPercentage(item);
 
-    const calculatedAmount = (item / 100) * liveUnifiedBalance;
+    const calculatedAmount = (item / 100) * effectiveBalance;
 
     let formatted = "0";
     if (calculatedAmount > 0) {
@@ -291,6 +321,30 @@ export const Collateral = (props: CollateralProps) => {
                   View Sources
                 </motion.button>
               )}
+
+              {/* Nexus bridging indicator — only show when bridging is actually needed */}
+              {isWBSelected && props.nexusReady && needsBridging && (
+                <motion.div
+                  className={`flex items-center gap-[6px] mt-[4px] px-[8px] py-[4px] rounded-[8px] ${
+                    isDark ? "bg-[#1A1035]" : "bg-[#F8F4FF]"
+                  }`}
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <div
+                    className="flex-shrink-0 w-[14px] h-[14px] rounded-full flex items-center justify-center"
+                    style={{ background: "linear-gradient(135deg, #FC5457 10%, #703AE6 90%)" }}
+                  >
+                    <svg width="7" height="7" viewBox="0 0 12 12" fill="none">
+                      <path d="M2 6H10M10 6L7 3M10 6L7 9" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <span className={`text-[10px] font-medium ${isDark ? "text-[#C4A8FF]" : "text-[#703AE6]"}`}>
+                    Will bridge from other chains via Nexus
+                  </span>
+                </motion.div>
+              )}
             </div>
           </motion.section>
         ) : (
@@ -386,17 +440,20 @@ export const Collateral = (props: CollateralProps) => {
                 />
               </div>
 
-              {/* Unified Balance link – always shown in editing */}
+              {/* Balance display – shows current chain or unified depending on context */}
               <motion.button
                 type="button"
                 onClick={handleUnifiedBalanceClick}
-                className="text-[12px] font-medium text-[#111111] cursor-pointer hover:underline text-left"
+                className={`text-[12px] font-medium cursor-pointer hover:underline text-left ${isDark ? "text-white" : "text-[#111111]"}`}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 transition={{ duration: 0.1 }}
-                aria-label="View unified balance breakdown"
+                aria-label="View balance breakdown"
               >
-                Unified Balance: {formatAmount(liveUnifiedBalance, selectedCurrency)} {selectedCurrency}
+                {isWBSelected && props.nexusReady && (props.nexusTotal ?? 0) > currentChainBalance
+                  ? `Balance across chains: ${formatAmount(effectiveBalance, selectedCurrency)} ${selectedCurrency}`
+                  : `Balance: ${formatAmount(effectiveBalance, selectedCurrency)} ${selectedCurrency}`
+                }
               </motion.button>
             </div>
           </motion.section>
@@ -479,7 +536,7 @@ export const Collateral = (props: CollateralProps) => {
                 transition={{ duration: 0.1 }}
                 aria-label="View unified balance breakdown"
               >
-                Unified Balance: {formatAmount(collateral.unifiedBalance, collateral.asset)} {collateral.asset}
+                Balance: {formatAmount(collateral.unifiedBalance, collateral.asset)} {collateral.asset}
               </motion.button>
             </div>
 
@@ -589,7 +646,7 @@ export const Collateral = (props: CollateralProps) => {
         )}
       </AnimatePresence>
 
-      {/* View Sources dialogue */}
+      {/* View Sources dialogue — shows real deposit source breakdown */}
       <AnimatePresence>
         {isViewSourcesOpen && (
           <motion.div
@@ -608,10 +665,19 @@ export const Collateral = (props: CollateralProps) => {
               onClick={(e) => e.stopPropagation()}
             >
               <AmountBreakdownDialogue
-                heading={DEPOSIT_AMOUNT_BREAKDOWN_DATA.heading}
-                asset={DEPOSIT_AMOUNT_BREAKDOWN_DATA.asset}
-                totalDeposit={DEPOSIT_AMOUNT_BREAKDOWN_DATA.totalDeposit}
-                breakdown={[...DEPOSIT_AMOUNT_BREAKDOWN_DATA.breakdown]}
+                heading="Your Deposit Amount Breakdown"
+                asset={selectedCurrency}
+                totalDeposit={depositAmount}
+                breakdown={
+                  props.nexusReady && props.nexusBreakdown && props.nexusBreakdown.length > 0
+                    ? props.nexusBreakdown
+                        .filter((b) => b.value > 0)
+                        .map((b) => ({
+                          name: SUPPORTED_CHAIN_NAMES[b.chainId] || b.chainName,
+                          value: b.value,
+                        }))
+                    : [{ name: "Wallet", value: currentChainBalance }]
+                }
                 onClose={handleCloseViewSources}
               />
             </motion.div>
@@ -619,7 +685,7 @@ export const Collateral = (props: CollateralProps) => {
         )}
       </AnimatePresence>
 
-      {/* Unified Balance dialogue */}
+      {/* Balance Breakdown dialogue — shows real per-chain balances */}
       <AnimatePresence>
         {isUnifiedBalanceOpen && (
           <motion.div
@@ -638,10 +704,23 @@ export const Collateral = (props: CollateralProps) => {
               onClick={(e) => e.stopPropagation()}
             >
               <AmountBreakdownDialogue
-                heading={UNIFIED_BALANCE_BREAKDOWN_DATA.heading}
-                asset={UNIFIED_BALANCE_BREAKDOWN_DATA.asset}
-                totalDeposit={UNIFIED_BALANCE_BREAKDOWN_DATA.totalDeposit}
-                breakdown={[...UNIFIED_BALANCE_BREAKDOWN_DATA.breakdown]}
+                heading={
+                  props.nexusReady && props.nexusBreakdown && props.nexusBreakdown.length > 1
+                    ? "Balance Across Chains"
+                    : "Wallet Balance"
+                }
+                asset={selectedCurrency}
+                totalDeposit={effectiveBalance}
+                breakdown={
+                  props.nexusReady && props.nexusBreakdown && props.nexusBreakdown.length > 0
+                    ? props.nexusBreakdown
+                        .filter((b) => b.value > 0)
+                        .map((b) => ({
+                          name: SUPPORTED_CHAIN_NAMES[b.chainId] || b.chainName,
+                          value: b.value,
+                        }))
+                    : [{ name: "Wallet", value: currentChainBalance }]
+                }
                 onClose={handleCloseUnifiedBalance}
               />
             </motion.div>

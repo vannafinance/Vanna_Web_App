@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useAccount, useWalletClient, usePublicClient, useChainId } from "wagmi";
 import { Dropdown } from "../ui/dropdown";
-import { DEPOSIT_PERCENTAGES, PERCENTAGE_COLORS, UNIFIED_BALANCE_BREAKDOWN_DATA } from "@/lib/constants/margin";
+import { DEPOSIT_PERCENTAGES, PERCENTAGE_COLORS } from "@/lib/constants/margin";
 import { InfoCard } from "../margin/info-card";
 import { Button } from "../ui/button";
 import { AmountBreakdownDialogue } from "../ui/amount-breakdown-dialogue";
@@ -13,6 +13,8 @@ import { supply } from "@/lib/utils/earn/transactions";
 import { useFetchUserWalletBalance, useFetchConvertToShares } from "@/lib/utils/earn/earnFetchers";
 import { SUPPORTED_TOKENS_BY_CHAIN } from "@/lib/utils/web3/token";
 import { useVaultData } from "@/lib/hooks/useVaultData";
+import { useNexus, useNexusBalanceBreakdown } from "@/lib/nexus";
+import { SUPPORTED_CHAIN_NAMES } from "@/lib/chains/chains";
 
 export const SupplyLiquidityTab = () => {
    const { isDark } = useTheme();
@@ -46,6 +48,11 @@ export const SupplyLiquidityTab = () => {
   const [isBalanceBreakdownOpen, setIsBalanceBreakdownOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [sharesPreview, setSharesPreview] = useState<number>(0);
+
+  // Nexus unified balance (cross-chain)
+  const { initialized: nexusReady } = useNexus();
+  const { total: nexusUnifiedBalance, breakdown: nexusBreakdown } =
+    useNexusBalanceBreakdown(selectedAsset);
 
   const [txModal, setTxModal] = useState<{
     isOpen: boolean;
@@ -96,10 +103,16 @@ export const SupplyLiquidityTab = () => {
     return value.toFixed(decimals).replace(/\.?0+$/, "");
   };
 
+  // Effective balance: use Nexus unified balance when WB is selected and Nexus is ready
+  const effectiveBalance =
+    selectedBalance === "WB" && nexusReady
+      ? nexusUnifiedBalance
+      : walletBalance;
+
   const handlePercentageClick = (percent: number) => {
     setSelectedPercentage(percent);
-    if (walletBalance > 0) {
-      const calculatedAmount = (walletBalance * percent) / 100;
+    if (effectiveBalance > 0) {
+      const calculatedAmount = (effectiveBalance * percent) / 100;
       setAmount(formatAmount(calculatedAmount));
     }
   };
@@ -120,7 +133,7 @@ export const SupplyLiquidityTab = () => {
       return;
     }
 
-    if (parseFloat(amount) > walletBalance) {
+    if (parseFloat(amount) > effectiveBalance) {
       setTxModal({ isOpen: true, status: "error", message: "Insufficient balance" });
       return;
     }
@@ -222,12 +235,12 @@ export const SupplyLiquidityTab = () => {
     if (!isConnected) return "Connect Wallet";
     if (loading) return "Supplying...";
     if (!amount || parseFloat(amount) <= 0) return "Enter Amount";
-    if (parseFloat(amount) > walletBalance) return "Insufficient Balance";
+    if (parseFloat(amount) > effectiveBalance) return "Insufficient Balance";
     return "Supply Liquidity";
   };
 
   const isButtonDisabled =
-    !isConnected || loading || !amount || parseFloat(amount) <= 0 || parseFloat(amount) > walletBalance;
+    !isConnected || loading || !amount || parseFloat(amount) <= 0 || parseFloat(amount) > effectiveBalance;
   return (
     <>
       <form className={`flex gap-[16px] items-center w-full h-fit border-[1px] rounded-[16px] p-[16px] ${isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"
@@ -281,13 +294,13 @@ export const SupplyLiquidityTab = () => {
                 type="button"
                 onClick={() => handlePercentageClick(item)}
                 key={item}
-                disabled={loading || walletBalance <= 0}
+                disabled={loading || effectiveBalance <= 0}
                 className={`flex justify-center items-center cursor-pointer text-[14px] font-semibold w-fit h-[44px] rounded-[12px] p-[10px] ${selectedPercentage === item
                   ? `${PERCENTAGE_COLORS[item]} text-white`
                   : isDark
                     ? "bg-[#222222] text-white"
                     : "bg-[#F4F4F4] text-black"
-                  } ${loading || walletBalance <= 0 ? "opacity-50 cursor-not-allowed" : ""}`}
+                  } ${loading || effectiveBalance <= 0 ? "opacity-50 cursor-not-allowed" : ""}`}
                 aria-pressed={selectedPercentage === item}
               >
                 {item}%
@@ -348,10 +361,14 @@ export const SupplyLiquidityTab = () => {
                   } text-[10px] font-semibold`}
                 disabled={selectedBalance !== "WB"}
               >
-                {selectedBalance === "WB" ? "Wallet Balance:" : "Balance:"}
+                {selectedBalance === "WB"
+                  ? nexusReady && nexusUnifiedBalance > walletBalance
+                    ? "Unified Balance:"
+                    : "Wallet Balance:"
+                  : "Balance:"}
               </button>
               <span className={isDark ? "text-white" : "text-[#363636]"}>
-                {walletBalance.toFixed(4)} {selectedAsset}
+                {effectiveBalance.toFixed(4)} {selectedAsset}
               </span>
             </output>
           </div>
@@ -397,12 +414,20 @@ export const SupplyLiquidityTab = () => {
               onClick={(e) => e.stopPropagation()}
             >
               <AmountBreakdownDialogue
-                heading={UNIFIED_BALANCE_BREAKDOWN_DATA.heading}
+                heading={nexusReady && nexusUnifiedBalance > walletBalance ? "Balance Across Chains" : "Wallet Balance"}
                 asset={selectedAsset}
-                totalDeposit={walletBalance}
-                breakdown={[
-                  { name: "Wallet Balance", value: walletBalance },
-                ]}
+                totalDeposit={effectiveBalance}
+                breakdown={
+                  nexusReady && nexusBreakdown.length > 0
+                    ? nexusBreakdown
+                        .filter((b) => b.value > 0)
+                        .map((b) => ({
+                          name:
+                            SUPPORTED_CHAIN_NAMES[b.chainId] || b.chainName,
+                          value: b.value,
+                        }))
+                    : [{ name: "Wallet Balance", value: walletBalance }]
+                }
                 onClose={() => setIsBalanceBreakdownOpen(false)}
               />
             </motion.article>
