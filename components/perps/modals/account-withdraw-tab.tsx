@@ -7,8 +7,8 @@ import {
   CHAIN_OPTIONS,
   TOKEN_OPTIONS,
   ACCOUNT_TYPE_OPTIONS,
-  BRIDGE_OPTIONS,
 } from "@/lib/constants/perps";
+import { useNexus, useNexusBalanceBreakdown } from "@/lib/nexus";
 
 export interface WithdrawTabRef {
   getData: () => {
@@ -34,20 +34,18 @@ export const WithdrawTab = forwardRef<WithdrawTabRef, WithdrawTabProps>(
     const [selectedToken, setSelectedToken] = useState<TokenOption>(
       TOKEN_OPTIONS[0],
     );
-    const [selectedBridge, setSelectedBridge] = useState<string | null>(null);
+    // Nexus unified balance
+    const { initialized: nexusReady } = useNexus();
+    const { total: unifiedBalance } = useNexusBalanceBreakdown(
+      selectedToken.symbol
+    );
 
-    // Mock balance - replace with actual balance
-    const balance = "1000";
-
+    const balance = nexusReady ? unifiedBalance.toFixed(4) : "--";
     const isValid = !!amount && parseFloat(amount) > 0;
 
     const handleTokenSelect = (value: string) => {
       const token = TOKEN_OPTIONS.find((t) => t.symbol === value);
       if (token) setSelectedToken(token);
-    };
-
-    const handleBridgeSelect = (value: string) => {
-      setSelectedBridge(value);
     };
 
     // Notify parent when validity changes
@@ -62,12 +60,14 @@ export const WithdrawTab = forwardRef<WithdrawTabRef, WithdrawTabProps>(
         chain: selectedChain,
         token: selectedToken.symbol,
         amount,
-        bridge: selectedBridge,
+        bridge: "Avail Nexus",
       }),
     }));
 
     const handleMaxClick = () => {
-      setAmount(balance);
+      if (nexusReady) {
+        setAmount(unifiedBalance.toString());
+      }
     };
 
     return (
@@ -125,18 +125,15 @@ export const WithdrawTab = forwardRef<WithdrawTabRef, WithdrawTabProps>(
           </div>
         </div>
 
-        {/* Bridge Name Dropdown */}
-        <Dropdown
-          items={BRIDGE_OPTIONS}
-          selectedOption={selectedBridge || "Bridge Name"}
-          setSelectedOption={
-            handleBridgeSelect as React.Dispatch<React.SetStateAction<string>>
-          }
-          classname="!w-full !justify-between !rounded-lg border border-[#E2E2E2] bg-white px-4 py-3 text-[12px] leading-[18px] font-medium"
-          dropdownClassname="text-[12px] leading-[18px]"
-          menuClassname="top-full left-0 mt-1 w-full border border-[#E2E2E2] rounded-lg"
-          arrowClassname="size-4"
-        />
+        {/* Bridge provider badge */}
+        <div className="flex items-center justify-between rounded-lg border border-[#D4C4F7] bg-[#F0EBFD] px-4 py-3">
+          <span className="text-[12px] leading-[18px] font-medium text-[#4A2A8A]">
+            Bridge via
+          </span>
+          <span className="text-[12px] leading-[18px] font-semibold text-[#703AE6]">
+            Avail Nexus
+          </span>
+        </div>
 
         {/* Withdrawable amount with Max Value */}
         <div className="flex items-center justify-between">
@@ -145,25 +142,26 @@ export const WithdrawTab = forwardRef<WithdrawTabRef, WithdrawTabProps>(
           </span>
           <div className="flex items-center gap-2">
             <span className="text-[12px] leading-[18px] font-semibold text-[#111111]">
-              --
+              {balance} {selectedToken.symbol}
             </span>
             <button
               type="button"
               onClick={handleMaxClick}
-              className="cursor-pointer bg-[#FFE6F2] rounded-sm px-2 py-1 text-[10px] leading-[15px] font-semibold text-[#FF007A] hover:bg-[#FFD6E8] transition-colors"
+              disabled={!nexusReady}
+              className="cursor-pointer bg-[#FFE6F2] rounded-sm px-2 py-1 text-[10px] leading-[15px] font-semibold text-[#FF007A] hover:bg-[#FFD6E8] transition-colors disabled:opacity-50"
             >
               Max Value
             </button>
           </div>
         </div>
 
-        {/* Transaction fee/Bridge fee */}
+        {/* Bridge fee */}
         <div className="flex items-center justify-between">
           <span className="text-[12px] leading-[18px] font-medium text-[#6F6F6F]">
-            Transaction fee/Bridge fee
+            Bridge fee (est.)
           </span>
           <span className="text-[12px] leading-[18px] font-semibold text-[#111111]">
-            --
+            Auto-optimized
           </span>
         </div>
       </div>

@@ -44,13 +44,16 @@ export const iconPaths: Record<string, string> = {
   ARBITRUM: "/icons/arbitrum-icon.svg",
   BASE: "/icons/base-icon.svg",
   WBTC: "/icons/wbtc-icon.png",
-  // Chain names (for chain selector dropdowns)
+  // Chain names (for chain selector dropdowns and Nexus breakdown)
   "BNB Chain": "/icons/bnb-icon.svg",
   Arbitrum: "/icons/arbitrum-icon.svg",
+  "Arbitrum One": "/icons/arbitrum-icon.svg",
+  "ARBITRUM ONE": "/icons/arbitrum-icon.svg",
   Ethereum: "/icons/eth-icon.png",
   Polygon: "/icons/polygon-icon.png",
   Base: "/icons/base-icon.svg",
   Optimism: "/icons/optimism-icon.svg",
+  "OP Mainnet": "/icons/optimism-icon.svg",
 };
 
 export const poolsPlaceholder: PoolTable[] = [

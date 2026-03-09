@@ -29,7 +29,7 @@ import RiskEngine from "../../abi/vanna/out/out/RiskEngine.sol/RiskEngine.json"
 import { toast } from "sonner"
 import { PoolTable } from "@/lib/utils/margin/types";
 import { baseAddressList, arbAddressList, opAddressList } from "@/lib/web3Constants";
-import { erc20Abi, formatUnits, parseEther, parseUnits } from "viem";
+import { erc20Abi, formatUnits, parseEther, parseUnits, encodeFunctionData } from "viem";
 import { iconPaths } from "@/lib/constants";
 
 ///lib/utils/margim/calculation iumport
@@ -41,8 +41,38 @@ import { useFetchAccountCheck, useFetchBorrowState, useFetchCollateralState, use
 import { useBalanceStore } from "@/store/balance-store";
 import { useTheme } from "@/contexts/theme-context";
 import { TransactionModal } from "@/components/ui/transaction-modal";
+import { useNexus, useNexusBalanceBreakdown, useBridgeAndExecute } from "@/lib/nexus";
+import { NexusBridgingDialogue } from "@/components/ui/nexus-bridging-dialogue";
+import { SUPPORTED_CHAIN_NAMES, SUPPORTED_CHAIN_IDS } from "@/lib/chains/chains";
 
 
+
+// Wrapper component that provides Nexus balance data per-token to each Collateral box
+// This is needed because useNexusBalanceBreakdown is a hook and must be called at component level
+const NexusCollateralWrapper = ({
+  collateral,
+  nexusReady,
+  defaultToken,
+  ...collateralProps
+}: {
+  collateral: Collaterals | null;
+  nexusReady: boolean;
+  defaultToken?: string;
+} & Omit<React.ComponentProps<typeof Collateral>, "collaterals" | "nexusBreakdown" | "nexusTotal" | "nexusReady">) => {
+  // Each wrapper calls the hook for its own token
+  const tokenSymbol = collateral?.asset || defaultToken || "USDC";
+  const { total, breakdown } = useNexusBalanceBreakdown(tokenSymbol);
+
+  return (
+    <Collateral
+      {...collateralProps}
+      collaterals={collateral}
+      nexusBreakdown={breakdown}
+      nexusTotal={total}
+      nexusReady={nexusReady}
+    />
+  );
+};
 
 type Modes = "Deposit" | "Borrow";
 type AddressList = typeof baseAddressList;
@@ -117,11 +147,18 @@ export const LeverageAssetsTab = () => {
 
   const { reloadMarginState } = useMarginStore();
 
-  // zustand Balance store 
+  // zustand Balance store
 
   const walletBalances = useBalanceStore(s => s.walletBalances);
   const marginBalances = useBalanceStore(s => s.marginBalances);
   const getBalance = useBalanceStore(s => s.getBalance);
+
+  // Nexus unified balance (cross-chain visibility for WB deposits)
+  const { initialized: nexusReady, fetchBridgeBalances } = useNexus();
+
+  // Nexus bridging flow (for cross-chain deposits)
+  const nexusBridge = useBridgeAndExecute();
+  const [showBridgingDialogue, setShowBridgingDialogue] = useState(false);
 
   useEffect(() => {
     const fetchPrices = async () => {
@@ -829,6 +866,17 @@ export const LeverageAssetsTab = () => {
 
   const mbTotalUsd = isMBMode ? totalDepositValue : 0;
 
+  // Check if any WB deposit actually needs cross-chain bridging
+  // (deposit amount exceeds current-chain balance for that asset)
+  const anyDepositNeedsBridging = useMemo(() => {
+    if (!nexusReady) return false;
+    return currentCollaterals.some((c) => {
+      if (c.balanceType.toLowerCase() !== "wb") return false;
+      const currentChainBal = getBalance(c.asset, "WB");
+      return c.amount > currentChainBal;
+    });
+  }, [currentCollaterals, nexusReady, getBalance]);
+
   // Calculate info card values based on margin state
   const fees = totalDepositValue > 0 ? totalDepositValue * 0.000234 : 0;
   const totalDeposit = totalDepositValue + fees;
@@ -942,7 +990,13 @@ export const LeverageAssetsTab = () => {
     const type = updatedCollateral.balanceType.toUpperCase() as "WB" | "MB";
     const freshBalance = getBalance(updatedCollateral.asset, type);
 
-    // ✅ VALIDATION: Check if total amount for this asset exceeds wallet balance (WB mode only)
+    // For WB mode: use the Collateral component's reported unifiedBalance (includes Nexus cross-chain total)
+    // This respects Nexus unified balance when available, falling back to current-chain balance
+    const effectiveBalance = type === "WB" && updatedCollateral.unifiedBalance > 0
+      ? updatedCollateral.unifiedBalance
+      : freshBalance;
+
+    // ✅ VALIDATION: Check if total amount for this asset exceeds available balance (WB mode only)
     if (type === "WB") {
       // Calculate total amount for this asset across all collaterals (excluding current one being edited)
       const totalAmountForAsset = currentCollaterals
@@ -951,21 +1005,17 @@ export const LeverageAssetsTab = () => {
 
       const newTotalAmount = totalAmountForAsset + updatedCollateral.amount;
 
-      if (newTotalAmount > freshBalance) {
+      if (newTotalAmount > effectiveBalance) {
         showError(
-          `Total deposit amount exceeds your wallet balance. Please reduce the amount.`
+          `Total deposit amount exceeds your ${nexusReady ? "unified" : "wallet"} balance. Please reduce the amount.`
         );
         return;
       }
-
-
-
-
     }
 
     const collateralWithFreshBalance = {
       ...updatedCollateral,
-      unifiedBalance: freshBalance,
+      unifiedBalance: effectiveBalance,
     };
 
     if (updatedCollateral.balanceType.toLowerCase() === "mb") {
@@ -1370,59 +1420,255 @@ export const LeverageAssetsTab = () => {
         }
       }
 
-      // --- EXECUTE DEPOSITS ---
-      for (const item of deposits) {
-        const decimals = TOKEN_DECIMALS[item.asset] ?? 18;
-        const amountBigInt = parseUnits(item.amount.toString(), decimals);
+      // --- CHECK FOR CROSS-CHAIN DEPOSITS (Nexus bridging) ---
+      // For each WB deposit, check if current-chain wallet balance covers the amount.
+      // If not, use Nexus bridgeAndExecute to bridge from other chains + deposit.
+      const localDeposits: typeof deposits = [];
+      const crossChainDeposits: typeof deposits = [];
 
-        // Handle native ETH deposit first (no token address needed)
-        if (item.asset === "ETH") {
-          setTxModalMessage(`Depositing ${item.amount} ETH...`);
-          const txHash = await walletClient.writeContract({
-            address: addressList.accountManagerContractAddress as `0x${string}`,
-            abi: AccountManager.abi,
-            functionName: "depositEth",
-            args: [targetAccount],
-            value: amountBigInt
-          });
-          await publicClient.waitForTransactionReceipt({ hash: txHash });
-          depositsCompleted++;
-        } else {
-          // ERC20 Deposit - check token address exists
-          const tokenAddress = tokenAddressByChain[chainId]?.[item.asset];
+      if (nexusReady && deposits.length > 0) {
+        for (const dep of deposits) {
+          const currentChainBalance = getBalance(dep.asset, "WB");
+          if (dep.amount > currentChainBalance) {
+            // Need cross-chain bridging — amount exceeds current-chain balance
+            crossChainDeposits.push(dep);
+          } else {
+            localDeposits.push(dep);
+          }
+        }
+      } else {
+        // Nexus not ready, all deposits are local
+        localDeposits.push(...deposits);
+      }
+
+      // --- EXECUTE CROSS-CHAIN DEPOSITS (Nexus bridgeAndExecute) ---
+      if (crossChainDeposits.length > 0) {
+        setTxModalOpen(false); // Hide standard modal, show bridging dialogue
+        setShowBridgingDialogue(true);
+
+        for (const dep of crossChainDeposits) {
+          const decimals = TOKEN_DECIMALS[dep.asset] ?? 18;
+          const amountBigInt = parseUnits(dep.amount.toString(), decimals);
+          const tokenAddress = tokenAddressByChain[chainId]?.[dep.asset];
+
           if (!tokenAddress) {
-            console.warn(`Token address not found for ${item.asset}`);
+            console.warn(`[Nexus Bridge] Token address not found for ${dep.asset}`);
             continue;
           }
-          setTxModalMessage(`Checking allowance for ${item.asset}...`);
-          const allowance = await publicClient.readContract({
-            address: tokenAddress as `0x${string}`,
-            abi: erc20Abi,
-            functionName: "allowance",
-            args: [address as `0x${string}`, addressList.accountManagerContractAddress as `0x${string}`]
-          }) as bigint;
 
-          if (allowance < amountBigInt) {
-            setTxModalMessage(`Approving ${item.asset}...`);
-            const approveHash = await walletClient.writeContract({
-              address: tokenAddress as `0x${string}`,
-              abi: erc20Abi,
-              functionName: "approve",
-              args: [addressList.accountManagerContractAddress as `0x${string}`, amountBigInt]
-            });
-            await publicClient.waitForTransactionReceipt({ hash: approveHash });
-          }
-
-          setTxModalMessage(`Depositing ${item.amount} ${item.asset}...`);
-          const txHash = await walletClient.writeContract({
-            address: addressList.accountManagerContractAddress as `0x${string}`,
+          // Build the deposit calldata for the margin account
+          const depositCalldata = encodeFunctionData({
             abi: AccountManager.abi,
             functionName: "deposit",
-            args: [targetAccount, tokenAddress, amountBigInt]
+            args: [targetAccount, tokenAddress, amountBigInt],
           });
-          await publicClient.waitForTransactionReceipt({ hash: txHash });
-          depositsCompleted++;
-          setTxModalHash(txHash); // Store last deposit hash
+
+          console.log(`[Nexus Bridge] Bridging ${dep.amount} ${dep.asset} to chain ${chainId} and depositing to margin account`);
+
+          const result = await nexusBridge.execute({
+            token: dep.asset,
+            amount: amountBigInt,
+            toChainId: chainId,
+            executeTo: addressList.accountManagerContractAddress as `0x${string}`,
+            executeData: depositCalldata,
+          });
+
+          if (result) {
+            depositsCompleted++;
+            console.log("[Nexus Bridge] Cross-chain deposit completed:", result);
+          } else if (nexusBridge.isCancelled) {
+            throw new Error("Transaction cancelled");
+          } else {
+            throw new Error(nexusBridge.error || "Cross-chain deposit failed");
+          }
+        }
+
+        // Refresh Nexus balances after bridging
+        fetchBridgeBalances();
+      }
+
+      // --- EXECUTE LOCAL DEPOSITS (BATCHED via EIP-5792) ---
+      if (localDeposits.length > 0) {
+        if (showBridgingDialogue) {
+          // Re-show standard modal for remaining local deposits
+          setShowBridgingDialogue(false);
+          setTxModalOpen(true);
+        }
+
+        const ethDeposits = localDeposits.filter(d => d.asset === "ETH");
+        const erc20Deposits = localDeposits.filter(d => {
+          const tokenAddress = tokenAddressByChain[chainId]?.[d.asset];
+          if (!tokenAddress) {
+            console.warn(`Token address not found for ${d.asset}`);
+            return false;
+          }
+          return d.asset !== "ETH";
+        });
+
+        // 1. Batch-check all allowances in ONE multicall read (no popup)
+        setTxModalMessage("Checking token allowances...");
+        const allowanceContracts = erc20Deposits.map(item => ({
+          address: tokenAddressByChain[chainId]![item.asset] as `0x${string}`,
+          abi: erc20Abi,
+          functionName: "allowance" as const,
+          args: [address as `0x${string}`, addressList.accountManagerContractAddress as `0x${string}`],
+        }));
+
+        const allowanceResults = allowanceContracts.length > 0
+          ? await publicClient.multicall({ contracts: allowanceContracts, allowFailure: true })
+          : [];
+
+        // 2. Build all calls: approves that are needed + all deposits
+        const MAX_UINT256 = BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        const batchCalls: Array<{ to: `0x${string}`; data: `0x${string}`; value?: bigint }> = [];
+
+        // Add approve calls for tokens that need it
+        for (let i = 0; i < erc20Deposits.length; i++) {
+          const item = erc20Deposits[i];
+          const decimals = TOKEN_DECIMALS[item.asset] ?? 18;
+          const amountBigInt = parseUnits(item.amount.toString(), decimals);
+          const currentAllowance = (allowanceResults[i]?.result as bigint) ?? BigInt(0);
+
+          if (currentAllowance < amountBigInt) {
+            batchCalls.push({
+              to: tokenAddressByChain[chainId]![item.asset] as `0x${string}`,
+              data: encodeFunctionData({
+                abi: erc20Abi,
+                functionName: "approve",
+                args: [addressList.accountManagerContractAddress as `0x${string}`, MAX_UINT256],
+              }),
+            });
+          }
+        }
+
+        // Add ETH deposit calls
+        for (const item of ethDeposits) {
+          const decimals = TOKEN_DECIMALS[item.asset] ?? 18;
+          const amountBigInt = parseUnits(item.amount.toString(), decimals);
+          batchCalls.push({
+            to: addressList.accountManagerContractAddress as `0x${string}`,
+            data: encodeFunctionData({
+              abi: AccountManager.abi,
+              functionName: "depositEth",
+              args: [targetAccount],
+            }),
+            value: amountBigInt,
+          });
+        }
+
+        // Add ERC20 deposit calls
+        for (const item of erc20Deposits) {
+          const decimals = TOKEN_DECIMALS[item.asset] ?? 18;
+          const amountBigInt = parseUnits(item.amount.toString(), decimals);
+          batchCalls.push({
+            to: addressList.accountManagerContractAddress as `0x${string}`,
+            data: encodeFunctionData({
+              abi: AccountManager.abi,
+              functionName: "deposit",
+              args: [targetAccount, tokenAddressByChain[chainId]![item.asset] as `0x${string}`, amountBigInt],
+            }),
+          });
+        }
+
+        // 3. Try EIP-5792 batched sendCalls (single wallet popup)
+        setTxModalMessage(`Depositing ${deposits.length} asset(s) in one transaction...`);
+
+        try {
+          const batchId = await (walletClient as any).request({
+            method: "wallet_sendCalls",
+            params: [{
+              version: "1.0",
+              from: address,
+              chainId: `0x${chainId.toString(16)}`,
+              calls: batchCalls.map(c => ({
+                to: c.to,
+                data: c.data,
+                ...(c.value ? { value: `0x${c.value.toString(16)}` } : {}),
+              })),
+            }],
+          });
+
+          // Poll for batch completion
+          setTxModalMessage("Waiting for batch transaction confirmation...");
+          let batchStatus: any;
+          do {
+            await new Promise(r => setTimeout(r, 2000));
+            batchStatus = await (walletClient as any).request({
+              method: "wallet_getCallsStatus",
+              params: [batchId],
+            });
+          } while (batchStatus.status === "PENDING");
+
+          if (batchStatus.status === "CONFIRMED") {
+            depositsCompleted += localDeposits.length;
+            const receipts = batchStatus.receipts;
+            if (receipts?.length > 0) {
+              setTxModalHash(receipts[receipts.length - 1].transactionHash);
+            }
+          } else {
+            throw new Error("Batch transaction failed");
+          }
+
+          console.log("[Strategy] Batched deposits completed via EIP-5792");
+        } catch (batchError: any) {
+          // 4. Fallback to sequential if wallet doesn't support EIP-5792
+          const isUnsupported =
+            batchError?.code === 4200 ||
+            batchError?.code === -32601 ||
+            batchError?.message?.includes("not supported") ||
+            batchError?.message?.includes("does not support") ||
+            batchError?.message?.includes("Method not found");
+
+          if (!isUnsupported) throw batchError;
+
+          console.log("[Strategy] Wallet doesn't support EIP-5792, falling back to sequential...");
+
+          // Sequential fallback: ETH deposits
+          for (const item of ethDeposits) {
+            const decimals = TOKEN_DECIMALS[item.asset] ?? 18;
+            const amountBigInt = parseUnits(item.amount.toString(), decimals);
+            setTxModalMessage(`Depositing ${item.amount} ETH...`);
+            const txHash = await walletClient.writeContract({
+              address: addressList.accountManagerContractAddress as `0x${string}`,
+              abi: AccountManager.abi,
+              functionName: "depositEth",
+              args: [targetAccount],
+              value: amountBigInt,
+            });
+            await publicClient.waitForTransactionReceipt({ hash: txHash });
+            depositsCompleted++;
+          }
+
+          // Sequential fallback: ERC20 approve + deposit
+          for (let i = 0; i < erc20Deposits.length; i++) {
+            const item = erc20Deposits[i];
+            const decimals = TOKEN_DECIMALS[item.asset] ?? 18;
+            const amountBigInt = parseUnits(item.amount.toString(), decimals);
+            const tokenAddress = tokenAddressByChain[chainId]![item.asset] as `0x${string}`;
+            const currentAllowance = (allowanceResults[i]?.result as bigint) ?? BigInt(0);
+
+            if (currentAllowance < amountBigInt) {
+              setTxModalMessage(`Approving ${item.asset}...`);
+              const approveHash = await walletClient.writeContract({
+                address: tokenAddress,
+                abi: erc20Abi,
+                functionName: "approve",
+                args: [addressList.accountManagerContractAddress as `0x${string}`, MAX_UINT256],
+              });
+              await publicClient.waitForTransactionReceipt({ hash: approveHash });
+            }
+
+            setTxModalMessage(`Depositing ${item.amount} ${item.asset}...`);
+            const txHash = await walletClient.writeContract({
+              address: addressList.accountManagerContractAddress as `0x${string}`,
+              abi: AccountManager.abi,
+              functionName: "deposit",
+              args: [targetAccount, tokenAddress, amountBigInt],
+            });
+            await publicClient.waitForTransactionReceipt({ hash: txHash });
+            depositsCompleted++;
+            setTxModalHash(txHash);
+          }
         }
       }
 
@@ -1546,9 +1792,12 @@ export const LeverageAssetsTab = () => {
 
       // Always close the dialogue on error
       setActiveDialogue("none");
+      setShowBridgingDialogue(false);
+      setTxModalOpen(true); // Ensure error modal is visible
     } finally {
       setLoading(false);
       setLoadingMessage("");
+      setShowBridgingDialogue(false);
     }
   };
 
@@ -1593,6 +1842,35 @@ export const LeverageAssetsTab = () => {
           >
             {isMBMode ? "Select Your Collateral" : "Deposit"}
           </motion.h2>
+
+          {/* Nexus smart deposit info — only show when bridging is actually needed */}
+          {!isMBMode && nexusReady && mode === "Deposit" && anyDepositNeedsBridging && (
+            <motion.div
+              className={`flex items-center gap-[10px] px-[12px] py-[8px] rounded-[10px] border ${
+                isDark
+                  ? "bg-[#1A1035] border-[#703AE6]/30"
+                  : "bg-[#F8F4FF] border-[#E8DEFF]"
+              }`}
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="flex-shrink-0 w-[20px] h-[20px] rounded-full flex items-center justify-center" style={{ background: "linear-gradient(135deg, #FC5457 10%, #703AE6 90%)" }}>
+                <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                  <path d="M2 6H10M10 6L7 3M10 6L7 9" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <div className="flex flex-col">
+                <span className={`text-[11px] font-semibold ${isDark ? "text-[#C4A8FF]" : "text-[#703AE6]"}`}>
+                  Avail Nexus
+                </span>
+                <span className={`text-[10px] font-medium ${isDark ? "text-[#8B7AAF]" : "text-[#8B7AAF]"}`}>
+                  Cross-chain balances unified. Bridging is automatic.
+                </span>
+              </div>
+            </motion.div>
+          )}
+
           <div className="flex flex-col gap-[12px]">
             {isMBMode ? (
               <motion.div
@@ -1704,9 +1982,10 @@ export const LeverageAssetsTab = () => {
                             layout
                           >
                             <li>
-                              <Collateral
+                              <NexusCollateralWrapper
+                                collateral={collateral}
+                                nexusReady={nexusReady}
                                 id={collateral.id}
-                                collaterals={collateral}
                                 isEditing={editingIndex === index}
                                 isAnyOtherEditing={editingIndex !== null && editingIndex !== index}
                                 onEdit={() => handleEditCollateral(index)}
@@ -1731,8 +2010,10 @@ export const LeverageAssetsTab = () => {
                       exit={{ opacity: 0, y: -20 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <Collateral
-                        collaterals={null}
+                      <NexusCollateralWrapper
+                        collateral={null}
+                        defaultToken={supportedTokens[0] || "USDC"}
+                        nexusReady={nexusReady}
                         isEditing={true}
                         isAnyOtherEditing={false}
                         onEdit={() => { }}
@@ -2143,6 +2424,32 @@ export const LeverageAssetsTab = () => {
             : undefined
         }
       />
+
+      {/* Nexus Bridging Dialogue — shown during cross-chain deposits */}
+      <AnimatePresence>
+        {showBridgingDialogue && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <NexusBridgingDialogue
+              heading={`Bridging to ${SUPPORTED_CHAIN_NAMES[chainId ?? 0] || "destination"}`}
+              status={nexusBridge.status}
+              steps={nexusBridge.steps}
+              startTime={nexusBridge.startTime}
+              explorerUrl={nexusBridge.explorerUrl}
+              destChain={SUPPORTED_CHAIN_NAMES[chainId ?? 0] || ""}
+              onClose={() => {
+                setShowBridgingDialogue(false);
+                nexusBridge.reset();
+              }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
