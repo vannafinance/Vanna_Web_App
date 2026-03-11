@@ -188,7 +188,7 @@ const PerpsOrderPlacementForm = () => {
   return (
     <>
       <form
-        className={`w-[316px] rounded-2xl p-4 flex flex-col gap-5 text-[10px] leading-[15px] font-medium ${isDark ? "bg-[#222222] border border-[#333333] text-[#FFFFFF]" : "bg-[#F7F7F7] border border-[#E2E2E2] text-[#111111]"}`}
+        className={`w-full rounded-2xl p-4 flex flex-col gap-5 text-[10px] leading-[15px] font-medium ${isDark ? "bg-[#222222] border border-[#333333] text-[#FFFFFF]" : "bg-[#F7F7F7] border border-[#E2E2E2] text-[#111111]"}`}
       >
         {/* top buttons */}
         <div className="flex gap-2">
@@ -277,7 +277,7 @@ const PerpsOrderPlacementForm = () => {
         {perpsOrderType === "limit" && (
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2 justify-end">
-              <span className="text-[10px] leading-[15px] text-[#111111] font-medium">
+              <span className={`text-[10px] leading-[15px] font-medium ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
                 Loop
               </span>
               <ToggleButton

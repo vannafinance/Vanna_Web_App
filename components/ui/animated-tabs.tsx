@@ -148,7 +148,7 @@ export const AnimatedTabs = ({
   if (type === "ghost-compact") {
     return (
       <div
-        className={`flex gap-1 bg-white p-1 rounded-lg ${containerClassName}`}
+        className={`flex gap-1 bg-white p-1 rounded-lg w-max ${containerClassName}`}
         onMouseLeave={() => setHoveredTab(null)}
       >
         {tabs.map((tab) => {

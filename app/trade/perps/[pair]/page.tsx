@@ -28,6 +28,7 @@ const Perps = () => {
   const tradingPairSelectorRef = useRef<HTMLDivElement>(null);
   const [protocol, setProtocol] = useState("Aster");
   const [netRateInterval, setNetRateInterval] = useState("1h");
+  const [mobileTab, setMobileTab] = useState<"trade" | "chart">("trade");
 
   const perpNonOrderbookStats = [
     { label: "Mark price", value: "3,377.55" },
@@ -74,76 +75,169 @@ const Perps = () => {
   }, [isTradingPairSelectorOpen]);
 
   return (
-    <main className={`w-full min-h-screen px-5 pt-5 grid grid-cols-[minmax(0,1fr)_316px] gap-2 ${isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"}`}>
-      {/* left  */}
-      <div className="flex flex-col flex-1 gap-2">
-        {/* top: TradingPairInfo, charts & orderbook */}
-        <div className="flex flex-col  gap-2">
-          {/* TradingPairInfo */}
-          <div className="flex  gap-2">
-            <div ref={tradingPairSelectorRef} className="relative flex-1">
-              <TradingPairInfo
-                isOpen={isTradingPairSelectorOpen}
-                onOpenPairSelector={() =>
-                  setIsTradingPairSelectorOpen((prev) => !prev)
-                }
-                pair={pair}
-                market="perps"
-                icon={icon}
-                stats={perpNonOrderbookStats}
-              />
-              {isTradingPairSelectorOpen && (
-                <div className="absolute top-[60px] left-2  z-150 ">
-                  <TradingPairSearch
-                    onSelectPair={(pair) => {
-                      const market =
-                        pair.marketType === "spot" ? "spot" : "perps";
-                      router.push(
-                        `/trade/${market}/${pair.base.toLowerCase()}usdc`,
-                      );
-                      setIsTradingPairSelectorOpen(false);
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* dex navigation dropdown */}
-            <div className={`rounded-lg p-4 flex gap-5 ${isDark ? "bg-[#222222] border border-[#333333]" : "bg-[#F7F7F7] border border-[#E2E2E2]"}`}>
-              <div className="flex flex-col gap-1">
-                <div className="text-[#A7A7A7] font-medium text-[12px] leading-[18px]">
-                  Protocol
-                </div>
-                <Dropdown
-                  items={PROTCOL_OPTIONS}
-                  selectedOption={protocol}
-                  setSelectedOption={(val) => setProtocol(val)}
-                  classname={` gap-2 font-medium text-[12px] leading-[18px] ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}
-                  dropdownClassname="text-[12px] leading-[18px] font-medium "
+    <main
+      className={`w-full min-h-screen px-3 pt-3 md:px-5 md:pt-5 grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_316px] xl:grid-cols-[minmax(0,1fr)_316px] gap-2 ${isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"}`}
+    >
+      {/* Left column */}
+      <div className="flex flex-col gap-2">
+        {/* TradingPairInfo — xl+ only */}
+        <div className="hidden xl:flex gap-2">
+          <div ref={tradingPairSelectorRef} className="relative flex-1">
+            <TradingPairInfo
+              isOpen={isTradingPairSelectorOpen}
+              onOpenPairSelector={() =>
+                setIsTradingPairSelectorOpen((prev) => !prev)
+              }
+              pair={pair}
+              market="perps"
+              icon={icon}
+              stats={perpNonOrderbookStats}
+            />
+            {isTradingPairSelectorOpen && (
+              <div className="absolute top-[60px] left-2 z-150">
+                <TradingPairSearch
+                  onSelectPair={(pair) => {
+                    const market =
+                      pair.marketType === "spot" ? "spot" : "perps";
+                    router.push(
+                      `/trade/${market}/${pair.base.toLowerCase()}usdc`,
+                    );
+                    setIsTradingPairSelectorOpen(false);
+                  }}
                 />
               </div>
-            </div>
+            )}
           </div>
 
-          {/* chart & orderBook */}
-          <div className="flex gap-2">
-            <div className="flex-1 rounded-lg ">
-              <TradingViewChart />
-            </div>
-            <div className={`w-[224px] h-[541px] p-2 rounded-xl ${isDark ? "bg-[#222222] border border-[#333333]" : "bg-[#F7F7F7] border border-[#E2E2E2]"}`}>
-              <NonOrderBook />
+          {/* dex navigation dropdown */}
+          <div
+            className={`rounded-lg p-4 flex gap-5 ${isDark ? "bg-[#222222] border border-[#333333]" : "bg-[#F7F7F7] border border-[#E2E2E2]"}`}
+          >
+            <div className="flex flex-col gap-1">
+              <div className="text-[#A7A7A7] font-medium text-[12px] leading-[18px]">
+                Protocol
+              </div>
+              <Dropdown
+                items={PROTCOL_OPTIONS}
+                selectedOption={protocol}
+                setSelectedOption={(val) => setProtocol(val)}
+                classname={` gap-2 font-medium text-[12px] leading-[18px] ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}
+                dropdownClassname="text-[12px] leading-[18px] font-medium "
+              />
             </div>
           </div>
         </div>
 
-        {/* position table */}
-        <div className="flex flex-col gap-3 rounded-lg">
+        {/* Trade / Chart tabs — below xl */}
+        <div
+          className={`xl:hidden flex items-center rounded-lg overflow-hidden p-1 ${isDark ? "bg-[#222222] border border-[#333333]" : "bg-white border border-[#E2E2E2]"}`}
+        >
+          <button
+            className={`flex-1 py-3 text-center font-semibold text-[12px] leading-[100%] rounded-lg transition-colors ${
+              mobileTab === "trade"
+                ? "bg-[#703AE6] text-white"
+                : isDark
+                  ? "text-[#A7A7A7]"
+                  : "text-[#111111]"
+            }`}
+            onClick={() => setMobileTab("trade")}
+          >
+            Trade
+          </button>
+          <button
+            className={`flex-1 py-3 text-center font-semibold text-[12px] leading-[100%] rounded-lg transition-colors ${
+              mobileTab === "chart"
+                ? "bg-[#703AE6] text-white"
+                : isDark
+                  ? "text-[#A7A7A7]"
+                  : "text-[#111111]"
+            }`}
+            onClick={() => setMobileTab("chart")}
+          >
+            Chart
+          </button>
+        </div>
+
+        {/* xl+: Chart + Orderbook side by side */}
+        <div className="hidden xl:flex gap-2">
+          <div className="flex-1 rounded-lg h-[541px]">
+            <TradingViewChart />
+          </div>
+          <div
+            className={`w-[224px] h-[541px] p-2 rounded-xl ${isDark ? "bg-[#222222] border border-[#333333]" : "bg-[#F7F7F7] border border-[#E2E2E2]"}`}
+          >
+            <NonOrderBook />
+          </div>
+        </div>
+
+        {/* Below xl: tab-based content */}
+        <div className="xl:hidden">
+          {mobileTab === "chart" ? (
+            <div className="flex flex-col gap-2">
+              {/* Protocol dropdown */}
+              <div
+                className={`rounded-lg p-4 flex gap-5 ${isDark ? "bg-[#222222] border border-[#333333]" : "bg-[#F7F7F7] border border-[#E2E2E2]"}`}
+              >
+                <div className="flex flex-col gap-1">
+                  <div className="text-[#A7A7A7] font-medium text-[12px] leading-[18px]">
+                    Chart Protocol
+                  </div>
+                  <Dropdown
+                    items={PROTCOL_OPTIONS}
+                    selectedOption={protocol}
+                    setSelectedOption={(val) => setProtocol(val)}
+                    classname={` gap-2 font-medium text-[12px] leading-[18px] ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}
+                    dropdownClassname="text-[12px] leading-[18px] font-medium "
+                  />
+                </div>
+              </div>
+              <div ref={tradingPairSelectorRef} className="relative">
+                <TradingPairInfo
+                  isOpen={isTradingPairSelectorOpen}
+                  onOpenPairSelector={() =>
+                    setIsTradingPairSelectorOpen((prev) => !prev)
+                  }
+                  pair={pair}
+                  market="perps"
+                  icon={icon}
+                  stats={perpNonOrderbookStats}
+                />
+                {isTradingPairSelectorOpen && (
+                  <div className="absolute top-[60px] left-2 z-150">
+                    <TradingPairSearch
+                      onSelectPair={(pair) => {
+                        const market =
+                          pair.marketType === "spot" ? "spot" : "perps";
+                        router.push(
+                          `/trade/${market}/${pair.base.toLowerCase()}usdc`,
+                        );
+                        setIsTradingPairSelectorOpen(false);
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+              <div className="rounded-lg h-[400px] md:h-[500px]">
+                <TradingViewChart />
+              </div>
+            </div>
+          ) : (
+            <div
+              className={`p-2 rounded-xl ${isDark ? "bg-[#222222] border border-[#333333]" : "bg-[#F7F7F7] border border-[#E2E2E2]"}`}
+            >
+              <NonOrderBook />
+            </div>
+          )}
+        </div>
+
+        {/* Position tables — inside left column */}
+        <div className="min-w-0">
           <PositionTables />
         </div>
       </div>
 
-      {/* right */}
-      <div>
+      {/* Right column: Order placement form */}
+      <div className="md:row-span-2">
         <PerpsOrderPlacementForm />
       </div>
     </main>

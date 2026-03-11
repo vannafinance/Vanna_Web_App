@@ -157,16 +157,18 @@ const PositionTables = () => {
       } flex flex-col gap-1 p-2`}
     >
       {/* Tabs */}
-      <div className="flex p-0.5 gap-6 justify-between">
-        <AnimatedTabs
-          type="ghost-compact"
-          tabs={filteredMainTabs}
-          activeTab={activeTab}
-          onTabChange={(tabId) => setActiveTab(tabId as MainTabType)}
-          containerClassName="!bg-transparent !p-0 !rounded-none"
-          tabClassName="py-2"
-        />
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between p-0.5">
+        <div className="overflow-x-auto scrollbar-hide">
+          <AnimatedTabs
+            type="ghost-compact"
+            tabs={filteredMainTabs}
+            activeTab={activeTab}
+            onTabChange={(tabId) => setActiveTab(tabId as MainTabType)}
+            containerClassName="!bg-transparent !p-0 !rounded-none"
+            tabClassName="py-2 whitespace-nowrap"
+          />
+        </div>
+        <div className="flex items-center gap-3 shrink-0">
           {/* show current checkbox */}
           {activeTab !== "transactionHistory" && activeTab !== "assets" && (
             <div className="text-[12px] font-semibold">
@@ -191,13 +193,13 @@ const PositionTables = () => {
 
       {/* Order Tabs - show for openOrders & orderHistory */}
       {(activeTab === "openOrders" || activeTab === "orderHistory") && (
-        <div className="flex gap-2 items-center">
-          <div className={`flex h-[47px] p-1 rounded-lg border ${isDark ? "bg-[#111111] border-[#333333]" : "bg-[#FFFFFF] border-[#E2E2E2]"}`}>
+        <div className="flex flex-col gap-2 md:flex-row md:items-center">
+          <div className={`flex h-[47px] p-1 rounded-lg border overflow-x-auto scrollbar-hide ${isDark ? "bg-[#111111] border-[#333333]" : "bg-[#FFFFFF] border-[#E2E2E2]"}`}>
             {ORDER_TABS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveFilterTab(tab.id)}
-                className={`cursor-pointer px-4 py-3 text-[12px] leading-[100%] font-semibold rounded-lg transition-colors ${
+                className={`cursor-pointer px-4 py-3 text-[12px] leading-[100%] font-semibold rounded-lg transition-colors whitespace-nowrap ${
                   activeFilterTab === tab.id
                     ? "bg-[#703AE6] text-white"
                     : isDark
@@ -231,7 +233,7 @@ const PositionTables = () => {
 
       {/* Filter & Sort - show for position tab */}
       {activeTab === "position" && (
-        <div className="flex justify-between">
+        <div className="flex flex-wrap gap-2 justify-between">
           <div className="flex gap-2">
             {/* Filter Dropdown */}
             <FilterDropdown
