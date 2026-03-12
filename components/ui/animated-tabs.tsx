@@ -148,7 +148,7 @@ export const AnimatedTabs = ({
   if (type === "ghost-compact") {
     return (
       <div
-        className={`flex gap-1 bg-white p-1 rounded-lg w-max ${containerClassName}`}
+        className={`flex gap-1 ${isDark ? "bg-[#222222]" : "bg-white"} p-1 rounded-lg w-max ${containerClassName}`}
         onMouseLeave={() => setHoveredTab(null)}
       >
         {tabs.map((tab) => {
@@ -164,11 +164,11 @@ export const AnimatedTabs = ({
               className={`cursor-pointer px-4 h-[39px] rounded-lg text-[12px] font-semibold ${tabClassName}`}
               animate={{
                 backgroundColor: isActive
-                  ? "#F1EBFD"
+                  ? isDark ? "#3D2A6E" : "#F1EBFD"
                   : isHovered
-                    ? "rgba(241, 235, 253, 0.5)"
+                    ? isDark ? "rgba(61, 42, 110, 0.5)" : "rgba(241, 235, 253, 0.5)"
                     : "transparent",
-                color: isActive ? "#703AE6" : "#111111",
+                color: isActive ? "#703AE6" : isDark ? "#FFFFFF" : "#111111",
               }}
               whileTap={{ scale: 0.95 }}
               transition={{ duration: 0.2 }}

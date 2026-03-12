@@ -168,8 +168,8 @@ const PositionTables = () => {
             tabClassName="py-2 whitespace-nowrap"
           />
         </div>
-        <div className="flex items-center gap-3 shrink-0">
-          {/* show current checkbox */}
+        <div className="hidden md:flex items-center gap-3 shrink-0">
+          {/* show current checkbox — md+ */}
           {activeTab !== "transactionHistory" && activeTab !== "assets" && (
             <div className="text-[12px] font-semibold">
               <Checkbox
@@ -191,9 +191,32 @@ const PositionTables = () => {
         </div>
       </div>
 
+      {/* Mobile: Show Current + Close All row */}
+      <div className="flex md:hidden items-center justify-between px-1">
+        {activeTab !== "transactionHistory" && activeTab !== "assets" ? (
+          <div className="text-[12px] font-semibold">
+            <Checkbox
+              label="Show Current"
+              checked={showCurrent}
+              onChange={(e) => setShowCurrent(e.target.checked)}
+            />
+          </div>
+        ) : (
+          <div />
+        )}
+        {activeTab === "position" && (
+          <button
+            onClick={() => setIsCloseAllModalOpen(true)}
+            className={`text-[12px] font-semibold cursor-pointer ${isDark ? "text-[#703AE6]" : "text-[#703AE6]"}`}
+          >
+            Close all
+          </button>
+        )}
+      </div>
+
       {/* Order Tabs - show for openOrders & orderHistory */}
       {(activeTab === "openOrders" || activeTab === "orderHistory") && (
-        <div className="flex flex-col gap-2 md:flex-row md:items-center">
+        <div className="hidden md:flex flex-col gap-2 md:flex-row md:items-center">
           <div className={`flex h-[47px] p-1 rounded-lg border overflow-x-auto scrollbar-hide ${isDark ? "bg-[#111111] border-[#333333]" : "bg-[#FFFFFF] border-[#E2E2E2]"}`}>
             {ORDER_TABS.map((tab) => (
               <button
@@ -231,9 +254,9 @@ const PositionTables = () => {
         </div>
       )}
 
-      {/* Filter & Sort - show for position tab */}
+      {/* Filter & Sort - show for position tab — md+ only */}
       {activeTab === "position" && (
-        <div className="flex flex-wrap gap-2 justify-between">
+        <div className="hidden md:flex flex-wrap gap-2 justify-between">
           <div className="flex gap-2">
             {/* Filter Dropdown */}
             <FilterDropdown

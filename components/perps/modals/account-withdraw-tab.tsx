@@ -9,6 +9,7 @@ import {
   ACCOUNT_TYPE_OPTIONS,
   BRIDGE_OPTIONS,
 } from "@/lib/constants/perps";
+import { useTheme } from "@/contexts/theme-context";
 
 export interface WithdrawTabRef {
   getData: () => {
@@ -26,7 +27,7 @@ interface WithdrawTabProps {
 
 export const WithdrawTab = forwardRef<WithdrawTabRef, WithdrawTabProps>(
   ({ onValidChange }, ref) => {
-    // Form state
+    const { isDark } = useTheme();
     const [amount, setAmount] = useState("");
     const [accountType, setAccountType] =
       useState<AccountType>("Portfolio Balance");
@@ -36,9 +37,7 @@ export const WithdrawTab = forwardRef<WithdrawTabRef, WithdrawTabProps>(
     );
     const [selectedBridge, setSelectedBridge] = useState<string | null>(null);
 
-    // Mock balance - replace with actual balance
     const balance = "1000";
-
     const isValid = !!amount && parseFloat(amount) > 0;
 
     const handleTokenSelect = (value: string) => {
@@ -50,12 +49,10 @@ export const WithdrawTab = forwardRef<WithdrawTabRef, WithdrawTabProps>(
       setSelectedBridge(value);
     };
 
-    // Notify parent when validity changes
     useEffect(() => {
       onValidChange(isValid);
     }, [isValid, onValidChange]);
 
-    // Expose getData to parent via ref
     useImperativeHandle(ref, () => ({
       getData: () => ({
         accountType,
@@ -72,41 +69,37 @@ export const WithdrawTab = forwardRef<WithdrawTabRef, WithdrawTabProps>(
 
     return (
       <div className="flex flex-col gap-4">
-        {/* Account Type Dropdown */}
         <Dropdown
           items={ACCOUNT_TYPE_OPTIONS as unknown as string[]}
           selectedOption={accountType}
           setSelectedOption={
             setAccountType as React.Dispatch<React.SetStateAction<string>>
           }
-          classname="w-full! justify-between! rounded-lg! border border-[#E2E2E2] bg-white px-4 py-3 text-[12px] leading-[18px] font-medium"
+          classname={`w-full! justify-between! rounded-lg! border px-4 py-3 text-[12px] leading-[18px] font-medium ${isDark ? "border-[#333333] bg-[#111111]" : "border-[#E2E2E2] bg-white"}`}
           dropdownClassname="text-[12px] leading-[18px]"
-          menuClassname="top-full left-0 mt-1 w-full border border-[#E2E2E2] rounded-lg"
+          menuClassname={`top-full left-0 mt-1 w-full border rounded-lg ${isDark ? "border-[#333333]" : "border-[#E2E2E2]"}`}
           arrowClassname="size-4"
         />
 
-        {/* Chain Selector Dropdown */}
         <Dropdown
           items={CHAIN_OPTIONS.map((c) => c.name)}
           selectedOption={selectedChain}
           setSelectedOption={setSelectedChain}
-          classname="!w-full !justify-between !rounded-lg border border-[#E2E2E2] bg-white px-4 py-3 text-[12px] leading-[18px] font-medium"
+          classname={`!w-full !justify-between !rounded-lg border px-4 py-3 text-[12px] leading-[18px] font-medium ${isDark ? "border-[#333333] bg-[#111111]" : "border-[#E2E2E2] bg-white"}`}
           dropdownClassname="text-[12px] leading-[18px] gap-2"
-          menuClassname="top-full left-0 mt-1 w-full border border-[#E2E2E2] rounded-lg"
+          menuClassname={`top-full left-0 mt-1 w-full border rounded-lg ${isDark ? "border-[#333333]" : "border-[#E2E2E2]"}`}
           arrowClassname="size-4"
         />
 
-        {/* Amount Input with Token Selector */}
         <div className="flex flex-col gap-1">
-          <div className="flex items-center justify-between rounded-lg border border-[#E2E2E2] bg-white px-4 py-3">
+          <div className={`flex items-center justify-between rounded-lg border px-4 py-3 ${isDark ? "border-[#333333] bg-[#111111]" : "border-[#E2E2E2] bg-white"}`}>
             <input
               type="text"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="Amount"
-              className="flex-1 text-[12px] leading-[18px] font-medium text-[#111111] placeholder:text-[#A7A7A7] outline-none bg-transparent"
+              className={`flex-1 text-[12px] leading-[18px] font-medium placeholder:text-[#A7A7A7] outline-none bg-transparent ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}
             />
-            {/* Token Selector */}
             <div className="w-fit flex items-center">
               <Dropdown
                 items={TOKEN_OPTIONS.map((t) => t.symbol)}
@@ -118,33 +111,31 @@ export const WithdrawTab = forwardRef<WithdrawTabRef, WithdrawTabProps>(
                 }
                 classname="gap-1 pl-2 text-[12px] leading-[18px] font-medium"
                 dropdownClassname="text-[12px] leading-[18px] gap-2"
-                menuClassname="right-0 mt-2 min-w-[100px] border border-[#E2E2E2] rounded-lg"
+                menuClassname={`right-0 mt-2 min-w-[100px] border rounded-lg ${isDark ? "border-[#333333]" : "border-[#E2E2E2]"}`}
                 arrowClassname="size-4"
               />
             </div>
           </div>
         </div>
 
-        {/* Bridge Name Dropdown */}
         <Dropdown
           items={BRIDGE_OPTIONS}
           selectedOption={selectedBridge || "Bridge Name"}
           setSelectedOption={
             handleBridgeSelect as React.Dispatch<React.SetStateAction<string>>
           }
-          classname="!w-full !justify-between !rounded-lg border border-[#E2E2E2] bg-white px-4 py-3 text-[12px] leading-[18px] font-medium"
+          classname={`!w-full !justify-between !rounded-lg border px-4 py-3 text-[12px] leading-[18px] font-medium ${isDark ? "border-[#333333] bg-[#111111]" : "border-[#E2E2E2] bg-white"}`}
           dropdownClassname="text-[12px] leading-[18px]"
-          menuClassname="top-full left-0 mt-1 w-full border border-[#E2E2E2] rounded-lg"
+          menuClassname={`top-full left-0 mt-1 w-full border rounded-lg ${isDark ? "border-[#333333]" : "border-[#E2E2E2]"}`}
           arrowClassname="size-4"
         />
 
-        {/* Withdrawable amount with Max Value */}
         <div className="flex items-center justify-between">
-          <span className="text-[12px] leading-[18px] font-medium text-[#6F6F6F]">
+          <span className={`text-[12px] leading-[18px] font-medium ${isDark ? "text-[#A7A7A7]" : "text-[#6F6F6F]"}`}>
             Withdrawable amount
           </span>
           <div className="flex items-center gap-2">
-            <span className="text-[12px] leading-[18px] font-semibold text-[#111111]">
+            <span className={`text-[12px] leading-[18px] font-semibold ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
               --
             </span>
             <button
@@ -157,12 +148,11 @@ export const WithdrawTab = forwardRef<WithdrawTabRef, WithdrawTabProps>(
           </div>
         </div>
 
-        {/* Transaction fee/Bridge fee */}
         <div className="flex items-center justify-between">
-          <span className="text-[12px] leading-[18px] font-medium text-[#6F6F6F]">
+          <span className={`text-[12px] leading-[18px] font-medium ${isDark ? "text-[#A7A7A7]" : "text-[#6F6F6F]"}`}>
             Transaction fee/Bridge fee
           </span>
-          <span className="text-[12px] leading-[18px] font-semibold text-[#111111]">
+          <span className={`text-[12px] leading-[18px] font-semibold ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
             --
           </span>
         </div>

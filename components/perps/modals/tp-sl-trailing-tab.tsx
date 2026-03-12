@@ -3,21 +3,26 @@ import { TpSlTriggerPriceType } from "@/lib/types";
 import { TP_SL_PRICE_TYPE_OPTIONS } from "@/lib/constants/perps";
 import { Dropdown } from "../../ui/dropdown";
 import { QuantitySlider } from "../../ui/quantity-slider";
+import { useTheme } from "@/contexts/theme-context";
 
 export const TrailingTab = () => {
+  const { isDark } = useTheme();
   const [trailingTriggerPrice, setTrailingTriggerPrice] = useState("");
   const [trailingTriggerType, setTrailingTriggerType] =
     useState<TpSlTriggerPriceType>("Last");
   const [trailingCallbackRate, setTrailingCallbackRate] = useState("");
   const [trailingQuantity, setTrailingQuantity] = useState("");
 
+  const textPrimary = isDark ? "text-[#FFFFFF]" : "text-[#111111]";
+  const inputBg = isDark ? "border-[#333333] bg-[#111111]" : "border-[#E2E2E2] bg-white";
+
   return (
     <>
       <div className="flex flex-col gap-1">
-        <label className="text-[10px] leading-[15px] font-medium text-[#111111]">
+        <label className={`text-[10px] leading-[15px] font-medium ${textPrimary}`}>
           Trigger Price
         </label>
-        <div className="h-9 flex gap-2 items-center rounded-lg border border-[#E2E2E2] bg-white px-2">
+        <div className={`h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
           <span className="text-[12px] text-[#A7A7A7] leading-[18px] font-medium ">
             Trigger Price
           </span>
@@ -25,7 +30,7 @@ export const TrailingTab = () => {
             type="number"
             value={trailingTriggerPrice}
             onChange={(e) => setTrailingTriggerPrice(e.target.value)}
-            className="flex-1 text-[12px] leading-[18px] font-medium outline-none"
+            className={`flex-1 text-[12px] leading-[18px] font-medium outline-none bg-transparent ${textPrimary}`}
           />
           <div className="ml-auto">
             <Dropdown
@@ -42,10 +47,10 @@ export const TrailingTab = () => {
       </div>
       <div className="flex gap-1">
         <div className="flex-1 flex flex-col gap-1">
-          <label className="text-[10px] leading-[15px] font-medium text-[#111111]">
+          <label className={`text-[10px] leading-[15px] font-medium ${textPrimary}`}>
             Callback Rate
           </label>
-          <div className="h-9 flex gap-2 items-center rounded-lg border border-[#E2E2E2] bg-white px-2">
+          <div className={`h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
             <span className="text-[12px] text-[#A7A7A7] leading-[18px] font-medium shrink-0">
               Callback Rate
             </span>
@@ -53,7 +58,7 @@ export const TrailingTab = () => {
               type="number"
               value={trailingCallbackRate}
               onChange={(e) => setTrailingCallbackRate(e.target.value)}
-              className="flex-1 min-w-0 text-[12px] leading-[18px] font-medium outline-none"
+              className={`flex-1 min-w-0 text-[12px] leading-[18px] font-medium outline-none bg-transparent ${textPrimary}`}
             />
             <span className="text-[10px] leading-[15px] font-medium shrink-0">
               %
@@ -82,15 +87,15 @@ export const TrailingTab = () => {
         </div>
       </div>
       <div className="flex flex-col gap-1">
-        <label className="text-[10px] leading-[15px] font-medium text-[#111111]">
+        <label className={`text-[10px] leading-[15px] font-medium ${textPrimary}`}>
           Quantity
         </label>
-        <div className="h-9 flex gap-2 items-center rounded-lg border border-[#E2E2E2] bg-white px-2">
+        <div className={`h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
           <input
             type="number"
             value={trailingQuantity}
             onChange={(e) => setTrailingQuantity(e.target.value)}
-            className="flex-1 text-[12px] leading-[18px] font-medium outline-none"
+            className={`flex-1 text-[12px] leading-[18px] font-medium outline-none bg-transparent ${textPrimary}`}
           />
         </div>
         <QuantitySlider

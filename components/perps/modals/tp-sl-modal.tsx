@@ -9,6 +9,7 @@ import { EntirePositionTab } from "./tp-sl-entire-tab";
 import { PartialPositionTab } from "./tp-sl-partial-tab";
 import { TrailingTab } from "./tp-sl-trailing-tab";
 import { MmrSlTab } from "./tp-sl-mmr-tab";
+import { useTheme } from "@/contexts/theme-context";
 
 const TP_SL_TABS = [
   { id: "entire_position", label: "Entire Position" },
@@ -30,11 +31,14 @@ export const TpSlModal = ({
   onClose,
   onConfirm,
 }: TpSlModalProps) => {
+  const { isDark } = useTheme();
   const [selectedMode, setSelectedMode] = useState<TpSlMode>(defaultMode);
 
   useEffect(() => {
     setSelectedMode(defaultMode);
   }, [defaultMode]);
+
+  const textPrimary = isDark ? "text-[#FFFFFF]" : "text-[#111111]";
 
   return (
     <BaseModalContent
@@ -54,7 +58,7 @@ export const TpSlModal = ({
     >
       {/* position info: pair & leverage */}
       <div className="flex gap-1">
-        <div className="text-[12px] leading-[18px] font-semibold text-[#111111]">
+        <div className={`text-[12px] leading-[18px] font-semibold ${textPrimary}`}>
           {position?.pair || "SBTCUSDT"}. {position?.mode || "Cross"}
         </div>
         <div className="rounded-[5px] bg-[#EBFCFD] py-1 px-2 text-[10px] leading-[15px] font-semibold text-[#32E2EE]">
@@ -68,7 +72,7 @@ export const TpSlModal = ({
           <span className="flex text-[10px] leading-[15px] font-medium text-[#919191]">
             Last Price
           </span>
-          <span className="text-[12px] leading-[18px] font-semibold text-[#111111]">
+          <span className={`text-[12px] leading-[18px] font-semibold ${textPrimary}`}>
             {position?.lastPrice || "102,964"} USDT
           </span>
         </div>
@@ -77,7 +81,7 @@ export const TpSlModal = ({
           <span className="flex text-[10px] leading-[15px] font-medium text-[#919191]">
             Entry price
           </span>
-          <span className="text-[12px] leading-[18px] font-semibold text-[#111111]">
+          <span className={`text-[12px] leading-[18px] font-semibold ${textPrimary}`}>
             {position?.entryPrice || "102,964"} USDT
           </span>
         </div>
@@ -86,25 +90,25 @@ export const TpSlModal = ({
           <span className="flex text-[10px] leading-[15px] font-medium text-[#919191]">
             Limit order
           </span>
-          <span className="text-[12px] leading-[18px] font-semibold text-[#111111]">
+          <span className={`text-[12px] leading-[18px] font-semibold ${textPrimary}`}>
             {position?.entryPrice || "102,964"} USDT
           </span>
         </div>
 
         <div className="flex flex-col gap-0.5">
-          <span className="flex text-[10px] leading-[15px] font-medium text-[#111111]">
+          <span className={`flex text-[10px] leading-[15px] font-medium ${textPrimary}`}>
             Mark Price
           </span>
-          <span className="text-[12px] leading-[18px] font-semibold text-[#111111]">
+          <span className={`text-[12px] leading-[18px] font-semibold ${textPrimary}`}>
             {position?.markPrice || "102,964"} USDT
           </span>
         </div>
 
         <div className="flex flex-col gap-0.5">
-          <span className="flex text-[10px] leading-[15px] font-medium text-[#111111]">
+          <span className={`flex text-[10px] leading-[15px] font-medium ${textPrimary}`}>
             Est. Liquidation Price
           </span>
-          <span className="text-[12px] leading-[18px] font-semibold text-[#111111]">
+          <span className={`text-[12px] leading-[18px] font-semibold ${textPrimary}`}>
             {position?.estLiquidationPrice || "102,964"} USDT
           </span>
         </div>

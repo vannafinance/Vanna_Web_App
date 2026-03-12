@@ -2,6 +2,7 @@
 
 import { Radio } from "./radio-button";
 import { ReactNode } from "react";
+import { useTheme } from "@/contexts/theme-context";
 
 interface ModalRadioOptionProps {
   name: string;
@@ -24,6 +25,8 @@ export const ModalRadioOption = ({
   onClick,
   children,
 }: ModalRadioOptionProps) => {
+  const { isDark } = useTheme();
+
   const handleClick = () => {
     if (onClick) {
       onClick();
@@ -43,13 +46,13 @@ export const ModalRadioOption = ({
         />
       </div>
       <div className="flex flex-col gap-1">
-        <span className="text-[14px] leading-[21px] font-semibold text-[#111111]">
+        <span className={`text-[14px] leading-[21px] font-semibold ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
           {title}
         </span>
         {children ? (
           children
         ) : (
-          <span className="text-[12px] leading-[18px] font-medium text-[#5C5B5B]">
+          <span className={`text-[12px] leading-[18px] font-medium ${isDark ? "text-[#A7A7A7]" : "text-[#5C5B5B]"}`}>
             {description}
           </span>
         )}

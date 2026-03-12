@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTheme } from "@/contexts/theme-context";
 import { Dropdown } from "../ui/dropdown";
 
@@ -283,6 +283,58 @@ export default function TradingPairSearch({
     setTimeout(() => onClose?.(), 300);
   };
 
+  // Drag-to-close logic
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const dragStartY = useRef(0);
+  const currentTranslateY = useRef(0);
+  const isDragging = useRef(false);
+
+  const startDrag = (clientY: number) => {
+    dragStartY.current = clientY;
+    isDragging.current = true;
+    if (sheetRef.current) sheetRef.current.style.transition = "none";
+  };
+
+  const moveDrag = (clientY: number) => {
+    if (!isDragging.current) return;
+    const deltaY = clientY - dragStartY.current;
+    if (deltaY > 0) {
+      currentTranslateY.current = deltaY;
+      if (sheetRef.current) sheetRef.current.style.transform = `translateY(${deltaY}px)`;
+    }
+  };
+
+  const endDrag = () => {
+    if (!isDragging.current) return;
+    isDragging.current = false;
+    if (sheetRef.current) {
+      sheetRef.current.style.transition = "transform 0.3s ease-out";
+      if (currentTranslateY.current > 150) {
+        sheetRef.current.style.transform = "translateY(100%)";
+        setTimeout(() => onClose?.(), 300);
+      } else {
+        sheetRef.current.style.transform = "translateY(0)";
+      }
+    }
+    currentTranslateY.current = 0;
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => startDrag(e.touches[0].clientY);
+  const handleTouchMove = (e: React.TouchEvent) => moveDrag(e.touches[0].clientY);
+  const handleTouchEnd = () => endDrag();
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    startDrag(e.clientY);
+    const onMouseMove = (ev: MouseEvent) => moveDrag(ev.clientY);
+    const onMouseUp = () => {
+      endDrag();
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+    };
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+  };
+
   const {
     marketType,
     setMarketType,
@@ -515,12 +567,19 @@ export default function TradingPairSearch({
 
         {/* Bottom sheet — extends from navbar to bottom */}
         <div
+          ref={sheetRef}
           className={`fixed inset-x-0 top-[72px] bottom-0 z-[201] flex flex-col rounded-t-2xl transition-transform duration-300 ease-out ${
             isVisible ? "translate-y-0" : "translate-y-full"
           } ${isDark ? "bg-[#222222]" : "bg-[#F4F4F4]"}`}
         >
-          {/* Handle bar */}
-          <div className="flex justify-center pt-3 pb-1">
+          {/* Handle bar — drag to close */}
+          <div
+            className="flex justify-center pt-3 pb-1 cursor-grab"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onMouseDown={handleMouseDown}
+          >
             <div
               className={`w-10 h-1 rounded-full ${isDark ? "bg-[#555555]" : "bg-[#CCCCCC]"}`}
             />

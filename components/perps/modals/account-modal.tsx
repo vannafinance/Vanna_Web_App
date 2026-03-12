@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from "react";
 import Image from "next/image";
+import { useTheme } from "@/contexts/theme-context";
 import { BaseModalContent } from "../../ui/base-modal-content";
 import { AnimatedTabs } from "../../ui/animated-tabs";
 import { DepositTab, DepositTabRef } from "./account-deposit-tab";
@@ -25,6 +26,7 @@ export const AccountModal = ({
   onClose,
   defaultTab = "deposit",
 }: AccountModalProps) => {
+  const { isDark } = useTheme();
   const [activeTab, setActiveTab] = useState<AccountTab>(defaultTab);
   const [isFormValid, setIsFormValid] = useState(false);
 
@@ -98,7 +100,7 @@ export const AccountModal = ({
         {/* History Icon */}
         <button
           type="button"
-          className="cursor-pointer p-2 hover:bg-[#E2E2E2] rounded-lg transition-colors"
+          className={`cursor-pointer p-2 rounded-lg transition-colors ${isDark ? "hover:bg-[#333333]" : "hover:bg-[#E2E2E2]"}`}
           aria-label="Transaction History"
         >
           <Image

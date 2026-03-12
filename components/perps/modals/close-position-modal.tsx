@@ -5,6 +5,7 @@ import { ActivePositionType } from "../position-tables/active-positions-table";
 import { QuantitySlider } from "../../ui/quantity-slider";
 import { BaseModalContent } from "../../ui/base-modal-content";
 import { AnimatedTabs } from "../../ui/animated-tabs";
+import { useTheme } from "@/contexts/theme-context";
 
 const CLOSE_POSITION_TABS = [
   { id: "limit", label: "Limit" },
@@ -29,6 +30,7 @@ export const ClosePositionModal = ({
   onClose,
   onConfirm,
 }: ClosePositionModalProps) => {
+  const { isDark } = useTheme();
   const [type, setType] = useState<"market" | "limit">(defaultType);
   const [closePrice, setClosePrice] = useState<string>(position.markPrice);
   const [percentage, setPercentage] = useState<number>(75);
@@ -72,6 +74,10 @@ export const ClosePositionModal = ({
     });
   };
 
+  const textPrimary = isDark ? "text-[#FFFFFF]" : "text-[#111111]";
+  const textSecondary = isDark ? "text-[#A7A7A7]" : "text-[#5C5B5B]";
+  const inputBg = isDark ? "border-[#333333] bg-[#111111]" : "border-[#E2E2E2] bg-white";
+
   return (
     <BaseModalContent
       title="Close"
@@ -91,7 +97,7 @@ export const ClosePositionModal = ({
 
       {/* Position Info Header */}
       <div className="flex items-center gap-1">
-        <span className="text-[12px] leading-[18px] font-semibold text-[#111111]">
+        <span className={`text-[12px] leading-[18px] font-semibold ${textPrimary}`}>
           S{pair}. {position.futures.mode}
         </span>
         <span className="rounded-[5px] bg-[#FFEEEE] px-2 py-1 text-[10px] leading-[15px] font-semibold text-[#FC5457]">
@@ -102,50 +108,50 @@ export const ClosePositionModal = ({
       {/* Price Details */}
       <div className="flex flex-col gap-2">
         <div className="flex justify-between items-center">
-          <span className="text-[10px] leading-[15px] text-[#5C5B5B] font-medium">
+          <span className={`text-[10px] leading-[15px] ${textSecondary} font-medium`}>
             Current Price
           </span>
-          <span className="text-[10px] leading-[15px] text-[#111111] font-semibold">
+          <span className={`text-[10px] leading-[15px] ${textPrimary} font-semibold`}>
             {position.markPrice} SUSDT
           </span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-[10px] leading-[15px] text-[#5C5B5B] font-medium">
+          <span className={`text-[10px] leading-[15px] ${textSecondary} font-medium`}>
             Entry Price
           </span>
-          <span className="text-[10px] leading-[15px] text-[#111111] font-semibold">
+          <span className={`text-[10px] leading-[15px] ${textPrimary} font-semibold`}>
             {position.entryPrice} SUSDT
           </span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-[10px] leading-[15px] text-[#5C5B5B] font-medium">
+          <span className={`text-[10px] leading-[15px] ${textSecondary} font-medium`}>
             Position
           </span>
-          <span className="text-[10px] leading-[15px] text-[#111111] font-semibold">
+          <span className={`text-[10px] leading-[15px] ${textPrimary} font-semibold`}>
             {position.positionSize.size} S{unit}
           </span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-[10px] leading-[15px] text-[#5C5B5B] font-medium">
+          <span className={`text-[10px] leading-[15px] ${textSecondary} font-medium`}>
             Placed
           </span>
-          <span className="text-[10px] leading-[15px] text-[#111111] font-semibold">
+          <span className={`text-[10px] leading-[15px] ${textPrimary} font-semibold`}>
             0.000 S{unit}
           </span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-[10px] leading-[15px] text-[#5C5B5B] font-medium">
+          <span className={`text-[10px] leading-[15px] ${textSecondary} font-medium`}>
             Max Close
           </span>
-          <span className="text-[10px] leading-[15px] text-[#111111] font-semibold">
+          <span className={`text-[10px] leading-[15px] ${textPrimary} font-semibold`}>
             {position.positionSize.size} S{unit}
           </span>
         </div>
 
         {/* Close Price Input - Only show in Limit mode */}
         {type === "limit" && (
-          <div className="flex items-center justify-between rounded-lg border border-[#E2E2E2] bg-white px-2 py-3">
-            <span className="text-[10px] leading-[100%] text-[#111111]">
+          <div className={`flex items-center justify-between rounded-lg border ${inputBg} px-2 py-3`}>
+            <span className={`text-[10px] leading-[100%] ${textPrimary}`}>
               Close price
             </span>
             <div className="flex flex-1 items-center gap-1">
@@ -153,9 +159,9 @@ export const ClosePositionModal = ({
                 type="text"
                 value={closePrice}
                 onChange={(e) => setClosePrice(e.target.value)}
-                className="text-[12px] leading-[18px] font-medium text-[#111111] text-right bg-transparent outline-none flex-1"
+                className={`text-[12px] leading-[18px] font-medium ${textPrimary} text-right bg-transparent outline-none flex-1`}
               />
-              <span className="text-[10px] leading-[100%] font-medium text-[#111111]">
+              <span className={`text-[10px] leading-[100%] font-medium ${textPrimary}`}>
                 SUSDT
               </span>
             </div>
@@ -163,8 +169,8 @@ export const ClosePositionModal = ({
         )}
 
         {/* Close Quantity Input */}
-        <div className="flex items-center justify-between rounded-lg border border-[#E2E2E2] bg-white px-2 py-3">
-          <span className="text-[10px] leading-[100%] text-[#111111]">
+        <div className={`flex items-center justify-between rounded-lg border ${inputBg} px-2 py-3`}>
+          <span className={`text-[10px] leading-[100%] ${textPrimary}`}>
             Close Quantity
           </span>
           <div className="flex flex-1 items-center gap-1">
@@ -172,9 +178,9 @@ export const ClosePositionModal = ({
               type="text"
               value={closeQuantity}
               onChange={(e) => handleQuantityChange(e.target.value)}
-              className="text-[12px] leading-[18px] font-medium text-[#111111] text-right bg-transparent outline-none flex-1"
+              className={`text-[12px] leading-[18px] font-medium ${textPrimary} text-right bg-transparent outline-none flex-1`}
             />
-            <span className="text-[10px] leading-[100%] font-medium text-[#111111]">
+            <span className={`text-[10px] leading-[100%] font-medium ${textPrimary}`}>
               S{unit}
             </span>
           </div>
@@ -192,7 +198,7 @@ export const ClosePositionModal = ({
       />
 
       {/* MMR Info Text */}
-      <p className="text-[12px] leading-[100%] text-[#76737B] ">
+      <p className={`text-[12px] leading-[100%] ${isDark ? "text-[#A7A7A7]" : "text-[#76737B]"} `}>
         When MMR≥0%, the position will be closed at the market price. The higher
         the MMR, the higher the risk. Position liquidation/reduction will be
         triggered when the MMR reaches 100%.

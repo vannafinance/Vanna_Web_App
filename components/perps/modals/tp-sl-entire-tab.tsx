@@ -3,8 +3,10 @@ import { TpSlTriggerPriceType, TpSlValueType } from "@/lib/types";
 import { TP_SL_PRICE_TYPE_OPTIONS, TP_SL_VALUE_TYPE_OPTIONS } from "@/lib/constants/perps";
 import { Dropdown } from "../../ui/dropdown";
 import { QuantitySlider } from "../../ui/quantity-slider";
+import { useTheme } from "@/contexts/theme-context";
 
 export const EntirePositionTab = () => {
+  const { isDark } = useTheme();
   const [entireTpPrice, setEntireTpPrice] = useState("");
   const [entireTpPriceType, setEntireTpPriceType] =
     useState<TpSlTriggerPriceType>("Last");
@@ -19,15 +21,18 @@ export const EntirePositionTab = () => {
   const [entireSlValueType, setEntireSlValueType] =
     useState<TpSlValueType>("ROI(%)");
 
+  const textPrimary = isDark ? "text-[#FFFFFF]" : "text-[#111111]";
+  const inputBg = isDark ? "border-[#333333] bg-[#111111]" : "border-[#E2E2E2] bg-white";
+
   return (
     <>
       <div className="flex flex-col gap-1">
         <div className="flex gap-1">
           <div className="flex-1 flex flex-col gap-1">
-            <label className="text-[10px] leading-[15px] font-medium text-[#111111]">
+            <label className={`text-[10px] leading-[15px] font-medium ${textPrimary}`}>
               Take-Profit
             </label>
-            <div className="h-9 flex gap-2 items-center rounded-lg border border-[#E2E2E2] bg-white px-2">
+            <div className={`h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
               <span className="text-[12px] text-[#A7A7A7] leading-[18px] font-medium shrink-0">
                 Trigger Price
               </span>
@@ -35,7 +40,7 @@ export const EntirePositionTab = () => {
                 type="number"
                 value={entireTpPrice}
                 onChange={(e) => setEntireTpPrice(e.target.value)}
-                className="flex-1 min-w-0 text-[12px] leading-[18px] font-medium outline-none"
+                className={`flex-1 min-w-0 text-[12px] leading-[18px] font-medium outline-none bg-transparent ${textPrimary}`}
               />
               <div className="shrink-0 flex items-center">
                 <Dropdown
@@ -52,7 +57,7 @@ export const EntirePositionTab = () => {
           </div>
           <div className="w-[180px] shrink-0 flex flex-col">
             <div className="h-[19px]" />
-            <div className="h-9 flex gap-2 items-center rounded-lg border border-[#E2E2E2] bg-white px-2">
+            <div className={`h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
               <span className="text-[12px] text-[#A7A7A7] leading-[18px] font-medium shrink-0">
                 ROI
               </span>
@@ -64,7 +69,7 @@ export const EntirePositionTab = () => {
                     e.target.value ? Number(e.target.value) : null,
                   )
                 }
-                className="flex-1 min-w-0 text-[12px] leading-[18px] font-medium outline-none"
+                className={`flex-1 min-w-0 text-[12px] leading-[18px] font-medium outline-none bg-transparent ${textPrimary}`}
               />
               <div className=" flex items-center">
                 <Dropdown
@@ -92,10 +97,10 @@ export const EntirePositionTab = () => {
       <div className="flex flex-col gap-1">
         <div className="flex gap-1">
           <div className="flex-1 flex flex-col gap-1">
-            <label className="text-[10px] leading-[15px] font-medium text-[#111111]">
+            <label className={`text-[10px] leading-[15px] font-medium ${textPrimary}`}>
               Stop-loss
             </label>
-            <div className="h-9 flex gap-2 items-center rounded-lg border border-[#E2E2E2] bg-white px-2">
+            <div className={`h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
               <span className="text-[12px] text-[#A7A7A7] leading-[18px] font-medium shrink-0">
                 Trigger Price
               </span>
@@ -103,7 +108,7 @@ export const EntirePositionTab = () => {
                 type="number"
                 value={entireSlPrice}
                 onChange={(e) => setEntireSlPrice(e.target.value)}
-                className="flex-1 min-w-0 text-[12px] leading-[18px] font-medium outline-none"
+                className={`flex-1 min-w-0 text-[12px] leading-[18px] font-medium outline-none bg-transparent ${textPrimary}`}
               />
               <div className="shrink-0 flex items-center">
                 <Dropdown
@@ -120,7 +125,7 @@ export const EntirePositionTab = () => {
           </div>
           <div className="w-[180px] shrink-0 flex flex-col">
             <div className="h-[19px]" />
-            <div className="h-9 flex gap-2 items-center rounded-lg border border-[#E2E2E2] bg-white px-2">
+            <div className={`h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
               <span className="text-[12px] text-[#A7A7A7] leading-[18px] font-medium shrink-0">
                 ROI
               </span>
@@ -132,7 +137,7 @@ export const EntirePositionTab = () => {
                     e.target.value ? Number(e.target.value) : null,
                   )
                 }
-                className="flex-1 min-w-0 text-[12px] leading-[18px] font-medium outline-none"
+                className={`flex-1 min-w-0 text-[12px] leading-[18px] font-medium outline-none bg-transparent ${textPrimary}`}
               />
               <div className="flex items-center">
                 <Dropdown
