@@ -110,7 +110,7 @@ export const Dropdown = (props: Dropdown) => {
             onMouseLeave={handleDropdownMouseLeave}
             className={`absolute z-100 bg-white p-2 shadow-lg rounded-[6px] ${
               props.menuClassname || "top-8 -left-4"
-            } ${props.items.length > 4 ? "max-h-48 overflow-y-auto" : ""}`}
+            } ${props.items.length > 4 ? "max-h-48 overflow-y-auto scrollbar-thin" : ""}`}
             role="listbox"
             aria-label="Options"
           >

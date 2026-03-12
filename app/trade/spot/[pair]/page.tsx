@@ -66,8 +66,8 @@ const Spot = () => {
         {/* TradingPairInfo, charts & orderbook */}
         <div className="flex flex-col  gap-2">
           {/* TradingPairInfo */}
-          <div className="flex  gap-2">
-            <div ref={tradingPairSelectorRef} className="relative flex-1">
+          <div ref={tradingPairSelectorRef} className="flex gap-2 relative z-100">
+            <div className="flex-1">
               <TradingPairInfo
                 isOpen={isTradingPairSelectorOpen}
                 onOpenPairSelector={() =>
@@ -78,20 +78,6 @@ const Spot = () => {
                 icon={icon}
                 stats={spotStats}
               />
-              {isTradingPairSelectorOpen && (
-                <div className="absolute top-[60px] left-2  z-150 ">
-                  <TradingPairSearch
-                    onSelectPair={(pair) => {
-                      const market =
-                        pair.marketType === "spot" ? "spot" : "perps";
-                      router.push(
-                        `/trade/${market}/${pair.base.toLowerCase()}usdc`
-                      );
-                      setIsTradingPairSelectorOpen(false);
-                    }}
-                  />
-                </div>
-              )}
             </div>
 
             {/* dex navigation dropdown */}
@@ -109,6 +95,21 @@ const Spot = () => {
                 />
               </div>
             </div>
+            {isTradingPairSelectorOpen && (
+              <div className="absolute top-full left-0 right-0 z-999">
+                <TradingPairSearch
+                  onSelectPair={(pair) => {
+                    const market =
+                      pair.marketType === "spot" ? "spot" : "perps";
+                    router.push(
+                      `/trade/${market}/${pair.base.toLowerCase()}usdc`
+                    );
+                    setIsTradingPairSelectorOpen(false);
+                  }}
+                  onClose={() => setIsTradingPairSelectorOpen(false)}
+                />
+              </div>
+            )}
           </div>
 
           {/* chart & orderBook */}

@@ -81,8 +81,11 @@ const Perps = () => {
       {/* Left column */}
       <div className="flex flex-col gap-2">
         {/* TradingPairInfo — xl+ only */}
-        <div className="hidden xl:flex gap-2">
-          <div ref={tradingPairSelectorRef} className="relative flex-1">
+        <div
+          ref={tradingPairSelectorRef}
+          className="hidden xl:flex gap-2 relative z-100"
+        >
+          <div className="flex-1">
             <TradingPairInfo
               isOpen={isTradingPairSelectorOpen}
               onOpenPairSelector={() =>
@@ -93,20 +96,6 @@ const Perps = () => {
               icon={icon}
               stats={perpNonOrderbookStats}
             />
-            {isTradingPairSelectorOpen && (
-              <div className="absolute top-[60px] left-2 z-150">
-                <TradingPairSearch
-                  onSelectPair={(pair) => {
-                    const market =
-                      pair.marketType === "spot" ? "spot" : "perps";
-                    router.push(
-                      `/trade/${market}/${pair.base.toLowerCase()}usdc`,
-                    );
-                    setIsTradingPairSelectorOpen(false);
-                  }}
-                />
-              </div>
-            )}
           </div>
 
           {/* dex navigation dropdown */}
@@ -126,6 +115,20 @@ const Perps = () => {
               />
             </div>
           </div>
+          {isTradingPairSelectorOpen && (
+            <div className="absolute top-[72px] left-0 right-0 z-999">
+              <TradingPairSearch
+                onSelectPair={(pair) => {
+                  const market = pair.marketType === "spot" ? "spot" : "perps";
+                  router.push(
+                    `/trade/${market}/${pair.base.toLowerCase()}usdc`,
+                  );
+                  setIsTradingPairSelectorOpen(false);
+                }}
+                onClose={() => setIsTradingPairSelectorOpen(false)}
+              />
+            </div>
+          )}
         </div>
 
         {/* Trade / Chart tabs — below xl */}
@@ -191,7 +194,7 @@ const Perps = () => {
                   />
                 </div>
               </div>
-              <div ref={tradingPairSelectorRef} className="relative">
+              <div ref={tradingPairSelectorRef} className="relative z-100">
                 <TradingPairInfo
                   isOpen={isTradingPairSelectorOpen}
                   onOpenPairSelector={() =>
@@ -203,7 +206,7 @@ const Perps = () => {
                   stats={perpNonOrderbookStats}
                 />
                 {isTradingPairSelectorOpen && (
-                  <div className="absolute top-[60px] left-2 z-150">
+                  <div className="absolute top-[72px] left-0 right-0 z-999">
                     <TradingPairSearch
                       onSelectPair={(pair) => {
                         const market =
@@ -213,6 +216,7 @@ const Perps = () => {
                         );
                         setIsTradingPairSelectorOpen(false);
                       }}
+                      onClose={() => setIsTradingPairSelectorOpen(false)}
                     />
                   </div>
                 )}
