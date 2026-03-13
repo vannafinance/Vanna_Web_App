@@ -45,7 +45,7 @@ export const AdjustLeverageModal = ({
       }}
     >
       <div>
-        <div className={`w-[360px] rounded-lg p-0.5 flex items-center gap-1 ${isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"}`}>
+        <div className={`w-full max-w-[360px] rounded-lg p-0.5 flex items-center gap-1 ${isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"}`}>
           {/* Minus Button */}
           <button
             type="button"

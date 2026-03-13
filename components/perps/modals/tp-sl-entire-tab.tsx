@@ -27,12 +27,11 @@ export const EntirePositionTab = () => {
   return (
     <>
       <div className="flex flex-col gap-1">
-        <div className="flex gap-1">
-          <div className="flex-1 flex flex-col gap-1">
-            <label className={`text-[10px] leading-[15px] font-medium ${textPrimary}`}>
-              Take-Profit
-            </label>
-            <div className={`h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
+        <label className={`text-[10px] leading-[15px] font-medium ${textPrimary}`}>
+          Take-Profit
+        </label>
+        <div className="flex flex-col md:flex-row gap-1">
+          <div className={`md:flex-1 h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
               <span className="text-[12px] text-[#A7A7A7] leading-[18px] font-medium shrink-0">
                 Trigger Price
               </span>
@@ -53,11 +52,8 @@ export const EntirePositionTab = () => {
                   dropdownClassname="text-[12px] font-semibold"
                 />
               </div>
-            </div>
           </div>
-          <div className="w-[180px] shrink-0 flex flex-col">
-            <div className="h-[19px]" />
-            <div className={`h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
+          <div className={`w-full md:w-[180px] md:shrink-0 h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
               <span className="text-[12px] text-[#A7A7A7] leading-[18px] font-medium shrink-0">
                 ROI
               </span>
@@ -82,7 +78,6 @@ export const EntirePositionTab = () => {
                   dropdownClassname="text-[12px] font-semibold"
                 />
               </div>
-            </div>
           </div>
         </div>
         <QuantitySlider
@@ -95,12 +90,11 @@ export const EntirePositionTab = () => {
         />
       </div>
       <div className="flex flex-col gap-1">
-        <div className="flex gap-1">
-          <div className="flex-1 flex flex-col gap-1">
-            <label className={`text-[10px] leading-[15px] font-medium ${textPrimary}`}>
-              Stop-loss
-            </label>
-            <div className={`h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
+        <label className={`text-[10px] leading-[15px] font-medium ${textPrimary}`}>
+          Stop-loss
+        </label>
+        <div className="flex flex-col md:flex-row gap-1">
+          <div className={`md:flex-1 h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
               <span className="text-[12px] text-[#A7A7A7] leading-[18px] font-medium shrink-0">
                 Trigger Price
               </span>
@@ -121,11 +115,8 @@ export const EntirePositionTab = () => {
                   dropdownClassname="text-[12px] font-semibold"
                 />
               </div>
-            </div>
           </div>
-          <div className="w-[180px] shrink-0 flex flex-col">
-            <div className="h-[19px]" />
-            <div className={`h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
+          <div className={`w-full md:w-[180px] md:shrink-0 h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
               <span className="text-[12px] text-[#A7A7A7] leading-[18px] font-medium shrink-0">
                 ROI
               </span>
@@ -150,7 +141,6 @@ export const EntirePositionTab = () => {
                   dropdownClassname="text-[12px] font-semibold"
                 />
               </div>
-            </div>
           </div>
         </div>
         <QuantitySlider

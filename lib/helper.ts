@@ -1,4 +1,4 @@
-import { OrderBookRowType } from "@/components/spot/OrderBook";
+import { OrderBookRowType } from "@/components/spot/spot-orderbook/OrderBook";
 import {
   ActivePositionType,
   OpenOrderType,

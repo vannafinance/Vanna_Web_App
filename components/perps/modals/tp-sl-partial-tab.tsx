@@ -73,8 +73,8 @@ export const PartialPositionTab = () => {
           </div>
         </div>
         {/* Trigger Price + ROI row */}
-        <div className="flex gap-1">
-          <div className={`flex-1 h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
+        <div className="flex flex-col md:flex-row gap-1">
+          <div className={`md:flex-1 h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
             <span className="text-[12px] text-[#A7A7A7] leading-[18px] font-medium shrink-0">
               Trigger Price
             </span>
@@ -97,7 +97,7 @@ export const PartialPositionTab = () => {
               />
             </div>
           </div>
-          <div className={`w-[180px] shrink-0 h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
+          <div className={`w-full md:w-[180px] md:shrink-0 h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
             <span className="text-[12px] text-[#A7A7A7] leading-[18px] font-medium shrink-0">
               ROI
             </span>
@@ -134,8 +134,8 @@ export const PartialPositionTab = () => {
         {/* Price + ROI row (shown when Limit-Order is checked) */}
         {partialTpLimitOrder && (
           <>
-            <div className="flex gap-1">
-              <div className={`flex-1 h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
+            <div className="flex flex-col md:flex-row gap-1">
+              <div className={`md:flex-1 h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
                 {partialTpOrderType === "Limit" ? (
                   <>
                     <span className="text-[12px] text-[#A7A7A7] leading-[18px] font-medium shrink-0">
@@ -165,7 +165,7 @@ export const PartialPositionTab = () => {
                   />
                 )}
               </div>
-              <div className={`w-[180px] shrink-0 h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
+              <div className={`w-full md:w-[180px] md:shrink-0 h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
                 <Dropdown
                   items={TP_SL_ORDER_TYPE_OPTIONS}
                   selectedOption={partialTpOrderType}
@@ -229,8 +229,8 @@ export const PartialPositionTab = () => {
           </div>
         </div>
         {/* Trigger Price + ROI row */}
-        <div className="flex gap-1">
-          <div className={`flex-1 h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
+        <div className="flex flex-col md:flex-row gap-1">
+          <div className={`md:flex-1 h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
             <span className="text-[12px] text-[#A7A7A7] leading-[18px] font-medium shrink-0">
               Trigger Price
             </span>
@@ -253,7 +253,7 @@ export const PartialPositionTab = () => {
               />
             </div>
           </div>
-          <div className={`w-[180px] shrink-0 h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
+          <div className={`w-full md:w-[180px] md:shrink-0 h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
             <span className="text-[12px] text-[#A7A7A7] leading-[18px] font-medium shrink-0">
               ROI
             </span>
@@ -290,8 +290,8 @@ export const PartialPositionTab = () => {
         {/* Price + ROI row (shown when Limit-Order is checked) */}
         {partialSlLimitOrder && (
           <>
-            <div className="flex gap-1">
-              <div className={`flex-1 h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
+            <div className="flex flex-col md:flex-row gap-1">
+              <div className={`md:flex-1 h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
                 {partialSlOrderType === "Limit" ? (
                   <>
                     <span className="text-[12px] text-[#A7A7A7] leading-[18px] font-medium shrink-0">
@@ -321,7 +321,7 @@ export const PartialPositionTab = () => {
                   />
                 )}
               </div>
-              <div className={`w-[180px] shrink-0 h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
+              <div className={`w-full md:w-[180px] md:shrink-0 h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
                 <Dropdown
                   items={TP_SL_ORDER_TYPE_OPTIONS}
                   selectedOption={partialSlOrderType}

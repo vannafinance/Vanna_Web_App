@@ -32,11 +32,10 @@ export const BaseModalContent = ({
   hideButtons = false,
 }: BaseModalContentProps) => {
   const { isDark } = useTheme();
-  const containerClasses = `rounded-[20px] p-5 flex flex-col ${gap} ${isDark ? "bg-[#222222] border border-[#333333]" : "bg-[#F7F7F7]"}`;
-  const style = { width };
+  const containerClasses = `rounded-[20px] p-5 flex flex-col overflow-hidden ${gap} ${isDark ? "bg-[#222222] border border-[#333333]" : "bg-[#F7F7F7]"}`;
 
   return (
-    <div className={containerClasses} style={style}>
+    <div className={containerClasses} style={{ width: "100%", maxWidth: width }}>
       {/* Title */}
       <div className={`text-[16px] leading-[24px] font-semibold flex items-center gap-1.5 ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
         {title}

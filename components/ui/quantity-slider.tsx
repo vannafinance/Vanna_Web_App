@@ -50,9 +50,22 @@ export const QuantitySlider = ({
     handleMove(e.clientX);
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    e.stopPropagation();
+    setIsDragging(true);
+    handleMove(e.touches[0].clientX);
+  };
+
   const handleMouseMove = (e: MouseEvent) => {
     if (isDragging) {
       handleMove(e.clientX);
+    }
+  };
+
+  const handleTouchMove = (e: TouchEvent) => {
+    if (isDragging) {
+      e.preventDefault();
+      handleMove(e.touches[0].clientX);
     }
   };
 
@@ -64,9 +77,13 @@ export const QuantitySlider = ({
     if (isDragging) {
       window.addEventListener("mousemove", handleMouseMove);
       window.addEventListener("mouseup", handleMouseUp);
+      window.addEventListener("touchmove", handleTouchMove, { passive: false });
+      window.addEventListener("touchend", handleMouseUp);
       return () => {
         window.removeEventListener("mousemove", handleMouseMove);
         window.removeEventListener("mouseup", handleMouseUp);
+        window.removeEventListener("touchmove", handleTouchMove);
+        window.removeEventListener("touchend", handleMouseUp);
       };
     }
   }, [isDragging]);
@@ -86,7 +103,9 @@ export const QuantitySlider = ({
         {/* Track Background */}
         <motion.div
           className={`relative h-1 rounded-full cursor-pointer overflow-visible ${isDark ? "bg-[#333333]" : "bg-[#F4F4F4]"}`}
+          style={{ touchAction: "none" }}
           onMouseDown={handleMouseDown}
+          onTouchStart={handleTouchStart}
         >
           {/* Progress Fill with Gradient */}
           <motion.div
@@ -159,10 +178,16 @@ export const QuantitySlider = ({
               left: `${percentage}%`,
               top: "50%",
               transform: "translateX(-50%) translateY(calc(-50% + 0.5px))",
+              touchAction: "none",
             }}
             onMouseDown={(e) => {
               setIsDragging(true);
               handleMove(e.clientX);
+            }}
+            onTouchStart={(e) => {
+              e.stopPropagation();
+              setIsDragging(true);
+              handleMove(e.touches[0].clientX);
             }}
           >
             <motion.div

@@ -30,7 +30,7 @@ export const TrailingTab = () => {
             type="number"
             value={trailingTriggerPrice}
             onChange={(e) => setTrailingTriggerPrice(e.target.value)}
-            className={`flex-1 text-[12px] leading-[18px] font-medium outline-none bg-transparent ${textPrimary}`}
+            className={`flex-1 min-w-0 text-[12px] leading-[18px] font-medium outline-none bg-transparent ${textPrimary}`}
           />
           <div className="ml-auto">
             <Dropdown
@@ -95,7 +95,7 @@ export const TrailingTab = () => {
             type="number"
             value={trailingQuantity}
             onChange={(e) => setTrailingQuantity(e.target.value)}
-            className={`flex-1 text-[12px] leading-[18px] font-medium outline-none bg-transparent ${textPrimary}`}
+            className={`flex-1 min-w-0 text-[12px] leading-[18px] font-medium outline-none bg-transparent ${textPrimary}`}
           />
         </div>
         <QuantitySlider

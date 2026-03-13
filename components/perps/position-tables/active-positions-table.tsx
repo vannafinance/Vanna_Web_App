@@ -857,7 +857,7 @@ export default function ActivePositionsTable({
       </Modal>
 
       {/* TP/SL Modal */}
-      <Modal open={tpslModal.isOpen} onClose={handleCloseTpSlModal}>
+      <Modal open={tpslModal.isOpen} onClose={handleCloseTpSlModal} bottomSheet>
         {tpslModal.position && (
           <TpSlModal
             defaultMode={tpslModal.mode}

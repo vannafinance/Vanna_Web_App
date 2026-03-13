@@ -3,7 +3,7 @@
 import PerpsOrderPlacementForm from "@/components/perps/perps-order-placement-form";
 import PositionTables from "@/components/perps/position-tables";
 import TradingPairInfo from "@/components/ui/TradingPairInfo";
-import TradingPairSearch from "@/components/spot/TradingPairSearch";
+import TradingPairSearch from "@/components/spot/spot-orderbook/TradingPairSearch";
 import { Dropdown } from "@/components/ui/dropdown";
 import TradingViewChart from "@/components/ui/trading-view-chart";
 import { useEffect, useRef, useState } from "react";
@@ -249,7 +249,7 @@ const Perps = () => {
             <div className="flex flex-col gap-2">
               {/* Protocol dropdown */}
               <div
-                className={`rounded-lg p-4 flex gap-5 ${isDark ? "bg-[#222222] border border-[#333333]" : "bg-[#F7F7F7] border border-[#E2E2E2]"}`}
+                className={`rounded-lg p-4 flex gap-5 relative z-10 ${isDark ? "bg-[#222222] border border-[#333333]" : "bg-[#F7F7F7] border border-[#E2E2E2]"}`}
               >
                 <div className="flex flex-col gap-1">
                   <div className="text-[#A7A7A7] font-medium text-[12px] leading-[18px]">
@@ -264,7 +264,7 @@ const Perps = () => {
                   />
                 </div>
               </div>
-              <div ref={tradingPairSelectorRef} className="relative z-100">
+              <div ref={tradingPairSelectorRef} className={`relative ${isTradingPairSelectorOpen ? "z-100" : "z-0"}`}>
                 <TradingPairInfo
                   isOpen={isTradingPairSelectorOpen}
                   onOpenPairSelector={() =>

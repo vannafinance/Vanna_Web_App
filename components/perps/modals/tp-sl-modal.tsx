@@ -67,7 +67,7 @@ export const TpSlModal = ({
       </div>
 
       {/* price grid */}
-      <div className="grid grid-cols-3 gap-x-5 gap-y-5">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-x-5 gap-y-5">
         <div className="flex flex-col gap-0.5">
           <span className="flex text-[10px] leading-[15px] font-medium text-[#919191]">
             Last Price
@@ -120,7 +120,7 @@ export const TpSlModal = ({
         tabs={TP_SL_TABS}
         activeTab={selectedMode}
         onTabChange={(tabId) => setSelectedMode(tabId as TpSlMode)}
-        tabClassName="flex-1 whitespace-nowrap "
+        tabClassName="flex-1 text-[10px] md:text-[12px]"
       />
 
       {/* fields based on selected mode */}

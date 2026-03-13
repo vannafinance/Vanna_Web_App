@@ -1,13 +1,13 @@
 "use client";
 
-import OrderBook from "@/components/spot/OrderBook";
-import OrderPlacementForm from "@/components/spot/OrderPlacementForm";
-import PositionTables from "@/components/spot/PositionTables";
+import OrderBook from "@/components/spot/spot-orderbook/OrderBook";
+import OrderPlacementForm from "@/components/spot/spot-orderbook/OrderPlacementForm";
+import PositionTables from "@/components/spot/spot-orderbook/PositionTables";
 import { Dropdown } from "@/components/ui/dropdown";
 import TradingViewChart from "@/components/ui/trading-view-chart";
 import { useEffect, useRef, useState } from "react";
 import TradingPairInfo from "@/components/ui/TradingPairInfo";
-import TradingPairSearch from "@/components/spot/TradingPairSearch";
+import TradingPairSearch from "@/components/spot/spot-orderbook/TradingPairSearch";
 import { useParams, useRouter } from "next/navigation";
 
 const PROTCOL_OPTIONS = ["Aster", "Avantis"];
