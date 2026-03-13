@@ -1,6 +1,7 @@
 "use client";
 
 import { RiskRewardRatio } from "@/lib/types";
+import { useTheme } from "@/contexts/theme-context";
 
 const RATIOS: RiskRewardRatio[] = ["NA", "1:1", "1:2", "1:3", "2:1", "3:1"];
 
@@ -21,12 +22,13 @@ export const RiskRewardSelector = ({
   className = "",
   label = "RR Ratio",
 }: RiskRewardSelectorProps) => {
+  const { isDark } = useTheme();
   const isCustom = value === "CUSTOM";
 
   return (
     <div className={`flex items-center   h-auto ${className}`}>
       {/* Left label */}
-      <span className="text-[10px] leading-[15px] font-medium text-[#000000] mr-1">
+      <span className={`text-[10px] leading-[15px] font-medium mr-1 ${isDark ? "text-[#FFFFFF]" : "text-[#000000]"}`}>
         {label}
       </span>
 
@@ -64,9 +66,10 @@ export const RiskRewardSelector = ({
           placeholder="4:1"
           inputMode="numeric"
           className={`
-            w-12 h-9 rounded-md border border-[#E2E2E2] 
-            text-sm px-2 bg-white placeholder:text-[#C6C6C6]
+            w-12 h-9 rounded-md border
+            text-sm px-2 placeholder:text-[#C6C6C6]
             focus:outline-none focus:ring-1 focus:ring-[#703AE6]
+            ${isDark ? "border-[#333333] bg-[#111111] text-[#FFFFFF]" : "border-[#E2E2E2] bg-white"}
           `}
           value={isCustom ? customValue ?? "" : ""}
           onFocus={() => onChange("CUSTOM")}

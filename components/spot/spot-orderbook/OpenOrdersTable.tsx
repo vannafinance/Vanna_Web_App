@@ -6,8 +6,10 @@ import { useState } from "react";
 import { Modal } from "../../ui/modal";
 import { LimitBracketModal } from "./LimitBracketModal";
 import { EditBracketModal } from "./EditBracketModal";
+import { useTheme } from "@/contexts/theme-context";
 
 export default function OpenOrdersTable() {
+  const { isDark } = useTheme();
   const openOrders = useSpotTradeStore((state) => state.openOrders);
   const [openLimitBracket, setOpenLimitBracket] = useState(false);
   const [openEditBracket, setOpenEditBracket] = useState(false);
@@ -144,7 +146,7 @@ export default function OpenOrdersTable() {
         <div className="flex items-center justify-center gap-2">
           <button
             onClick={() => setOpenEditBracket(true)}
-            className="cursor-pointer inline-flex items-center justify-center rounded-md border-[0.75px] border-[#E2E2E2] p-2 bg-white"
+            className={`cursor-pointer inline-flex items-center justify-center rounded-md border-[0.75px] p-2 ${isDark ? "border-[#333333] bg-[#111111]" : "border-[#E2E2E2] bg-white"}`}
           >
             <Image
               className="object-cover"
@@ -154,7 +156,7 @@ export default function OpenOrdersTable() {
               src="/icons/edit.svg"
             />
           </button>
-          <button className="cursor-pointer inline-flex items-center justify-center rounded-md border-[0.75px] border-[#E2E2E2] p-2 bg-white">
+          <button className={`cursor-pointer inline-flex items-center justify-center rounded-md border-[0.75px] p-2 ${isDark ? "border-[#333333] bg-[#111111]" : "border-[#E2E2E2] bg-white"}`}>
             <Image
               className="object-cover"
               width={16}
@@ -169,7 +171,7 @@ export default function OpenOrdersTable() {
   ];
   return (
     <>
-      <div className="p-2 rounded-lg   border border-[#E2E2E2]  bg-[#F7F7F7]">
+      <div className={`p-2 rounded-lg border ${isDark ? "border-[#333333] bg-[#222222]" : "border-[#E2E2E2] bg-[#F7F7F7]"}`}>
         <Table
           columns={openOrderColumns}
           data={openOrders}

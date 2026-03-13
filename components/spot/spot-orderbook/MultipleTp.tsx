@@ -4,6 +4,7 @@ import Image from "next/image";
 import { Checkbox } from "../../ui/Checkbox";
 import { FieldArrayWithId, UseFormRegister } from "react-hook-form";
 import { OrderPlacementFormValues } from "@/lib/types";
+import { useTheme } from "@/contexts/theme-context";
 
 interface MultipleTpProps {
   fields: FieldArrayWithId<
@@ -18,15 +19,16 @@ interface MultipleTpProps {
 }
 
 const inputBase =
-  "w-full min-w-0 py-1 bg-transparent outline-none text-[10px] leading-[15px] font-medium text-[#111111] text-left placeholder:text-[8px] placeholder:font-medium placeholder:text-[#C6C6C6]";
+  "w-full min-w-0 py-1 bg-transparent outline-none text-[10px] leading-[15px] font-medium text-left placeholder:text-[8px] placeholder:font-medium placeholder:text-[#C6C6C6]";
 
 export default function MultipleTp({
   fields,
   register,
   onAdd,
   onRemove,
-}: // maxReached,
+}: // maxReached:
 MultipleTpProps) {
+  const { isDark } = useTheme();
   return (
     <div className="flex flex-col rounded-sm gap-3 overflow-hidden">
       {/* Header */}
@@ -53,9 +55,9 @@ MultipleTpProps) {
         {fields.map((field, index) => (
           <div
             key={field.id}
-            className="flex gap-1 item-center text-[10px] leading-[15px] font-medium text-[#111111]"
+            className={`flex gap-1 item-center text-[10px] leading-[15px] font-medium ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}
           >
-            <div className="flex flex-2 rounded-sm bg-white border border-[#E2E2E2] gap-1 p-1 ">
+            <div className={`flex flex-2 rounded-sm border gap-1 p-1 ${isDark ? "bg-[#111111] border-[#333333]" : "bg-white border-[#E2E2E2]"}`}>
               <input
                 type="number"
                 placeholder="Exit Price(USD)"
@@ -69,7 +71,7 @@ MultipleTpProps) {
                 className={inputBase}
               />
             </div>
-            <div className="flex-1 rounded-sm bg-white border border-[#E2E2E2] items-center justify-center p-1">
+            <div className={`flex-1 rounded-sm border items-center justify-center p-1 ${isDark ? "bg-[#111111] border-[#333333]" : "bg-white border-[#E2E2E2]"}`}>
               <input
                 type="number"
                 placeholder="Profit"
@@ -77,7 +79,7 @@ MultipleTpProps) {
                 className={inputBase}
               />
             </div>
-            <div className="flex flex-2 rounded-sm bg-white border border-[#E2E2E2] gap-1 p-1 ">
+            <div className={`flex flex-2 rounded-sm border gap-1 p-1 ${isDark ? "bg-[#111111] border-[#333333]" : "bg-white border-[#E2E2E2]"}`}>
               <input
                 type="number"
                 placeholder="Units (%)"

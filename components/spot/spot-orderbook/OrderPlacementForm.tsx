@@ -23,6 +23,7 @@ import { useSpotTradeStore } from "@/store/spot-trade-store";
 import { mapOrderToActivePosition, mapOrderToOpenOrder } from "@/lib/helper";
 import { InputWithUnit } from "../../ui/InputWithUnit";
 import { BaseInput } from "../../ui/BaseInput";
+import { useTheme } from "@/contexts/theme-context";
 
 type FormMode = "create" | "edit";
 
@@ -104,6 +105,7 @@ export default function OrderPlacementForm({
     gainAmount: 0,
     gainPercent: 0,
   };
+  const { isDark } = useTheme();
   const userAddress = useUserStore((state) => state.address);
 
   const setSpotTrade = useSpotTradeStore((s) => s.set);
@@ -208,9 +210,9 @@ export default function OrderPlacementForm({
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className={`max-w-[316px] rounded-2xl bg-[#F7F7F7] p-4 flex flex-col gap-5 text-[10px] leading-[15px] text-[#111111] font-medium ${
-        mode === "create" ? "border border-[#E2E2E2]" : ""
-      } `}
+      className={`max-w-[316px] rounded-2xl p-4 flex flex-col gap-5 text-[10px] leading-[15px] font-medium ${
+        isDark ? "bg-[#222222] text-[#FFFFFF]" : "bg-[#F7F7F7] text-[#111111]"
+      } ${mode === "create" ? isDark ? "border border-[#333333]" : "border border-[#E2E2E2]" : ""} `}
     >
       {mode === "create" && (
         <AnimatedTabs
@@ -234,7 +236,7 @@ export default function OrderPlacementForm({
       {orderType === "limit" && (
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2 justify-end">
-            <span className="text-[10px] leading-[15px] text-[#111111] font-medium">
+            <span className={`text-[10px] leading-[15px] font-medium ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
               Loop
             </span>
             <ToggleButton
@@ -246,19 +248,19 @@ export default function OrderPlacementForm({
           {isLoopOn && (
             <div className="flex flex-col gap-2">
               <div className="flex flex-col gap-1">
-                <label className="text-[10px] leading-[15px] text-[#111111] font-medium">
+                <label className={`text-[10px] leading-[15px] font-medium ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
                   No of Loops
                 </label>
-                <div className="h-9 flex items-center rounded-lg border border-[#E2E2E2] bg-white px-2">
+                <div className={`h-9 flex items-center rounded-lg border px-2 ${isDark ? "border-[#333333] bg-[#111111]" : "border-[#E2E2E2] bg-white"}`}>
                   <input
                     placeholder="Enter No of Loops"
                     disabled={noOfLoops === null}
-                    className="w-full text-[12px] leading-[18px] font-medium outline-none bg-transparent placeholder:text-[#C6C6C6]
-
+                    className={`w-full text-[12px] leading-[18px] font-medium outline-none bg-transparent placeholder:text-[#C6C6C6]
+                    ${isDark ? "text-[#FFFFFF]" : ""}
                     disabled:text-[#9CA3AF]
                     disabled:placeholder:text-[#D1D5DB]
                     disabled:cursor-not-allowed
-                    "
+                    `}
                     {...register("noOfLoops", {
                       min: { value: 1, message: "Min 1 loop" },
                     })}
@@ -275,7 +277,7 @@ export default function OrderPlacementForm({
                     className={`flex-1 min-w-0 cursor-pointer  h-9 rounded-lg p-2.5  text-[12px] leading-[18px] font-medium  ${
                       noOfLoops === n
                         ? "bg-[#F1EBFD] text-[#703AE6]"
-                        : "bg-white text-[#111111]"
+                        : isDark ? "bg-[#111111] text-[#FFFFFF]" : "bg-white text-[#111111]"
                     }`}
                   >
                     {n}
@@ -287,7 +289,7 @@ export default function OrderPlacementForm({
                   className={`flex-1 min-w-0 flex items-center justify-center cursor-pointer h-9 rounded-lg p-2.5 text-[20px] leading-[22px] font-medium ${
                     noOfLoops === null
                       ? "bg-[#703AE6] text-white"
-                      : "bg-white text-[#111111]"
+                      : isDark ? "bg-[#111111] text-[#FFFFFF]" : "bg-white text-[#111111]"
                   }`}
                 >
                   <Image
@@ -323,11 +325,11 @@ export default function OrderPlacementForm({
         {/* Limit market toggle */}
         {orderType === "trigger" && (
           <div className="flex items-center gap-1 justify-end">
-            <span className="text-[10px] leading-[15px] text-[#111111] font-medium">
+            <span className={`text-[10px] leading-[15px] font-medium ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
               Limit
             </span>
             <ToggleButton size="small" onToggle={handleModeToggle} />
-            <span className="text-[10px] leading-[15px] text-[#111111] font-medium">
+            <span className={`text-[10px] leading-[15px] font-medium ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
               Market
             </span>
           </div>
@@ -356,7 +358,7 @@ export default function OrderPlacementForm({
                 <div className="flex-1 min-w-0 text-[12px] leading-[18px] font-medium">
                   66500
                 </div>
-                <span className="text-[8px] leading-3 font-medium text-[#111111]">
+                <span className={`text-[8px] leading-3 font-medium ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
                   USDT
                 </span>
               </BaseInput>
@@ -386,7 +388,7 @@ export default function OrderPlacementForm({
       <div className="flex flex-col gap-2">
         {/* label + MB text */}
         <div className="flex items-center justify-between ">
-          <label className="text-[10px] leading-[15px] font-medium text-[#111111]">
+          <label className={`text-[10px] leading-[15px] font-medium ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
             Total Amount
           </label>
 
@@ -427,7 +429,7 @@ export default function OrderPlacementForm({
             <button
               key={p}
               type="button"
-              className="flex-1  cursor-pointer min-w-0 h-9 rounded-lg bg-white text-[10px] leading-[15px] font-medium text-[#111111] "
+              className={`flex-1  cursor-pointer min-w-0 h-9 rounded-lg text-[10px] leading-[15px] font-medium ${isDark ? "bg-[#111111] text-[#FFFFFF]" : "bg-white text-[#111111]"}`}
             >
               {p}%
             </button>
@@ -438,7 +440,7 @@ export default function OrderPlacementForm({
       <div
         className={` ${
           takeProfitEnabled
-            ? "flex flex-col gap-2 $ border-b border-[#E2E2E2] pb-4"
+            ? `flex flex-col gap-2 border-b pb-4 ${isDark ? "border-[#333333]" : "border-[#E2E2E2]"}`
             : ""
         }`}
       >
@@ -447,7 +449,7 @@ export default function OrderPlacementForm({
 
           {takeProfitEnabled && (
             <div className="flex items-center gap-2 justify-end">
-              <span className="text-[10px] leading-[15px] text-[#111111] font-medium">
+              <span className={`text-[10px] leading-[15px] font-medium ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
                 Multiple TP
               </span>
               <ToggleButton
@@ -459,7 +461,7 @@ export default function OrderPlacementForm({
         </div>
 
         {takeProfitEnabled && !multiTpEnabled && (
-          <div className="flex  gap-1 min-w-0  bg-white border rounded-lg border-[#E2E2E2] p-2">
+          <div className={`flex gap-1 min-w-0 border rounded-lg p-2 ${isDark ? "bg-[#111111] border-[#333333]" : "bg-white border-[#E2E2E2]"}`}>
             <div className=" flex flex-1 flex-col min-w-0 gap-1">
               <label className="text-[8px] font-medium leading-3 text-[#C6C6C6]">
                 Exit Price (USD)
@@ -467,7 +469,7 @@ export default function OrderPlacementForm({
               <input
                 type="number"
                 placeholder="00.00"
-                className=" w-full min-w-0 text-[12px]  font-medium  leading-[18px] text-[#000000] outline-none"
+                className={`w-full min-w-0 text-[12px] font-medium leading-[18px] outline-none bg-transparent ${isDark ? "text-[#FFFFFF]" : "text-[#000000]"}`}
                 {...register("singleTakeProfit.exitPrice", { min: 0 })}
               />
             </div>
@@ -479,7 +481,7 @@ export default function OrderPlacementForm({
               <input
                 type="number"
                 placeholder="00.00"
-                className="w-full min-w-0 text-[12px] font-medium text-center  flex-1 leading-[18px] text-[#000000] outline-none"
+                className={`w-full min-w-0 text-[12px] font-medium text-center flex-1 leading-[18px] outline-none bg-transparent ${isDark ? "text-[#FFFFFF]" : "text-[#000000]"}`}
                 {...register("singleTakeProfit.profitPercent", { min: 0 })}
               />
             </div>
@@ -491,7 +493,7 @@ export default function OrderPlacementForm({
               <input
                 type="number"
                 placeholder="00.00"
-                className="w-full min-w-0 text-[12px] font-medium text-right flex-1 leading-[18px] text-[#000000] outline-none"
+                className={`w-full min-w-0 text-[12px] font-medium text-right flex-1 leading-[18px] outline-none bg-transparent ${isDark ? "text-[#FFFFFF]" : "text-[#000000]"}`}
                 {...register("singleTakeProfit.profitAmount", { min: 0 })}
               />
             </div>
@@ -511,7 +513,7 @@ export default function OrderPlacementForm({
       <div
         className={`${
           stopLossEnabled
-            ? "flex flex-col gap-2 $ border-b border-[#E2E2E2] pb-4 "
+            ? `flex flex-col gap-2 border-b pb-4 ${isDark ? "border-[#333333]" : "border-[#E2E2E2]"}`
             : ""
         }`}
       >
@@ -568,10 +570,10 @@ export default function OrderPlacementForm({
         )}
       </div>
 
-      <div className="flex flex-col gap-1 pt-2 text-[11px] text-[#111111]">
+      <div className={`flex flex-col gap-1 pt-2 text-[11px] ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
         <div className="flex gap-16">
           <div className="flex gap-1 w-[138px]">
-            <div className="text-[#111111] text-[10px] font-semibold leading-[15px]">
+            <div className={`text-[10px] font-semibold leading-[15px] ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
               Risk:
             </div>
             <div className="text-[#464545] text-[10px] font-medium leading-[15px]">
@@ -579,7 +581,7 @@ export default function OrderPlacementForm({
             </div>
           </div>
           <div className="flex gap-1 w-[138px]">
-            <div className="text-[#111111] text-[10px] font-semibold leading-[15px]">
+            <div className={`text-[10px] font-semibold leading-[15px] ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
               Risk (in %):
             </div>
             <div className="text-[#464545] text-[10px] font-medium leading-[15px]">
@@ -589,7 +591,7 @@ export default function OrderPlacementForm({
         </div>
         <div className="flex gap-16">
           <div className="flex gap-1 w-[138px]">
-            <div className="text-[#111111] text-[10px] font-semibold leading-[15px]">
+            <div className={`text-[10px] font-semibold leading-[15px] ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
               Gain:
             </div>
             <div className="text-[#464545] text-[10px] font-medium leading-[15px]">
@@ -597,7 +599,7 @@ export default function OrderPlacementForm({
             </div>
           </div>
           <div className="flex gap-1 w-[138px]">
-            <div className="text-[#111111] text-[10px] font-semibold leading-[15px]">
+            <div className={`text-[10px] font-semibold leading-[15px] ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
               Gain (in %):
             </div>
             <div className="text-[#464545] text-[10px] font-medium leading-[15px]">

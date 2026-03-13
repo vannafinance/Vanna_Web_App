@@ -1,7 +1,9 @@
 import Image from "next/image";
 import TimeframeSelector from "../../ui/TimeframeSelector";
+import { useTheme } from "@/contexts/theme-context";
 
 const Toolbar = () => {
+  const { isDark } = useTheme();
   return (
     <div className="flex justify-between items-center rounded-t-lg gap-4">
       <div className="flex items-center justify-between gap-2">
@@ -67,7 +69,7 @@ const Toolbar = () => {
           </div>
         </div>
       </div>
-      <div className="px-1 py-1 rounded-lg border border-[#E2E2E2] bg-white flex items-center justify-around gap-1 text-sm leading-[18.86px]">
+      <div className={`px-1 py-1 rounded-lg border flex items-center justify-around gap-1 text-sm leading-[18.86px] ${isDark ? "border-[#333333] bg-[#111111]" : "border-[#E2E2E2] bg-white"}`}>
         <button className="px-1  rounded-sm text-center bg-[#F1EBFD] text-[#703AE6] text-xs leading-[1.179rem]">
           Original
         </button>

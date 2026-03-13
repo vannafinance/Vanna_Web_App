@@ -7,6 +7,7 @@ import { calculateRatio, groupOrdersByTick } from "@/lib/helper";
 import { Dropdown } from "../../ui/dropdown";
 import Image from "next/image";
 import { MarketTrades } from "./MarketTrades";
+import { useTheme } from "@/contexts/theme-context";
 
 export interface OrderBookRowType {
   price: number;
@@ -48,6 +49,7 @@ const sellOrders: OrderBookRowType[] = [
 ];
 
 export default function OrderBook() {
+  const { isDark } = useTheme();
   const [activeTab, setActiveTab] = useState<"orderbook" | "markettrades">(
     "orderbook"
   );
@@ -80,9 +82,9 @@ export default function OrderBook() {
   const mid = bestBid && bestAsk ? (bestBid + bestAsk) / 2 : undefined;
 
   return (
-    <div className=" flex flex-col bg-[#F7F7F7]  rounded-xl p-2    gap-1 ">
+    <div className={`flex flex-col rounded-xl p-2 gap-1 ${isDark ? "bg-[#222222]" : "bg-[#F7F7F7]"}`}>
       {/* Buttons */}
-      <div className="flex items-center  p-1 rounded-lg bg-white h-[47px]">
+      <div className={`flex items-center p-1 rounded-lg h-[47px] ${isDark ? "bg-[#111111]" : "bg-white"}`}>
         <button
           onClick={() => setActiveTab("orderbook")}
           className={`cursor-pointer flex flex-1 items-center justify-center rounded-lg py-3 px-2
@@ -90,7 +92,7 @@ export default function OrderBook() {
         >
           <span
             className={`text-[12px] font-semibold text-center
-          ${activeTab === "orderbook" ? "text-[#703AE6]" : "text-black"}`}
+          ${activeTab === "orderbook" ? "text-[#703AE6]" : isDark ? "text-[#FFFFFF]" : "text-black"}`}
           >
             Orderbook
           </span>
@@ -103,7 +105,7 @@ export default function OrderBook() {
         >
           <span
             className={`text-[12px] font-semibold text-center
-          ${activeTab === "markettrades" ? "text-[#703AE6]" : "text-black"}`}
+          ${activeTab === "markettrades" ? "text-[#703AE6]" : isDark ? "text-[#FFFFFF]" : "text-black"}`}
           >
             Market Trades
           </span>
@@ -117,7 +119,7 @@ export default function OrderBook() {
                 key={v}
                 onClick={() => setView(v)}
                 className={`  w-4 h-4 cursor-pointer transition ${
-                  view === v ? "" : "hover:bg-white/60"
+                  view === v ? "" : isDark ? "hover:bg-white/20" : "hover:bg-white/60"
                 }`}
                 aria-label={`View ${v}`}
               >

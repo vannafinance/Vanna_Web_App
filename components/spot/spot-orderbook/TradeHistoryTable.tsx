@@ -1,5 +1,6 @@
 import { TradeHistoryType } from "@/lib/types";
 import { Column, Table } from "../../ui/Table";
+import { useTheme } from "@/contexts/theme-context";
 
 export const tradeHistoryColumns: Column<TradeHistoryType>[] = [
   {
@@ -173,8 +174,9 @@ export const tradeHistoryData: TradeHistoryType[] = [
 ];
 
 export default function TradeHistoryTable() {
+  const { isDark } = useTheme();
   return (
-    <div className="p-2 rounded-lg border border-[#E2E2E2] bg-[#F7F7F7]">
+    <div className={`p-2 rounded-lg border ${isDark ? "border-[#333333] bg-[#222222]" : "border-[#E2E2E2] bg-[#F7F7F7]"}`}>
       <Table
         columns={tradeHistoryColumns}
         data={tradeHistoryData}

@@ -3,6 +3,7 @@ import cn from "classnames";
 import { Column, Table } from "../../ui/Table";
 import { ActivePositionType } from "@/lib/types";
 import { useSpotTradeStore } from "@/store/spot-trade-store";
+import { useTheme } from "@/contexts/theme-context";
 
 export const activePositionsColumns: Column<ActivePositionType>[] = [
   {
@@ -155,9 +156,10 @@ export const activePositionsColumns: Column<ActivePositionType>[] = [
 ];
 
 export default function ActivePositionsTable() {
+  const { isDark } = useTheme();
   const activePositions = useSpotTradeStore((state) => state.activePositions);
   return (
-    <div className="p-2 rounded-lg border border-[#E2E2E2] bg-[#F7F7F7]">
+    <div className={`p-2 rounded-lg border ${isDark ? "border-[#333333] bg-[#222222]" : "border-[#E2E2E2] bg-[#F7F7F7]"}`}>
       <Table
         columns={activePositionsColumns}
         data={activePositions}

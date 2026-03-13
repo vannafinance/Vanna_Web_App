@@ -1,6 +1,7 @@
 import { OrderHistoryType } from "@/lib/types";
 import { Column, Table } from "../../ui/Table";
 import cn from "classnames";
+import { useTheme } from "@/contexts/theme-context";
 
 export const orderHistoryColumns: Column<OrderHistoryType>[] = [
   {
@@ -272,8 +273,9 @@ export const orderHistoryData: OrderHistoryType[] = [
 ];
 
 export default function OrderHistoryTable() {
+  const { isDark } = useTheme();
   return (
-    <div className="p-2 rounded-lg border border-[#E2E2E2] bg-[#F7F7F7]">
+    <div className={`p-2 rounded-lg border ${isDark ? "border-[#333333] bg-[#222222]" : "border-[#E2E2E2] bg-[#F7F7F7]"}`}>
       <Table
         columns={orderHistoryColumns}
         data={orderHistoryData}

@@ -1,5 +1,7 @@
 "use client";
 
+import { useTheme } from "@/contexts/theme-context";
+
 export interface MarketTradeRow {
   price: number;
   amount: number;
@@ -41,6 +43,8 @@ const mockTrades: MarketTradeRow[] = [
 ];
 
 export function MarketTrades() {
+  const { isDark } = useTheme();
+
   return (
     <div className="flex flex-col gap-1">
       {/* Header */}
@@ -62,9 +66,9 @@ export function MarketTrades() {
               {trade.price.toLocaleString()}
             </span>
 
-            <span className="text-right text-[#111111]">{trade.amount}</span>
+            <span className={`text-right ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>{trade.amount}</span>
 
-            <span className="text-right text-[#111111] ">{trade.time}</span>
+            <span className={`text-right ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>{trade.time}</span>
           </div>
         ))}
       </div>

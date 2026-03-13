@@ -2,15 +2,17 @@
 
 import Image from "next/image";
 import { Button } from "../../ui/button";
+import { useTheme } from "@/contexts/theme-context";
 
 interface LimitBracketModalProps {
   onEdit?: () => void;
 }
 
 export const LimitBracketModal = ({ onEdit }: LimitBracketModalProps) => {
+  const { isDark } = useTheme();
   return (
-    <div className="w-[740px] rounded-[20px] border border-[#E2E2E2] bg-[#F7F7F7] px-5 py-6 flex flex-col gap-6">
-      <h2 className="text-[24px]  leading-9 font-bold text-[#111111] ">
+    <div className={`w-[740px] rounded-[20px] border px-5 py-6 flex flex-col gap-6 ${isDark ? "border-[#333333] bg-[#222222]" : "border-[#E2E2E2] bg-[#F7F7F7]"}`}>
+      <h2 className={`text-[24px] leading-9 font-bold ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
         Limit Bracket
       </h2>
 
@@ -20,15 +22,15 @@ export const LimitBracketModal = ({ onEdit }: LimitBracketModalProps) => {
         </span>
 
         <div className="flex items-center gap-2">
-          <span className="text-[24px] font-bold leading-9 text-[#000000]">
+          <span className={`text-[24px] font-bold leading-9 ${isDark ? "text-[#FFFFFF]" : "text-[#000000]"}`}>
             9279.04
           </span>
 
           <div className="flex flex-col gap-0.5">
-            <span className="text-[8px] leading-3 text-[#111111] font-medium">
+            <span className={`text-[8px] leading-3 font-medium ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
               2025-10-23
             </span>
-            <span className="text-[12px] leading-[18px] font-semibold text-[#111111]">
+            <span className={`text-[12px] leading-[18px] font-semibold ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
               BTC/USDT
             </span>
           </div>
@@ -37,11 +39,11 @@ export const LimitBracketModal = ({ onEdit }: LimitBracketModalProps) => {
 
       <div className=" grid grid-cols-3 gap-10">
         <div className="flex flex-col gap-3">
-          <div className="text-[10px] leading-[15px] font-medium text-[#111111]">
+          <div className={`text-[10px] leading-[15px] font-medium ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
             Total Value
           </div>
           <div className="flex flex-col gap-1">
-            <div className="font-semibold text-[16px] leading-6 text-[#111111]">
+            <div className={`font-semibold text-[16px] leading-6 ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
               99.993 USDT
             </div>
             <div className="text-[#A7A7A7] text-[12px] leading-[18px] font-semibold">
@@ -51,11 +53,11 @@ export const LimitBracketModal = ({ onEdit }: LimitBracketModalProps) => {
         </div>
 
         <div className="flex flex-col gap-3">
-          <div className="text-[10px] leading-[15px] font-medium text-[#111111]">
+          <div className={`text-[10px] leading-[15px] font-medium ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
             Gain
           </div>
           <div className="flex flex-col gap-1">
-            <div className="font-semibold text-[16px] leading-6 text-[#111111]">
+            <div className={`font-semibold text-[16px] leading-6 ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
               1.211 USDT
             </div>
             <div className="text-[#A7A7A7] text-[12px] leading-[18px] font-semibold">
@@ -65,11 +67,11 @@ export const LimitBracketModal = ({ onEdit }: LimitBracketModalProps) => {
         </div>
 
         <div className="flex flex-col gap-3">
-          <div className="text-[10px] leading-[15px] font-medium text-[#111111]">
+          <div className={`text-[10px] leading-[15px] font-medium ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
             Risk
           </div>
           <div className="flex flex-col gap-1">
-            <div className="font-semibold text-[16px] leading-6 text-[#111111]">
+            <div className={`font-semibold text-[16px] leading-6 ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
               2.013 USDT
             </div>
             <div className="text-[#A7A7A7] text-[12px] leading-[18px] font-semibold">
@@ -79,8 +81,8 @@ export const LimitBracketModal = ({ onEdit }: LimitBracketModalProps) => {
         </div>
       </div>
 
-      <div className=" rounded-lg p-2 border border-[#E2E2E2] bg-[#FFFFFF] flex flex-col gap-2">
-        <div className="grid grid-cols-6 border-b-2  border-b-[#E8E8E8] text-[12px] leading-[18px] font-medium text-[#919191] ">
+      <div className={`rounded-lg p-2 border flex flex-col gap-2 ${isDark ? "border-[#333333] bg-[#111111]" : "border-[#E2E2E2] bg-[#FFFFFF]"}`}>
+        <div className={`grid grid-cols-6 border-b-2 text-[12px] leading-[18px] font-medium text-[#919191] ${isDark ? "border-b-[#333333]" : "border-b-[#E8E8E8]"}`}>
           <span className="px-2 py-1 rounded-sm">Order Type</span>
           <span className="px-2 py-1 rounded-sm">Price</span>
           <span className="px-2 py-1 rounded-sm">Units</span>
@@ -100,7 +102,7 @@ export const LimitBracketModal = ({ onEdit }: LimitBracketModalProps) => {
                 src="/icons/Vector.svg"
               />
               <div className=" flex flex-col gap-0.5">
-                <div className="font-medium text-[14px] text-[#101010]">
+                <div className={`font-medium text-[14px] ${isDark ? "text-[#FFFFFF]" : "text-[#101010]"}`}>
                   BUY
                 </div>
                 <div className="font-normal text-[12px] text-[#808080]">
@@ -109,19 +111,19 @@ export const LimitBracketModal = ({ onEdit }: LimitBracketModalProps) => {
               </div>
             </div>
 
-            <span className="text-[12px] leading-[18px] font-medium  text-[#222222] px-2 py-1">
+            <span className={`text-[12px] leading-[18px] font-medium px-2 py-1 ${isDark ? "text-[#FFFFFF]" : "text-[#222222]"}`}>
               9287
             </span>
-            <span className="text-[12px] leading-[18px] font-medium  text-[#222222] px-2 py-1">
+            <span className={`text-[12px] leading-[18px] font-medium px-2 py-1 ${isDark ? "text-[#FFFFFF]" : "text-[#222222]"}`}>
               0.0010767
             </span>
-            <span className="text-[12px] leading-[18px] font-medium  text-[#222222] px-2 py-1">
+            <span className={`text-[12px] leading-[18px] font-medium px-2 py-1 ${isDark ? "text-[#FFFFFF]" : "text-[#222222]"}`}>
               100%
             </span>
-            <span className="text-[12px] leading-[18px] font-medium  text-[#222222] px-2 py-1">
+            <span className={`text-[12px] leading-[18px] font-medium px-2 py-1 ${isDark ? "text-[#FFFFFF]" : "text-[#222222]"}`}>
               2025-10-23{"\n"}14:25:46
             </span>
-            <span className="text-[12px] leading-[18px] font-medium  text-[#222222] px-2 py-1">
+            <span className={`text-[12px] leading-[18px] font-medium px-2 py-1 ${isDark ? "text-[#FFFFFF]" : "text-[#222222]"}`}>
               Completed
             </span>
           </div>
@@ -136,7 +138,7 @@ export const LimitBracketModal = ({ onEdit }: LimitBracketModalProps) => {
                 src="/icons/Vector.svg"
               />
               <div className=" flex flex-col gap-0.5">
-                <div className="font-medium text-[14px] text-[#101010]">
+                <div className={`font-medium text-[14px] ${isDark ? "text-[#FFFFFF]" : "text-[#101010]"}`}>
                   SELL
                 </div>
                 <div className="font-normal text-[12px] text-[#808080]">
@@ -145,19 +147,19 @@ export const LimitBracketModal = ({ onEdit }: LimitBracketModalProps) => {
               </div>
             </div>
 
-            <span className="text-[12px] leading-[18px] font-medium  text-[#222222] px-2 py-1">
+            <span className={`text-[12px] leading-[18px] font-medium px-2 py-1 ${isDark ? "text-[#FFFFFF]" : "text-[#222222]"}`}>
               9287
             </span>
-            <span className="text-[12px] leading-[18px] font-medium  text-[#222222] px-2 py-1">
+            <span className={`text-[12px] leading-[18px] font-medium px-2 py-1 ${isDark ? "text-[#FFFFFF]" : "text-[#222222]"}`}>
               0.0010767
             </span>
-            <span className="text-[12px] leading-[18px] font-medium  text-[#222222] px-2 py-1">
+            <span className={`text-[12px] leading-[18px] font-medium px-2 py-1 ${isDark ? "text-[#FFFFFF]" : "text-[#222222]"}`}>
               100%
             </span>
-            <span className="text-[12px] leading-[18px] font-medium  text-[#222222] px-2 py-1">
+            <span className={`text-[12px] leading-[18px] font-medium px-2 py-1 ${isDark ? "text-[#FFFFFF]" : "text-[#222222]"}`}>
               2025-10-23{"\n"}14:25:46
             </span>
-            <span className="text-[12px] leading-[18px] font-medium  text-[#222222] px-2 py-1">
+            <span className={`text-[12px] leading-[18px] font-medium px-2 py-1 ${isDark ? "text-[#FFFFFF]" : "text-[#222222]"}`}>
               Completed
             </span>
           </div>
@@ -166,35 +168,35 @@ export const LimitBracketModal = ({ onEdit }: LimitBracketModalProps) => {
 
       {/* Info Cards */}
       <div className=" grid grid-cols-2 gap-3">
-        <div className=" rounded-lg border border-[#E2E2E2] p-2.5 bg-[#FFFFFF] flex flex-col gap-2.5">
+        <div className={`rounded-lg border p-2.5 flex flex-col gap-2.5 ${isDark ? "border-[#333333] bg-[#111111]" : "border-[#E2E2E2] bg-[#FFFFFF]"}`}>
           <div className="flex justify-between text-[10px] leading-3 font-semibold">
-            <span className="text-black">STOP:</span>
+            <span className={isDark ? "text-[#FFFFFF]" : "text-black"}>STOP:</span>
             <span className="text-[#464545]">9100</span>
           </div>
 
           <div className="flex justify-between text-[10px] leading-3 font-semibold">
-            <span className="text-black">Limit:</span>
+            <span className={isDark ? "text-[#FFFFFF]" : "text-black"}>Limit:</span>
             <span className="text-[#464545]">0</span>
           </div>
 
           <div className="flex justify-between text-[10px] leading-3 font-semibold">
-            <span className="text-black">USDT</span>
+            <span className={isDark ? "text-[#FFFFFF]" : "text-black"}>USDT</span>
             <span className="text-[#464545]">1 USDT</span>
           </div>
         </div>
-        <div className=" rounded-lg border border-[#E2E2E2] p-2.5 bg-[#FFFFFF] flex flex-col gap-2.5">
+        <div className={`rounded-lg border p-2.5 flex flex-col gap-2.5 ${isDark ? "border-[#333333] bg-[#111111]" : "border-[#E2E2E2] bg-[#FFFFFF]"}`}>
           <div className="flex justify-between text-[10px] leading-3 font-semibold">
-            <span className="text-black">Current SL:</span>
+            <span className={isDark ? "text-[#FFFFFF]" : "text-black"}>Current SL:</span>
             <span className="text-[#464545]">9100</span>
           </div>
 
           <div className="flex justify-between text-[10px] leading-3 font-semibold">
-            <span className="text-black">Current Limit:</span>
+            <span className={isDark ? "text-[#FFFFFF]" : "text-black"}>Current Limit:</span>
             <span className="text-[#464545]">0</span>
           </div>
 
           <div className="flex justify-between text-[10px] leading-3 font-semibold">
-            <span className="text-black">Status:</span>
+            <span className={isDark ? "text-[#FFFFFF]" : "text-black"}>Status:</span>
             <span className="text-[#464545]">Partially Filled</span>
           </div>
         </div>
