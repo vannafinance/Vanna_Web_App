@@ -143,7 +143,7 @@ export const sleep = (duration: number) => {
 };
 
 
-export const formatBignumberToUnits = (coin: string, balance: number) => {
+export const formatBignumberToUnits = (coin: string, balance: bigint) => {
   let units = 18;
   if (coin == "USDC" || coin == "USDT") {
     units = 6;

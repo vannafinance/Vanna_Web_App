@@ -10,6 +10,8 @@ interface StatsCardProps {
   pie?: boolean;
   tooltip?: string;
   address?: string;
+  fullAddress?: `0x${string}`;
+  explorerUrl?: string;
 }
 
 export const StatsCard = ({

@@ -8,7 +8,7 @@ interface Button {
   size: "small" | "medium" | "large";
   type: "solid" | "gradient" | "ghost" | "navbar";
   onClick?: React.MouseEventHandler<HTMLButtonElement>;
-  disabled: boolean;
+  disabled?: boolean;
   icon?: Element;
   ariaLabel?: string;
   width?: string;

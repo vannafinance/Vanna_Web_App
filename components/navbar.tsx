@@ -435,7 +435,7 @@ export const Navbar = (props: Navbar) => {
           transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
         >
           {/* Network Switcher */}
-          {isConnected }
+          {isConnected && <NetworkDropdown />}
           {address && (
             <Button
               size="small"
