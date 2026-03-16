@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { SunIcon, MoonIcon } from "@/components/icons";
 import { gsap } from "gsap";
 import { DepositModal } from "./ui/deposit-modal";
+import { NetworkDropdown } from "./network-dropdown";
 
 
 interface Navbar {
@@ -433,6 +434,8 @@ export const Navbar = (props: Navbar) => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
         >
+          {/* Network Switcher */}
+          {isConnected }
           {address && (
             <Button
               size="small"

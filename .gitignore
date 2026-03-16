@@ -22,6 +22,9 @@
 
 .claude  
 
+.vscode
+./vscode
+
 # production
 /build
 
