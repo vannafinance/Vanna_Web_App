@@ -254,6 +254,7 @@ const PerpsOrderPlacementForm = () => {
             height={16}
             alt="icons"
             src="/icons/info.svg"
+            style={isDark ? { filter: "brightness(0) invert(1)" } : undefined}
           />
           <span className="text-[12px] leading-[18px] font-medium">
             Available MB: {availableMarginBalance.toFixed(2)}USDT
@@ -269,6 +270,7 @@ const PerpsOrderPlacementForm = () => {
               height={16}
               alt="transfer"
               src="/icons/swap.svg"
+              style={isDark ? { filter: "brightness(0) invert(1)" } : undefined}
             />
           </button>
         </div>

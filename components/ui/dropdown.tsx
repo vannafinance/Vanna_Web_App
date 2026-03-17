@@ -4,6 +4,7 @@ import { iconPaths } from "@/lib/constants";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
+import { useTheme } from "@/contexts/theme-context";
 
 interface Dropdown {
   items: string[];
@@ -16,6 +17,7 @@ interface Dropdown {
 }
 
 export const Dropdown = (props: Dropdown) => {
+  const { isDark } = useTheme();
   const [isHover, setIsHover] = useState(false);
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -64,7 +66,7 @@ export const Dropdown = (props: Dropdown) => {
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         type="button"
-        className={`w-fit rounded-[8px] z-[10] ${props.classname} cursor-pointer flex justify-center items-center `}
+        className={`w-fit rounded-[8px] z-[10] ${props.classname} cursor-pointer flex justify-center items-center ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}
         aria-label={`Selected: ${props.selectedOption}. Click to change option`}
         aria-expanded={isHover}
         aria-haspopup="listbox"
@@ -108,9 +110,9 @@ export const Dropdown = (props: Dropdown) => {
             transition={{ duration: 0.2, ease: "easeOut" }}
             onMouseEnter={handleDropdownMouseEnter}
             onMouseLeave={handleDropdownMouseLeave}
-            className={`absolute z-100 bg-white p-2 shadow-lg rounded-[6px] ${
-              props.menuClassname || "top-8 -left-4"
-            } ${props.items.length > 4 ? "max-h-48 overflow-y-auto scrollbar-thin" : ""}`}
+            className={`absolute z-100 p-2 shadow-lg rounded-[6px] ${
+              isDark ? "bg-[#222222]" : "bg-white"
+            } ${props.menuClassname || "top-8 -left-4"} ${props.items.length > 4 ? "max-h-48 overflow-y-auto scrollbar-thin" : ""}`}
             role="listbox"
             aria-label="Options"
           >
@@ -119,7 +121,7 @@ export const Dropdown = (props: Dropdown) => {
                 <motion.button
                   type="button"
                   whileTap={{ scale: 0.85 }}
-                  className={` ${props.dropdownClassname} hover:text-[#7C35F8] flex  font-medium rounded-[6px]  cursor-pointer py-2 px-8  hover:bg-[#F2EBFE] w-full text-left`}
+                  className={` ${props.dropdownClassname} hover:text-[#7C35F8] flex font-medium rounded-[6px] cursor-pointer py-2 px-8 ${isDark ? "text-[#FFFFFF] hover:bg-[#333333]" : "hover:bg-[#F2EBFE]"} w-full text-left`}
                   key={item}
                   role="option"
                   aria-selected={props.selectedOption === item}

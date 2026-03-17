@@ -148,7 +148,7 @@ export const AnimatedTabs = ({
   if (type === "ghost-compact") {
     return (
       <div
-        className={`flex gap-1 ${isDark ? "bg-[#222222]" : "bg-white"} p-1 rounded-lg w-full ${containerClassName}`}
+        className={`flex gap-1 ${isDark ? "bg-[#222222]" : "bg-white"} p-1 rounded-lg w-full overflow-x-auto scrollbar-hide ${containerClassName}`}
         onMouseLeave={() => setHoveredTab(null)}
       >
         {tabs.map((tab) => {
@@ -161,14 +161,14 @@ export const AnimatedTabs = ({
               type="button"
               onClick={() => onTabChange(tab.id)}
               onMouseEnter={() => setHoveredTab(tab.id)}
-              className={`cursor-pointer px-2 md:px-4 h-[39px] rounded-lg text-[12px] font-semibold text-center ${tabClassName}`}
+              className={`cursor-pointer px-2 md:px-4 h-[39px] rounded-lg text-[12px] font-semibold text-center whitespace-nowrap ${tabClassName}`}
               animate={{
                 backgroundColor: isActive
                   ? isDark ? "#3D2A6E" : "#F1EBFD"
                   : isHovered
                     ? isDark ? "rgba(61, 42, 110, 0.5)" : "rgba(241, 235, 253, 0.5)"
                     : "transparent",
-                color: isActive ? "#703AE6" : isDark ? "#FFFFFF" : "#111111",
+                color: isActive ? (isDark ? "#B794F6" : "#703AE6") : isDark ? "#FFFFFF" : "#111111",
               }}
               whileTap={{ scale: 0.95 }}
               transition={{ duration: 0.2 }}

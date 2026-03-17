@@ -58,6 +58,7 @@ export const AdjustLeverageModal = ({
               alt="minus"
               width={12}
               height={12}
+              style={isDark ? { filter: "brightness(0) invert(1)" } : undefined}
             />
           </button>
 
@@ -93,6 +94,7 @@ export const AdjustLeverageModal = ({
               alt="plus"
               width={12}
               height={12}
+              style={isDark ? { filter: "brightness(0) invert(1)" } : undefined}
             />
           </button>
         </div>

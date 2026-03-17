@@ -108,6 +108,7 @@ export const AccountModal = ({
             width={24}
             height={24}
             alt="Transaction History"
+            style={isDark ? { filter: "brightness(0) invert(1)" } : undefined}
           />
         </button>
       </div>

@@ -136,7 +136,7 @@ export const DepositTab = forwardRef<DepositTabRef, DepositTabProps>(
 
         {/* Estimated Deposit Time Info */}
         {depositTimeEstimate && (
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#FFF8E6] border border-[#FFE4A0]">
+          <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${isDark ? "bg-[#3D2E00] border border-[#5C4500]" : "bg-[#FFF8E6] border border-[#FFE4A0]"}`}>
             <svg
               width="16"
               height="16"
@@ -153,7 +153,7 @@ export const DepositTab = forwardRef<DepositTabRef, DepositTabProps>(
               />
               <circle cx="8" cy="11" r="0.75" fill="#F5A623" />
             </svg>
-            <span className="text-[11px] leading-[16px] font-medium text-[#8B6914]">
+            <span className={`text-[11px] leading-[16px] font-medium ${isDark ? "text-[#F5C842]" : "text-[#8B6914]"}`}>
               Estimated deposit time for {selectedChain} is{" "}
               {depositTimeEstimate}
             </span>

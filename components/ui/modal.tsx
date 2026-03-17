@@ -92,7 +92,7 @@ export const Modal = ({ open, onClose, children, bottomSheet = false }: ModalPro
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="relative z-[1001] w-full md:w-auto max-h-[85vh] overflow-y-auto scrollbar-hide flex justify-center min-w-0"
+              className="relative z-[1001] w-full max-w-[calc(100vw-32px)] md:w-auto max-h-[85vh] overflow-y-auto scrollbar-hide flex justify-center min-w-0"
             >
               {children}
             </motion.div>
