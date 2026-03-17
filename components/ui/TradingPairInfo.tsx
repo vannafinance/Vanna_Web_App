@@ -28,7 +28,7 @@ const TradingPairInfo = ({
         <button
           type="button"
           onClick={onOpenPairSelector}
-          className="flex gap-3 px-4 cursor-pointer outline-none"
+          className="flex items-center gap-3 px-4 cursor-pointer outline-none"
         >
           <Image src={icon} alt={pair} height={24} width={24} />
           <div>
@@ -39,15 +39,23 @@ const TradingPairInfo = ({
               {market}
             </div>
           </div>
-          <Image
-            src="/icons/down-arrow.svg"
-            alt="arrow"
-            height={16}
-            width={16}
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
             className={`transition-transform duration-200 ease-in-out ${
               isOpen ? "rotate-180" : "rotate-0"
             }`}
-          />
+          >
+            <path
+              d="M13.3335 5.33301L8.00016 10.6663L2.66683 5.33301"
+              stroke={isDark ? "#FFFFFF" : "#19191A"}
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         </button>
         <div className="flex flex-col text-[#01BC8D] ">
           <div className="text-[16px] leading-6 font-semibold">3,377.88</div>

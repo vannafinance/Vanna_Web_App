@@ -3,19 +3,14 @@
 import { useTheme } from "@/contexts/theme-context";
 import { useState, useCallback, useRef } from "react";
 import { useUserStore } from "@/store/user";
-import { SwapInput } from "./SwapInput";
-import { SwapDirectionButton } from "./SwapDirectionButton";
-import { SwapDetails } from "./SwapDetails";
-import { SwapButton } from "./SwapButton";
-import { TokenSearchModal } from "./TokenSearchModal";
-import { SwapSettings } from "./SwapSettings";
-import { Token, SwapButtonState, DexOption } from "./types";
-import {
-  MOCK_TOKENS,
-  POPULAR_TOKENS,
-  MOCK_BALANCES,
-  MOCK_DEXES,
-} from "./mock-data";
+import { SwapInput } from "./swap-input";
+import { SwapDirectionButton } from "./swap-direction-button";
+import { SwapDetails } from "./swap-details";
+import { SwapButton } from "./swap-button";
+import { TokenSearchModal } from "./token-search-modal";
+import { SwapSettings } from "./swap-settings";
+import { Token, SwapButtonState, DexOption } from "@/lib/types";
+import { TOKENS, POPULAR_TOKENS, BALANCES, DEXES } from "@/lib/constants/spot";
 import { AnimatePresence, motion } from "framer-motion";
 
 function deriveSwapButtonState(
@@ -51,7 +46,7 @@ interface SwapCardProps {
 export const SwapCard = ({
   baseSymbol,
   selectedDex,
-  dexes = MOCK_DEXES,
+  dexes = DEXES,
   onDexChange,
   onSwitchToOrderbook,
 }: SwapCardProps) => {
@@ -63,14 +58,13 @@ export const SwapCard = ({
 
   // Find token matching the URL pair, fallback to first token
   const initialToken = baseSymbol
-    ? MOCK_TOKENS.find(
-        (t) => t.symbol.toLowerCase() === baseSymbol.toLowerCase(),
-      ) || MOCK_TOKENS[0]
-    : MOCK_TOKENS[0];
+    ? TOKENS.find((t) => t.symbol.toLowerCase() === baseSymbol.toLowerCase()) ||
+      TOKENS[0]
+    : TOKENS[0];
 
   // Token state
   const [tokenIn, setTokenIn] = useState<Token | null>(initialToken);
-  const [tokenOut, setTokenOut] = useState<Token | null>(MOCK_TOKENS[1]); // USDC
+  const [tokenOut, setTokenOut] = useState<Token | null>(TOKENS[1]); // USDC
 
   // Amount state
   const [amountIn, setAmountIn] = useState("1.0");
@@ -81,6 +75,9 @@ export const SwapCard = ({
   // Quote state (mocked)
   const [isQuoteLoading] = useState(false);
   const [isDetailsExpanded, setIsDetailsExpanded] = useState(false);
+
+  // Preset percentage state
+  const [activePercent, setActivePercent] = useState<number | null>(null);
 
   // Settings state
   const [slippage, setSlippage] = useState("0.5");
@@ -99,9 +96,9 @@ export const SwapCard = ({
 
   // Only show balances when connected
   const tokenInBalance =
-    isWalletConnected && tokenIn ? MOCK_BALANCES[tokenIn.id] || null : null;
+    isWalletConnected && tokenIn ? BALANCES[tokenIn.id] || null : null;
   const tokenOutBalance =
-    isWalletConnected && tokenOut ? MOCK_BALANCES[tokenOut.id] || null : null;
+    isWalletConnected && tokenOut ? BALANCES[tokenOut.id] || null : null;
 
   const buttonState = deriveSwapButtonState(
     isWalletConnected,
@@ -139,11 +136,21 @@ export const SwapCard = ({
     [tokenModalTarget, tokenIn, tokenOut],
   );
 
-  const handleMaxClick = useCallback(() => {
-    if (tokenInBalance) {
-      setAmountIn(tokenInBalance.replace(/,/g, ""));
-    }
-  }, [tokenInBalance]);
+  const handlePercentClick = useCallback(
+    (percent: number) => {
+      if (tokenInBalance) {
+        const balance = parseFloat(tokenInBalance.replace(/,/g, ""));
+        const value = (balance * percent) / 100;
+        setAmountIn(
+          percent === 100
+            ? balance.toString()
+            : value.toFixed(2).replace(/\.?0+$/, ""),
+        );
+        setActivePercent(percent);
+      }
+    },
+    [tokenInBalance],
+  );
 
   // Connect wallet via global store (same as navbar login)
   const setUser = useUserStore((s) => s.set);
@@ -173,7 +180,7 @@ export const SwapCard = ({
   return (
     <>
       <div
-        className={`w-full max-w-[480px] rounded-3xl overflow-hidden flex flex-col transition-colors ${
+        className={`w-full max-w-[480px] rounded-2xl sm:rounded-3xl overflow-hidden flex flex-col transition-colors ${
           isDark
             ? "bg-[#1A1A1A] border border-[#2A2A2A]"
             : "bg-white border border-[#E8E8E8]"
@@ -184,51 +191,22 @@ export const SwapCard = ({
             : "0 4px 20px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)",
         }}
       >
-        {/* Mode Tabs: Swap / Orderbook - pill style */}
-        <div className="px-4 pt-4 pb-1">
-          <div
-            className={`flex items-center gap-1 p-1 rounded-xl ${
-              isDark ? "bg-[#111111] border border-[#222222]" : "bg-[#F4F4F4]"
-            }`}
-          >
-            {/* Swap tab - active */}
-            <button
-              type="button"
-              className={`flex-1 py-2.5 rounded-lg text-[13px] font-semibold leading-[18px] cursor-pointer transition-all ${
-                isDark
-                  ? "bg-[#703AE6] text-white shadow-[0_2px_8px_rgba(112,58,230,0.3)]"
-                  : "bg-white text-[#111111] shadow-[0_1px_4px_rgba(0,0,0,0.08)]"
-              }`}
-            >
-              Swap
-            </button>
-
-            {/* Orderbook tab */}
-            <button
-              type="button"
-              onClick={onSwitchToOrderbook}
-              className={`flex-1 py-2.5 rounded-lg text-[13px] font-semibold leading-[18px] cursor-pointer transition-all ${
-                isDark
-                  ? "text-[#666666] hover:text-[#999999] hover:bg-[#1A1A1A]"
-                  : "text-[#999999] hover:text-[#666666] hover:bg-[#EBEBEB]"
-              }`}
-            >
-              Orderbook
-            </button>
-          </div>
-        </div>
-
         {/* Card body */}
-        <div className="p-4 flex flex-col gap-1">
-          {/* Sub-header: Protocol dropdown + Settings */}
+        <div className="p-3 sm:p-4 flex flex-col gap-1">
+          {/* Swap heading + Protocol dropdown + Settings */}
           <div className="flex items-center justify-between px-0.5 pb-2">
-            {/* Protocol dropdown */}
+            {/* Swap + Protocol dropdown */}
             {dexes.length > 1 ? (
-              <div className="relative" ref={dexDropdownRef}>
+              <div className="relative flex items-center" ref={dexDropdownRef}>
+                <span
+                  className={`text-[14px] sm:text-[16px] font-semibold ${isDark ? "text-white" : "text-[#111111]"}`}
+                >
+                  Swap
+                </span>
                 <button
                   type="button"
                   onClick={() => setIsDexDropdownOpen((prev) => !prev)}
-                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[14px] font-medium leading-[18px] cursor-pointer transition-colors ${
+                  className={`flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2.5 py-1 rounded-lg text-[12px] sm:text-[14px] font-medium leading-[18px] cursor-pointer transition-colors ${
                     isDark
                       ? "text-[#777777] hover:text-[#A7A7A7]"
                       : "text-[#A7A7A7] hover:text-[#777777]"
@@ -239,7 +217,7 @@ export const SwapCard = ({
                     <img
                       src={activeDex.logo}
                       alt={activeDex.name}
-                      className="w-5 h-5 rounded-full object-cover"
+                      className="w-4 h-4 sm:w-5 sm:h-5 rounded-full object-cover"
                     />
                   )}
                   <span
@@ -354,7 +332,11 @@ export const SwapCard = ({
                 </AnimatePresence>
               </div>
             ) : (
-              <div />
+              <span
+                className={`text-[14px] sm:text-[16px] font-semibold ${isDark ? "text-white" : "text-[#111111]"}`}
+              >
+                Swap
+              </span>
             )}
 
             {/* Settings button */}
@@ -404,9 +386,13 @@ export const SwapCard = ({
             amountUsd={amountInUsd}
             balance={tokenInBalance}
             onTokenSelect={() => setTokenModalTarget("in")}
-            onAmountChange={setAmountIn}
-            onMaxClick={handleMaxClick}
-            showMax
+            onAmountChange={(val) => {
+              setAmountIn(val);
+              setActivePercent(null);
+            }}
+            onPercentClick={handlePercentClick}
+            activePercent={activePercent}
+            showPresets
           />
 
           {/* Swap Direction Button */}
@@ -476,9 +462,9 @@ export const SwapCard = ({
         isOpen={tokenModalTarget !== null}
         onClose={() => setTokenModalTarget(null)}
         onSelect={handleTokenSelect}
-        tokens={MOCK_TOKENS}
+        tokens={TOKENS}
         popularTokens={POPULAR_TOKENS}
-        balances={MOCK_BALANCES}
+        balances={BALANCES}
       />
     </>
   );

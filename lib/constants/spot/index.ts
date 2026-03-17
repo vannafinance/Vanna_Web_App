@@ -1,6 +1,6 @@
-import { Token, DexOption } from "./types";
+import { Token, DexOption } from "@/lib/types";
 
-export const MOCK_TOKENS: Token[] = [
+export const TOKENS: Token[] = [
   {
     id: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
     symbol: "ETH",
@@ -95,9 +95,9 @@ export const MOCK_TOKENS: Token[] = [
   },
 ];
 
-export const POPULAR_TOKENS = MOCK_TOKENS.slice(0, 5);
+export const POPULAR_TOKENS = TOKENS.slice(0, 5);
 
-export const MOCK_BALANCES: Record<string, string> = {
+export const BALANCES: Record<string, string> = {
   "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee": "2.5410",
   "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": "1,250.00",
   "0xdac17f958d2ee523a2206206994597c13d831ec7": "500.00",
@@ -105,7 +105,7 @@ export const MOCK_BALANCES: Record<string, string> = {
   "0x6b175474e89094c44da98b954eedeac495271d0f": "340.50",
 };
 
-export const MOCK_DEXES: DexOption[] = [
+export const DEXES: DexOption[] = [
   { id: "uniswap", name: "Uniswap", logo: "/icons/uniswap-logo.svg" },
   { id: "aerodrome", name: "Aerodrome", logo: "/icons/aerodrome-logo.svg" },
   { id: "soroswap", name: "Soroswap", logo: "/icons/soroswap-logo.png" },
