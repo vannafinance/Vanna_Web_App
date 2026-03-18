@@ -53,6 +53,7 @@ const TradingPairInfo = ({
             className={`transition-transform duration-200 ease-in-out ${
               isOpen ? "rotate-180" : "rotate-0"
             }`}
+            style={isDark ? { filter: "brightness(0) invert(1)" } : undefined}
           />
         </button>
         <div className="flex flex-col text-[#01BC8D] ">

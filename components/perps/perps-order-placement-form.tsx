@@ -334,6 +334,7 @@ const PerpsOrderPlacementForm = () => {
                       alt="infinite"
                       width={18}
                       height={17}
+                      style={isDark || noOfLoops === null ? { filter: "brightness(0) invert(1)" } : undefined}
                     />
                   </button>
                 </div>
@@ -506,7 +507,7 @@ const PerpsOrderPlacementForm = () => {
                 onClick={() => setActiveModal("futuresUnitSettings")}
                 className="cursor-pointer flex items-center gap-1 px-2 py-1 rounded  hover:bg-[#E5DBFA] transition-colors"
               >
-                <span className="text-[12px] leading-[18px] font-semibold text-[#111111] hover:text-[#703AE6]">
+                <span className={`text-[12px] leading-[18px] font-semibold hover:text-[#703AE6] ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
                   {quantityUnit}
                 </span>
                 <Image
@@ -514,6 +515,7 @@ const PerpsOrderPlacementForm = () => {
                   width={12}
                   height={12}
                   alt="settings"
+                  style={isDark ? { filter: "brightness(0) invert(1)" } : undefined}
                 />
               </button>
             </div>
@@ -633,6 +635,7 @@ const PerpsOrderPlacementForm = () => {
                     width={12}
                     height={12}
                     alt="arrow-down"
+                    style={isDark ? { filter: "brightness(0) invert(1)" } : undefined}
                   />
                 </button>
               </div>
@@ -663,6 +666,7 @@ const PerpsOrderPlacementForm = () => {
                     width={12}
                     height={12}
                     alt="arrow-down"
+                    style={isDark ? { filter: "brightness(0) invert(1)" } : undefined}
                   />
                 </button>
               </div>
