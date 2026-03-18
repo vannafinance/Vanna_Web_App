@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { useAccount, useConnectorClient, useAccountEffect } from "wagmi";
+import { useWallets } from "@privy-io/react-auth";
 import type { NexusSDK, EthereumProvider } from "@avail-project/nexus-core";
 import {
   getNexusSDK,
@@ -74,6 +75,7 @@ export function NexusProvider({ children }: { children: ReactNode }) {
 
   const { status, connector } = useAccount();
   const { data: walletClient } = useConnectorClient();
+  const { wallets: privyWallets } = useWallets();
 
   // ─── Initialize on wallet connect ────────────────────
 
@@ -83,15 +85,30 @@ export function NexusProvider({ children }: { children: ReactNode }) {
 
     setLoading(true);
     try {
-      // Resolve EIP-1193 provider from wagmi
-      const mobileProvider = walletClient
-        ? ({
-            request: (args: unknown) => walletClient.request(args as never),
-          } as EthereumProvider)
-        : undefined;
-      const desktopProvider = await connector?.getProvider();
-      const provider =
-        mobileProvider ?? (desktopProvider as EthereumProvider | undefined);
+      // Resolve EIP-1193 provider: try Privy wallets first, then wagmi connector
+      let provider: EthereumProvider | undefined;
+
+      // Try Privy embedded wallet provider first
+      const privyWallet = privyWallets.find(
+        (w) => w.walletClientType === "privy"
+      );
+      if (privyWallet) {
+        try {
+          provider = await privyWallet.getEthereumProvider() as EthereumProvider;
+        } catch { /* fall through to wagmi */ }
+      }
+
+      // Fallback to wagmi connector client / desktop provider
+      if (!provider) {
+        const mobileProvider = walletClient
+          ? ({
+              request: (args: unknown) => walletClient.request(args as never),
+            } as EthereumProvider)
+          : undefined;
+        const desktopProvider = await connector?.getProvider();
+        provider =
+          mobileProvider ?? (desktopProvider as EthereumProvider | undefined);
+      }
 
       if (!provider || typeof provider.request !== "function") return;
 
@@ -126,7 +143,7 @@ export function NexusProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [status, connector, walletClient, loading, initialized]);
+  }, [status, connector, walletClient, privyWallets, loading, initialized]);
 
   useEffect(() => {
     if (status === "connected" && !initialized && !loading) {

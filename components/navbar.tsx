@@ -8,11 +8,10 @@ import { useState, useRef, useEffect } from "react";
 import { tradeItems } from "@/lib/constants";
 import { useTheme } from "@/contexts/theme-context";
 import { useUserStore } from "@/store/user";
-import { useConnectModal } from '@rainbow-me/rainbowkit';
-import { useAccount, useClient, useDisconnect, useEnsAvatar, useEnsName, usePublicClient, useReadContract, useSimulateContract, useWalletClient } from "wagmi";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { usePrivy, useWallets } from "@privy-io/react-auth";
+import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import AccountManager from "../abi/vanna/out/out/AccountManager.sol/AccountManager.json";
-import Registry from "../abi/vanna/out/out/Registry.sol/Registry.json" ;
+import Registry from "../abi/vanna/out/out/Registry.sol/Registry.json";
 import {
   arbAddressList,
   baseAddressList,
@@ -24,7 +23,8 @@ import { SunIcon, MoonIcon } from "@/components/icons";
 import { gsap } from "gsap";
 import { DepositModal } from "./ui/deposit-modal";
 import { NetworkDropdown } from "./network-dropdown";
-
+import { LoginModal } from "./auth/login-modal";
+import { UserMenu } from "./auth/user-menu";
 
 interface Navbar {
   items: {
@@ -34,46 +34,91 @@ interface Navbar {
   }[];
 }
 
-
 export const Navbar = (props: Navbar) => {
-
   const pathname = usePathname();
   const router = useRouter();
   const { isDark, toggleTheme } = useTheme();
   const setUserAddress = useUserStore((state) => state.set);
   const userAddress = useUserStore((state) => state.address);
-  const [open, setOpen] = useState(false)
-  const [depositModalOpen, setDepositModalOpen] = useState(false)
-  const hasMarginAccount = useMarginAccountInfoStore((state) => state.hasMarginAccount);
+  const [depositModalOpen, setDepositModalOpen] = useState(false);
+
+  // Detect OAuth redirect — DON'T clean URL yet, Privy needs those params
+  const [oauthReturnProvider] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.has("privy_oauth_state")) {
+        return params.get("privy_oauth_provider") || "google";
+      }
+    }
+    return null;
+  });
+  const isOAuthReturn = oauthReturnProvider !== null;
+  const [loginModalOpen, setLoginModalOpen] = useState(isOAuthReturn);
+  const hasMarginAccount = useMarginAccountInfoStore(
+    (state) => state.hasMarginAccount
+  );
   const setHasMarginAccount = useMarginAccountInfoStore((state) => state.set);
 
-  const { address, isConnected, chainId } = useAccount();
-  const { disconnect } = useDisconnect();
+  // Privy hooks
+  const { ready, authenticated, logout, user } = usePrivy();
+  const { wallets } = useWallets();
 
+  // Wagmi hooks (still work under Privy's WagmiProvider)
+  const { address, isConnected, chainId } = useAccount();
   const { data: walletClient } = useWalletClient();
   const publicClient = usePublicClient();
 
-  const { openConnectModal } = useConnectModal();
+  // Clean OAuth params from URL AFTER Privy completes authentication
+  // Privy needs the URL params until authenticated — cleaning too early breaks the flow
+  useEffect(() => {
+    if (!isOAuthReturn) return;
+    if (!authenticated) return;
+    const url = new URL(window.location.href);
+    if (url.searchParams.has("privy_oauth_state")) {
+      url.searchParams.delete("privy_oauth_state");
+      url.searchParams.delete("privy_oauth_provider");
+      url.searchParams.delete("privy_oauth_code");
+      window.history.replaceState({}, "", url.pathname);
+    }
+  }, [isOAuthReturn, authenticated]);
 
-
-  const { data: ensName } = useEnsName({
-    address,
-    query: { enabled: !!address }
-  })
-
-
-  const { data: ensAvatar } = useEnsAvatar({
-    name: ensName ?? undefined,
-    query: { enabled: !!ensName },
-  });
-
+  // Sync wallet address and Privy user data to user store
   useEffect(() => {
     if (isConnected && address) {
       setUserAddress({ address });
+    } else if (authenticated && wallets.length > 0) {
+      // Embedded wallet may not sync to wagmi immediately
+      setUserAddress({ address: wallets[0].address });
     } else {
       setUserAddress({ address: null });
     }
-  }, [isConnected, address, setUserAddress]);
+  }, [isConnected, address, authenticated, wallets, setUserAddress]);
+
+  // Sync Privy user info to store
+  useEffect(() => {
+    if (authenticated && user) {
+      const authMethod = user.email
+        ? "email"
+        : user.google
+        ? "google"
+        : user.twitter
+        ? "twitter"
+        : user.apple
+        ? "apple"
+        : "wallet";
+      setUserAddress({
+        privyUserId: user.id,
+        authMethod,
+        email: user.email?.address || user.google?.email || null,
+      });
+    } else {
+      setUserAddress({
+        privyUserId: null,
+        authMethod: null,
+        email: null,
+      });
+    }
+  }, [authenticated, user, setUserAddress]);
 
   const groupedItems = {
     primary: props.items.filter((item) => item.group === "primary"),
@@ -109,14 +154,31 @@ export const Navbar = (props: Navbar) => {
         gsap.fromTo(
           dropdownItemsRef.current,
           { opacity: 0, y: -10 },
-          { opacity: 1, y: 0, duration: 0.2, stagger: 0.03, ease: "power2.out", delay: 0.1 }
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.2,
+            stagger: 0.03,
+            ease: "power2.out",
+            delay: 0.1,
+          }
         );
       }
     } else {
       if (dropdownItemsRef.current.length > 0) {
-        gsap.to(dropdownItemsRef.current, { opacity: 0, duration: 0.15, ease: "power2.in" });
+        gsap.to(dropdownItemsRef.current, {
+          opacity: 0,
+          duration: 0.15,
+          ease: "power2.in",
+        });
       }
-      gsap.to(dropdownRef.current, { height: 0, opacity: 0, duration: 0.25, ease: "power2.in", delay: 0.05 });
+      gsap.to(dropdownRef.current, {
+        height: 0,
+        opacity: 0,
+        duration: 0.25,
+        ease: "power2.in",
+        delay: 0.05,
+      });
     }
   }, [isDropdownOpen]);
 
@@ -161,7 +223,8 @@ export const Navbar = (props: Navbar) => {
 
   // Keyboard support for nav items
   const handleNavKeyDown =
-    (item: { title: string; link: string }) => (event: React.KeyboardEvent) => {
+    (item: { title: string; link: string }) =>
+    (event: React.KeyboardEvent) => {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
         handleNavItemClickWithLink(item);
@@ -170,9 +233,6 @@ export const Navbar = (props: Navbar) => {
         setIsDropdownOpen(false);
       }
     };
-
-
-    const notify=()=>toast("Working 🏇🏾")
 
   return (
     <div className={`${isDark ? "bg-[#111111]" : ""}`}>
@@ -242,7 +302,11 @@ export const Navbar = (props: Navbar) => {
                 role="button"
                 tabIndex={0}
                 className={`rounded-[8px] py-[8px] px-[16px] text-[14px] font-medium group flex gap-[4px] items-center hover:text-[#FF007A] cursor-pointer transition-colors ${
-                  isActive ? "bg-[#FFE6F2] text-[#FF007A]" : isDark ? "text-white" : ""
+                  isActive
+                    ? "bg-[#FFE6F2] text-[#FF007A]"
+                    : isDark
+                    ? "text-white"
+                    : ""
                 }`}
                 aria-label={`Navigate to ${item.title}`}
                 aria-current={isActive ? "page" : undefined}
@@ -268,7 +332,9 @@ export const Navbar = (props: Navbar) => {
               const isActive =
                 item.title === "Trade"
                   ? pathname === item.link ||
-                  tradeItems.some((tradeItem) => pathname === tradeItem.link)
+                    tradeItems.some(
+                      (tradeItem) => pathname === tradeItem.link
+                    )
                   : pathname === item.link;
               return (
                 <motion.div
@@ -282,7 +348,11 @@ export const Navbar = (props: Navbar) => {
                   role="button"
                   tabIndex={0}
                   className={`rounded-[8px] py-[8px] px-[16px] text-[14px] font-medium group flex gap-[4px] items-center hover:text-[#FF007A] cursor-pointer transition-colors ${
-                    isActive ? "bg-[#FFE6F2] text-[#FF007A]" : isDark ? "text-white" : ""
+                    isActive
+                      ? "bg-[#FFE6F2] text-[#FF007A]"
+                      : isDark
+                      ? "text-white"
+                      : ""
                   }`}
                   aria-haspopup={item.title === "Trade" ? "menu" : undefined}
                   aria-expanded={
@@ -302,7 +372,11 @@ export const Navbar = (props: Navbar) => {
                   }}
                   whileHover={{
                     scale: 0.95,
-                    transition: { type: "spring", stiffness: 300, damping: 15 },
+                    transition: {
+                      type: "spring",
+                      stiffness: 300,
+                      damping: 15,
+                    },
                   }}
                   whileTap={{ scale: 0.95 }}
                 >
@@ -404,7 +478,11 @@ export const Navbar = (props: Navbar) => {
                 role="button"
                 tabIndex={0}
                 className={`rounded-[8px] py-[8px] px-[16px] text-[14px] font-medium group flex gap-[4px] items-center hover:text-[#FF007A] cursor-pointer transition-colors ${
-                  isActive ? "bg-[#FFE6F2] text-[#FF007A]" : isDark ? "text-white" : ""
+                  isActive
+                    ? "bg-[#FFE6F2] text-[#FF007A]"
+                    : isDark
+                    ? "text-white"
+                    : ""
                 }`}
                 aria-label={`Navigate to ${item.title}`}
                 aria-current={isActive ? "page" : undefined}
@@ -427,16 +505,15 @@ export const Navbar = (props: Navbar) => {
           })}
         </div>
 
-        {/* Right section: Theme toggle and Login button */}
+        {/* Right section: Theme toggle and Auth */}
         <motion.div
           className="flex gap-[8px] items-center"
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
         >
-          {/* Network Switcher */}
-          {isConnected }
-          {address && (
+          {/* Deposit button (only when connected) */}
+          {authenticated && address && (
             <Button
               size="small"
               type="navbar"
@@ -444,8 +521,9 @@ export const Navbar = (props: Navbar) => {
               onClick={() => setDepositModalOpen(true)}
               text="DEPOSIT"
               ariaLabel="Deposit to your account"
-            ></Button>
+            />
           )}
+
           {/* Theme toggle button */}
           <button
             type="button"
@@ -465,43 +543,53 @@ export const Navbar = (props: Navbar) => {
               whileTap={{ scale: 0.9 }}
               className="w-[24px] h-[24px] flex flex-col justify-center items-center "
             >
-
-              {isDark ? (
-                <SunIcon />
-              ) : (
-                <MoonIcon />
-              )}
+              {isDark ? <SunIcon /> : <MoonIcon />}
             </motion.div>
           </button>
-          {/* Login button */}
-          {!isConnected ? (
-            <>
-              <Button
-                size="small"
-                type="gradient"
-                disabled={false}
-                onClick={async () => {
-                  openConnectModal?.();
-                }}
-                text="Login"
-                ariaLabel="Login to your account"
-              ></Button>
-            </>
-          ) : (
+
+          {/* Auth: Login button or User Menu */}
+          {!ready ? (
             <div
-              onClick={() => {
-                disconnect()
-                setUserAddress({ address: null })
-              }}
-              className={`cursor-pointer py-[12px] px-[24px] text-[16px] font-semibold rounded-[8px] h-full w-fit ${
-                isDark ? "bg-[#222222] text-white" : "bg-[#F4F4F4]"
+              className={`py-[12px] px-[24px] rounded-[8px] ${
+                isDark ? "bg-[#222222]" : "bg-[#F4F4F4]"
               }`}
             >
-              {address!.slice(0, 6) + "..." + address!.slice(-4)}
+              <div className="w-16 h-4 animate-pulse rounded bg-current opacity-10" />
             </div>
+          ) : !authenticated ? (
+            <Button
+              size="small"
+              type="gradient"
+              disabled={false}
+              onClick={() => setLoginModalOpen(true)}
+              text="Login"
+              ariaLabel="Login to your account"
+            />
+          ) : wallets.length === 0 ? (
+            /* Wallet being created — show loading pill */
+            <div
+              className={`flex items-center gap-2 py-[10px] px-[16px] rounded-xl ${
+                isDark
+                  ? "bg-[#1C1C1C] border border-[#2A2A2A] text-[#777777]"
+                  : "bg-[#F7F7F7] border border-[#DFDFDF] text-[#949494]"
+              }`}
+            >
+              <div
+                className="w-4 h-4 rounded-full border-2 border-transparent animate-spin"
+                style={{
+                  borderTopColor: "#703AE6",
+                  borderRightColor: "#FC5457",
+                }}
+              />
+              <span className="text-[13px] font-medium">Setting up...</span>
+            </div>
+          ) : (
+            <UserMenu />
           )}
         </motion.div>
       </motion.div>
+
+      {/* Trade Dropdown */}
       {isDropdownOpen && (
         <div
           ref={dropdownRef}
@@ -532,7 +620,11 @@ export const Navbar = (props: Navbar) => {
                 }}
                 onKeyDown={handleNavKeyDown(item)}
                 className={`${
-                  isActive ? "bg-[#FFE6F2] text-[#FF007A]" : isDark ? "text-white" : ""
+                  isActive
+                    ? "bg-[#FFE6F2] text-[#FF007A]"
+                    : isDark
+                    ? "text-white"
+                    : ""
                 } cursor-pointer hover:text-[#FF007A] py-[8px] px-[16px] text-[14px] font-medium rounded-[8px]`}
                 whileHover={{
                   scale: 0.95,
@@ -546,6 +638,14 @@ export const Navbar = (props: Navbar) => {
           })}
         </div>
       )}
+
+      {/* Login Modal */}
+      <LoginModal
+        isOpen={loginModalOpen}
+        onClose={() => setLoginModalOpen(false)}
+        isOAuthReturn={isOAuthReturn}
+        oauthProvider={oauthReturnProvider}
+      />
 
       {/* Deposit Modal */}
       <DepositModal

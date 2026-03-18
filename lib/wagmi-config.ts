@@ -1,7 +1,7 @@
-//import "@rainbow-me/rainbowkit/styles.css";
-import { getDefaultConfig } from "@rainbow-me/rainbowkit";
-import { http } from "wagmi";
+"use client";
 
+import { createConfig } from "@privy-io/wagmi";
+import { http } from "wagmi";
 import {
   mainnet,
   arbitrum,
@@ -16,12 +16,8 @@ import {
 } from "wagmi/chains";
 import { fallback } from "viem";
 
-
-const config = getDefaultConfig({
-  appName: "Vanna",
-  projectId: "f22dfa1f5a575e7a9ca23001ebc6bec8",
-
-  // ✅ All supported chains
+// Use @privy-io/wagmi's createConfig to keep Privy & Wagmi wallet state in sync
+const config = createConfig({
   chains: [
     mainnet,
     arbitrum,
@@ -36,15 +32,14 @@ const config = getDefaultConfig({
   ],
 
   transports: {
-     [mainnet.id]: http(),
+    [mainnet.id]: http(),
     [arbitrum.id]: http(),
     [avalanche.id]: http(),
     [base.id]: fallback([
-      http("https://base-mainnet.g.alchemy.com/v2/6GTerb8N0X0IiWOQviJsc"),
-     
+      http(
+        `https://base-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_API_KEY}`
+      ),
     ]),
-
-    // [base.id]:http("https://base.blockpi.network/v1/rpc/public"),
     [bsc.id]: http(),
     [fantom.id]: http(),
     [gnosis.id]: http(),
@@ -52,9 +47,6 @@ const config = getDefaultConfig({
     [polygon.id]: http(),
     [zora.id]: http(),
   },
-
-  // ⭐ IMPORTANT
-  enableUnsupportedChains: true,
 });
 
 export default config;

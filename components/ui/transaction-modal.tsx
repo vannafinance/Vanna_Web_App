@@ -217,13 +217,14 @@ export const TransactionModal = ({
           {status !== "pending" && (
             <div className="flex flex-col gap-3">
               {status === "error" && onRetry && (
-                <Button type="solid" size="medium" text="Try Again" onClick={onRetry} />
+                <Button type="solid" size="medium" text="Try Again" onClick={onRetry} disabled={false} />
               )}
               <Button
                 type={status === "error" ? "ghost" : "solid"}
                 size="medium"
                 text="Close"
                 onClick={onClose}
+                disabled={false}
               />
             </div>
           )}

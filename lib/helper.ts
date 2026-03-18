@@ -149,7 +149,7 @@ export const formatBignumberToUnits = (coin: string, balance: number) => {
     units = 6;
   }
 
-  return formatUnits(balance, units);
+  return formatUnits(BigInt(balance), units);
 };
 
 export const formatStringToUnits = (coin: string, balance: number) => {

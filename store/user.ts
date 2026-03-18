@@ -1,13 +1,19 @@
-import createNewStore from "@/zustand/index"
+import createNewStore from "@/zustand/index";
 
 // Types
 export interface User {
-  address:string | null
+  address: string | null;
+  privyUserId: string | null;
+  authMethod: "email" | "google" | "twitter" | "apple" | "wallet" | null;
+  email: string | null;
 }
 
 // Initial State
 const initialState: User = {
-  address:null,
+  address: null,
+  privyUserId: null,
+  authMethod: null,
+  email: null,
 };
 
 // Export Store
@@ -16,4 +22,3 @@ export const useUserStore = createNewStore(initialState, {
   devTools: true,
   persist: true,
 });
-
