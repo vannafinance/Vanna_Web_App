@@ -779,7 +779,7 @@ export const RangeSelector = ({
       {/* Chart section with background */}
       <div className={`w-full rounded-[20px] p-[20px] flex flex-col gap-[16px] ${isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"}`}>
         {/* Token selection buttons */}
-        <div className="w-full h-fit flex items-center gap-[8px]">
+        <div className="w-full h-fit flex flex-wrap items-center gap-[8px]">
         {(t1ChartData || t2ChartData) && (
           <>
             {t1ChartData && (
@@ -1092,7 +1092,7 @@ export const RangeSelector = ({
       {showControls && (
         <div className="w-full h-fit flex flex-col gap-[12px]">
           {/* Options Grid - 4 items per row */}
-          <div className="w-full h-fit grid grid-cols-4 gap-[8px]">
+          <div className="w-full h-fit grid grid-cols-2 sm:grid-cols-4 gap-[8px]">
             {/* Range Options */}
             {rangeOptions.map((option) => (
               <button

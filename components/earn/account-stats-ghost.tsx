@@ -45,29 +45,29 @@ export const AccountStatsGhost = ({ items, type = "standard", gridCols, gridRows
     <section className={containerClass} aria-label="Statistics Overview">
       {items.map((items) => {
         const articleClass = useGrid
-          ? "w-full h-fit flex flex-col gap-[12px]"
-          : "w-[240px] h-fit flex flex-col gap-[12px]";
+          ? "w-full h-fit flex flex-col gap-2 sm:gap-[12px]"
+          : "w-full sm:w-[240px] h-fit flex flex-col gap-2 sm:gap-[12px]";
         
-        const articlePadding = type === "background" || type === "background-light" ? "px-[20px]" : "";
+        const articlePadding = type === "background" || type === "background-light" ? "px-3 sm:px-[20px]" : "";
         
         return (
           <article
             key={items.id}
             className={`${articleClass} ${articlePadding}`}
           >
-            <h3 className={`text-[12px] font-medium ${
+            <h3 className={`text-[11px] sm:text-[12px] font-medium ${
               isDark ? "text-[#919191]" : "text-[#919191]"
             }`}>
               {items.name}
             </h3>
             <div className="w-full h-fit flex flex-col gap-[4px]">
-              <p className={`text-[28px] font-bold ${
+              <p className={`text-[20px] sm:text-[24px] lg:text-[28px] font-bold ${
                 isDark ? "text-white" : ""
               }`}>
                 {items.amount}
               </p>
               {items.amountInToken && (
-                <p className={`text-[12px] font-medium ${
+                <p className={`text-[11px] sm:text-[12px] font-medium ${
                   isDark ? "text-white" : ""
                 }`}>
                   {items.amountInToken}

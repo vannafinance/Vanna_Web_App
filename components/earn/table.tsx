@@ -838,7 +838,7 @@ export const Table = memo((props: TableProps) => {
     <section className="w-full h-fit flex flex-col gap-[24px]" aria-label={props.heading.heading || "Data Table"}>
       {hasHeadingTitle && (
         <motion.header
-          className="flex justify-between items-center"
+          className="flex flex-col sm:flex-row sm:justify-between gap-3 sm:items-center"
           variants={headerVariants}
           initial="hidden"
           animate="visible"
@@ -849,7 +849,7 @@ export const Table = memo((props: TableProps) => {
             {props.heading.heading}
           </h2>
           {!showAllChainDropdown && (
-            <div className="flex items-center gap-[16px]" role="toolbar" aria-label="Table Filters">
+            <div className="flex items-center gap-3 sm:gap-[16px] flex-wrap" role="toolbar" aria-label="Table Filters">
               {hasCollateral && (
                 <FilterDropdown
                   dropdownOptions={FILTER_OPTIONS.collateral}

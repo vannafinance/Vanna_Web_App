@@ -593,7 +593,7 @@ export const LeverageAssetsTab = () => {
       <AnimatePresence>
         {activeDialogue === "create-margin" && (
           <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-[#45454566] "
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[#45454566] px-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -629,7 +629,7 @@ export const LeverageAssetsTab = () => {
       <AnimatePresence>
         {activeDialogue === "sign-agreement" && (
           <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-[#45454566] "
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[#45454566] px-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

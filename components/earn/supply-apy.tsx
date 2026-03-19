@@ -77,7 +77,7 @@ export const SupplyApy = (props: SupplyApyProps) => {
       </button>
       {isOpen && (
         <section 
-          className={`shadow-md w-[370px] h-fit top-14 right-0 absolute rounded-[16px] p-[16px] flex flex-col gap-[15px] z-50 border-[1px] ${
+          className={`shadow-md w-[calc(100vw-32px)] sm:w-[370px] h-fit top-14 right-0 absolute rounded-[16px] p-3 sm:p-[16px] flex flex-col gap-[15px] z-50 border-[1px] ${
             isDark
               ? "bg-[#222222]"
               : "bg-[#F4F4F4]"

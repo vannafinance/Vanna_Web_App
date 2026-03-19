@@ -40,7 +40,7 @@ export const RewardsTable = ({height = "330px"}: {height?: string}) => {
   
   return (
     <section 
-      className={`w-full h-[330px] rounded-[16px] border-[1px] p-[16px] flex flex-col gap-[16px] ${
+      className={`w-full h-auto sm:h-[330px] rounded-[16px] border-[1px] p-3 sm:p-[16px] flex flex-col gap-[16px] ${
         isDark
           ? "bg-[#222222]"
           : "bg-[#F7F7F7]"
@@ -62,13 +62,14 @@ export const RewardsTable = ({height = "330px"}: {height?: string}) => {
           </p>
         </div>
       ) : (
-        <table className="w-full h-fit flex flex-col gap-[4px]" aria-label="Claimable Rewards">
+        <div className="w-full overflow-x-auto">
+        <table className="w-full min-w-[400px] h-fit flex flex-col gap-[4px]" aria-label="Claimable Rewards">
           <thead>
-            <tr className="w-full h-fit flex gap-[2px] rounded-[12px]  items-center">
+            <tr className="w-full h-fit flex gap-[2px] rounded-[12px] items-center">
               {rewardsHeading.map((heading) => (
                 <th
                   key={heading}
-                  className={`w-full h-full p-[8px] flex items-center ${
+                  className={`w-full h-full p-1.5 sm:p-[8px] flex items-center ${
                     heading === "Claim all" ? "text-center justify-center" : "text-start justify-start"
                   } text-[10px] font-medium text-[#707070]`}
                 >
@@ -107,6 +108,7 @@ export const RewardsTable = ({height = "330px"}: {height?: string}) => {
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </section>
   );

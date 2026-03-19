@@ -5,9 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Chart } from "@/components/earn/chart";
 import { Table } from "@/components/earn/table";
-import { AccountStats } from "@/components/margin/account-stats";
 import { tableBody, tableHeadings } from "@/lib/constants/earn";
-import { ACCOUNT_STATS_ITEMS } from "@/lib/constants/margin";
 import { useUserStore } from "@/store/user";
 import { RewardsTable } from "@/components/earn/rewards-table";
 import { useEarnVaultStore } from "@/store/earn-vault-store";
@@ -116,25 +114,25 @@ export default function Earn() {
     <main>
       {userAddress && (
         <motion.section
-          className="p-[40px] w-full h-fit flex gap-[24px]"
+          className="p-4 sm:p-6 lg:p-[40px] w-full h-fit flex gap-[24px]"
           aria-label="User Dashboard"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
-          <motion.div className="flex flex-col xl:flex-row gap-[16px] w-full h-fit" variants={containerVariants}>
-            <div className="flex flex-col md:flex-row gap-[16px] w-full xl:w-fit">
+          <motion.div className="flex flex-col xl:flex-row gap-4 w-full h-fit" variants={containerVariants}>
+            <div className="flex flex-col md:flex-row gap-4 w-full xl:w-fit">
               <motion.article 
-                className="w-full min-w-[220px] sm:min-w-[336px] lg:min-w-[437.33px] h-fit"
+                className="w-full min-w-0 h-fit"
                 variants={itemVariants}
               >
-                <Chart containerWidth="w-full"  containerHeight="md:h-[331px] h-[331px] " type="overall-deposit" />
+                <Chart containerWidth="w-full" containerHeight="h-[360px] sm:h-[331px]" type="overall-deposit" />
               </motion.article>
               <motion.article 
-                className="w-full min-w-[220px] sm:min-w-[336px] lg:min-w-[437.33px] h-fit"
+                className="w-full min-w-0 h-fit"
                 variants={itemVariants}
               >
-                <Chart containerWidth="w-full" containerHeight="md:h-[331px] h-[331px]" type="net-apy" />
+                <Chart containerWidth="w-full" containerHeight="h-[360px] sm:h-[331px]" type="net-apy" />
               </motion.article>
             </div>
             <motion.aside 
@@ -148,27 +146,7 @@ export default function Earn() {
       )}
 
       <motion.section
-        className="h-[800px] sm:h-[730px] md:h-[300px]  w-full pt-[40px] px-[40px]"
-        aria-label="Account Statistics"
-        variants={fadeInVariants}
-        initial="hidden"
-        animate="visible"
-      >
-        <AccountStats
-          items={ACCOUNT_STATS_ITEMS.slice(0, 3)}
-          values={{
-            netHealthFactor: !userAddress ? "-" : 1.0,
-            collateralLeftBeforeLiquidation: !userAddress ? "-" : 1000,
-            netAvailableCollateral: !userAddress ? "-" : 1000,
-          }}
-          gridCols="grid-cols-1 md:grid-cols-3 "
-          gridRows="grid-rows-3 md:grid-rows-1"
-
-        />
-      </motion.section>
-
-      <motion.section
-        className="p-[40px] w-full h-fit"
+        className="p-4 sm:p-6 lg:p-[40px] w-full h-fit"
         aria-label="Vaults and Positions"
         variants={fadeInVariants}
         initial="hidden"

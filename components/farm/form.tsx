@@ -13,7 +13,7 @@ export const Form = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className={`w-[480px] border-[1px] rounded-[20px] p-[16px] h-fit flex flex-col gap-[24px] ${
+      className={`w-full lg:w-[480px] border-[1px] rounded-[20px] p-3 sm:p-[16px] h-fit flex flex-col gap-[24px] ${
         isDark ? "bg-[#222222]" : "bg-[#F7F7F7]"
       }`}
     >

@@ -356,13 +356,13 @@ export default function FarmDetailPage() {
   // Loading state skeleton
   if (!rowData) {
     return (
-      <main className="flex flex-col gap-[40px] pt-[40px] px-[40px] pb-[80px]">
+      <main className="flex flex-col gap-6 sm:gap-[40px] pt-6 sm:pt-[40px] px-4 sm:px-8 lg:px-[40px] pb-[80px]">
         <div className="w-full h-fit flex justify-between">
           <div className="w-full h-fit flex flex-col gap-[20px]">
             <button
               type="button"
               onClick={handleBackToPools}
-              className={`w-fit h-fit flex gap-[12px] items-center cursor-pointer text-[16px] font-medium hover:text-[#703AE6] transition-colors ${isDark ? "text-white" : "text-[#5A5555]"}`}
+              className={`w-fit h-fit flex gap-[12px] items-center cursor-pointer text-[14px] sm:text-[16px] font-medium hover:text-[#703AE6] transition-colors ${isDark ? "text-white" : "text-[#5A5555]"}`}
               aria-label="Back to pools"
             >
               <ChevronLeftIcon />
@@ -379,12 +379,12 @@ export default function FarmDetailPage() {
   }
 
   return (
-    <main className="flex flex-col gap-[40px] pt-[40px] px-[40px] pb-[80px]">
+    <main className="flex flex-col gap-6 sm:gap-[40px] pt-6 sm:pt-[40px] px-4 sm:px-8 lg:px-[40px] pb-[80px]">
       <motion.header
         initial="hidden"
         animate="visible"
         variants={headerVariants}
-        className=" w-full h-fit flex justify-between"
+        className="w-full h-fit flex flex-col sm:flex-row justify-between gap-4"
       >
         <div className="w-full h-fit flex flex-col gap-[20px]">
           <nav aria-label="Breadcrumb">
@@ -394,14 +394,14 @@ export default function FarmDetailPage() {
               whileHover={{ x: -5 }}
               whileTap={{ scale: 0.98 }}
               transition={{ duration: 0.2 }}
-              className={`w-fit h-fit flex gap-[12px] items-center cursor-pointer text-[16px] font-medium hover:text-[#703AE6] transition-colors ${isDark ? "text-white" : "text-[#5A5555]"
+              className={`w-fit h-fit flex gap-[12px] items-center cursor-pointer text-[14px] sm:text-[16px] font-medium hover:text-[#703AE6] transition-colors ${isDark ? "text-white" : "text-[#5A5555]"
                 }`}
             >
               <ChevronLeftIcon />
               Back to pools
             </motion.button>
           </nav>
-          <div className="w-full h-fit flex gap-[16px] items-center">
+          <div className="w-full h-fit flex flex-wrap gap-3 sm:gap-[16px] items-center">
             {/* Chain icon for multi-asset type - 16px */}
             {isMultiAsset && (
               <Image
@@ -446,12 +446,12 @@ export default function FarmDetailPage() {
                   />
                 </motion.div>
               )}
-              <div className="w-fit h-fit flex gap-[8px] items-center">
-                <h1 className={`w-fit h-fit text-[24px] font-bold ${isDark ? "text-white" : "text-[#181822]"
+              <div className="w-fit h-fit flex flex-wrap gap-2 sm:gap-[8px] items-center">
+                <h1 className={`w-fit h-fit text-[20px] sm:text-[24px] font-bold ${isDark ? "text-white" : "text-[#181822]"
                   }`}>
                   {farmData.title}
                 </h1>
-                <div className="w-fit h-fit flex gap-[8px] items-center">
+                <div className="w-fit h-fit flex flex-wrap gap-[8px] items-center">
                   {farmData.tags.slice(0, 2).map((tag: string | number, index: number) => (
                     <span
                       key={index}
@@ -487,7 +487,7 @@ export default function FarmDetailPage() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.4, delay: 0.2 }}
-            className="w-[164px] h-fit"
+            className="w-full sm:w-[164px] h-fit flex-shrink-0"
           >
             <Button
               type="solid"
@@ -517,7 +517,7 @@ export default function FarmDetailPage() {
           animate="visible"
           variants={staggerContainerVariants}
           transition={{ delay: 0.3 }}
-          className="w-full h-fit flex gap-[20px] "
+          className="w-full h-fit flex flex-col lg:flex-row gap-6 lg:gap-[20px]"
         >
 
         <motion.div variants={itemVariants} className="w-full h-fit flex flex-col gap-[10px]">
@@ -525,7 +525,7 @@ export default function FarmDetailPage() {
             <AnimatedTabs containerClassName="w-full h-fit" tabClassName="w-full h-fit" type="solid" tabs={UI_TABS} activeTab={activeUiTab} onTabChange={handleUiTabChange} />
           </div>
           {activeUiTab === "all-transactions" ? (
-            <div className={`w-full h-fit flex flex-col gap-[24px] rounded-[20px] border-[1px] p-[24px] ${isDark ? "bg-[#111111]" : "bg-[#F7F7F7]"
+            <div className={`w-full h-fit flex flex-col gap-[24px] rounded-[20px] border-[1px] p-4 sm:p-[24px] ${isDark ? "bg-[#111111]" : "bg-[#F7F7F7]"
               }`}
             >
               <Chart type="farm" heading="1 WISE = <0.001 WETH ($0.159)" downtrend="0.07%" />
@@ -548,12 +548,12 @@ export default function FarmDetailPage() {
               />
             </div>
           ) : (
-            <div className={`w-full h-fit flex flex-col gap-[24px] rounded-[20px] border-[1px] p-[24px] ${isDark ? "bg-[#111111]" : "bg-[#F7F7F7]"
+            <div className={`w-full h-fit flex flex-col gap-[24px] rounded-[20px] border-[1px] p-4 sm:p-[24px] ${isDark ? "bg-[#111111]" : "bg-[#F7F7F7]"
               }`}
             >
-              <h2 className={`w-full h-fit text-[20px] font-semibold ${isDark ? "text-white" : ""
+              <h2 className={`w-full h-fit text-[18px] sm:text-[20px] font-semibold ${isDark ? "text-white" : ""
                 }`}>Statistics</h2>
-              <article className="w-full h-full grid grid-cols-3 grid-rows-3 gap-x-[15px]" aria-label="Vault Statistics">
+              <article className="w-full h-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-[15px]" aria-label="Vault Statistics">
                 {items.map((item, idx) => {
                   return (
                     <StatsCard
@@ -572,7 +572,7 @@ export default function FarmDetailPage() {
         </motion.div>
         <motion.div
           variants={itemVariants}
-          className="w-[480px] h-fit flex flex-col gap-[20px]"
+          className="w-full lg:w-[480px] h-fit flex flex-col gap-[20px] flex-shrink-0"
         >
           <Form />
         </motion.div>
@@ -586,9 +586,9 @@ export default function FarmDetailPage() {
           animate="visible"
           variants={staggerContainerVariants}
           transition={{ delay: 0.2 }}
-          className="w-full h-fit flex gap-[24px] "
+          className="w-full h-fit flex flex-col lg:flex-row gap-6 lg:gap-[24px]"
         >
-        <motion.div variants={itemVariants} className="w-full h-fit flex flex-col gap-[24px]">
+        <motion.div variants={itemVariants} className="w-full min-w-0 h-fit flex flex-col gap-[24px]">
           {showAddLiquidity ? (
             <motion.div
               initial="hidden"
@@ -610,7 +610,7 @@ export default function FarmDetailPage() {
                 hidden: { opacity: 0, y: 20 },
                 visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
               }}
-              className={`w-full h-fit rounded-[16px] border-[1px] p-[24px] ${isDark ? "bg-[#1A1A1A]" : "bg-[#F7F7F7]"
+              className={`w-full h-fit rounded-[16px] border-[1px] p-3 sm:p-[24px] ${isDark ? "bg-[#1A1A1A]" : "bg-[#F7F7F7]"
               }`}
             >
               <RangeSelector
@@ -635,9 +635,9 @@ export default function FarmDetailPage() {
                   hidden: { opacity: 0, y: 20 },
                   visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
                 }}
-                className={`w-full h-fit flex rounded-[16px] border-[1px] p-[20px] gap-[8px] ${isDark ? "bg-[#222222]" : "bg-[#F7F7F7]"} `}
+                className={`w-full h-fit flex flex-col sm:flex-row rounded-[16px] border-[1px] p-3 sm:p-[20px] gap-3 sm:gap-[8px] ${isDark ? "bg-[#222222]" : "bg-[#F7F7F7]"} `}
               >
-                <div className={`w-full h-fit flex flex-col gap-[20px] rounded-[16px] border-[1px] p-[20px] ${isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"} `}
+                <div className={`w-full h-fit flex flex-col gap-[20px] rounded-[16px] border-[1px] p-4 sm:p-[20px] ${isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"} `}
                 >
                   <div className="w-full h-fit flex flex-col ">
                     <h3 className={`w-full h-fit text-[16px] font-semibold ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>Max Price</h3>
@@ -678,7 +678,7 @@ export default function FarmDetailPage() {
 
                   </div>
                 </div>
-                <div className={`w-full h-fit flex flex-col gap-[20px] rounded-[16px] border-[1px] p-[20px] ${isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"} `}
+                <div className={`w-full h-fit flex flex-col gap-[20px] rounded-[16px] border-[1px] p-4 sm:p-[20px] ${isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"} `}
                 >
                   <div className="w-full h-fit flex flex-col ">
                     <h3 className={`w-full h-fit text-[16px] font-semibold ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>Min Price</h3>
@@ -723,7 +723,7 @@ export default function FarmDetailPage() {
               </motion.div>
             </motion.div>
           ) : (
-            <div className={`w-full h-fit flex flex-col gap-[24px] ${isDark ? "bg-[#111111]" : "bg-[#F7F7F7]"} border-[1px] rounded-[20px] p-[24px]`}
+            <div className={`w-full h-fit flex flex-col gap-[24px] ${isDark ? "bg-[#111111]" : "bg-[#F7F7F7]"} border-[1px] rounded-[20px] p-4 sm:p-[24px]`}
             >
               <Chart type="farm" heading="1 WISE = <0.001 WETH ($0.159)" downtrend="0.07%" />
               <Table
@@ -759,7 +759,7 @@ export default function FarmDetailPage() {
         {!showAddLiquidity && (
           <motion.div
             variants={itemVariants}
-            className="w-[400px] h-fit"
+            className="w-full lg:w-[400px] h-fit flex-shrink-0"
           >
             <FarmStatsCard items={farmStatsData} />
           </motion.div>
@@ -778,7 +778,7 @@ export default function FarmDetailPage() {
                 },
               },
             }}
-            className="w-fit h-fit flex flex-col gap-[20px]"
+            className="w-full lg:w-[400px] h-fit flex flex-col gap-[20px] flex-shrink-0"
           >
             {!userAddress && (
               <motion.div
@@ -786,7 +786,7 @@ export default function FarmDetailPage() {
                   hidden: { opacity: 0, y: -10 },
                   visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
                 }}
-                className={`w-[400px] rounded-[12px] border-[1px] p-[16px] flex items-center gap-[12px] ${isDark ? "bg-[#1A1A1A] border-[#595959] text-[#FFFFFF]" : "bg-[#FFF9E6] border-[#FFD700] text-[#111111]"}`}
+                className={`w-full rounded-[12px] border-[1px] p-[16px] flex items-center gap-[12px] ${isDark ? "bg-[#1A1A1A] border-[#595959] text-[#FFFFFF]" : "bg-[#FFF9E6] border-[#FFD700] text-[#111111]"}`}
                 role="alert"
                 aria-live="polite"
               >
@@ -807,7 +807,7 @@ export default function FarmDetailPage() {
                 hidden: { opacity: 0, y: 20 },
                 visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
               }}
-              className="w-[400px] h-fit"
+              className="w-full h-fit"
             >
               <FarmStatsCard items={farmLiquidationStatsData} />
             </motion.div>

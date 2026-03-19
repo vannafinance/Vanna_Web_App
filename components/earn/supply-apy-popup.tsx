@@ -79,7 +79,7 @@ interface SupplyApyPopupProps {
 export const SupplyApyPopup = ({ onClose }: SupplyApyPopupProps) => {
   return (
     <motion.article 
-      className="shadow-md w-[349px] h-fit rounded-[12px] p-[16px] flex flex-col gap-[16px] bg-[#FFFFFF]"
+      className="shadow-md w-full max-w-[349px] h-fit rounded-[12px] p-3 sm:p-[16px] flex flex-col gap-[16px] bg-[#FFFFFF]"
       aria-label="Supply APY Breakdown"
       variants={popupVariants}
       initial="hidden"
@@ -87,11 +87,11 @@ export const SupplyApyPopup = ({ onClose }: SupplyApyPopupProps) => {
     >
       <section className="w-full h-fit flex flex-col gap-[12px]">
         <motion.header 
-          className="w-full h-fit flex justify-between items-center border-[1px] bg-[#F7F7F7] p-[12px] rounded-[8px]"
+          className="w-full h-fit flex justify-between items-center border-[1px] bg-[#F7F7F7] p-2 sm:p-[12px] rounded-[8px]"
           variants={headerVariants}
         >
           <h2 className="text-[10px] font-medium w-full">APY TYPE</h2>
-          <div className="w-[137.5px] h-fit flex justify-between items-center">
+          <div className="w-[100px] sm:w-[137.5px] h-fit flex justify-between items-center">
             <h3 className="text-[10px] font-medium w-full">1D</h3>
             <h3 className="text-[10px] font-medium w-full">7D</h3>
           </div>
@@ -121,7 +121,7 @@ export const SupplyApyPopup = ({ onClose }: SupplyApyPopupProps) => {
                     {item.description}
                   </dd>
                 </div>
-                <div className="flex justify-between items-center w-[137.5px] h-fit">
+                <div className="flex justify-between items-center w-[100px] sm:w-[137.5px] h-fit flex-shrink-0">
                   <dd className="text-[10px] font-semibold w-full">
                     {item.oneDay}
                   </dd>
@@ -134,7 +134,7 @@ export const SupplyApyPopup = ({ onClose }: SupplyApyPopupProps) => {
           })}
         </motion.dl>
         <motion.hr 
-          className="w-[317px] h-px bg-[#E2E2E2] border-0"
+          className="w-full h-px bg-[#E2E2E2] border-0"
           initial={{ scaleX: 0 }}
           animate={{ scaleX: 1 }}
           transition={{ duration: 0.3, delay: 0.3 }}
@@ -147,7 +147,7 @@ export const SupplyApyPopup = ({ onClose }: SupplyApyPopupProps) => {
           whileHover={{ scale: 1.02 }}
         >
           <strong className="text-[10px] font-semibold w-full">Overall APY</strong>
-          <div className="flex justify-between items-center w-[137.5px] h-fit">
+          <div className="flex justify-between items-center w-[100px] sm:w-[137.5px] h-fit flex-shrink-0">
             <strong className="text-[10px] font-semibold w-full">10.08%</strong>
             <strong className="text-[10px] font-semibold w-full">10.02%</strong>
           </div>

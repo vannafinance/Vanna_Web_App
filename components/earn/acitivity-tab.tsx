@@ -162,7 +162,7 @@ export const ActivityTab = () => {
   
   return (
     <section 
-      className={`w-full h-fit rounded-[20px] border-[1px] p-[24px] flex flex-col gap-[24px] ${
+      className={`w-full h-fit rounded-[20px] border-[1px] p-3 sm:p-[24px] flex flex-col gap-4 sm:gap-[24px] ${
         isDark ? "bg-[#111111]" : "bg-[#F7F7F7]"
       }`}
       aria-label="Activity Overview"

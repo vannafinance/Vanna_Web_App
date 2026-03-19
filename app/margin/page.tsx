@@ -1,7 +1,6 @@
 "use client";
 
 import { Carousel } from "@/components/ui/carousel";
-import { NetworkDropdown } from "@/components/network-dropdown";
 import {
   CAROUSEL_ITEMS,
   MARGIN_ACCOUNT_INFO_ITEMS,
@@ -21,6 +20,8 @@ import { useUserStore } from "@/store/user";
 import { formatValue } from "@/lib/utils/format-value";
 import { ACCOUNT_STATS_ITEMS } from "@/lib/constants/margin";
 import { useTheme } from "@/contexts/theme-context";
+import { BottomSheet } from "@/components/ui/bottom-sheet";
+import { Button } from "@/components/ui/button";
 
 const Margin = () => {
   const { isDark } = useTheme();
@@ -136,11 +137,13 @@ const Margin = () => {
     return acc;
   }, {} as Record<string, string>);
 
+  const [sheetOpen, setSheetOpen] = useState(false);
+
   return (
-    <main className="w-full">
-      {/* Carousel section - displays promotional items */}
+    <main className="w-full pb-[60px] lg:pb-0">
+      {/* Carousel section */}
       <motion.section
-        className="w-full h-fit  pb-[48px] px-[80px] pt-[80px] "
+        className="w-full h-fit pb-6 sm:pb-[48px] px-4 sm:px-8 lg:px-[80px] pt-6 sm:pt-10 lg:pt-[80px]"
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{
@@ -154,7 +157,7 @@ const Margin = () => {
 
       {userAddress && (
         <motion.section
-          className="px-[80px]  w-full h-[405px]"
+          className="px-4 sm:px-8 lg:px-[80px] w-full h-auto"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
@@ -168,32 +171,35 @@ const Margin = () => {
       )}
 
       {/* Main leverage section */}
-      <section className=" w-full p-[80px]  flex flex-col gap-[48px]">
+      <section className="w-full p-4 sm:p-8 lg:p-[80px] flex flex-col gap-6 sm:gap-8 lg:gap-[48px]">
         {/* Section header with network dropdown */}
         <motion.header
-          className="w-full flex gap-[20px] items-center"
+          className="w-full flex flex-col sm:flex-row gap-3 sm:gap-[20px] sm:items-center"
           initial={{ opacity: 0, x: -20 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.4, ease: "easeOut" }}
         >
-          <h1 className={`text-[34px] font-semibold ${isDark ? "text-white" : ""}`}>
+          <h1 className={`text-[28px] sm:text-[32px] lg:text-[38px] font-semibold ${isDark ? "text-white" : ""}`}>
             Leverage your Collateral
           </h1>
-          <div className="flex-shrink-0">
-            <NetworkDropdown />
-          </div>
         </motion.header>
 
-        {/* Two column layout: Leverage form and Info card */}
-        <div className="flex gap-[36px] relative" ref={leverageCollateralRef}>
-          {/* Left: Leverage collateral form */}
+        {/* Mobile bottom sheet for leverage form */}
+        <BottomSheet open={sheetOpen} onOpenChange={setSheetOpen}>
+          <LeverageCollateral
+            switchToRepayTab={switchToRepayTab}
+            onTabSwitched={() => setSwitchToRepayTab(false)}
+          />
+        </BottomSheet>
+
+        {/* Desktop: Two column layout */}
+        <div className="hidden lg:flex gap-[36px] relative" ref={leverageCollateralRef}>
           <LeverageCollateral
             switchToRepayTab={switchToRepayTab}
             onTabSwitched={() => setSwitchToRepayTab(false)}
           />
 
-          {/* Right: Margin account info card - sticky */}
           <motion.aside
             className="flex flex-col gap-[20px] w-full h-fit sticky top-[80px] self-start"
             initial={{ opacity: 0, x: 20 }}
@@ -201,7 +207,6 @@ const Margin = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.4, ease: "easeOut" }}
           >
-            {/* Info card header */}
             <motion.header
               className="flex gap-[10px]"
               initial={{ opacity: 0, y: 20 }}
@@ -209,11 +214,8 @@ const Margin = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.4, ease: "easeOut" }}
             >
-              {/* Vanna logo icon */}
               <motion.div
-                className={`border-[1px] flex flex-col justify-center items-center p-2 rounded-[11px] w-[62px] h-[62px] ${
-                  ""
-                }`}
+                className="border-[1px] flex flex-col justify-center items-center p-2 rounded-[11px] w-[62px] h-[62px]"
                 initial={{ scale: 0, rotate: -180 }}
                 whileInView={{ scale: 1, rotate: 0 }}
                 viewport={{ once: true }}
@@ -230,13 +232,12 @@ const Margin = () => {
                 <h2 className={`w-full text-[24px] font-bold ${isDark ? "text-white" : ""}`}>
                   Margin Account Info
                 </h2>
-                <p className={`w-full text-[16px] font-medium text-[#A3A3A3]`}>
+                <p className="w-full text-[16px] font-medium text-[#A3A3A3]">
                   Stay updated details and status.
                 </p>
               </div>
             </motion.header>
 
-            {/* Info card with expandable sections */}
             <InfoCard
               data={marginAccountInfo}
               items={[...MARGIN_ACCOUNT_INFO_ITEMS]}
@@ -261,10 +262,53 @@ const Margin = () => {
           </motion.aside>
         </div>
 
+        {/* Mobile: Info card below the buttons */}
+        <div className="flex lg:hidden flex-col gap-4">
+          <div className="flex gap-3 items-center">
+            <div className="border-[1px] flex flex-col justify-center items-center p-2 rounded-[11px] w-[48px] h-[48px] flex-shrink-0">
+              <Image
+                alt={"vanna"}
+                src={"/logos/vanna-icon.png"}
+                width={28}
+                height={25}
+              />
+            </div>
+            <div className="flex flex-col">
+              <h2 className={`text-[18px] font-bold ${isDark ? "text-white" : ""}`}>
+                Margin Account Info
+              </h2>
+              <p className="text-[14px] font-medium text-[#A3A3A3]">
+                Stay updated details and status.
+              </p>
+            </div>
+          </div>
+          <InfoCard
+            data={marginAccountInfo}
+            items={[...MARGIN_ACCOUNT_INFO_ITEMS]}
+            showExpandable={true}
+            expandableSections={[
+              {
+                title: "MORE DETAILS",
+                headingBold: true,
+                items: [...MARGIN_ACCOUNT_MORE_DETAILS_ITEMS],
+                defaultExpanded: false,
+                delay: 0.1,
+              },
+              {
+                title: "ORACLES AND LTS",
+                headingBold: true,
+                items: [...MARGIN_ACCOUNT_MORE_DETAILS_ITEMS],
+                defaultExpanded: false,
+                delay: 0.2,
+              },
+            ]}
+          />
+        </div>
+
         {/* Positions table section */}
         {userAddress && (
           <motion.section
-            className="w-full h-fit "
+            className="w-full h-fit"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
@@ -277,6 +321,38 @@ const Margin = () => {
           </motion.section>
         )}
       </section>
+
+      {/* Mobile: Fixed bottom bar with action buttons */}
+      <div className="fixed bottom-0 inset-x-0 z-50 flex flex-col items-center lg:hidden" style={{ backgroundColor: isDark ? '#111111' : '#ffffff' }}>
+        <motion.button
+          type="button"
+          className="py-1 cursor-pointer"
+          animate={{ y: [0, -4, 0] }}
+          transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+          onClick={() => { setSwitchToRepayTab(false); setSheetOpen(true); }}
+          aria-label="Open leverage form"
+        >
+          <svg width="20" height="10" viewBox="0 0 20 10" fill="none">
+            <path d="M2 8L10 2L18 8" stroke={isDark ? '#919191' : '#A0A0A0'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </motion.button>
+        <div className="flex gap-3 w-full px-4 pb-2 bg-opacity-95 backdrop-blur-sm">
+          <Button
+            text="Leverage Assets"
+            type="solid"
+            size="medium"
+            onClick={() => { setSwitchToRepayTab(false); setSheetOpen(true); }}
+            disabled={false}
+          />
+          <Button
+            text="Repay Loan"
+            type="ghost"
+            size="medium"
+            onClick={() => { setSwitchToRepayTab(true); setSheetOpen(true); }}
+            disabled={false}
+          />
+        </div>
+      </div>
     </main>
   );
 };

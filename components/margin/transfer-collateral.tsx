@@ -50,7 +50,7 @@ export const TransferCollateral = () => {
       >
         <motion.header
           key="editing"
-          className="flex justify-between "
+          className="flex flex-col sm:flex-row justify-between gap-3"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
@@ -72,7 +72,7 @@ export const TransferCollateral = () => {
             <AnimatePresence mode="wait">
               <motion.div
                 key="editing-middle"
-                className="flex gap-[8px]"
+                className="flex gap-2 sm:gap-[8px] flex-wrap"
                 role="group"
                 aria-label="Deposit percentage"
                 initial={{ opacity: 0, y: 10 }}
@@ -83,20 +83,19 @@ export const TransferCollateral = () => {
                   ease: [0.4, 0, 0.2, 1],
                 }}
               >
-                {/* Percentage buttons */}
                 {DEPOSIT_PERCENTAGES.map((item) => {
                   return (
                     <motion.button
                       type="button"
                       key={item}
                       onClick={() => handlePercentageClick(item)}
-                      className={`h-[44px] w-[95px] text-center text-[14px] text-medium cursor-pointer ${
+                      className={`h-[40px] sm:h-[44px] w-auto min-w-[60px] sm:w-[95px] text-center text-[13px] sm:text-[14px] text-medium cursor-pointer ${
                         percentage === item
                           ? `${PERCENTAGE_COLORS[item]} text-white`
                           : isDark
                           ? "bg-[#222222] text-white"
                           : "bg-[#F4F4F4]"
-                      } p-[10px] rounded-[12px]`}
+                      } p-2 sm:p-[10px] rounded-[12px]`}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       transition={{ duration: 0.1 }}
@@ -111,7 +110,7 @@ export const TransferCollateral = () => {
             </AnimatePresence>
           </motion.header>
         <motion.section 
-          className="flex justify-between gap-[10px] items-center"
+          className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-[10px] sm:items-center"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.2 }}
@@ -128,8 +127,8 @@ export const TransferCollateral = () => {
             <input
               id={`collateral-amount-input`}
               onChange={handleInputChange}
-              className={`w-fit text-[20px] focus:border-[0px] focus:outline-none focus:bg-transparent font-medium placeholder:text-[#C7C7C7] ${
-                isDark ? "placeholder:text-[#A7A7A7]  text-white bg-[#111111]" : "bg-white"
+              className={`w-full text-[20px] focus:border-[0px] focus:outline-none font-medium placeholder:text-[#C7C7C7] bg-transparent ${
+                isDark ? "placeholder:text-[#A7A7A7] text-white" : ""
               }`}
               type="text"
               placeholder="0.0"
