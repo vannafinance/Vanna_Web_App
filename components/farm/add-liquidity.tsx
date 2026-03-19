@@ -64,11 +64,11 @@ export const AddLiquidity = () => {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className={`w-full h-fit  p-[20px] rounded-[16px] ${
+        className={`w-full h-fit p-4 sm:p-[20px] rounded-[16px] ${
           isDark ? "bg-[#111111]" : "bg-white"
         }`}
       >
-        <div className="w-full flex items-center gap-[20px]">
+        <div className="w-full flex items-center gap-3 sm:gap-[20px]">
           <div className="w-full h-full flex flex-col gap-[24px]">
             <div className="w-full h-fit ">
               <input 
@@ -95,10 +95,10 @@ export const AddLiquidity = () => {
               }`}>USDT</span>
             </div>
             <div className=" justify-end items-end w-fit flex text-end h-fit gap-[4px] ">
-              <span className={`text-nowrap text-end text-[12px] font-medium ${
+              <span className={`text-end text-[12px] font-medium ${
                 isDark ? "text-[#919191]" : "text-[#5C5B5B]"
-              }`}>Margin Balance:</span>
-              <span className={`text-nowrap text-end text-[12px] font-medium underline cursor-pointer ${
+              }`}><span className="hidden sm:inline">Margin Balance:</span><span className="sm:hidden">Bal:</span></span>
+              <span className={`text-end text-[12px] font-medium underline cursor-pointer ${
                 isDark ? "text-[#919191]" : "text-[#5C5B5B]"
               }`}>7000 USD</span>
             </div>

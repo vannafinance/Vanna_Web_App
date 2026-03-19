@@ -63,7 +63,7 @@ export const RewardsTable = ({height = "330px"}: {height?: string}) => {
         </div>
       ) : (
         <div className="w-full overflow-x-auto">
-        <table className="w-full min-w-[400px] h-fit flex flex-col gap-[4px]" aria-label="Claimable Rewards">
+        <table className="w-full min-w-[320px] sm:min-w-[400px] h-fit flex flex-col gap-[4px]" aria-label="Claimable Rewards">
           <thead>
             <tr className="w-full h-fit flex gap-[2px] rounded-[12px] items-center">
               {rewardsHeading.map((heading) => (

@@ -163,7 +163,7 @@ export const Navbar = (props: Navbar) => {
   return (
     <div className={`${isDark ? "bg-[#111111]" : ""}`}>
       <motion.div
-        className={`py-[12px] px-[40px] w-full h-fit flex justify-between items-center ${isDark ? "text-white" : ""}`}
+        className={`py-[12px] px-4 sm:px-6 lg:px-[40px] w-full h-fit flex justify-between items-center ${isDark ? "text-white" : ""}`}
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
@@ -210,6 +210,7 @@ export const Navbar = (props: Navbar) => {
             alt="Vanna"
             width={153.4}
             height={48}
+            className="w-[110px] h-auto sm:w-[130px] lg:w-[153px]"
             src={isDark ? "/logos/vanna-white.png" : "/logos/vanna.png"}
           />
         </motion.a>
@@ -556,9 +557,10 @@ export const Navbar = (props: Navbar) => {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className={`fixed top-0 right-0 h-full w-[320px] max-w-[85vw] z-50 lg:hidden overflow-y-auto ${
+              className={`fixed top-0 right-0 h-full w-[300px] max-w-[80vw] z-50 lg:hidden overflow-y-auto ${
                 isDark ? "bg-[#111111]" : "bg-white"
               } shadow-2xl`}
+              style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
             >
               <div className="flex flex-col h-full">
                 {/* Header with close button */}

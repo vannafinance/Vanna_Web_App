@@ -118,34 +118,40 @@ export default function FarmPage() {
   }, [activeTab, activeFilterTab]);
 
   return (
-    <div className="w-full h-fit px-4 sm:px-8 lg:px-[40px] pt-6 sm:pt-[40px] pb-[80px] flex flex-col gap-6 sm:gap-[40px]">
+    <div className="w-full h-fit px-4 sm:px-8 lg:px-[40px] pt-5 sm:pt-[40px] pb-[80px] flex flex-col gap-5 sm:gap-[40px]">
       {userAddress && FARM_STATS_ITEMS.length > 0 && MARGIN_ACCOUNT_STATS_ITEMS.length > 0 && (
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: "easeOut" }}
-          className={`w-full h-fit p-4 sm:p-[24px] border-[1px] rounded-[20px] flex flex-col gap-6 sm:gap-[40px] ${isDark ? "bg-[#222222]" : "bg-[#F7F7F7]"}`}
+          className={`w-full h-fit p-4 sm:p-[24px] border-[1px] rounded-[16px] sm:rounded-[20px] flex flex-col gap-5 sm:gap-[40px] ${isDark ? "bg-[#222222]" : "bg-[#F7F7F7]"}`}
         >
-          <div className="w-full h-fit flex flex-col gap-[8px]">
-            <motion.div 
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3, delay: 0.1 }}
-              className={`w-full h-fit text-[20px] font-semibold ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}
-            >
-              Farm Stats
-            </motion.div>
+          <div className="w-full h-fit flex flex-col gap-3 sm:gap-[8px]">
+            <div className="flex items-center gap-2">
+              <div className="w-1 h-[16px] sm:hidden rounded-full bg-[#703AE6]" />
+              <motion.div 
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: 0.1 }}
+                className={`w-full h-fit text-[16px] sm:text-[20px] font-bold sm:font-semibold ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}
+              >
+                Farm Stats
+              </motion.div>
+            </div>
             <AccountStats darkBackgroundColor="#111111" items={FARM_STATS_ITEMS} values={FARM_STATS_VALUES} gridCols="grid-cols-1 sm:grid-cols-2" backgroundColor="#FFFFFF" />
           </div>
-          <div className="w-full h-fit flex flex-col gap-[8px]">
-            <motion.div 
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3, delay: 0.2 }}
-              className={`w-full h-fit text-[20px] font-semibold ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}
-            >
-              Margin Account Stats
-            </motion.div>
+          <div className="w-full h-fit flex flex-col gap-3 sm:gap-[8px]">
+            <div className="flex items-center gap-2">
+              <div className="w-1 h-[16px] sm:hidden rounded-full bg-[#703AE6]" />
+              <motion.div 
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: 0.2 }}
+                className={`w-full h-fit text-[16px] sm:text-[20px] font-bold sm:font-semibold ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}
+              >
+                Margin Account Stats
+              </motion.div>
+            </div>
             <AccountStats darkBackgroundColor="#111111" items={MARGIN_ACCOUNT_STATS_ITEMS} values={MARGIN_ACCOUNT_STATS_VALUES} gridCols="grid-cols-1 sm:grid-cols-2 md:grid-cols-3" backgroundColor="#FFFFFF" />
           </div>
         </motion.div>

@@ -9,6 +9,7 @@ import { tableBody, tableHeadings } from "@/lib/constants/earn";
 import { useUserStore } from "@/store/user";
 import { RewardsTable } from "@/components/earn/rewards-table";
 import { useEarnVaultStore } from "@/store/earn-vault-store";
+import { useTheme } from "@/contexts/theme-context";
 
 // Animation variants
 const containerVariants = {
@@ -47,6 +48,7 @@ const fadeInVariants = {
 };
 
 export default function Earn() {
+  const { isDark } = useTheme();
   const userAddress = useUserStore((state) => state.address);
   const setSelectedVault = useEarnVaultStore((state) => state.set);
   const router = useRouter();
@@ -114,31 +116,28 @@ export default function Earn() {
     <main>
       {userAddress && (
         <motion.section
-          className="p-4 sm:p-6 lg:p-[40px] w-full h-fit flex gap-[24px]"
+          className="px-4 sm:px-6 lg:px-[40px] pt-5 sm:pt-6 lg:pt-[40px] pb-2 sm:pb-6 lg:pb-[40px] w-full h-fit"
           aria-label="User Dashboard"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
+          {/* Mobile section heading */}
+          <motion.div className="flex items-center gap-3 mb-4 sm:hidden" variants={itemVariants}>
+            <div className="w-1 h-[20px] rounded-full bg-[#703AE6]" />
+            <h2 className={`text-[16px] font-bold ${isDark ? "text-white" : "text-[#111111]"}`}>Your Overview</h2>
+          </motion.div>
+
           <motion.div className="flex flex-col xl:flex-row gap-4 w-full h-fit" variants={containerVariants}>
             <div className="flex flex-col md:flex-row gap-4 w-full xl:w-fit">
-              <motion.article 
-                className="w-full min-w-0 h-fit"
-                variants={itemVariants}
-              >
-                <Chart containerWidth="w-full" containerHeight="h-[360px] sm:h-[331px]" type="overall-deposit" />
+              <motion.article className="w-full min-w-0 h-fit" variants={itemVariants}>
+                <Chart containerWidth="w-full" containerHeight="h-[300px] sm:h-[331px]" type="overall-deposit" />
               </motion.article>
-              <motion.article 
-                className="w-full min-w-0 h-fit"
-                variants={itemVariants}
-              >
-                <Chart containerWidth="w-full" containerHeight="h-[360px] sm:h-[331px]" type="net-apy" />
+              <motion.article className="w-full min-w-0 h-fit" variants={itemVariants}>
+                <Chart containerWidth="w-full" containerHeight="h-[300px] sm:h-[331px]" type="net-apy" />
               </motion.article>
             </div>
-            <motion.aside 
-              className="w-full h-fit"
-              variants={itemVariants}
-            >
+            <motion.aside className="w-full h-fit" variants={itemVariants}>
               <RewardsTable />
             </motion.aside>
           </motion.div>
@@ -146,7 +145,7 @@ export default function Earn() {
       )}
 
       <motion.section
-        className="p-4 sm:p-6 lg:p-[40px] w-full h-fit"
+        className="px-4 sm:px-6 lg:px-[40px] py-4 sm:py-6 lg:py-[40px] w-full h-fit"
         aria-label="Vaults and Positions"
         variants={fadeInVariants}
         initial="hidden"
