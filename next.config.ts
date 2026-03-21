@@ -4,11 +4,10 @@ const nextConfig: NextConfig = {
   compiler: {
     styledComponents: true,
   },
-  transpilePackages: [
-    "@privy-io/react-auth",
-    "@privy-io/wagmi",
-    "@privy-io/js-sdk-core",
-    "@privy-io/chains",
+  serverExternalPackages: [
+    "pino",
+    "pino-pretty",
+    "thread-stream",
   ],
 };
 
