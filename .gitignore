@@ -19,11 +19,8 @@
 
 /.next
 /.claude
-
-.claude  
-
+.claude
 .vscode
-./vscode
 
 # production
 /build
