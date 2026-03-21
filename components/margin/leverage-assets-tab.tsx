@@ -1874,7 +1874,7 @@ export const LeverageAssetsTab = () => {
           <div className="flex flex-col gap-[12px]">
             {isMBMode ? (
               <motion.div
-                className="flex flex-col gap-[24px] bg-white p-[20px] rounded-[16px] border-[1px] border-[#E2E2E2]"
+                className={`flex flex-col gap-[24px] ${isDark ? "bg-[#111111] border-[#333333]" : "bg-white border-[#E2E2E2]"} p-[20px] rounded-[16px] border-[1px]`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
@@ -1895,7 +1895,7 @@ export const LeverageAssetsTab = () => {
                     />
                   </div>
                 </header>
-                <div className="p-[10px] rounded-[12px] bg-[#F4F4F4] grid grid-cols-2 gap-[15px]">
+                <div className={`p-[10px] rounded-[12px] ${isDark ? "bg-[#1A1A1A]" : "bg-[#F4F4F4]"} grid grid-cols-2 gap-[15px]`}>
                   {mbAvailableCollaterals.length === 0 && (
                     <div className="col-span-2 text-center text-[14px] text-[#757575] py-2">
                       No assets in Margin Account
@@ -1951,10 +1951,10 @@ export const LeverageAssetsTab = () => {
                             height={20}
                           />
                         </div>
-                        <div className="text-[16px] font-semibold">
+                        <div className={`text-[16px] font-semibold ${isDark ? "text-white" : ""}`}>
                           {item.amount} {item.asset}
                         </div>
-                        <div className="rounded-[4px] py-[2px] px-[4px] bg-[#FFFFFF] text-[10px] font-medium">
+                        <div className={`rounded-[4px] py-[2px] px-[4px] ${isDark ? "bg-[#222222] text-[#A0A0A0]" : "bg-[#FFFFFF]"} text-[10px] font-medium`}>
                           {item.amountInUsd} USD
                         </div>
                       </div>

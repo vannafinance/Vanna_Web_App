@@ -425,7 +425,7 @@ export const Collateral = (props: CollateralProps) => {
             {/* Balance type selector and unified balance */}
             <div className="flex flex-col justify-end items-end gap-[4px]">
               {/* PB/WB toggle */}
-              <div className="py-[4px] pr-[4px] pl-[8px] bg-[#F2EBFE] rounded-[8px] ">
+              <div className={`py-[4px] pr-[4px] pl-[8px] ${isDark ? "bg-[#222222]" : "bg-[#F2EBFE]"} rounded-[8px]`}>
                 <Dropdown
                   dropdownClassname="text-[14px] gap-[10px] "
                   classname="text-[16px] font-medium gap-[8px]"
@@ -546,7 +546,7 @@ export const Collateral = (props: CollateralProps) => {
                 type="button"
                 onClick={() => props.onEdit?.(props.id!)}
                 disabled={props.isAnyOtherEditing}
-                className={`p-[8.73px] rounded-[8px] bg-[#F4F4F4] h-fit min-w-[32px] flex-shrink-0 ${props.isAnyOtherEditing
+                className={`p-[8.73px] rounded-[8px] ${isDark ? "bg-[#222222]" : "bg-[#F4F4F4]"} h-fit min-w-[32px] flex-shrink-0 ${props.isAnyOtherEditing
                   ? "opacity-50 cursor-not-allowed"
                   : "cursor-pointer"
                   }`}

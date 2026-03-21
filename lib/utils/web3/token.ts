@@ -1,4 +1,3 @@
-import { poolsPlaceholder } from "@/lib/constants";
 import { arbAddressList, arbTokensAddress, baseAddressList, baseTokensAddress, opAddressList, opTokensAddress } from "@/lib/web3Constants";
 
 // DefaultRateModel contract address per chain (for on-chain APY calculation)
@@ -34,7 +33,7 @@ export const accountManagerAddressByChain: Record<number, `0x${string}`> = {
   8453:  baseAddressList.accountManagerContractAddress as `0x${string}`, // Base
 };
 
-export const TOKEN_OPTIONS = poolsPlaceholder.map(p=>p.name)  //["ETH", "USDC", "USDT"]
+export const TOKEN_OPTIONS = ["ETH", "USDC", "USDT"] as const;
 
 
 

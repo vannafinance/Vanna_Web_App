@@ -531,7 +531,7 @@ export const BorrowBox = ({
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4, delay: 0.2 }}
       >
-        <div className="flex gap-[2px] items-center bg-white rounded-[8px] border-[1px] border-[#E2E2E2] p-[2px]">
+        <div className={`flex gap-[2px] items-center ${isDark ? "bg-[#111111] border-[#333333]" : "bg-white border-[#E2E2E2]"} rounded-[8px] border-[1px] p-[2px]`}>
           {/* - Button */}
           <motion.button
             type="button"
