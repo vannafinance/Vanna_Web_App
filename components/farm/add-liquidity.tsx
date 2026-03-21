@@ -7,6 +7,7 @@ import { useMarginAccountInfoStore } from "@/store/margin-account-info-store"
 import { useUserStore } from "@/store/user"
 import { Button } from "../ui/button"
 import { useTheme } from "@/contexts/theme-context"
+import { motion, AnimatePresence } from "framer-motion"
 
 export const AddLiquidity = () => {
   const [value, setValue] = useState<string>("")
@@ -58,11 +59,16 @@ export const AddLiquidity = () => {
   };
 
   return (
-    <>
-      <div className={`w-full h-fit p-[20px] rounded-[16px] ${
-        isDark ? "bg-[#111111]" : "bg-white"
-      }`}>
-        <div className="w-full flex items-center gap-[20px]">
+    <div className="w-full h-fit flex flex-col gap-[24px]">
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className={`w-full h-fit p-4 sm:p-[20px] rounded-[16px] ${
+          isDark ? "bg-[#111111]" : "bg-white"
+        }`}
+      >
+        <div className="w-full flex items-center gap-3 sm:gap-[20px]">
           <div className="w-full h-full flex flex-col gap-[24px]">
             <div className="w-full h-fit ">
               <input 
@@ -89,32 +95,45 @@ export const AddLiquidity = () => {
               }`}>USDT</span>
             </div>
             <div className=" justify-end items-end w-fit flex text-end h-fit gap-[4px] ">
-              <span className={`text-nowrap text-end text-[12px] font-medium ${
+              <span className={`text-end text-[12px] font-medium ${
                 isDark ? "text-[#919191]" : "text-[#5C5B5B]"
-              }`}>Margin Balance:</span>
-              <span className={`text-nowrap text-end text-[12px] font-medium underline cursor-pointer ${
+              }`}><span className="hidden sm:inline">Margin Balance:</span><span className="sm:hidden">Bal:</span></span>
+              <span className={`text-end text-[12px] font-medium underline cursor-pointer ${
                 isDark ? "text-[#919191]" : "text-[#5C5B5B]"
               }`}>7000 USD</span>
             </div>
           </div>
         </div>
-      </div>
-      {(Number(value) > 0) && (
-        <div>
-          <InfoCard
-            data={marginAccountInfo}
-            items={[...MARGIN_ACCOUNT_INFO_ITEMS]}
-          />
-        </div>
-      )}
+      </motion.div>
+      <AnimatePresence>
+        {(Number(value) > 0) && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+          >
+            <InfoCard
+              data={marginAccountInfo}
+              items={[...MARGIN_ACCOUNT_INFO_ITEMS]}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      <Button 
-        disabled={!userAddress || (Number(value) <= 0) ? true : false} 
-        type="gradient" 
-        size="large" 
-        text={!userAddress ? "Connect Wallet" : Number(value) > 0 ? "Add Liquidity" : "Enter Amount"}
-      />
-    </>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3, delay: 0.1 }}
+      >
+        <Button 
+          disabled={!userAddress || (Number(value) <= 0) ? true : false} 
+          type="gradient" 
+          size="large" 
+          text={!userAddress ? "Connect Wallet" : Number(value) > 0 ? "Add Liquidity" : "Enter Amount"}
+        />
+      </motion.div>
+    </div>
   )
 }
 

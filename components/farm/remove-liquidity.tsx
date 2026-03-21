@@ -5,6 +5,7 @@ import { Button } from "../ui/button"
 import { useUserStore } from "@/store/user"
 import { useTheme } from "@/contexts/theme-context"
 import { PERCENTAGE_COLORS } from "@/lib/constants/margin"
+import { motion } from "framer-motion"
 
 export const RemoveLiquidity = () => {
     const [selectedOption, setSelectedOption] = useState<string>("USDT")
@@ -17,17 +18,27 @@ export const RemoveLiquidity = () => {
     const { isDark } = useTheme()
     const userAddress = useUserStore((state) => state.address)
 
-    return <div className="w-full h-fit flex flex-col gap-[24px]">
-        <div className={`w-full h-fit flex rounded-[16px] gap-[8px] p-[20px] rounded-[16px] border-[1px] ${isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"
-            }`}>
-            <div className="w-full h-fit flex flex-col gap-[20px]">
+    return <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="w-full h-fit flex flex-col gap-[24px]"
+    >
+        <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
+            className={`w-full h-fit flex flex-col sm:flex-row rounded-[16px] gap-3 sm:gap-[8px] p-4 sm:p-[20px] border-[1px] ${isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"
+            }`}
+        >
+            <div className="w-full h-fit flex flex-col gap-[20px] relative z-20">
                 <Dropdown items={DropdownOptions} setSelectedOption={setSelectedOption} selectedOption={selectedOption} classname="w-fit h-fit gap-[4px]" dropdownClassname="w-full h-fit" />
-                <div className=" flex flex-col gap-[8px]">
+                <div className="flex flex-col gap-[8px]">
                     <div className="w-full h-fit">
                         <input
                             type="text"
                             placeholder="0.00"
-                            className={`w-full h-fit text-[16px] font-medium placeholder:text-[#CCCCCC] outline-none border-none ${isDark ? "text-white" : "text-[#111111]"
+                            className={`w-full h-fit text-[16px] font-medium placeholder:text-[#CCCCCC] outline-none border-none bg-transparent ${isDark ? "text-white" : "text-[#111111]"
                                 }`}
                             value={value}
                             onChange={onChange}
@@ -39,16 +50,19 @@ export const RemoveLiquidity = () => {
                     </div>
                 </div>
             </div>
-            <div className="w-fit h-fit flex flex-col gap-[8px] items-end">
-                <div className="flex gap-[8px]">
+            <div className="w-full sm:w-fit h-fit flex flex-col gap-[8px] items-start sm:items-end relative z-10">
+                <div className="flex flex-wrap gap-2 sm:gap-[8px]">
                     {[10, 25, 50, 100].map((pct) => {
                         // Get color for selected percentage, with fallback for 75
                         const selectedColor = PERCENTAGE_COLORS[pct] || "bg-[#F91A6F]";
                         return (
-                            <button
+                            <motion.button
                                 key={pct}
                                 type="button"
                                 onClick={() => setSelectedPercentage(pct)}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                transition={{ duration: 0.2 }}
                                 className={`flex justify-center items-center cursor-pointer text-[14px] font-semibold w-fit h-[36px] rounded-[10px] px-[12px] ${selectedPercentage === pct
                                         ? `${selectedColor} text-white`
                                         : isDark
@@ -59,18 +73,24 @@ export const RemoveLiquidity = () => {
                                 aria-label={`Select ${pct}%`}
                             >
                                 {pct}%
-                            </button>
+                            </motion.button>
                         );
                     })}
                 </div>
             </div>
 
-        </div>
-        <Button
+        </motion.div>
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3, delay: 0.2 }}
+        >
+            <Button
             disabled={!userAddress || (Number(value) <= 0) ? true : false}
             type="gradient"
             size="large"
             text={!userAddress ? "Connect Wallet" : Number(value) > 0 ? "Remove Liquidity" : "Enter Amount"}
         />
-    </div>
+        </motion.div>
+    </motion.div>
 }

@@ -8,7 +8,7 @@ import { useTheme } from "@/contexts/theme-context";
 import { netVolumeData , netEarningsData } from "@/lib/constants/portfolio";
 
 interface ChartProps {
-  type: "overall-deposit" | "net-apy" | "my-supply" | "deposit-apy" | "net-volume" | "net-profit-loss" | "farm";
+  type: "overall-deposit" | "net-apy" | "my-supply" | "deposit-apy" | "net-volume" | "net-profit-loss" | "farm" | "profitAndLoss";
   currencyTab?: boolean;
   height?: number;
   containerWidth?: string;
@@ -237,6 +237,8 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
               "Net Volume"
             ) : type === "net-profit-loss" ? (
               "Net Profit & Loss"
+            ) : type === "profitAndLoss" ? (
+              "P&L"
             ) : (
               <Dropdown
                 classname="text-[12px] font-semibold gap-[4px] w-[100px]"

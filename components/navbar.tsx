@@ -34,7 +34,25 @@ interface Navbar {
   }[];
 }
 
+/** Margin lives at `/` and remains available at `/margin` for existing links. */
+function isBorderedNavItemActive(
+  pathname: string,
+  item: { title: string; link: string }
+): boolean {
+  if (item.title === "Trade") {
+    return (
+      pathname === item.link ||
+      tradeItems.some((tradeItem) => pathname === tradeItem.link)
+    );
+  }
+  if (item.title === "Margin") {
+    return pathname === "/" || pathname === "/margin";
+  }
+  return pathname === item.link;
+}
+
 export const Navbar = (props: Navbar) => {
+  // Get current pathname for active link detection
   const pathname = usePathname();
   const router = useRouter();
   const { isDark, toggleTheme } = useTheme();
@@ -42,7 +60,7 @@ export const Navbar = (props: Navbar) => {
   const userAddress = useUserStore((state) => state.address);
   const [depositModalOpen, setDepositModalOpen] = useState(false);
 
-  // Detect OAuth redirect — DON'T clean URL yet, Privy needs those params
+  // Detect OAuth redirect
   const [oauthReturnProvider] = useState<string | null>(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
@@ -63,13 +81,12 @@ export const Navbar = (props: Navbar) => {
   const { ready, authenticated, logout, user } = usePrivy();
   const { wallets } = useWallets();
 
-  // Wagmi hooks (still work under Privy's WagmiProvider)
+  // Wagmi hooks
   const { address, isConnected, chainId } = useAccount();
   const { data: walletClient } = useWalletClient();
   const publicClient = usePublicClient();
 
   // Clean OAuth params from URL AFTER Privy completes authentication
-  // Privy needs the URL params until authenticated — cleaning too early breaks the flow
   useEffect(() => {
     if (!isOAuthReturn) return;
     if (!authenticated) return;
@@ -87,7 +104,6 @@ export const Navbar = (props: Navbar) => {
     if (isConnected && address) {
       setUserAddress({ address });
     } else if (authenticated && wallets.length > 0) {
-      // Embedded wallet may not sync to wagmi immediately
       setUserAddress({ address: wallets[0].address });
     } else {
       setUserAddress({ address: null });
@@ -127,10 +143,12 @@ export const Navbar = (props: Navbar) => {
   };
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const dropdownItemsRef = useRef<HTMLDivElement[]>([]);
 
+  // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
       if (closeTimeoutRef.current) {
@@ -144,16 +162,29 @@ export const Navbar = (props: Navbar) => {
     if (!dropdownRef.current) return;
 
     if (isDropdownOpen) {
+      // Opening animation
       gsap.fromTo(
         dropdownRef.current,
-        { height: 0, opacity: 0 },
-        { height: "auto", opacity: 1, duration: 0.3, ease: "power2.out" }
+        {
+          height: 0,
+          opacity: 0,
+        },
+        {
+          height: "auto",
+          opacity: 1,
+          duration: 0.3,
+          ease: "power2.out",
+        }
       );
 
+      // Stagger animation for items
       if (dropdownItemsRef.current.length > 0) {
         gsap.fromTo(
           dropdownItemsRef.current,
-          { opacity: 0, y: -10 },
+          {
+            opacity: 0,
+            y: -10,
+          },
           {
             opacity: 1,
             y: 0,
@@ -165,6 +196,7 @@ export const Navbar = (props: Navbar) => {
         );
       }
     } else {
+      // Closing animation
       if (dropdownItemsRef.current.length > 0) {
         gsap.to(dropdownItemsRef.current, {
           opacity: 0,
@@ -172,6 +204,7 @@ export const Navbar = (props: Navbar) => {
           ease: "power2.in",
         });
       }
+      
       gsap.to(dropdownRef.current, {
         height: 0,
         opacity: 0,
@@ -194,6 +227,7 @@ export const Navbar = (props: Navbar) => {
   };
 
   const handleMouseEnter = (item: { title: string; link: string }) => {
+    // Clear any pending close timeout
     if (closeTimeoutRef.current) {
       clearTimeout(closeTimeoutRef.current);
       closeTimeoutRef.current = null;
@@ -205,12 +239,14 @@ export const Navbar = (props: Navbar) => {
   };
 
   const handleMouseLeave = () => {
+    // Delay closing to allow mouse to move to dropdown
     closeTimeoutRef.current = setTimeout(() => {
       setIsDropdownOpen(false);
     }, 150);
   };
 
   const handleDropdownMouseEnter = () => {
+    // Clear timeout when mouse enters dropdown
     if (closeTimeoutRef.current) {
       clearTimeout(closeTimeoutRef.current);
       closeTimeoutRef.current = null;
@@ -223,8 +259,7 @@ export const Navbar = (props: Navbar) => {
 
   // Keyboard support for nav items
   const handleNavKeyDown =
-    (item: { title: string; link: string }) =>
-    (event: React.KeyboardEvent) => {
+    (item: { title: string; link: string }) => (event: React.KeyboardEvent) => {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
         handleNavItemClickWithLink(item);
@@ -237,7 +272,7 @@ export const Navbar = (props: Navbar) => {
   return (
     <div className={`${isDark ? "bg-[#111111]" : ""}`}>
       <motion.div
-        className={`py-[12px] px-[40px] w-full h-fit flex justify-between items-center ${isDark ? "text-white" : ""}`}
+        className={`py-[12px] px-4 sm:px-6 lg:px-[40px] w-full h-fit flex justify-between items-center ${isDark ? "text-white" : ""}`}
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
@@ -284,13 +319,15 @@ export const Navbar = (props: Navbar) => {
             alt="Vanna"
             width={153.4}
             height={48}
+            className="w-[110px] h-auto sm:w-[130px] lg:w-[153px]"
             src={isDark ? "/logos/vanna-white.png" : "/logos/vanna.png"}
           />
         </motion.a>
 
-        {/* Navigation items */}
-        <div className="flex gap-[20px] items-center ">
+        {/* Navigation items - hidden below lg, shown on lg+ */}
+        <div className="hidden lg:flex gap-[20px] items-center">
           {groupedItems.primary.map((item, idx) => {
+            // Check if current item is active
             const isActive = pathname === item.link;
             return (
               <motion.div
@@ -302,11 +339,7 @@ export const Navbar = (props: Navbar) => {
                 role="button"
                 tabIndex={0}
                 className={`rounded-[8px] py-[8px] px-[16px] text-[14px] font-medium group flex gap-[4px] items-center hover:text-[#FF007A] cursor-pointer transition-colors ${
-                  isActive
-                    ? "bg-[#FFE6F2] text-[#FF007A]"
-                    : isDark
-                    ? "text-white"
-                    : ""
+                  isActive ? "bg-[#FFE6F2] text-[#FF007A]" : isDark ? "text-white" : ""
                 }`}
                 aria-label={`Navigate to ${item.title}`}
                 aria-current={isActive ? "page" : undefined}
@@ -329,13 +362,7 @@ export const Navbar = (props: Navbar) => {
           })}
           <div className="rounded-[8px] border-[1px] p-[8px] flex gap-[8px]">
             {groupedItems.bordered.map((item, idx) => {
-              const isActive =
-                item.title === "Trade"
-                  ? pathname === item.link ||
-                    tradeItems.some(
-                      (tradeItem) => pathname === tradeItem.link
-                    )
-                  : pathname === item.link;
+              const isActive = isBorderedNavItemActive(pathname, item);
               return (
                 <motion.div
                   key={item.link}
@@ -348,11 +375,7 @@ export const Navbar = (props: Navbar) => {
                   role="button"
                   tabIndex={0}
                   className={`rounded-[8px] py-[8px] px-[16px] text-[14px] font-medium group flex gap-[4px] items-center hover:text-[#FF007A] cursor-pointer transition-colors ${
-                    isActive
-                      ? "bg-[#FFE6F2] text-[#FF007A]"
-                      : isDark
-                      ? "text-white"
-                      : ""
+                    isActive ? "bg-[#FFE6F2] text-[#FF007A]" : isDark ? "text-white" : ""
                   }`}
                   aria-haspopup={item.title === "Trade" ? "menu" : undefined}
                   aria-expanded={
@@ -372,11 +395,7 @@ export const Navbar = (props: Navbar) => {
                   }}
                   whileHover={{
                     scale: 0.95,
-                    transition: {
-                      type: "spring",
-                      stiffness: 300,
-                      damping: 15,
-                    },
+                    transition: { type: "spring", stiffness: 300, damping: 15 },
                   }}
                   whileTap={{ scale: 0.95 }}
                 >
@@ -467,6 +486,7 @@ export const Navbar = (props: Navbar) => {
             })}
           </div>
           {groupedItems.secondary.map((item, idx) => {
+            // Check if current item is active
             const isActive = pathname === item.link;
             return (
               <motion.div
@@ -478,11 +498,7 @@ export const Navbar = (props: Navbar) => {
                 role="button"
                 tabIndex={0}
                 className={`rounded-[8px] py-[8px] px-[16px] text-[14px] font-medium group flex gap-[4px] items-center hover:text-[#FF007A] cursor-pointer transition-colors ${
-                  isActive
-                    ? "bg-[#FFE6F2] text-[#FF007A]"
-                    : isDark
-                    ? "text-white"
-                    : ""
+                  isActive ? "bg-[#FFE6F2] text-[#FF007A]" : isDark ? "text-white" : ""
                 }`}
                 aria-label={`Navigate to ${item.title}`}
                 aria-current={isActive ? "page" : undefined}
@@ -505,29 +521,36 @@ export const Navbar = (props: Navbar) => {
           })}
         </div>
 
-        {/* Right section: Theme toggle and Auth */}
+        {/* Right section: Theme toggle and Login button */}
         <motion.div
           className="flex gap-[8px] items-center"
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
         >
-          {/* Deposit button (only when connected) */}
-          {authenticated && address && (
-            <Button
-              size="small"
-              type="navbar"
-              disabled={false}
-              onClick={() => setDepositModalOpen(true)}
-              text="DEPOSIT"
-              ariaLabel="Deposit to your account"
-            />
+          {/* Deposit button */}
+          {userAddress && (
+            <div className="hidden min-[550px]:block">
+              <Button
+                size="small"
+                type="navbar"
+                disabled={false}
+                onClick={() => setDepositModalOpen(true)}
+                text="DEPOSIT"
+                ariaLabel="Deposit to your account"
+              ></Button>
+            </div>
           )}
-
-          {/* Theme toggle button */}
+          {/* Network dropdown */}
+          {userAddress && (
+            <div className="hidden lg:block">
+              <NetworkDropdown />
+            </div>
+          )}
+          {/* Theme toggle button - hidden below lg, shown on lg+ */}
           <button
             type="button"
-            className="flex flex-col justify-center items-center rounded-[8px] py-[12px] px-[10px] h-[44px] border-[1px] cursor-pointer"
+            className="hidden lg:flex flex-col justify-center items-center rounded-[8px] py-[12px] px-[10px] h-[44px] border-[1px] cursor-pointer"
             onClick={toggleTheme}
             aria-label={
               isDark ? "Switch to light theme" : "Switch to dark theme"
@@ -543,53 +566,271 @@ export const Navbar = (props: Navbar) => {
               whileTap={{ scale: 0.9 }}
               className="w-[24px] h-[24px] flex flex-col justify-center items-center "
             >
-              {isDark ? <SunIcon /> : <MoonIcon />}
+              {/* Sun icon (dark mode) */}
+              {isDark ? (
+                <SunIcon />
+              ) : (
+                // Moon icon (light mode)
+                <MoonIcon />
+              )}
             </motion.div>
           </button>
-
-          {/* Auth: Login button or User Menu */}
-          {!ready ? (
-            <div
-              className={`py-[12px] px-[24px] rounded-[8px] ${
-                isDark ? "bg-[#222222]" : "bg-[#F4F4F4]"
-              }`}
-            >
-              <div className="w-16 h-4 animate-pulse rounded bg-current opacity-10" />
-            </div>
-          ) : !authenticated ? (
-            <Button
-              size="small"
-              type="gradient"
-              disabled={false}
-              onClick={() => setLoginModalOpen(true)}
-              text="Login"
-              ariaLabel="Login to your account"
-            />
-          ) : wallets.length === 0 ? (
-            /* Wallet being created — show loading pill */
-            <div
-              className={`flex items-center gap-2 py-[10px] px-[16px] rounded-xl ${
-                isDark
-                  ? "bg-[#1C1C1C] border border-[#2A2A2A] text-[#777777]"
-                  : "bg-[#F7F7F7] border border-[#DFDFDF] text-[#949494]"
-              }`}
-            >
-              <div
-                className="w-4 h-4 rounded-full border-2 border-transparent animate-spin"
-                style={{
-                  borderTopColor: "#703AE6",
-                  borderRightColor: "#FC5457",
-                }}
-              />
-              <span className="text-[13px] font-medium">Setting up...</span>
+          {/* Login/User section - hidden below lg, shown on lg+ */}
+          {!authenticated ? (
+            <div className="hidden lg:block">
+              <Button
+                size="small"
+                type="navbar"
+                disabled={!ready}
+                onClick={() => setLoginModalOpen(true)}
+                text="Login"
+                ariaLabel="Login to your account"
+              ></Button>
             </div>
           ) : (
-            <UserMenu />
+            <div className="hidden lg:block">
+              <UserMenu />
+            </div>
           )}
+          {/* Hamburger menu button - shown below lg, hidden on lg+ */}
+          <motion.button
+            type="button"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="lg:hidden flex flex-col justify-center items-center rounded-[8px] py-[12px] px-[10px] h-[44px] border-[1px] cursor-pointer"
+            aria-label="Toggle mobile menu"
+            aria-expanded={isMobileMenuOpen}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <div className="w-[24px] h-[24px] flex flex-col justify-center items-center gap-[4px]">
+              <motion.span
+                className={`w-full h-[2px] rounded-full ${
+                  isDark ? "bg-white" : "bg-black"
+                }`}
+                animate={{
+                  rotate: isMobileMenuOpen ? 45 : 0,
+                  y: isMobileMenuOpen ? 6 : 0,
+                }}
+                transition={{ duration: 0.2 }}
+              />
+              <motion.span
+                className={`w-full h-[2px] rounded-full ${
+                  isDark ? "bg-white" : "bg-black"
+                }`}
+                animate={{ opacity: isMobileMenuOpen ? 0 : 1 }}
+                transition={{ duration: 0.2 }}
+              />
+              <motion.span
+                className={`w-full h-[2px] rounded-full ${
+                  isDark ? "bg-white" : "bg-black"
+                }`}
+                animate={{
+                  rotate: isMobileMenuOpen ? -45 : 0,
+                  y: isMobileMenuOpen ? -6 : 0,
+                }}
+                transition={{ duration: 0.2 }}
+              />
+            </div>
+          </motion.button>
         </motion.div>
       </motion.div>
 
-      {/* Trade Dropdown */}
+      {/* Mobile Menu - Slide in from right */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            {/* Slide-in menu */}
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className={`fixed top-0 right-0 h-full w-[300px] max-w-[80vw] z-50 lg:hidden overflow-y-auto ${
+                isDark ? "bg-[#111111]" : "bg-white"
+              } shadow-2xl`}
+              style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+            >
+              <div className="flex flex-col h-full">
+                {/* Header with close button */}
+                <div className="flex justify-between items-center p-[20px] border-b-[1px] border-[#333]">
+                  <h2 className={`text-[18px] font-semibold ${isDark ? "text-white" : "text-black"}`}>
+                    Menu
+                  </h2>
+                  <motion.button
+                    type="button"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`p-[8px] rounded-[8px] ${isDark ? "hover:bg-[#222222]" : "hover:bg-[#F4F4F4]"}`}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    aria-label="Close menu"
+                  >
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      className={isDark ? "stroke-white" : "stroke-black"}
+                    >
+                      <path
+                        d="M18 6L6 18M6 6l12 12"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </motion.button>
+                </div>
+
+                {/* Menu Content */}
+                <div className="flex-1 p-[20px] flex flex-col gap-[16px]">
+                  {/* Primary nav items */}
+                  {groupedItems.primary.map((item) => {
+                    const isActive = pathname === item.link;
+                    return (
+                      <motion.button
+                        key={item.link}
+                        onClick={() => {
+                          handleNavItemClickWithLink(item);
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className={`text-left rounded-[8px] py-[12px] px-[16px] text-[14px] font-medium transition-colors ${
+                          isActive
+                            ? "bg-[#FFE6F2] text-[#FF007A]"
+                            : isDark
+                            ? "text-white hover:bg-[#222222]"
+                            : "text-black hover:bg-[#F4F4F4]"
+                        }`}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        {item.title}
+                      </motion.button>
+                    );
+                  })}
+
+                  {/* Bordered nav items */}
+                  {groupedItems.bordered.map((item) => {
+                    const isActive = isBorderedNavItemActive(pathname, item);
+                    return (
+                      <motion.button
+                        key={item.link}
+                        onClick={() => {
+                          handleNavItemClickWithLink(item);
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className={`text-left rounded-[8px] py-[12px] px-[16px] text-[14px] font-medium transition-colors ${
+                          isActive
+                            ? "bg-[#FFE6F2] text-[#FF007A]"
+                            : isDark
+                            ? "text-white hover:bg-[#222222]"
+                            : "text-black hover:bg-[#F4F4F4]"
+                        }`}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        {item.title}
+                      </motion.button>
+                    );
+                  })}
+
+                  {/* Secondary nav items */}
+                  {groupedItems.secondary.map((item) => {
+                    const isActive = pathname === item.link;
+                    return (
+                      <motion.button
+                        key={item.link}
+                        onClick={() => {
+                          handleNavItemClickWithLink(item);
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className={`text-left rounded-[8px] py-[12px] px-[16px] text-[14px] font-medium transition-colors ${
+                          isActive
+                            ? "bg-[#FFE6F2] text-[#FF007A]"
+                            : isDark
+                            ? "text-white hover:bg-[#222222]"
+                            : "text-black hover:bg-[#F4F4F4]"
+                        }`}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        {item.title}
+                      </motion.button>
+                    );
+                  })}
+
+                  {/* Divider */}
+                  <div className={`h-[1px] ${isDark ? "bg-[#333]" : "bg-[#E2E2E2]"}`} />
+
+                  {/* Deposit button */}
+                  {userAddress && (
+                    <div className="w-full">
+                      <Button
+                        size="small"
+                        type="navbar"
+                        disabled={false}
+                        onClick={() => {
+                          setDepositModalOpen(true);
+                          setIsMobileMenuOpen(false);
+                        }}
+                        text="DEPOSIT"
+                        ariaLabel="Deposit to your account"
+                      ></Button>
+                    </div>
+                  )}
+
+                  {/* Theme toggle */}
+                  <button
+                    type="button"
+                    onClick={toggleTheme}
+                    className={`w-full flex items-center justify-between rounded-[8px] py-[12px] px-[16px] text-[14px] font-medium transition-colors ${
+                      isDark
+                        ? "text-white hover:bg-[#222222]"
+                        : "text-black hover:bg-[#F4F4F4]"
+                    }`}
+                    aria-label={
+                      isDark ? "Switch to light theme" : "Switch to dark theme"
+                    }
+                  >
+                    <span>{isDark ? "Light Mode" : "Dark Mode"}</span>
+                    <div className="w-[24px] h-[24px] flex items-center justify-center">
+                      {isDark ? <SunIcon /> : <MoonIcon />}
+                    </div>
+                  </button>
+
+                  {/* Login button or User menu */}
+                  {!authenticated ? (
+                    <div className="w-full">
+                      <Button
+                        size="small"
+                        type="navbar"
+                        disabled={!ready}
+                        onClick={() => {
+                          setLoginModalOpen(true);
+                          setIsMobileMenuOpen(false);
+                        }}
+                        text="Login"
+                        ariaLabel="Login to your account"
+                      ></Button>
+                    </div>
+                  ) : (
+                    <UserMenu />
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
       {isDropdownOpen && (
         <div
           ref={dropdownRef}
@@ -599,8 +840,8 @@ export const Navbar = (props: Navbar) => {
           onMouseEnter={handleDropdownMouseEnter}
           onMouseLeave={handleDropdownMouseLeave}
           className={`w-full py-[8px] flex justify-center gap-[4px] overflow-hidden ${
-            isDark
-              ? "bg-[#111111] border-t-[1px] border-b-[1px]"
+            isDark 
+              ? "bg-[#111111] border-t-[1px] border-b-[1px]" 
               : "border-t-[1px] border-[#F4F4F4] border-b-[1px] border-[#F4F4F4]"
           }`}
           style={{ height: 0, opacity: 0 }}
@@ -620,11 +861,7 @@ export const Navbar = (props: Navbar) => {
                 }}
                 onKeyDown={handleNavKeyDown(item)}
                 className={`${
-                  isActive
-                    ? "bg-[#FFE6F2] text-[#FF007A]"
-                    : isDark
-                    ? "text-white"
-                    : ""
+                  isActive ? "bg-[#FFE6F2] text-[#FF007A]" : isDark ? "text-white" : ""
                 } cursor-pointer hover:text-[#FF007A] py-[8px] px-[16px] text-[14px] font-medium rounded-[8px]`}
                 whileHover={{
                   scale: 0.95,
@@ -643,8 +880,7 @@ export const Navbar = (props: Navbar) => {
       <LoginModal
         isOpen={loginModalOpen}
         onClose={() => setLoginModalOpen(false)}
-        isOAuthReturn={isOAuthReturn}
-        oauthProvider={oauthReturnProvider}
+        initialTab={isOAuthReturn ? "social" : undefined}
       />
 
       {/* Deposit Modal */}

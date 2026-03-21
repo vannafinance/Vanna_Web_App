@@ -11,8 +11,7 @@ interface Button {
   disabled: boolean;
   icon?: Element;
   ariaLabel?: string;
-  width?: string;
-  customBgColor?: string;
+  width?: string; // Custom width class (e.g., "w-full", "w-[200px]", etc.)
 }
 
 export const Button = (props: Button) => {
@@ -33,9 +32,9 @@ export const Button = (props: Button) => {
       aria-label={props.ariaLabel || props.text}
       className={`${props.width || "w-full"} h-fit ${
         props.size == "medium"
-          ? "py-[16px] px-[12px] text-[16px] rounded-[12px]"
+          ? "py-[12px] px-[10px] text-[14px] sm:py-[16px] sm:px-[12px] sm:text-[16px] rounded-[12px]"
           : props.size == "large"
-          ? "rounded-[16px] text-[20px] py-[20px] px-[16px]"
+          ? "rounded-[16px] text-[16px] py-[14px] px-[12px] sm:text-[20px] sm:py-[20px] sm:px-[16px]"
           : props.type === "navbar"
           ? "text-[12px] py-[12px] px-[24px]"
           : "text-[12px] p-[8px]"

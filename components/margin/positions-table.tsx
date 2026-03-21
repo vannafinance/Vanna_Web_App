@@ -216,7 +216,7 @@ export const Positionstable = ({ onRepayClick, onOpenPositionClick }: Positionst
         Positions
       </motion.h2>
 
-      <nav className="w-fit h-fit">
+      <nav className="w-full sm:w-fit h-fit">
         <AnimatedTabs type="solid" tabs={[{id:"currentPositions",label:"Current Positions"},{id:"positionsHistory",label:"Positions History"}]} activeTab={activeTab} onTabChange={handleTabChange}/>
       </nav>
 
@@ -336,13 +336,13 @@ export const Positionstable = ({ onRepayClick, onOpenPositionClick }: Positionst
        error ? renderError() :
        /* Show positions table or empty state */
        hasMarginAccount && filteredPositions.length > 0 ? (
-        <section className="rounded-[12px] w-full ">
+        <div className="w-full overflow-x-auto no-scrollbar"><section className="rounded-[12px] min-w-[700px]">
           {/* Table headers */}
-          <ul className="flex " role="row">
+          <ul className="flex" role="row">
             {TABLE_ROW_HEADINGS.map((item, idx) => {
               return (
                 <motion.li
-                  className={`w-full pt-[11.25px] px-[12px] pb-[12px] font-medium text-[14px] ${
+                  className={`w-full pt-[11.25px] px-[12px] pb-[12px] font-medium text-[12px] sm:text-[14px] ${
                     isDark ? "text-[#999999]" : "text-[#464545]"
                   }`}
                   key={item}
@@ -630,7 +630,7 @@ export const Positionstable = ({ onRepayClick, onOpenPositionClick }: Positionst
               </button>
             </motion.div>
           )}
-        </section>
+        </section></div>
       ) : renderEmpty()}
     </section>
   );

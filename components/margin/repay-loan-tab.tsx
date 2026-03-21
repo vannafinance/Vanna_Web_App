@@ -451,7 +451,7 @@ export const RepayLoanTab = () => {
       >
         {/* Repay stats cards */}
         <motion.section
-          className="flex justify-between gap-[12px]"
+          className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-[12px]"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.2 }}
@@ -460,7 +460,7 @@ export const RepayLoanTab = () => {
             return (
               <motion.article
                 key={key}
-                className={`w-full flex flex-col justify-between h-[120px] rounded-[8px] border-[1px] p-[16px] ${isDark ? "bg-[#111111]" : "bg-white"
+                className={`w-full flex flex-col justify-between h-auto min-h-[100px] sm:h-[120px] rounded-[8px] border-[1px] p-3 sm:p-[16px] ${isDark ? "bg-[#111111]" : "bg-white"
                   }`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -510,7 +510,7 @@ export const RepayLoanTab = () => {
         >
           {/* Currency dropdown and percentage buttons */}
           <motion.header
-            className="flex justify-between items-center"
+            className="flex flex-col sm:flex-row justify-between gap-3 sm:items-center"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.35 }}
@@ -532,7 +532,7 @@ export const RepayLoanTab = () => {
 
             {/* Percentage buttons */}
             <motion.div
-              className="flex gap-[8px]"
+              className="flex gap-2 sm:gap-[8px] flex-wrap"
               role="group"
               aria-label="Repay percentage"
               initial={{ opacity: 0, x: 10 }}
@@ -545,12 +545,12 @@ export const RepayLoanTab = () => {
                     type="button"
                     key={item}
                     onClick={() => handlePercentageClick(item)}
-                    className={`h-[44px] w-[95px] text-center text-[14px] text-medium cursor-pointer ${selectedRepayPercentage === item
+                    className={`h-[40px] sm:h-[44px] w-auto min-w-[60px] sm:w-[95px] text-center text-[13px] sm:text-[14px] text-medium cursor-pointer ${selectedRepayPercentage === item
                       ? `${PERCENTAGE_COLORS[item]} text-white`
                       : isDark
                         ? "bg-[#222222] text-white"
                         : "bg-[#F4F4F4]"
-                      } p-[10px] rounded-[12px]`}
+                      } p-2 sm:p-[10px] rounded-[12px]`}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     transition={{ duration: 0.1 }}
@@ -582,7 +582,7 @@ export const RepayLoanTab = () => {
               <input
                 id="repay-amount-input"
                 onChange={handleInputChange}
-                className={`w-fit text-[20px] focus:border-[0px] focus:outline-none font-medium transition-transform duration-200 focus:scale-[1.01] placeholder:text-[#C7C7C7] ${isDark ? "placeholder:text-[#A7A7A7]  text-white bg-[#111111]" : "bg-white"
+                className={`w-full text-[20px] focus:border-[0px] focus:outline-none font-medium transition-transform duration-200 focus:scale-[1.01] placeholder:text-[#C7C7C7] bg-transparent ${isDark ? "placeholder:text-[#A7A7A7] text-white" : ""
                   }`}
                 type="text"
                 placeholder="0.0"
@@ -671,7 +671,7 @@ export const RepayLoanTab = () => {
       <AnimatePresence>
         {isPayNowPopupOpen && (
           <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-[#45454566]"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[#45454566] px-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -702,7 +702,7 @@ export const RepayLoanTab = () => {
       <AnimatePresence>
         {isFlashClosePopupOpen && (
           <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-[#45454566]"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[#45454566] px-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

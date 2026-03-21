@@ -3,6 +3,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  useRef,
   memo,
 } from "react";
 import { AnimatedTabs } from "../ui/animated-tabs";
@@ -324,7 +325,7 @@ const CellContent = ({
 
   if (cell.onlyIcons) {
     return (
-      <div className="w-fit h-fit flex justify-end items-center">
+      <div className="w-fit h-fit flex justify-start items-center">
         {cell.onlyIcons.map((icon: string, iconIdx: number) => (
           <Image
             key={iconIdx}
@@ -530,9 +531,9 @@ const TableRow = memo(
             key={idx}
             className={`flex flex-col gap-[6px] h-full ${
               visibleHeadings.length - 1 === idx && !showProgressBar
-                ? "w-[120px] min-w-[120px] items-end"
+                ? "w-[120px] min-w-[120px] items-start"
                 : visibleHeadings.length - 1 === idx && showProgressBar
-                ? "w-full min-w-[120px] items-end"
+                ? "w-full min-w-[120px] items-start"
                 : "w-full min-w-[120px] items-start"
             }`}
           >
@@ -583,6 +584,9 @@ export const Table = memo((props: TableProps) => {
     columnId: null,
     direction: "asc",
   });
+  const [showLeftShadow, setShowLeftShadow] = useState(false);
+  const [showRightShadow, setShowRightShadow] = useState(true);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
   const supplyApyColumnIndex = useMemo(() => {
     // If custom label is provided, find column by label match
@@ -596,6 +600,14 @@ export const Table = memo((props: TableProps) => {
   }, [props.tableHeadings, props.filters?.supplyApyLabel]);
   
   const hasSupplyApyColumn = supplyApyColumnIndex !== -1;
+
+  // Handle scroll to show/hide shadow indicators
+  const handleScroll = useCallback(() => {
+    if (!scrollContainerRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+    setShowLeftShadow(scrollLeft > 0);
+    setShowRightShadow(scrollLeft < scrollWidth - clientWidth - 1);
+  }, []);
 
   const debouncedSearchHandler = useDebounce((value: string) => {
     setDebouncedSearchValue(value);
@@ -754,6 +766,29 @@ export const Table = memo((props: TableProps) => {
 
   const hasData = sortedData.length > 0;
 
+  // Handle scroll to show/hide shadow indicators
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container || !hasData) return;
+
+    const timeoutId = setTimeout(() => {
+      handleScroll();
+    }, 100);
+
+    container.addEventListener("scroll", handleScroll);
+
+    const resizeObserver = new ResizeObserver(() => {
+      handleScroll();
+    });
+    resizeObserver.observe(container);
+
+    return () => {
+      clearTimeout(timeoutId);
+      container.removeEventListener("scroll", handleScroll);
+      resizeObserver.disconnect();
+    };
+  }, [handleScroll, hasData, sortedData.length]);
+
   return (
     <section className="w-full h-fit flex flex-col gap-[24px]" aria-label={props.heading.heading || "Data Table"}>
       {hasHeadingTitle && (
@@ -866,7 +901,7 @@ export const Table = memo((props: TableProps) => {
       {/* Here is the Network Dropdown list for earn page  */}
 
       {showAllChainDropdown && (
-        <header className={`flex ${showFilterTabType && showAllChainDropdown ? "flex-col gap-[16px]" : "justify-between items-center"}`}>
+        <header className={`flex flex-wrap ${showFilterTabType && showAllChainDropdown ? "flex-col gap-[16px]" : "min-[550px]:justify-between min-[550px]:items-center gap-[16px] min-[550px]:gap-0"}`}>
           <div className={`flex ${showFilterTabType && showAllChainDropdown ? "justify-between w-full" : "items-center gap-[12px]"}`}>
             <div className="flex items-center gap-[12px]" role="search" aria-label="Table Search and Filters">
               <FilterDropdown

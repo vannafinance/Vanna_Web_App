@@ -373,7 +373,7 @@ export const TransferCollateral = () => {
         <div className="">
           <motion.div
             key="editing"
-            className="flex justify-between "
+            className="flex flex-col sm:flex-row justify-between gap-3"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
@@ -394,7 +394,7 @@ export const TransferCollateral = () => {
             <AnimatePresence mode="wait">
               <motion.div
                 key="editing-middle"
-                className="flex gap-[8px]"
+                className="flex gap-2 sm:gap-[8px] flex-wrap"
                 role="group"
                 aria-label="Deposit percentage"
                 initial={{ opacity: 0, y: 10 }}
@@ -416,10 +416,10 @@ export const TransferCollateral = () => {
                         type="button"
                         key={item}
                         onClick={() => handlePercentageClick(item)}
-                        className={`h-[44px] w-[95px] text-center text-[14px] text-medium cursor-pointer ${percentage === item
+                        className={`h-[40px] sm:h-[44px] w-auto min-w-[60px] sm:w-[95px] text-center text-[13px] sm:text-[14px] text-medium cursor-pointer ${percentage === item
                             ? `${PERCENTAGE_COLORS[item]} text-white`
                             : isDark ? "bg-[#333333] text-white" : "bg-[#F4F4F4]"
-                          } p-[10px] rounded-[12px]`}
+                          } p-2 sm:p-[10px] rounded-[12px]`}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         transition={{ duration: 0.1 }}
@@ -436,7 +436,7 @@ export const TransferCollateral = () => {
           </motion.div>
         </div>
         <motion.div
-          className="flex justify-between gap-[10px] items-center"
+          className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-[10px] sm:items-center"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.2 }}

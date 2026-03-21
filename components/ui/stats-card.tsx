@@ -10,8 +10,6 @@ interface StatsCardProps {
   pie?: boolean;
   tooltip?: string;
   address?: string;
-  fullAddress?: string;
-  explorerUrl?: string;
 }
 
 export const StatsCard = ({
@@ -25,29 +23,29 @@ export const StatsCard = ({
   const { isDark } = useTheme();
   if (pie && percentage) {
     return (
-      <div className={`w-full h-fit rounded-[12px] py-[32px] px-[20px] flex ${
+      <div className={`w-full h-fit rounded-[12px] py-4 sm:py-[32px] px-3 sm:px-[20px] flex ${
         isDark ? "bg-[#222222]" : "bg-[#FFFFFF]"
       }`}>
-        <div className="w-full h-fit flex gap-[16px] items-center ">
-          <div className="w-[78.65px] h-[78.65px]">
+        <div className="w-full h-fit flex gap-3 sm:gap-[16px] items-center">
+          <div className="w-[60px] h-[60px] sm:w-[78.65px] sm:h-[78.65px] flex-shrink-0">
             <PieChart
               percentage={percentage}
-              textSize="text-[12px] font-medium "
+              textSize="text-[10px] sm:text-[12px] font-medium"
             />
           </div>
 
-          <div className="w-fit h-fit flex flex-col gap-[6px]">
+          <div className="w-fit h-fit flex flex-col gap-[6px] min-w-0">
             <div className={`w-fit h-fit flex gap-[4px] items-center text-[10px] font-medium ${
               isDark ? "text-[#919191]" : "text-[#5C5B5B]"
             }`}>
               {heading}
-              <div className="cursor-pointer w-[12px] h-[12px] flex items-center ">
+              <div className="cursor-pointer w-[12px] h-[12px] flex items-center">
                 <InfoCircleIcon />
               </div>
             </div>
             <div className="w-full h-fit flex flex-col gap-[2px]">
               {mainInfo && (
-                <div className={`text-[14px] font-semibold ${
+                <div className={`text-[12px] sm:text-[14px] font-semibold break-words ${
                   isDark ? "text-white" : "text-[#111111]"
                 }`}>
                   {mainInfo}

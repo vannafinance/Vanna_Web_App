@@ -5,34 +5,84 @@ import { useFarmStore } from "@/store/farm-store";
 import { useRouter } from "next/navigation";
 import { useTheme } from "@/contexts/theme-context";
 import Image from "next/image";
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { iconPaths } from "@/lib/constants";
 import { AccountStatsGhost } from "@/components/earn/account-stats-ghost";
-import { LEVERAGE_HEALTH_STATS_ITEMS } from "@/lib/constants/farm";
+import { farmLiquidationStatsData, farmStatsData, LEVERAGE_HEALTH_STATS_ITEMS } from "@/lib/constants/farm";
 import { Chart } from "@/components/earn/chart";
 import { Table } from "@/components/earn/table";
-import { transactionTableHeadings } from "@/components/earn/acitivity-tab";
-import { useVaultActivityData } from "@/lib/hooks/useVaultActivityData";
-import { EarnAsset } from "@/lib/types";
-import { formatNumber } from "@/lib/utils/format-value";
+import { transactionTableBody, transactionTableHeadings } from "@/components/earn/acitivity-tab";
 import { Form } from "@/components/farm/form";
 import { farmTableBody, singleAssetTableBody } from "@/lib/constants/farm";
 import { useMarginAccountInfoStore } from "@/store/margin-account-info-store";
-import { usePositionHistory } from "@/lib/hooks/usePositionHistory";
 import { MARGIN_ACCOUNT_INFO_ITEMS, MARGIN_ACCOUNT_MORE_DETAILS_ITEMS } from "@/lib/constants/margin";
 import { InfoCard } from "@/components/margin/info-card";
 import { motion } from "framer-motion";
 import { AnimatedTabs } from "@/components/ui/animated-tabs";
-// Statistics items for farm vault details
-const items = [
-  { heading: "Total Value Locked", mainInfo: "$0.00", subInfo: "0 tokens", tooltip: "Total value locked in this vault" },
-  { heading: "APR", mainInfo: "0.00%", subInfo: "Annual", tooltip: "Annual percentage rate" },
-  { heading: "Daily APR", mainInfo: "0.00%", subInfo: "Daily", tooltip: "Daily percentage rate" },
-  { heading: "Your Deposit", mainInfo: "$0.00", subInfo: "0 tokens", tooltip: "Your deposited amount" },
-  { heading: "Your Earnings", mainInfo: "$0.00", subInfo: "0 tokens", tooltip: "Your earned rewards" },
-  { heading: "Pool Share", mainInfo: "0.00%", subInfo: "of total", tooltip: "Your share of the pool" },
-];
+import { items } from "@/components/earn/details-tab";
 import { StatsCard } from "@/components/ui/stats-card";
+import { FarmStatsCard } from "@/components/farm/stats";
+import { Button } from "@/components/ui/button";
+import { RangeSelector } from "@/components/farm/range-selector";
+import { DepositTokensForm } from "@/components/farm/deposit-tokens-form";
+import { useUserStore } from "@/store/user";
+import { 
+  ChevronLeftIcon, 
+  SortIcon, 
+  CompassIcon, 
+  ShareIcon, 
+  MinusIcon, 
+  PlusIcon, 
+  WarningIcon 
+} from "@/components/icons";
+
+// Animation variants
+const headerVariants = {
+  hidden: { opacity: 0, y: -20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.4,
+      ease: "easeOut" as const,
+    },
+  },
+};
+
+const sectionVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.4,
+      ease: "easeOut" as const,
+    },
+  },
+};
+
+const staggerContainerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, x: -10 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: {
+      duration: 0.3,
+      ease: "easeOut" as const,
+    },
+  },
+};
 
 const UI_TABS = [
   { id: "all-transactions", label: "All Transactions" },
@@ -45,11 +95,101 @@ export default function FarmDetailPage() {
   const router = useRouter();
   const { isDark } = useTheme();
 
+  const userAddress = useUserStore(user => user.address);
+
   const [activeUiTab, setActiveUiTab] = useState<string>("all-transactions");
+  const [showAddLiquidity, setShowAddLiquidity] = useState<boolean>(false);
 
   const handleUiTabChange = (tabId: string) => {
     setActiveUiTab(tabId);
   };
+
+  const handleAddLiquidityClick = () => {
+    setShowAddLiquidity(!showAddLiquidity);
+  };
+
+  // Range selector state and fake data - separate for each token
+  const [usdcRangeMin, setUsdcRangeMin] = useState<number>(0.0001);
+  const [usdcRangeMax, setUsdcRangeMax] = useState<number>(0.0004);
+  const [ethRangeMin, setEthRangeMin] = useState<number>(0.0001);
+  const [ethRangeMax, setEthRangeMax] = useState<number>(0.0004);
+
+  // Generate chart data with deterministic values (SSR-safe, no Math.random)
+  const usdcChartData = useMemo(() => {
+    const data: Array<{ x: number; y: number }> = [];
+    const center = 0.00025;
+    const variance = 0.0001;
+    for (let i = 0; i <= 50; i++) {
+      const x = 0.0000 + (i / 50) * 0.0005;
+      const normalizedX = (x - center) / variance;
+      const baseHeight = Math.exp(-(normalizedX * normalizedX) / 2) * 100;
+      // Use deterministic variation based on index instead of Math.random()
+      const variation = (Math.sin(i * 0.5) + 1) * 10;
+      const y = Math.max(10, baseHeight + variation);
+      data.push({ x, y });
+    }
+    return data;
+  }, []);
+
+  // Generate chart data for ETH (SSR-safe, no Math.random)
+  const ethChartData = useMemo(() => {
+    const data: Array<{ x: number; y: number }> = [];
+    const center = 0.0003;
+    const variance = 0.00012;
+    for (let i = 0; i <= 50; i++) {
+      const x = 0.0000 + (i / 50) * 0.0005;
+      const normalizedX = (x - center) / variance;
+      const baseHeight = Math.exp(-(normalizedX * normalizedX) / 2) * 100;
+      // Use deterministic variation based on index instead of Math.random()
+      const variation = (Math.cos(i * 0.4) + 1) * 10;
+      const y = Math.max(10, baseHeight + variation);
+      data.push({ x, y });
+    }
+    return data;
+  }, []);
+
+  const handleUsdcRangeChange = useCallback((min: number, max: number) => {
+    setUsdcRangeMin(min);
+    setUsdcRangeMax(max);
+  }, []);
+
+  const handleEthRangeChange = useCallback((min: number, max: number) => {
+    setEthRangeMin(min);
+    setEthRangeMax(max);
+  }, []);
+
+  // Calculate min and max price based on range values (asset1 per asset2)
+  const minPrice = useMemo(() => {
+    if (ethRangeMin === 0) return "0.0000";
+    const price = usdcRangeMin / ethRangeMin;
+    return price.toFixed(4);
+  }, [usdcRangeMin, ethRangeMin]);
+
+  const maxPrice = useMemo(() => {
+    if (ethRangeMax === 0) return "0.0000";
+    const price = usdcRangeMax / ethRangeMax;
+    return price.toFixed(4);
+  }, [usdcRangeMax, ethRangeMax]);
+
+  // State for manual input values
+  const [minPriceInput, setMinPriceInput] = useState<string>(minPrice);
+  const [maxPriceInput, setMaxPriceInput] = useState<string>(maxPrice);
+
+  // Update input values when calculated prices change
+  useEffect(() => {
+    setMinPriceInput(minPrice);
+    setMaxPriceInput(maxPrice);
+  }, [minPrice, maxPrice]);
+
+  // Validate and sanitize price input
+  const handlePriceInputChange = useCallback((value: string, setter: (val: string) => void) => {
+    // Allow only numbers and decimal point
+    const sanitized = value.replace(/[^0-9.]/g, '');
+    // Prevent multiple decimal points
+    const parts = sanitized.split('.');
+    const validated = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : sanitized;
+    setter(validated);
+  }, []);
 
 
   const totalBorrowedValue = useMarginAccountInfoStore(
@@ -193,21 +333,6 @@ export default function FarmDetailPage() {
   // Check if multi-asset type
   const isMultiAsset = rowData?.tabType === "multi" && farmData.titles && farmData.titles.length > 1;
 
-  // Derive vault asset from farm data for live transaction fetching
-  const vaultAsset = useMemo((): EarnAsset => {
-    const raw = farmData.titles?.[0]?.toUpperCase() || farmData.title?.split(" / ")[0]?.toUpperCase() || "ETH";
-    if (raw === "ETH" || raw === "WETH") return "ETH";
-    if (raw === "USDC") return "USDC";
-    if (raw === "USDT") return "USDT";
-    return "ETH";
-  }, [farmData.titles, farmData.title]);
-
-  // Fetch REAL vault activity from blockchain
-  const { transactions: vaultTxs } = useVaultActivityData(vaultAsset);
-
-  // Fetch position history (Borrow/Repay events) for the Position History tab
-  const { history: positionHistory, isLoading: historyLoading } = usePositionHistory();
-
   // Tab state for table
   const [activeTab, setActiveTab] = useState<string>("current-position");
 
@@ -216,103 +341,67 @@ export default function FarmDetailPage() {
     setActiveTab(tabId);
   }, []);
 
-  // Build table body from live vault transactions or position history
+  // Get table body based on active tab
   const tableBodyData = useMemo(() => {
     if (activeTab === "position-history") {
-      // Show Borrow/Repay history if available
-      if (positionHistory.length > 0) {
-        return {
-          rows: positionHistory.map((item) => ({
-            cell: [
-              { title: item.date, description: item.time },
-              { title: item.type },
-              {
-                icon: item.tokenSymbol === "USDC" ? "/icons/usdc-icon.svg"
-                  : item.tokenSymbol === "USDT" ? "/icons/usdt-icon.svg"
-                  : "/icons/eth-icon.png",
-                title: `${formatNumber(item.amount)} ${item.tokenSymbol === "WETH" ? "ETH" : item.tokenSymbol}`,
-                description: `$${formatNumber(item.amountUsd)}`,
-              },
-              {
-                icon: "/icons/user.png",
-                title: `${item.account.slice(0, 6)}...${item.account.slice(-4)}`,
-              },
-            ],
-          })),
-        };
-      }
-      // Fallback: show vault deposit/withdraw events as history
-      if (vaultTxs.length > 0) {
-        return {
-          rows: vaultTxs.map((tx) => ({
-            cell: [
-              { title: tx.date, description: tx.time },
-              { title: tx.type },
-              {
-                icon: tx.icon,
-                title: `${formatNumber(tx.amount)} ${tx.asset}`,
-                description: `$${formatNumber(tx.amountUsd)}`,
-              },
-              { icon: tx.userIcon, title: tx.userAddress },
-            ],
-          })),
-        };
-      }
-      return { rows: [] };
+      return { rows: [] }; // No data for position history
     }
-    if (vaultTxs.length === 0) {
-      return { rows: [] };
-    }
-    return {
-      rows: vaultTxs.map((tx) => ({
-        cell: [
-          { title: tx.date, description: tx.time },
-          { title: tx.type },
-          {
-            icon: tx.icon,
-            title: `${formatNumber(tx.amount)} ${tx.asset}`,
-            description: `$${formatNumber(tx.amountUsd)}`,
-          },
-          { icon: tx.userIcon, title: tx.userAddress },
-        ],
-      })),
-    };
-  }, [activeTab, vaultTxs, positionHistory]);
+    return transactionTableBody; // Show data for current position
+  }, [activeTab]);
 
   const handleBackToPools = () => {
     router.push("/farm");
   };
 
-  return (
-    <main className="flex flex-col gap-[40px] pt-[40px] px-[40px] pb-[80px]">
-      <header className=" w-full h-fit">
-        <div className="w-full h-fit flex flex-col gap-[20px]">
-          <nav aria-label="Breadcrumb">
+  // Loading state skeleton
+  if (!rowData) {
+    return (
+      <main className="flex flex-col gap-6 sm:gap-[40px] pt-6 sm:pt-[40px] px-4 sm:px-8 lg:px-[40px] pb-[80px]">
+        <div className="w-full h-fit flex justify-between">
+          <div className="w-full h-fit flex flex-col gap-[20px]">
             <button
               type="button"
               onClick={handleBackToPools}
-              className={`w-fit h-fit flex gap-[12px] items-center cursor-pointer text-[16px] font-medium hover:text-[#703AE6] transition-colors ${isDark ? "text-white" : "text-[#5A5555]"
-                }`}
+              className={`w-fit h-fit flex gap-[12px] items-center cursor-pointer text-[14px] sm:text-[16px] font-medium hover:text-[#703AE6] transition-colors ${isDark ? "text-white" : "text-[#5A5555]"}`}
+              aria-label="Back to pools"
             >
-              <svg
-                width="9"
-                height="16"
-                viewBox="0 0 9 16"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M8 1L1 8L8 15"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              <ChevronLeftIcon />
               Back to pools
             </button>
+            <div className="animate-pulse">
+              <div className={`h-[36px] w-[200px] rounded-[8px] ${isDark ? "bg-[#222222]" : "bg-gray-200"}`} />
+            </div>
+          </div>
+        </div>
+        <div className={`w-full h-[400px] rounded-[20px] animate-pulse ${isDark ? "bg-[#111111]" : "bg-gray-200"}`} />
+      </main>
+    );
+  }
+
+  return (
+    <main className="flex flex-col gap-6 sm:gap-[40px] pt-6 sm:pt-[40px] px-4 sm:px-8 lg:px-[40px] pb-[80px]">
+      <motion.header
+        initial="hidden"
+        animate="visible"
+        variants={headerVariants}
+        className="w-full h-fit flex flex-col sm:flex-row justify-between gap-4"
+      >
+        <div className="w-full h-fit flex flex-col gap-[20px]">
+          <nav aria-label="Breadcrumb">
+            <motion.button
+              type="button"
+              onClick={handleBackToPools}
+              whileHover={{ x: -5 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ duration: 0.2 }}
+              className={`w-fit h-fit flex gap-[12px] items-center cursor-pointer text-[14px] sm:text-[16px] font-medium hover:text-[#703AE6] transition-colors ${isDark ? "text-white" : "text-[#5A5555]"
+                }`}
+            >
+              <ChevronLeftIcon />
+              Back to pools
+            </motion.button>
           </nav>
-          <div className="w-full h-fit flex gap-[16px] items-center">
+          <div className="w-full h-fit flex flex-wrap gap-3 sm:gap-[16px] items-center">
             {/* Chain icon for multi-asset type - 16px */}
             {isMultiAsset && (
               <Image
@@ -325,7 +414,11 @@ export default function FarmDetailPage() {
             <div className="flex gap-[16px]">
               {isMultiAsset ? (
                 // Multi-asset icons (half-half display like table)
-                <div className="flex items-center -space-x-[18px]">
+                <motion.div
+                  className="flex items-center -space-x-[18px]"
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ duration: 0.2 }}
+                >
                   {farmData.titles?.map((titleName: string, iconIdx: number) => {
                     const assetIconPath = iconPaths[titleName.toUpperCase()];
                     if (!assetIconPath) return null;
@@ -341,22 +434,24 @@ export default function FarmDetailPage() {
                       />
                     );
                   })}
-                </div>
+                </motion.div>
               ) : (
                 // Single asset icon
-                <Image
-                  src={iconPath}
-                  alt={`${farmData.title}-icon`}
-                  width={36}
-                  height={36}
-                />
+                <motion.div whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
+                  <Image
+                    src={iconPath}
+                    alt={`${farmData.title}-icon`}
+                    width={36}
+                    height={36}
+                  />
+                </motion.div>
               )}
-              <div className="w-fit h-fit flex gap-[8px] items-center">
-                <h1 className={`w-fit h-fit text-[24px] font-bold ${isDark ? "text-white" : "text-[#181822]"
+              <div className="w-fit h-fit flex flex-wrap gap-2 sm:gap-[8px] items-center">
+                <h1 className={`w-fit h-fit text-[20px] sm:text-[24px] font-bold ${isDark ? "text-white" : "text-[#181822]"
                   }`}>
                   {farmData.title}
                 </h1>
-                <div className="w-fit h-fit flex gap-[8px] items-center">
+                <div className="w-fit h-fit flex flex-wrap gap-[8px] items-center">
                   {farmData.tags.slice(0, 2).map((tag: string | number, index: number) => (
                     <span
                       key={index}
@@ -371,21 +466,15 @@ export default function FarmDetailPage() {
                 {isMultiAsset && <div className="w-fit h-fit flex gap-[4px] items-center">
                   {/* Sort icon */}
                   <div className="w-[24px] h-[24px] rounded-full bg-[#F4F4F4] flex items-center justify-center">
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M13.1382 3.80392C13.0082 3.93392 12.8375 3.99923 12.6668 3.99923C12.4962 3.99923 12.3255 3.93392 12.1955 3.80392L10.6668 2.27527V9.99925C10.6668 10.3673 10.3688 10.6659 10.0002 10.6659C9.63151 10.6659 9.33351 10.3673 9.33351 9.99925V2.27527L7.80485 3.80392C7.54418 4.06459 7.12285 4.06459 6.86218 3.80392C6.60151 3.54325 6.60151 3.12187 6.86218 2.86121L9.52818 0.195193C9.59018 0.133193 9.66345 0.0845 9.74545 0.0505C9.90811 -0.0168333 10.0922 -0.0168333 10.2549 0.0505C10.3369 0.0845 10.4102 0.133193 10.4722 0.195193L13.1382 2.86121C13.3988 3.12187 13.3988 3.54325 13.1382 3.80392ZM5.52885 9.52785L4.00019 11.0565V3.33257C4.00019 2.96457 3.70219 2.6659 3.33353 2.6659C2.96486 2.6659 2.66686 2.96457 2.66686 3.33257V11.0565L1.13821 9.52785C0.877547 9.26719 0.456167 9.26719 0.1955 9.52785C-0.0651667 9.78852 -0.0651667 10.2099 0.1955 10.4706L2.86152 13.1366C2.92352 13.1986 2.9968 13.2473 3.07881 13.2813C3.16014 13.3153 3.24686 13.3326 3.33353 13.3326C3.42019 13.3326 3.50691 13.3147 3.58825 13.2813C3.67025 13.2473 3.74353 13.1986 3.80553 13.1366L6.47151 10.4706C6.73218 10.2099 6.73218 9.78852 6.47151 9.52785C6.21085 9.26719 5.78951 9.26719 5.52885 9.52785Z" fill="#111111" />
-                    </svg>
+                    <SortIcon />
                   </div>
                   {/* Eye icon */}
                   <div className="w-[24px] h-[24px] rounded-full bg-[#F4F4F4] flex items-center justify-center">
-                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path fillRule="evenodd" clipRule="evenodd" d="M0 7.29167C0 5.3578 0.768227 3.50313 2.13568 2.13568C3.50313 0.768227 5.3578 0 7.29167 0C9.22554 0 11.0802 0.768227 12.4477 2.13568C13.8151 3.50313 14.5833 5.3578 14.5833 7.29167C14.5833 9.22554 13.8151 11.0802 12.4477 12.4477C11.0802 13.8151 9.22554 14.5833 7.29167 14.5833C5.3578 14.5833 3.50313 13.8151 2.13568 12.4477C0.768227 11.0802 0 9.22554 0 7.29167ZM6.33333 5.04917C5.55538 5.68898 5.03554 6.58894 4.87 7.5825L4.3225 10.8733C4.19667 11.6325 5.08 12.1425 5.67417 11.6533L8.25 9.53417C9.02795 8.89435 9.5478 7.99439 9.71333 7.00083L10.26 3.71C10.3867 2.95083 9.50333 2.44083 8.90917 2.93L6.33333 5.04917Z" fill="#111111" />
-                    </svg>
+                    <CompassIcon />
                   </div>
                   {/* Share icon */}
                   <div className="w-[24px] h-[24px] rounded-full bg-[#F4F4F4] flex items-center justify-center">
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M11.112 8.88802C10.3542 8.88802 9.6849 9.27083 9.28385 9.84896L4.35937 7.24219C4.40885 7.05729 4.44531 6.86719 4.44531 6.66667C4.44531 6.46615 4.41146 6.27604 4.35937 6.09115L9.28385 3.48438C9.6849 4.0651 10.3516 4.44531 11.112 4.44531C12.3385 4.44531 13.3333 3.45052 13.3333 2.22396C13.3333 0.997396 12.3385 0 11.112 0C9.88542 0 8.89062 0.994792 8.89062 2.22135C8.89062 2.24219 8.89583 2.26302 8.89583 2.28385L3.71354 5.02865C3.31771 4.66927 2.79948 4.44531 2.22396 4.44531C0.994792 4.44531 0 5.4401 0 6.66667C0 7.89323 0.994792 8.88802 2.22135 8.88802C2.79688 8.88802 3.3151 8.66406 3.71094 8.30469L8.89323 11.0495C8.89323 11.0703 8.88802 11.0911 8.88802 11.112C8.88802 12.3385 9.88281 13.3333 11.1094 13.3333C12.3359 13.3333 13.3307 12.3385 13.3307 11.112C13.3307 9.88542 12.3385 8.88802 11.112 8.88802Z" fill="#111111" />
-                    </svg>
+                    <ShareIcon />
                   </div>
                 </div>}
               </div>
@@ -393,21 +482,53 @@ export default function FarmDetailPage() {
 
           </div>
         </div>
-      </header>
-      {!isMultiAsset && <section className="w-full h-fit ">
-        <AccountStatsGhost items={LEVERAGE_HEALTH_STATS_ITEMS} />
-      </section>}
-      <section className="w-full h-fit flex gap-[20px] ">
-        
-        <div className="w-full h-fit flex flex-col gap-[10px]">
+        {isMultiAsset && !showAddLiquidity && (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+            className="w-full sm:w-[164px] h-fit flex-shrink-0"
+          >
+            <Button
+              type="solid"
+              size="medium"
+              disabled={!userAddress}
+              text="+ Add Liquidity"
+              onClick={handleAddLiquidityClick}
+              aria-label={userAddress ? "Add liquidity to pool" : "Connect wallet to add liquidity"}
+            />
+          </motion.div>
+        )}
+      </motion.header>
+      {!isMultiAsset && (
+        <motion.section
+          initial="hidden"
+          animate="visible"
+          variants={sectionVariants}
+          transition={{ delay: 0.2 }}
+          className="w-full h-fit "
+        >
+          <AccountStatsGhost items={LEVERAGE_HEALTH_STATS_ITEMS} />
+        </motion.section>
+      )}
+      {!isMultiAsset && (
+        <motion.section
+          initial="hidden"
+          animate="visible"
+          variants={staggerContainerVariants}
+          transition={{ delay: 0.3 }}
+          className="w-full h-fit flex flex-col lg:flex-row gap-6 lg:gap-[20px]"
+        >
+
+        <motion.div variants={itemVariants} className="w-full h-fit flex flex-col gap-[10px]">
           <div className="w-full h-fit">
             <AnimatedTabs containerClassName="w-full h-fit" tabClassName="w-full h-fit" type="solid" tabs={UI_TABS} activeTab={activeUiTab} onTabChange={handleUiTabChange} />
           </div>
           {activeUiTab === "all-transactions" ? (
-            <div className={`w-full h-fit flex flex-col gap-[24px] rounded-[20px] border-[1px] p-[24px] ${
-              isDark ? "bg-[#111111]" : "bg-[#F7F7F7]"
-            }`}>
-              <Chart  type="farm" heading="1 WISE = <0.001 WETH ($0.159)" downtrend="0.07%" />
+            <div className={`w-full h-fit flex flex-col gap-[24px] rounded-[20px] border-[1px] p-4 sm:p-[24px] ${isDark ? "bg-[#111111]" : "bg-[#F7F7F7]"
+              }`}
+            >
+              <Chart type="farm" heading="1 WISE = <0.001 WETH ($0.159)" downtrend="0.07%" />
               <Table
                 filterDropdownPosition="right"
                 tableBodyBackground={isDark ? "bg-[#222222]" : "bg-white"}
@@ -427,34 +548,273 @@ export default function FarmDetailPage() {
               />
             </div>
           ) : (
-            <div className={`w-full h-fit flex flex-col gap-[24px] rounded-[20px] border-[1px] p-[24px] ${
-              isDark ? "bg-[#111111]" : "bg-[#F7F7F7]"
-            }`}>
-              <h2 className={`w-full h-fit text-[20px] font-semibold ${
-                isDark ? "text-white" : ""
-              }`}>Statistics</h2>
-              <article className="w-full h-full grid grid-cols-3 grid-rows-3 gap-x-[15px]" aria-label="Vault Statistics">
-          {items.map((item, idx) => {
-            return (
-              <StatsCard
-                key={idx}
-                heading={item.heading}
-                mainInfo={item.mainInfo}
-                subInfo={item.subInfo}
-                tooltip={item.tooltip}
-              />
-            );
-          })}
-        </article>
+            <div className={`w-full h-fit flex flex-col gap-[24px] rounded-[20px] border-[1px] p-4 sm:p-[24px] ${isDark ? "bg-[#111111]" : "bg-[#F7F7F7]"
+              }`}
+            >
+              <h2 className={`w-full h-fit text-[18px] sm:text-[20px] font-semibold ${isDark ? "text-white" : ""
+                }`}>Statistics</h2>
+              <article className="w-full h-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-[15px]" aria-label="Vault Statistics">
+                {items.map((item, idx) => {
+                  return (
+                    <StatsCard
+                      key={idx}
+                      heading={item.heading}
+                      mainInfo={item.mainInfo}
+                      subInfo={item.subInfo}
+                      tooltip={item.tooltip}
+                    />
+                  );
+                })}
+              </article>
             </div>
-            
-          )}
-        </div>
-        <div className="w-[480px] h-fit flex flex-col gap-[20px]">
-          <Form />
-                  </div>
 
-      </section>
+          )}
+        </motion.div>
+        <motion.div
+          variants={itemVariants}
+          className="w-full lg:w-[480px] h-fit flex flex-col gap-[20px] flex-shrink-0"
+        >
+          <Form />
+        </motion.div>
+
+      </motion.section>
+      )}
+
+      {isMultiAsset && (
+        <motion.section
+          initial="hidden"
+          animate="visible"
+          variants={staggerContainerVariants}
+          transition={{ delay: 0.2 }}
+          className="w-full h-fit flex flex-col lg:flex-row gap-6 lg:gap-[24px]"
+        >
+        <motion.div variants={itemVariants} className="w-full min-w-0 h-fit flex flex-col gap-[24px]">
+          {showAddLiquidity ? (
+            <motion.div
+              initial="hidden"
+              animate="visible"
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: {
+                    staggerChildren: 0.1,
+                    delayChildren: 0.05,
+                  },
+                },
+              }}
+              className="w-full h-fit flex flex-col gap-[8px]"
+            >
+            <motion.div
+              variants={{
+                hidden: { opacity: 0, y: 20 },
+                visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+              }}
+              className={`w-full h-fit rounded-[16px] border-[1px] p-3 sm:p-[24px] ${isDark ? "bg-[#1A1A1A]" : "bg-[#F7F7F7]"
+              }`}
+            >
+              <RangeSelector
+                token1Name="USDC"
+                token2Name="ETH"
+                token1ChartData={usdcChartData}
+                token2ChartData={ethChartData}
+                token1MinValue={usdcRangeMin}
+                token1MaxValue={usdcRangeMax}
+                token2MinValue={ethRangeMin}
+                token2MaxValue={ethRangeMax}
+                onToken1RangeChange={handleUsdcRangeChange}
+                onToken2RangeChange={handleEthRangeChange}
+                height={250}
+                xAxisLabels={["0.0000", "0.0001", "0.0002", "0.0003", "0.0004", "0.0005"]}
+                showControls={true}
+              />
+              
+              </motion.div>
+              <motion.div
+                variants={{
+                  hidden: { opacity: 0, y: 20 },
+                  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+                }}
+                className={`w-full h-fit flex flex-col sm:flex-row rounded-[16px] border-[1px] p-3 sm:p-[20px] gap-3 sm:gap-[8px] ${isDark ? "bg-[#222222]" : "bg-[#F7F7F7]"} `}
+              >
+                <div className={`w-full h-fit flex flex-col gap-[20px] rounded-[16px] border-[1px] p-4 sm:p-[20px] ${isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"} `}
+                >
+                  <div className="w-full h-fit flex flex-col ">
+                    <h3 className={`w-full h-fit text-[16px] font-semibold ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>Max Price</h3>
+                    <p className="w-full h-fit text-[12px] text-[#A7A7A7]">{farmData.title.split(" / ")[0]} per {farmData.title.split(" / ")[1]}</p>
+                  </div>
+                  <div className="w-full h-fit flex justify-between items-center">
+                    <input 
+                      type="text" 
+                      value={maxPriceInput}
+                      onChange={(e) => handlePriceInputChange(e.target.value, setMaxPriceInput)}
+                      className={`w-full h-[40px] min-h-[40px] rounded-[8px] border-[1px] pb-[4px] text-[24px] font-bold ${isDark ? "text-[#FFFFFF]" : "text-[#111827]"} border-none  outline-none`} 
+                      placeholder="0.0000"
+                      aria-label={`Maximum price: ${farmData.title.split(" / ")[0]} per ${farmData.title.split(" / ")[1]}`}
+                      inputMode="decimal"
+                    />
+                    <div className="w-fit h-fit flex gap-[4px] items-center ">
+                      <motion.button 
+                        type="button"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="w-[24px] h-[24px] bg-[#F1EBFD] flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                        aria-label="Decrease maximum price"
+                        disabled={!userAddress}
+                      >
+                        <MinusIcon />
+                      </motion.button>
+                      <motion.button 
+                        type="button"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="w-[24px] h-[24px] bg-[#F1EBFD] flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                        aria-label="Increase maximum price"
+                        disabled={!userAddress}
+                      >
+                        <PlusIcon />
+                      </motion.button>
+                    </div>
+
+                  </div>
+                </div>
+                <div className={`w-full h-fit flex flex-col gap-[20px] rounded-[16px] border-[1px] p-4 sm:p-[20px] ${isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"} `}
+                >
+                  <div className="w-full h-fit flex flex-col ">
+                    <h3 className={`w-full h-fit text-[16px] font-semibold ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>Min Price</h3>
+                    <p className="w-full h-fit text-[12px] text-[#A7A7A7]">{farmData.title.split(" / ")[0]} per {farmData.title.split(" / ")[1]}</p>
+                  </div>
+                  <div className="w-full h-fit flex justify-between items-center">
+                    <input 
+                      type="text" 
+                      value={minPriceInput}
+                      onChange={(e) => handlePriceInputChange(e.target.value, setMinPriceInput)}
+                      className={`w-full h-[40px] min-h-[40px] rounded-[8px] border-[1px] pb-[4px] text-[24px] font-bold ${isDark ? "text-[#FFFFFF]" : "text-[#111827]"} border-none  outline-none`} 
+                      placeholder="0.0000"
+                      aria-label={`Minimum price: ${farmData.title.split(" / ")[0]} per ${farmData.title.split(" / ")[1]}`}
+                      inputMode="decimal"
+                    />
+                    <div className="w-fit h-fit flex gap-[4px] items-center ">
+                      <motion.button 
+                        type="button"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="w-[24px] h-[24px] bg-[#F1EBFD] flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                        aria-label="Decrease minimum price"
+                        disabled={!userAddress}
+                      >
+                        <MinusIcon />
+                      </motion.button>
+                      <motion.button 
+                        type="button"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="w-[24px] h-[24px] bg-[#F1EBFD] flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                        aria-label="Increase minimum price"
+                        disabled={!userAddress}
+                      >
+                        <PlusIcon />
+                      </motion.button>
+                    </div>
+
+                  </div>
+                </div>
+
+              </motion.div>
+            </motion.div>
+          ) : (
+            <div className={`w-full h-fit flex flex-col gap-[24px] ${isDark ? "bg-[#111111]" : "bg-[#F7F7F7]"} border-[1px] rounded-[20px] p-4 sm:p-[24px]`}
+            >
+              <Chart type="farm" heading="1 WISE = <0.001 WETH ($0.159)" downtrend="0.07%" />
+              <Table
+                filterDropdownPosition="right"
+                tableBodyBackground={isDark ? "bg-[#222222]" : "bg-white"}
+                heading={{
+                  heading: "Your Transactions",
+                  tabsItems: [
+                    { id: "current-position", label: "Current Position" },
+                    { id: "position-history", label: "Position History" }
+                  ],
+                  tabType: "solid"
+                }}
+                activeTab={activeTab}
+                onTabChange={handleTabChange}
+                filters={{ filters: ["All"], customizeDropdown: true }}
+                tableHeadings={transactionTableHeadings}
+                tableBody={tableBodyData}
+              />
+              <Table
+                filterDropdownPosition="right"
+                tableBodyBackground={isDark ? "bg-[#222222]" : "bg-white"}
+                heading={{
+                  heading: "All Transactions",
+                }}
+                filters={{ filters: ["All"] }}
+                tableHeadings={transactionTableHeadings}
+                tableBody={tableBodyData}
+              />
+            </div>
+          )}
+        </motion.div>
+        {!showAddLiquidity && (
+          <motion.div
+            variants={itemVariants}
+            className="w-full lg:w-[400px] h-fit flex-shrink-0"
+          >
+            <FarmStatsCard items={farmStatsData} />
+          </motion.div>
+        )}
+        {showAddLiquidity && (
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: { opacity: 0 },
+              visible: {
+                opacity: 1,
+                transition: {
+                  staggerChildren: 0.1,
+                  delayChildren: 0.1,
+                },
+              },
+            }}
+            className="w-full lg:w-[400px] h-fit flex flex-col gap-[20px] flex-shrink-0"
+          >
+            {!userAddress && (
+              <motion.div
+                variants={{
+                  hidden: { opacity: 0, y: -10 },
+                  visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+                }}
+                className={`w-full rounded-[12px] border-[1px] p-[16px] flex items-center gap-[12px] ${isDark ? "bg-[#1A1A1A] border-[#595959] text-[#FFFFFF]" : "bg-[#FFF9E6] border-[#FFD700] text-[#111111]"}`}
+                role="alert"
+                aria-live="polite"
+              >
+                <WarningIcon />
+                <span className="text-[14px] font-medium">Connect your wallet to add liquidity</span>
+              </motion.div>
+            )}
+            <motion.div
+              variants={{
+                hidden: { opacity: 0, y: 20 },
+                visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+              }}
+            >
+              <DepositTokensForm assets={[`${farmData.title.split(" / ")[0]}`,`${farmData.title.split(" / ")[1]}`]} />
+            </motion.div>
+            <motion.div
+              variants={{
+                hidden: { opacity: 0, y: 20 },
+                visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+              }}
+              className="w-full h-fit"
+            >
+              <FarmStatsCard items={farmLiquidationStatsData} />
+            </motion.div>
+          </motion.div>
+        )}
+      </motion.section>
+      )}
     </main>
   );
 }

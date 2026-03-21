@@ -19,7 +19,7 @@ interface FarmStatsCardProps {
 export const FarmStatsCard = ({items}:FarmStatsCardProps) =>{
     const { isDark } = useTheme();
     
-    return <div className={`w-[400px] h-fit rounded-[16px] border-[1px]  p-[20px] flex flex-col gap-[24px] ${isDark ? "bg-[#222222]" : "bg-[#F7F7F7]"}`}>
+    return <div className={`w-full lg:w-[400px] h-fit rounded-[16px] border-[1px] p-4 sm:p-[20px] flex flex-col gap-[24px] ${isDark ? "bg-[#222222]" : "bg-[#F7F7F7]"}`}>
         {items.map((item,idx)=>{
             return <div key={idx} className="w-full min-w-[180px] h-fit flex flex-col gap-[12px] ">
                 {item.heading && <div className={`w-full h-fit text-[12px] font-medium ${isDark ? "text-[#919191]" : "text-[#5C5B5B]"}`}>{item.heading}</div>}

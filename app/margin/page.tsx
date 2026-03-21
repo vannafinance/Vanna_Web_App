@@ -1,7 +1,6 @@
 "use client";
 
 import { Carousel } from "@/components/ui/carousel";
-import { NetworkDropdown } from "@/components/network-dropdown";
 import {
   CAROUSEL_ITEMS,
   MARGIN_ACCOUNT_INFO_ITEMS,
@@ -21,6 +20,7 @@ import { useUserStore } from "@/store/user";
 import { formatValue } from "@/lib/utils/format-value";
 import { ACCOUNT_STATS_ITEMS } from "@/lib/constants/margin";
 import { useTheme } from "@/contexts/theme-context";
+import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { useMarginStore } from "@/store/margin-account-state";
 import { usePublicClient, useChainId } from "wagmi";
 import { useFetchAccountCheck, useFetchCollateralState, useFetchBorrowState } from "@/lib/utils/margin/marginFetchers";
@@ -215,8 +215,10 @@ const Margin = () => {
     return values;
   }, [accountStats, isLoadingMargin]);
 
+  const [sheetOpen, setSheetOpen] = useState(false);
+
   return (
-    <main className="w-full">
+    <main className="w-full pb-[72px] lg:pb-0">
       {/* Error banner for margin data loading issues */}
       {/* <BorrowDashboard/> */}
 
@@ -266,7 +268,7 @@ const Margin = () => {
 
       {/* Carousel section - displays promotional items */}
       <motion.section
-        className="w-full h-fit  pb-[48px] px-[80px] pt-[80px] "
+        className="w-full h-fit px-4 sm:px-8 lg:px-[80px] pt-5 sm:pt-10 lg:pt-[80px] pb-5 sm:pb-[48px]"
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{
@@ -280,7 +282,7 @@ const Margin = () => {
 
       {userAddress && (
         <motion.section
-          className="px-[80px]  w-full h-[405px]"
+          className="px-4 sm:px-8 lg:px-[80px] w-full h-auto pb-2 sm:pb-0"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
@@ -301,16 +303,17 @@ const Margin = () => {
       // )} */}
 
       {/* Main leverage section */}
-      <section className=" w-full p-[80px]  flex flex-col gap-[48px]">
-        {/* Section header with network dropdown */}
+      <section className="w-full px-4 sm:px-8 lg:px-[80px] py-5 sm:py-8 lg:py-[80px] flex flex-col gap-5 sm:gap-8 lg:gap-[48px]">
+        {/* Section heading */}
         <motion.header
-          className="w-full flex gap-[20px] items-center"
+          className="w-full flex items-center gap-3"
           initial={{ opacity: 0, x: -20 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.4, ease: "easeOut" }}
         >
-          <h1 className={`text-[34px] font-semibold ${isDark ? "text-white" : ""}`}>
+          <div className="w-1 h-[28px] sm:h-[36px] rounded-full bg-[#703AE6]" />
+          <h1 className={`text-[22px] sm:text-[32px] lg:text-[38px] font-bold ${isDark ? "text-white" : ""}`}>
             Leverage your Collateral
           </h1>
           {/* Loading Spinner Icon */}
@@ -346,13 +349,18 @@ const Margin = () => {
               </span>
             </motion.div>
           )}
-          <div className="flex-shrink-0">
-            <NetworkDropdown />
-          </div>
         </motion.header>
 
+        {/* Mobile bottom sheet for leverage form */}
+        <BottomSheet open={sheetOpen} onOpenChange={setSheetOpen}>
+          <LeverageCollateral
+            switchToRepayTab={switchToRepayTab}
+            onTabSwitched={() => setSwitchToRepayTab(false)}
+          />
+        </BottomSheet>
+
         {/* Two column layout: Leverage form and Info card */}
-        <div className="flex gap-[36px] relative" ref={leverageCollateralRef}>
+        <div className="hidden lg:flex gap-[36px] relative" ref={leverageCollateralRef}>
           {/* Left: Leverage collateral form */}
           <LeverageCollateral
             switchToRepayTab={switchToRepayTab}

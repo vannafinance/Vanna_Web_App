@@ -1,201 +1,72 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
-import { useUserStore } from "@/store/user";
-import { useMarginStore } from "@/store/margin-account-state";
-import { usePublicClient, useChainId } from "wagmi";
-import {
-  useFetchAccountCheck,
-  useFetchCollateralState,
-  useFetchBorrowState,
-} from "@/lib/utils/margin/marginFetchers";
-import { formatValue } from "@/lib/utils/format-value";
-import { useTheme } from "@/contexts/theme-context";
-import { Button } from "@/components/ui/button";
-import { AccountStats } from "@/components/margin/account-stats";
-import { Chart } from "@/components/earn/chart";
-import { AnimatedTabs } from "@/components/ui/animated-tabs";
 import { Lender } from "@/components/portfolio/lender";
-import { TraderSection } from "@/components/portfolio/trader-section";
-import { DepositModal } from "@/components/ui/deposit-modal";
-import { WithdrawModal } from "@/components/ui/withdraw-modal";
-
-// ── Portfolio stat card definitions ──────────────────────────────────────────
-const PORTFOLIO_STATS_ITEMS = [
-  {
-    id: "totalPortfolioBalance",
-    name: "Total Portfolio Balance",
-    icon: "/margin/dollar.png",
-  },
-  {
-    id: "netAvailableCollateral",
-    name: "Net Available Collateral",
-    icon: "/margin/liquidation.png",
-  },
-  {
-    id: "marginAccountBalance",
-    name: "Margin Account Balance",
-    icon: "/margin/retry.png",
-  },
-  {
-    id: "availablePortfolioBalance",
-    name: "Available Portfolio Balance",
-    icon: "/margin/bag.png",
-  },
-] as const;
-
-const MAIN_TABS = [
-  { id: "lender", label: "Lender" },
-  { id: "trader", label: "Trader" },
-];
+import { PortfolioSection } from "@/components/portfolio/portfolio-section";
+import { AnimatedTabs } from "@/components/ui/animated-tabs";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { useTheme } from "@/contexts/theme-context";
+import { motion } from "framer-motion";
 
 export default function PortfolioPage() {
   const { isDark } = useTheme();
-  const [activeTab, setActiveTab] = useState("trader");
-
-  // ── Modal states ─────────────────────────────────────────
-  const [depositOpen,  setDepositOpen]  = useState(false);
-  const [withdrawOpen, setWithdrawOpen] = useState(false);
-  const [transferOpen, setTransferOpen] = useState(false);
-
-  // ── Chain / wallet ────────────────────────────────────────
-  const userAddress = useUserStore((s) => s.address);
-  const chainId     = useChainId();
-  const publicClient = usePublicClient();
-
-  const marginState     = useMarginStore((s) => s.marginState);
-  const isLoadingMargin = useMarginStore((s) => s.isLoading);
-  const reloadMarginState = useMarginStore((s) => s.reloadMarginState);
-
-  // Register margin fetchers (same pattern as margin/page.tsx)
-  const fetchAccountCheck   = useFetchAccountCheck(chainId, userAddress as `0x${string}`, publicClient);
-  const fetchCollateralState = useFetchCollateralState(chainId, publicClient);
-  const fetchBorrowState    = useFetchBorrowState(chainId, publicClient);
-
-  useEffect(() => {
-    useMarginStore.getState().setFetchers({
-      fetchAccountCheck,
-      fetchCollateralState,
-      fetchBorrowState,
-    });
-  }, [fetchAccountCheck, fetchCollateralState, fetchBorrowState]);
-
-  useEffect(() => {
-    if (!publicClient || !chainId || !userAddress) return;
-    const t = setTimeout(() => reloadMarginState(true), 500);
-    return () => clearTimeout(t);
-  }, [publicClient, chainId, userAddress, reloadMarginState]);
-
-  // ── Portfolio overview stats ──────────────────────────────
-  const portfolioStatsValues = useMemo(() => {
-    const loading = isLoadingMargin && !marginState;
-    if (loading) {
-      return PORTFOLIO_STATS_ITEMS.reduce(
-        (acc, item) => ({ ...acc, [item.id]: "⟳" }),
-        {} as Record<string, string>
-      );
-    }
-    const collateral  = marginState?.collateralUsd ?? 0;
-    const borrow      = marginState?.borrowUsd     ?? 0;
-    const maxWithdraw = marginState?.maxWithdraw   ?? 0;
-    const fmt = (v: number) =>
-      `$${formatValue(v, { type: "number", useLargeFormat: true })}`;
-    return {
-      totalPortfolioBalance:    fmt(collateral),
-      netAvailableCollateral:   fmt(collateral),
-      marginAccountBalance:     fmt(Math.max(0, collateral - borrow)),
-      availablePortfolioBalance: fmt(maxWithdraw),
-    };
-  }, [marginState, isLoadingMargin]);
+  const tabs = [
+    { id: "lender", label: "Lender" },
+    { id: "trader", label: "Trader" },
+  ];
+  const [activeTab, setActiveTab] = useState<string>("lender");
 
   return (
-    <div className="py-[80px] px-[80px] w-full h-fit">
-      <div className="flex flex-col gap-[40px] w-full">
-
-        {/* ── Header ─────────────────────────────────────────── */}
-        <div className="flex justify-between w-full items-center">
-          <h1 className={`text-[24px] font-bold ${isDark ? "text-white" : "text-[#111]"}`}>
-            Portfolio
-          </h1>
-          <div className="flex gap-[8px]">
-            <Button
-              width="w-fit"
-              text="Deposit"
-              size="small"
-              type="solid"
-              disabled={false}
-              onClick={() => setDepositOpen(true)}
-            />
-            <Button
-              width="w-fit"
-              text="Withdraw"
-              size="small"
-              type="solid"
-              disabled={false}
-              onClick={() => setWithdrawOpen(true)}
-            />
-            <Button
-              width="w-fit"
-              text="Transfer"
-              size="small"
-              type="solid"
-              disabled={false}
-              onClick={() => setTransferOpen(true)}
-            />
-            <Button
-              width="w-fit"
-              text="History"
-              size="small"
-              type="ghost"
-              disabled={false}
-            />
+    <div className="py-5 sm:py-10 lg:py-[80px] px-4 sm:px-8 lg:px-[40px] w-full h-fit">
+      <div className="flex flex-col gap-5 sm:gap-[40px] w-full h-fit">
+        {/* Header section */}
+        <motion.div
+          className="flex flex-col gap-4 sm:gap-[20px] w-full h-fit"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <div className="flex flex-col sm:flex-row justify-between w-full gap-3 sm:items-center">
+            <div className="flex items-center gap-3">
+              <div className="w-1 h-[24px] sm:hidden rounded-full bg-[#703AE6]" />
+              <h1 className={`text-[22px] sm:text-[24px] font-bold ${isDark ? "text-white" : "text-black"}`}>
+                Portfolio
+              </h1>
+            </div>
+            <div className="grid grid-cols-4 sm:flex gap-2 sm:gap-[8px] sm:justify-end">
+              <Button text="Deposit" size="small" type="solid" disabled={false} />
+              <Button text="Withdraw" size="small" type="ghost" disabled={false} />
+              <Button text="Transfer" size="small" type="ghost" disabled={false} />
+              <Button text="History" size="small" type="ghost" disabled={false} />
+            </div>
           </div>
-        </div>
 
-        {/* ── Portfolio stats (2×2 grid) ──────────────────────── */}
-        {userAddress && (
-          <div className="w-full h-[405px]">
-            <AccountStats
-              items={[...PORTFOLIO_STATS_ITEMS]}
-              values={portfolioStatsValues}
-              gridCols="grid-cols-2"
-            />
-          </div>
-        )}
+          <PortfolioSection />
+        </motion.div>
 
-        {/* ── Charts row ─────────────────────────────────────── */}
-        <div className="w-full flex gap-[24px]">
-          <Chart
-            type="net-profit-loss"
-            containerHeight="h-[331px]"
-            containerWidth="w-full"
-          />
-          <Chart
-            type="net-volume"
-            containerHeight="h-[331px]"
-            containerWidth="w-full"
-          />
-        </div>
-
-        {/* ── Lender / Trader tabs ────────────────────────────── */}
-        <div className="flex flex-col gap-[24px]">
+        {/* Tabs section */}
+        <motion.div
+          className="w-full h-fit flex flex-col gap-5 sm:gap-[24px]"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+        >
           <AnimatedTabs
             type="underline"
-            tabs={MAIN_TABS}
+            tabs={tabs}
             activeTab={activeTab}
             onTabChange={setActiveTab}
-            containerClassName={`border-b ${isDark ? "border-[#333]" : "border-[#E5E7EB]"}`}
-            tabClassName="py-[12px] text-[16px]"
+            tabClassName="w-auto sm:w-[120px] h-[38px] sm:h-[40px] text-[13px] sm:text-[16px]"
+            containerClassName="w-full"
           />
-          {activeTab === "lender" ? <Lender /> : <TraderSection />}
-        </div>
-
+          {activeTab === "lender" && <Lender />}
+          {activeTab === "trader" && (
+            <div className={`text-center py-12 text-[14px] ${isDark ? "text-[#919191]" : "text-[#5C5B5B]"}`}>
+              Coming soon
+            </div>
+          )}
+        </motion.div>
       </div>
-
-      {/* ── Modals ─────────────────────────────────────────────── */}
-      <DepositModal  isOpen={depositOpen}  onClose={() => setDepositOpen(false)} />
-      <WithdrawModal isOpen={withdrawOpen} onClose={() => setWithdrawOpen(false)} title="Withdraw" />
-      <WithdrawModal isOpen={transferOpen} onClose={() => setTransferOpen(false)} title="Transfer Collateral" />
     </div>
   );
 }
