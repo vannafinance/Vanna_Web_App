@@ -19,6 +19,23 @@ interface Navbar {
   }[];
 }
 
+/** Margin lives at `/` and remains available at `/margin` for existing links. */
+function isBorderedNavItemActive(
+  pathname: string,
+  item: { title: string; link: string }
+): boolean {
+  if (item.title === "Trade") {
+    return (
+      pathname === item.link ||
+      tradeItems.some((tradeItem) => pathname === tradeItem.link)
+    );
+  }
+  if (item.title === "Margin") {
+    return pathname === "/" || pathname === "/margin";
+  }
+  return pathname === item.link;
+}
+
 export const Navbar = (props: Navbar) => {
   // Get current pathname for active link detection
   const pathname = usePathname();
@@ -253,12 +270,7 @@ export const Navbar = (props: Navbar) => {
           })}
           <div className="rounded-[8px] border-[1px] p-[8px] flex gap-[8px]">
             {groupedItems.bordered.map((item, idx) => {
-              // For Trade button, check if current path matches Trade link or any trade dropdown item
-              const isActive =
-                item.title === "Trade"
-                  ? pathname === item.link ||
-                    tradeItems.some((tradeItem) => pathname === tradeItem.link)
-                  : pathname === item.link;
+              const isActive = isBorderedNavItemActive(pathname, item);
               return (
                 <motion.div
                   key={item.link}
@@ -622,11 +634,7 @@ export const Navbar = (props: Navbar) => {
 
                   {/* Bordered nav items */}
                   {groupedItems.bordered.map((item) => {
-                    const isActive =
-                      item.title === "Trade"
-                        ? pathname === item.link ||
-                          tradeItems.some((tradeItem) => pathname === tradeItem.link)
-                        : pathname === item.link;
+                    const isActive = isBorderedNavItemActive(pathname, item);
                     return (
                       <motion.button
                         key={item.link}

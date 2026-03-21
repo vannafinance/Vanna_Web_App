@@ -1,7 +1,7 @@
 export const navbarItems = [
   { title: "Portfolio", link: "/portfolio", group: "primary" },
   { title: "Earn", link: "/earn", group: "primary" },
-  { title: "Margin", link: "/margin", group: "bordered" },
+  { title: "Margin", link: "/", group: "bordered" },
   { title: "Trade", link: "/trade" , group: "bordered"  },
   { title: "Farm", link: "/farm", group: "bordered" },
   { title: "Analytics", link: "/analytics", group: "secondary" },
