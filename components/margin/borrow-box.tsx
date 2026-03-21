@@ -541,7 +541,7 @@ export const BorrowBox = ({
               }
             }}
             disabled={leverage <= 1}
-            className="w-[20px] h-[40px] flex items-center justify-center rounded-[6px] text-[16px] font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#F7F7F7] transition-colors"
+            className={`w-[20px] h-[40px] flex items-center justify-center rounded-[6px] text-[16px] font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${isDark ? "text-white hover:bg-[#222222]" : "hover:bg-[#F7F7F7]"}`}
             whileHover={{ scale: leverage > 1 ? 1.05 : 1 }}
             whileTap={{ scale: leverage > 1 ? 0.95 : 1 }}
             aria-label="Decrease leverage"
@@ -556,7 +556,7 @@ export const BorrowBox = ({
             min={1}
             max={MAX_LEVERAGE}
             onChange={handleLeverageChange}
-            className="w-[40px] h-[40px] focus:outline-none bg-transparent p-[10px] text-[16px] font-medium text-center border-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            className={`w-[40px] h-[40px] focus:outline-none bg-transparent p-[10px] text-[16px] font-medium text-center border-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${isDark ? "text-white" : ""}`}
           />
           
           {/* + Button */}
