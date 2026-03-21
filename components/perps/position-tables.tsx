@@ -217,7 +217,9 @@ const PositionTables = () => {
       {/* Order Tabs - show for openOrders & orderHistory */}
       {(activeTab === "openOrders" || activeTab === "orderHistory") && (
         <div className="hidden md:flex flex-col gap-2 md:flex-row md:items-center">
-          <div className={`flex h-[47px] p-1 rounded-lg border overflow-x-auto scrollbar-hide ${isDark ? "bg-[#111111] border-[#333333]" : "bg-[#FFFFFF] border-[#E2E2E2]"}`}>
+          <div
+            className={`flex h-[47px] p-1 rounded-lg border overflow-x-auto scrollbar-hide ${isDark ? "bg-[#111111] border-[#333333]" : "bg-[#FFFFFF] border-[#E2E2E2]"}`}
+          >
             {ORDER_TABS.map((tab) => (
               <button
                 key={tab.id}
@@ -312,8 +314,12 @@ const PositionTables = () => {
       )}
 
       {!userAddress ? (
-        <div className={`flex-1 flex items-center justify-center rounded-lg border ${isDark ? "bg-[#222222] border-[#333333]" : "bg-gray-50 border-[#E2E2E2]"}`}>
-          <button className={`px-4 py-2 font-semibold rounded-lg ${isDark ? "bg-[#3D2A6E] text-[#703AE6]" : "bg-[#F1EBFD] text-[#703AE6]"}`}>
+        <div
+          className={`w-full min-h-[400px] flex items-center justify-center rounded-lg border ${isDark ? "bg-[#222222] border-[#333333]" : "bg-gray-50 border-[#E2E2E2]"}`}
+        >
+          <button
+            className={`px-6 py-3 font-semibold rounded-lg transition-all hover:opacity-80 ${isDark ? "bg-[#3D2A6E] text-[#703AE6]" : "bg-[#F1EBFD] text-[#703AE6]"}`}
+          >
             Connect your Wallet
           </button>
         </div>

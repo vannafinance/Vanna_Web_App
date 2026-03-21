@@ -70,8 +70,10 @@ const Perps = () => {
   };
 
   // Touch handlers
-  const handleTouchStart = (e: React.TouchEvent) => startDrag(e.touches[0].clientY);
-  const handleTouchMove = (e: React.TouchEvent) => moveDrag(e.touches[0].clientY);
+  const handleTouchStart = (e: React.TouchEvent) =>
+    startDrag(e.touches[0].clientY);
+  const handleTouchMove = (e: React.TouchEvent) =>
+    moveDrag(e.touches[0].clientY);
   const handleTouchEnd = () => endDrag();
 
   // Mouse handlers
@@ -264,7 +266,10 @@ const Perps = () => {
                   />
                 </div>
               </div>
-              <div ref={tradingPairSelectorRef} className={`relative ${isTradingPairSelectorOpen ? "z-100" : "z-0"}`}>
+              <div
+                ref={tradingPairSelectorRef}
+                className={`relative ${isTradingPairSelectorOpen ? "z-100" : "z-0"}`}
+              >
                 <TradingPairInfo
                   isOpen={isTradingPairSelectorOpen}
                   onOpenPairSelector={() =>
