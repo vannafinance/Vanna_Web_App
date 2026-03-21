@@ -17,6 +17,11 @@
 /.next/
 /out/
 
+
+.mcp.json
+/.mcp.json
+
+
 /.next
 /.claude
 .claude
