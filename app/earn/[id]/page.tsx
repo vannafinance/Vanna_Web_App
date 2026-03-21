@@ -150,8 +150,8 @@ export default function EarnPage({
   }, [vaultData]);
 
   return (
-    <main className="flex flex-col gap-4 sm:gap-8 lg:gap-[40px] pb-[72px] lg:pb-0">
-      {/* Header */}
+    <main className="flex flex-col gap-6 sm:gap-8 lg:gap-[40px]">
+      {/* ─── Header ─── */}
       <motion.header
         className="pt-5 sm:pt-8 lg:pt-[40px] px-4 sm:px-8 lg:px-[80px] w-full h-fit"
         variants={headerVariants}
@@ -159,11 +159,12 @@ export default function EarnPage({
         animate="visible"
       >
         <div className="w-full h-fit flex flex-col gap-3 sm:gap-4 lg:gap-[20px]">
+          {/* Back button */}
           <nav aria-label="Breadcrumb">
             <motion.button
               type="button"
               onClick={handleBackToPools}
-              className={`w-fit h-fit flex gap-2 items-center cursor-pointer text-[13px] sm:text-[16px] font-medium hover:text-[#703AE6] transition-colors ${
+              className={`w-fit h-fit flex gap-2 items-center cursor-pointer text-[14px] sm:text-[16px] font-medium hover:text-[#703AE6] transition-colors ${
                 isDark ? "text-white" : "text-[#5A5555]"
               }`}
               whileHover={{ x: -4 }}
@@ -174,29 +175,74 @@ export default function EarnPage({
             </motion.button>
           </nav>
 
-          {/* Vault title */}
-          <motion.div className="w-full h-fit flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center" variants={itemVariants}>
+          {/* Vault title row -- stacks on mobile */}
+          <motion.div
+            className="w-full h-fit flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center"
+            variants={itemVariants}
+          >
             <div className="flex gap-3 sm:gap-[16px] items-center min-w-0 flex-wrap">
-              <Image src={iconPath} alt={`${vaultData.title}-icon`} width={32} height={32} className="sm:w-[36px] sm:h-[36px]" />
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.2 }}
+                className="flex-shrink-0"
+              >
+                <Image
+                  src={iconPath}
+                  alt={`${vaultData.title}-icon`}
+                  width={36}
+                  height={36}
+                />
+              </motion.div>
               <div className="flex gap-2 items-center flex-wrap">
-                <h1 className={`text-[20px] sm:text-[24px] font-bold ${isDark ? "text-white" : "text-[#181822]"}`}>
+                <h1
+                  className={`text-[20px] sm:text-[24px] font-bold ${
+                    isDark ? "text-white" : "text-[#181822]"
+                  }`}
+                >
                   {vaultData.title}
                 </h1>
                 <div className="flex gap-[6px] items-center">
-                  <span className={`text-[11px] sm:text-[12px] font-semibold text-center rounded-[4px] py-[2px] px-[6px] ${isDark ? "bg-[#222222] text-white" : "bg-[#F4F4F4] text-[#0C0C0C]"}`}>V3</span>
-                  <span className={`text-[11px] sm:text-[12px] font-semibold text-center rounded-[4px] py-[2px] px-[6px] ${isDark ? "bg-[#222222] text-white" : "bg-[#F4F4F4] text-[#0C0C0C]"}`}>{vaultData.tag}</span>
+                  <span
+                    className={`text-[12px] font-semibold text-center rounded-[4px] py-[2px] px-[6px] ${
+                      isDark
+                        ? "bg-[#222222] text-white"
+                        : "bg-[#F4F4F4] text-[#0C0C0C]"
+                    }`}
+                  >
+                    V3
+                  </span>
+                  <span
+                    className={`text-[12px] font-semibold text-center rounded-[4px] py-[2px] px-[6px] ${
+                      isDark
+                        ? "bg-[#222222] text-white"
+                        : "bg-[#F4F4F4] text-[#0C0C0C]"
+                    }`}
+                  >
+                    {vaultData.tag}
+                  </span>
                 </div>
               </div>
             </div>
-            <div className={`text-[13px] sm:text-[16px] font-semibold w-fit h-[36px] sm:h-[48px] rounded-[10px] sm:rounded-[12px] py-2 sm:py-[12px] pr-3 sm:pr-[16px] pl-2 sm:pl-[8px] flex gap-[6px] items-center ${isDark ? "bg-[#222222] text-white" : "bg-[#F4F4F4]"}`}>
+
+            {/* Network badge */}
+            <div
+              className={`text-[14px] sm:text-[16px] font-semibold w-fit h-[40px] sm:h-[48px] rounded-[12px] py-2 sm:py-[12px] pr-3 sm:pr-[16px] pl-2 sm:pl-[8px] flex gap-[6px] items-center ${
+                isDark ? "bg-[#222222] text-white" : "bg-[#F4F4F4]"
+              }`}
+            >
               Network:{" "}
-              <Image src={iconPath} alt={`${vaultData.chain}-icon`} width={18} height={18} className="sm:w-[20px] sm:h-[20px]" />
+              <Image
+                src={iconPath}
+                alt={`${vaultData.chain}-icon`}
+                width={20}
+                height={20}
+              />
             </div>
           </motion.div>
         </div>
       </motion.header>
 
-      {/* Stats - horizontal scroll on mobile */}
+      {/* ─── Stats Row ─── */}
       <motion.section
         className="px-4 sm:px-8 lg:px-[80px]"
         aria-label="Vault Statistics"
@@ -212,23 +258,30 @@ export default function EarnPage({
         />
       </motion.section>
 
-      {/* Content: Tabs + Form */}
+      {/* ─── Content: Tabs + Form ─── */}
       <motion.section
-        className="px-4 sm:px-8 lg:px-[80px] pb-4 lg:pb-[80px] w-full h-fit"
+        className="px-4 sm:px-8 lg:px-[80px] pb-8 lg:pb-[80px] w-full h-fit"
         aria-label="Vault Details and Actions"
         variants={contentVariants}
         initial="hidden"
         animate="visible"
       >
-        <motion.div className="flex flex-col lg:flex-row gap-5 w-full h-fit" variants={contentVariants}>
-          <motion.article className="w-full lg:flex-1 lg:max-w-[700px] h-full flex flex-col gap-4 lg:gap-[24px] min-w-0" variants={itemVariants}>
+        <motion.div
+          className="flex flex-col lg:flex-row gap-5 w-full h-fit"
+          variants={contentVariants}
+        >
+          {/* Left: Info tabs */}
+          <motion.article
+            className="w-full lg:flex-1 lg:max-w-[700px] h-full flex flex-col gap-4 lg:gap-[24px] min-w-0"
+            variants={itemVariants}
+          >
             <nav className="w-full" aria-label="Vault Information Tabs">
               <AnimatedTabs
                 tabs={tabs}
                 activeTab={activeTab}
                 onTabChange={handleTabChange}
                 type="underline"
-                tabClassName="h-[38px] sm:h-[48px] text-[11px] sm:text-[12px]"
+                tabClassName="h-[42px] sm:h-[48px] text-[11px] sm:text-[12px]"
                 containerClassName="w-full"
               />
             </nav>
@@ -240,7 +293,12 @@ export default function EarnPage({
             {activeTab === "collateral-limits" && <CollateralLimitsTab />}
           </motion.article>
 
-          <motion.aside aria-label="Transaction Form" variants={itemVariants} className="w-full lg:w-auto mt-2 lg:mt-0">
+          {/* Right: Supply / Withdraw form */}
+          <motion.aside
+            aria-label="Transaction Form"
+            variants={itemVariants}
+            className="w-full lg:w-auto mt-4 lg:mt-0"
+          >
             <Form />
           </motion.aside>
         </motion.div>

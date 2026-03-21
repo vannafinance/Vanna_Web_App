@@ -142,7 +142,7 @@ const CollateralComponent = (props: Collateral) => {
 
   return (
     <motion.article
-      className={`relative flex flex-col sm:flex-row justify-between gap-4 sm:gap-[20px] w-full p-3 sm:p-[20px] rounded-[16px] border-[1px] ${
+      className={`relative flex justify-between gap-[20px] w-full p-[20px] rounded-[16px] border-[1px] ${
         isDark ? "bg-[#111111]" : "bg-white"
       }`}
       initial={{ opacity: 0, y: 20 }}
@@ -159,7 +159,7 @@ const CollateralComponent = (props: Collateral) => {
         {isEditing ? (
           <motion.section
             key="editing"
-            className="h-auto sm:h-[162px] flex flex-col justify-between gap-3 sm:gap-0"
+            className="h-[162px] flex flex-col justify-between"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
@@ -256,12 +256,12 @@ const CollateralComponent = (props: Collateral) => {
         )}
       </AnimatePresence>
 
-      {/* Middle section: Percentage buttons */}
+      {/* Middle section: Percentage buttons and balance type */}
       <AnimatePresence mode="wait">
         {isEditing ? (
           <motion.section
             key="editing-middle"
-            className="flex flex-col justify-between gap-3 sm:gap-0"
+            className="flex flex-col justify-between"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
@@ -272,7 +272,7 @@ const CollateralComponent = (props: Collateral) => {
           >
             {/* Percentage buttons */}
             <div
-              className="flex gap-2 sm:gap-[8px] flex-wrap"
+              className="flex gap-[8px]"
               role="group"
               aria-label="Deposit percentage"
             >
@@ -282,13 +282,13 @@ const CollateralComponent = (props: Collateral) => {
                     type="button"
                     key={item}
                     onClick={() => handlePercentageClick(item)}
-                    className={`h-[40px] sm:h-[44px] w-auto min-w-[60px] sm:w-[95px] text-center text-[13px] sm:text-[14px] text-medium cursor-pointer ${
+                    className={`h-[44px] w-[95px] text-center text-[14px] text-medium cursor-pointer ${
                       percentage === item
                         ? `${PERCENTAGE_COLORS[item]} text-white`
                         : isDark
                         ? "bg-[#222222] text-white"
                         : "bg-[#F4F4F4]"
-                    } p-2 sm:p-[10px] rounded-[12px]`}
+                    } p-[10px] rounded-[12px]`}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     transition={{ duration: 0.1 }}
@@ -299,6 +299,45 @@ const CollateralComponent = (props: Collateral) => {
                   </motion.button>
                 );
               })}
+            </div>
+
+            {/* Balance type selector and unified balance */}
+            <div className="flex flex-col justify-end items-end gap-[4px]">
+              {/* PB/WB toggle */}
+              <div className={`py-[4px] pr-[4px] pl-[8px] rounded-[8px] ${
+                isDark ? "bg-[#222222]" : "bg-[#F2EBFE]"
+              }`}>
+                <Dropdown 
+                  dropdownClassname="text-[14px] gap-[10px] "
+                  classname="text-[16px] font-medium gap-[8px]" 
+                  items={[...BALANCE_TYPE_OPTIONS]} 
+                  selectedOption={selectedBalanceType} 
+                  setSelectedOption={(value) => {
+                    setSelectedBalanceType(value);
+                    if (props.onBalanceTypeChange && props.id) {
+                      props.onBalanceTypeChange(props.id, value as string);
+                    }
+                  }}
+                />
+              </div>
+
+              {/* Unified Balance link */}
+              {hasCollateral && (
+                <motion.button
+                  type="button"
+                  onClick={handleUnifiedBalanceClick}
+                  className={`text-[12px] font-medium cursor-pointer hover:underline text-left ${
+                    isDark ? "text-white" : "text-[#111111]"
+                  }`}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ duration: 0.1 }}
+                  aria-label="View unified balance breakdown"
+                >
+                  Unified Balance: {collateral.unifiedBalance}{" "}
+                  {collateral.asset}
+                </motion.button>
+              )}
             </div>
           </motion.section>
         ) : (
@@ -354,7 +393,7 @@ const CollateralComponent = (props: Collateral) => {
         {showStandardRight && (
           <motion.aside
             key="standard-right"
-            className="flex gap-3 sm:gap-[20px]"
+            className="flex gap-[20px]"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
@@ -364,7 +403,7 @@ const CollateralComponent = (props: Collateral) => {
             }}
           >
             {/* Balance type badge and unified balance */}
-            <div className="flex flex-col justify-end items-start sm:items-end gap-[4px]">
+            <div className="flex flex-col justify-end items-end gap-[4px]">
               <motion.div
                 className="w-[28px] h-[28px] bg-[#703AE6] rounded-[4px] text-white p-[4px] text-center text-[12px] font-medium items-center flex"
                 whileHover={{ scale: 1.1 }}
@@ -416,12 +455,12 @@ const CollateralComponent = (props: Collateral) => {
         )}
       </AnimatePresence>
 
-      {/* Bottom row: WB selector + Unified Balance + Save/Cancel (editing mode) */}
+      {/* Right section: Save and Cancel buttons (editing mode) */}
       <AnimatePresence>
         {isEditing && (
           <motion.aside
             key="editing-right"
-            className="flex flex-wrap items-center w-full gap-3"
+            className="flex flex-col gap-[12px] min-w-[32px] flex-shrink-0"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
@@ -430,69 +469,33 @@ const CollateralComponent = (props: Collateral) => {
               ease: [0.4, 0, 0.2, 1],
             }}
           >
-            {/* WB selector */}
-            <div className={`py-[4px] pr-[4px] pl-[8px] rounded-[8px] flex-shrink-0 ${
-              isDark ? "bg-[#222222]" : "bg-[#F2EBFE]"
-            }`}>
-              <Dropdown 
-                dropdownClassname="text-[14px] gap-[10px]"
-                classname="text-[14px] sm:text-[16px] font-medium gap-[8px]" 
-                items={[...BALANCE_TYPE_OPTIONS]} 
-                selectedOption={selectedBalanceType} 
-                setSelectedOption={(value) => {
-                  setSelectedBalanceType(value);
-                  if (props.onBalanceTypeChange && props.id) {
-                    props.onBalanceTypeChange(props.id, value as string);
-                  }
-                }}
-              />
-            </div>
+            {/* Save button */}
+            <motion.button
+              type="button"
+              onClick={handleSave}
+              className="cursor-pointer flex flex-col justify-center items-center w-[32px] h-[32px] rounded-[8px] p-[12px] bg-[#703AE6] flex-shrink-0"
+              whileHover={{ scale: 1.05, backgroundColor: "#5A2DB8" }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ duration: 0.1 }}
+              aria-label="Save collateral"
+            >
+              <CheckIcon />
+            </motion.button>
 
-            {/* Unified Balance */}
-            {hasCollateral && (
-              <motion.button
-                type="button"
-                onClick={handleUnifiedBalanceClick}
-                className={`text-[12px] font-medium cursor-pointer hover:underline text-left whitespace-nowrap ${
-                  isDark ? "text-white" : "text-[#111111]"
-                }`}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ duration: 0.1 }}
-                aria-label="View unified balance breakdown"
-              >
-                Unified Balance: {collateral.unifiedBalance}{" "}
-                {collateral.asset}
-              </motion.button>
-            )}
-
-            {/* Save + Cancel buttons */}
-            <div className="flex gap-[12px] flex-shrink-0 ml-auto">
-              <motion.button
-                type="button"
-                onClick={handleSave}
-                className="cursor-pointer flex flex-col justify-center items-center w-[32px] h-[32px] rounded-[8px] p-[12px] bg-[#703AE6] flex-shrink-0"
-                whileHover={{ scale: 1.05, backgroundColor: "#5A2DB8" }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ duration: 0.1 }}
-                aria-label="Save collateral"
-              >
-                <CheckIcon />
-              </motion.button>
-              <motion.button
-                type="button"
-                onClick={handleCancel}
-                className={`cursor-pointer flex flex-col justify-center items-center w-[32px] h-[32px] rounded-[8px] p-[12px] flex-shrink-0 ${
-                  isDark ? "bg-[#222222]" : "bg-[#F4F4F4]"
-                }`}
-                whileHover={{ scale: 1.05, backgroundColor: isDark ? "#333333" : "#F0F0F0" }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ duration: 0.1 }}
-                aria-label="Cancel editing"
-              >
-                <CloseIcon stroke={isDark ? "#FFFFFF" : "#111111"} width={12} height={12} />
-              </motion.button>
-            </div>
+            {/* Cancel button */}
+            <motion.button
+              type="button"
+              onClick={handleCancel}
+              className={`cursor-pointer flex flex-col justify-center items-center w-[32px] h-[32px] rounded-[8px] p-[12px] flex-shrink-0 ${
+                isDark ? "bg-[#222222]" : "bg-[#F4F4F4]"
+              }`}
+              whileHover={{ scale: 1.05, backgroundColor: isDark ? "#333333" : "#F0F0F0" }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ duration: 0.1 }}
+              aria-label="Cancel editing"
+            >
+              <CloseIcon stroke={isDark ? "#FFFFFF" : "#111111"} width={12} height={12} />
+            </motion.button>
           </motion.aside>
         )}
       </AnimatePresence>
@@ -501,7 +504,7 @@ const CollateralComponent = (props: Collateral) => {
       <AnimatePresence>
         {isViewSourcesOpen && (
           <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-[#45454566] px-4"
+            className={`fixed inset-0 z-50 flex items-center justify-center bg-[#45454566]`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -531,7 +534,7 @@ const CollateralComponent = (props: Collateral) => {
       <AnimatePresence>
         {isUnifiedBalanceOpen && (
           <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-[#45454566] px-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[#45454566]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

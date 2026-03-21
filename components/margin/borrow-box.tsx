@@ -140,7 +140,7 @@ export const BorrowBox = ({
 
   return (
     <motion.section
-      className={`flex flex-col gap-[20px] rounded-[16px] py-4 sm:py-[24px] px-3 sm:px-[16px] border-[1px] ${
+      className={`flex flex-col gap-[20px] rounded-[16px] py-[24px] px-[16px] border-[1px] ${
         isDark ? "bg-[#111111]" : "bg-white"
       }`}
       initial={{ opacity: 0, y: 20 }}
@@ -148,12 +148,12 @@ export const BorrowBox = ({
       transition={{ duration: 0.4, ease: "easeOut" }}
     >
       {/* Top section: Asset selector or borrowed items display */}
-      <header className="flex flex-col sm:flex-row justify-between gap-4 relative z-20">
+      <header className="flex justify-between ">
         {/* Deposit mode: Single asset selector */}
         {mode === "Deposit" && (
           <>
             <motion.div
-              className="flex gap-[10px] items-top"
+              className="flex gap-[10px] items-top "
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.3 }}
@@ -203,12 +203,12 @@ export const BorrowBox = ({
 
             {/* Borrowed Amount section for Deposit mode */}
             <motion.div
-              className="flex flex-col justify-start items-start sm:justify-end sm:items-end gap-[12px]"
+              className="flex flex-col justify-end items-end gap-[12px]"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.3 }}
             >
-              <div className="flex flex-col items-start sm:items-end gap-[12px]">
+              <div className="flex flex-col items-end gap-[12px]">
                 <div className={`text-[14px] font-medium ${
                   isDark ? "text-white" : ""
                 }`}>Borrowed Amount:</div>
@@ -262,7 +262,7 @@ export const BorrowBox = ({
         {/* Borrow mode: Display borrowed items */}
         {mode === "Borrow" && (
           <motion.div
-            className="w-full flex flex-col sm:flex-row justify-between gap-4 sm:items-center"
+            className="w-full flex justify-between items-center"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
@@ -272,7 +272,7 @@ export const BorrowBox = ({
               <div className={`text-[14px] font-medium ${
                 isDark ? "text-white" : ""
               }`}>Borrowed Amount:</div>
-              <div className="flex flex-wrap gap-[12px]">
+              <div className="flex gap-[12px]">
                 {Array.from({ length: config.maxItems }).map((_, idx) => {
                   const selectedOption =
                     selectedOptions[idx] || DropdownOptions[0];
@@ -333,7 +333,7 @@ export const BorrowBox = ({
 
             {/* Total borrowed value */}
             {showTotal && (
-              <div className="flex flex-col justify-start items-start sm:justify-end sm:items-end gap-[12px]">
+              <div className="flex flex-col justify-end items-end gap-[12px]">
                 <div className={`text-[14px] font-medium ${
                   isDark ? "text-white" : ""
                 }`}>
@@ -357,7 +357,7 @@ export const BorrowBox = ({
       {/* Input boxes for borrow items */}
       {showInputBoxes && (
         <motion.section
-          className="flex flex-col sm:flex-row gap-[8px] items-stretch sm:items-center justify-center relative z-10"
+          className="flex gap-[8px] items-center justify-center relative z-10"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
@@ -379,19 +379,19 @@ export const BorrowBox = ({
               return (
                 <motion.div
                   key={idx}
-                  className="flex flex-1 gap-[8px] items-center w-full"
+                  className="flex gap-[8px] items-center"
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.3, delay: idx * 0.1 }}
                 >
                   <motion.div
-                    className={`p-3 sm:p-[16px] border-[1px] rounded-[16px] flex flex-col sm:flex-row justify-between gap-4 sm:items-center w-full overflow-visible ${
+                    className={`p-[16px] border-[1px] rounded-[16px] flex justify-between items-center ${
                       isDark ? "bg-[#222222]" : "bg-[#F7F7F7]"
                     }`}
                     whileHover={{ scale: 1.02 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <div className="flex flex-col gap-[16px] relative z-20">
+                    <div className="flex flex-col gap-[16px]">
                       <div>
                         <Dropdown
                           dropdownClassname="text-[14px] gap-[10px] "
@@ -414,8 +414,8 @@ export const BorrowBox = ({
                           <input
                             id={`borrow-amount-input-${idx}`}
                             onChange={handleInputChange(idx)}
-                            className={`w-full text-[20px] focus:border-[0px] focus:outline-none font-medium placeholder:text-[#C7C7C7] bg-transparent ${
-                              isDark ? "placeholder:text-[#A7A7A7] text-white" : ""
+                            className={`w-full text-[20px] focus:border-[0px] focus:outline-none font-medium placeholder:text-[#C7C7C7] ${
+                              isDark ? "placeholder:text-[#A7A7A7] text-white bg-[#222222]" : "bg-[#F7F7F7]"
                             }`}
                             type="text"
                             placeholder="0.0"
@@ -432,19 +432,17 @@ export const BorrowBox = ({
                         </div>
                       </div>
                     </div>
-                    <div className="w-full flex flex-col justify-start items-start sm:justify-end sm:items-end gap-[20px] relative z-10">
-                      <div className={`py-[4px] pr-[4px] pl-[8px] rounded-[8px] ${
-                        isDark ? "bg-[#111111]" : "bg-[#F2EBFE]"
-                      }`}>
-                        <Dropdown dropdownClassname="text-[14px] gap-[10px]" items={["Amount in %","Amount in $"]}  selectedOption={selectedAmountType} setSelectedOption={setSelectedAmountType} classname="text-[14px] sm:text-[16px] font-medium gap-[8px]" />
+                    <div className="w-full flex flex-col justify-end items-end gap-[20px] ">
+                      <div>
+                        <Dropdown dropdownClassname="text-[14px] gap-[10px] " items={["Amount in %","Amount in $"]}  selectedOption={selectedAmountType} setSelectedOption={setSelectedAmountType} classname="text-[16px] font-medium gap-[8px]" />
                       </div>
-                      <div className="px-0 sm:px-[10px] flex flex-col justify-start items-start sm:justify-end sm:items-end gap-[4px] w-full">
+                      <div className="px-[10px] flex flex-col justify-end items-end gap-[4px]">
                         <input 
                           type="text" 
                           placeholder="0.0" 
                           onChange={handlePercentageInputChange(idx)} 
-                          className={`focus:outline-none text-[20px] font-semibold w-full text-left sm:text-right placeholder:text-[#C7C7C7] bg-transparent ${
-                            isDark ? "placeholder:text-[#A7A7A7] text-white" : ""
+                          className={`focus:outline-none text-[20px] font-semibold w-full text-right placeholder:text-[#C7C7C7] ${
+                            isDark ? "placeholder:text-[#A7A7A7] text-white bg-[#222222]" : "bg-[#F7F7F7]"
                           }`}
                           value={percentageInputValues[idx] || 0} 
                         />
@@ -478,12 +476,12 @@ export const BorrowBox = ({
 
       {/* Leverage slider */}
       <motion.section
-        className="relative z-0 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-0"
+        className="relative z-0 flex items-center justify-between"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4, delay: 0.2 }}
       >
-        <div className={`flex gap-[2px] items-center rounded-[8px] border-[1px] p-[2px] w-fit flex-shrink-0 ${
+        <div className={`flex gap-[2px] items-center rounded-[8px] border-[1px] p-[2px] ${
           isDark ? "bg-[#111111]" : "bg-white"
         }`}>
           {/* - Button */}
@@ -536,7 +534,7 @@ export const BorrowBox = ({
             +
           </motion.button>
         </div>
-        <div className="w-full sm:w-[500px] px-[5px]">
+        <div className="w-[500px] px-[5px]">
           <LeverageSlider
           value={leverage}
           onChange={setLeverage}

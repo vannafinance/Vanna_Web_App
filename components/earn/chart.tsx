@@ -204,9 +204,9 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
     <article className={`flex flex-col gap-[24px] rounded-[16px] p-[16px] border-[1px] ${
       isDark ? "bg-transparent" : "bg-[#FFFFFF]"
     } ${containerWidth} ${containerHeight}`}>
-      <header className="w-full h-fit flex flex-col sm:flex-row sm:justify-between gap-3 sm:gap-4 flex-shrink-0">
+      <header className="w-full h-fit flex justify-between flex-shrink-0">
         <div
-          className={`w-full sm:w-auto h-fit flex flex-col ${
+          className={`w-full h-fit flex flex-col ${
             type === "deposit-apy" || type === "farm" ? "gap-[16px]" : ""
           }`}
         >
@@ -269,21 +269,22 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
             </div>
           )}
         </div>
-        <div className="flex items-start gap-2 sm:gap-[8px] flex-wrap sm:flex-nowrap">
+        <div className="flex items-top gap-[8px]">
           {type !== "deposit-apy" && (
             <>
               {currencyTab && (
-                <div className="w-full sm:w-[220px]">
+                <div className="w-[220px]">
                   <AnimatedTabs
-                    type="ghost"
-                    tabs={[
-                      { id: "usd", label: "USD" },
-                      { id: "usdc", label: "USDC" },
-                    ]}
-                    activeTab={selectedCurrency}
-                    onTabChange={(tabId: string) => setSelectedCurrency(tabId)}
-                  />
+                  type="ghost"
+                  tabs={[
+                    { id: "usd", label: "USD" },
+                    { id: "usdc", label: "USDC" },
+                  ]}
+                  activeTab={selectedCurrency}
+                  onTabChange={(tabId: string) => setSelectedCurrency(tabId)}
+                />
                 </div>
+                
               )}
               <div className="p-[10px] h-fit rounded-[6px] border-[1px]">
                 <Dropdown
@@ -297,24 +298,26 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
             </>
           )}
           {type === "deposit-apy" && (
-            <nav className="w-fit h-fit flex gap-1 sm:gap-[6px] flex-wrap" aria-label="Time Period Selection">
-              {dayOptions.map((item, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => setSelectedDays(item)}
-                  className={`cursor-pointer flex flex-col items-center justify-center font-semibold text-[12px] sm:text-[14px] w-auto sm:w-[56px] py-2 sm:py-[10px] px-3 sm:px-[20px] rounded-[8px] ${
-                    selectedDays === item
-                      ? "text-white bg-[#703AE6]"
-                      : isDark
-                      ? "text-white bg-[#1A1A1A] border-[1px]"
-                      : "text-black bg-white border-[1px]"
-                  }`}
-                  aria-pressed={selectedDays === item}
-                >
-                  {item}
-                </button>
-              ))}
+            <nav className="w-fit h-fit flex gap-[6px]" aria-label="Time Period Selection">
+              {dayOptions.map((item, idx) => {
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setSelectedDays(item)}
+                    className={`cursor-pointer flex flex-col items-center justify-center font-semibold text-[14px] w-[56px] py-[10px] px-[20px] rounded-[8px] ${
+                      selectedDays === item
+                        ? "text-white bg-[#703AE6]"
+                        : isDark
+                        ? "text-white bg-[#1A1A1A] border-[1px]"
+                        : "text-black bg-white border-[1px]"
+                    }`}
+                    aria-pressed={selectedDays === item}
+                  >
+                    {item}
+                  </button>
+                );
+              })}
             </nav>
           )}
           <ExpandableModal
@@ -326,9 +329,9 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
                 : "bg-white"
             }`}
             modalHeader={
-              <header className="w-full h-fit flex flex-col sm:flex-row sm:justify-between gap-3 sm:gap-4">
+              <header className="w-full h-fit flex justify-between">
                 <div
-                  className={`w-full sm:w-auto h-fit flex flex-col ${
+                  className={`w-full h-fit flex flex-col ${
                     type === "deposit-apy" || type === "farm" ? "gap-[16px]" : ""
                   }`}
                 >
@@ -387,23 +390,21 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
                     </div>
                   )}
                 </div>
-                <div className="flex items-start gap-2 sm:gap-[8px] flex-wrap sm:flex-nowrap">
-                  {type !== "deposit-apy" && (
+                <div className="flex items-top gap-[8px]">
+                  {type !== "deposit-apy" &&  (
                     <>
                       {currencyTab && (
-                        <div className="w-full sm:w-auto">
-                          <AnimatedTabs
-                            type="ghost"
-                            tabs={[
-                              { id: "usd", label: "USD" },
-                              { id: "usdc", label: "USDC" },
-                            ]}
-                            activeTab={selectedCurrency}
-                            onTabChange={(tabId: string) =>
-                              setSelectedCurrency(tabId)
-                            }
-                          />
-                        </div>
+                        <AnimatedTabs
+                          type="ghost"
+                          tabs={[
+                            { id: "usd", label: "USD" },
+                            { id: "usdc", label: "USDC" },
+                          ]}
+                          activeTab={selectedCurrency}
+                          onTabChange={(tabId: string) =>
+                            setSelectedCurrency(tabId)
+                          }
+                        />
                       )}
                       <div className="p-[10px] h-fit rounded-[6px] border-[1px]">
                         <Dropdown
@@ -417,24 +418,26 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
                     </>
                   )}
                   {type === "deposit-apy" && (
-                    <nav className="w-fit h-fit flex gap-1 sm:gap-[6px] flex-wrap" aria-label="Time Period Selection">
-                      {dayOptions.map((item, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => setSelectedDays(item)}
-                          className={`cursor-pointer flex flex-col items-center justify-center font-semibold text-[12px] sm:text-[14px] w-auto sm:w-[56px] py-2 sm:py-[10px] px-3 sm:px-[20px] rounded-[8px] ${
-                            selectedDays === item
-                              ? "text-white bg-[#703AE6]"
-                              : isDark
-                              ? "text-white bg-[#1A1A1A] border-[1px]"
-                              : "text-black bg-white border-[1px]"
-                          }`}
-                          aria-pressed={selectedDays === item}
-                        >
-                          {item}
-                        </button>
-                      ))}
+                    <nav className="w-fit h-fit flex gap-[6px]" aria-label="Time Period Selection">
+                      {dayOptions.map((item, idx) => {
+                        return (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => setSelectedDays(item)}
+                            className={`cursor-pointer flex flex-col items-center justify-center font-semibold text-[14px] w-[56px] py-[10px] px-[20px] rounded-[8px] ${
+                              selectedDays === item
+                                ? "text-white bg-[#703AE6]"
+                                : isDark
+                                ? "text-white bg-[#1A1A1A] border-[1px]"
+                                : "text-black bg-white border-[1px]"
+                            }`}
+                            aria-pressed={selectedDays === item}
+                          >
+                            {item}
+                          </button>
+                        );
+                      })}
                     </nav>
                   )}
                 </div>

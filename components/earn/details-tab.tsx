@@ -96,13 +96,11 @@ export const Details = () => {
     <section className={`w-full h-fit flex flex-col gap-[16px] rounded-[20px] border-[1px] ${
       isDark ? "bg-[#111111]" : "bg-[#F4F4F4]"
     }`} aria-label="Vault Details">
-      <div className="w-full h-fit rounded-[20px] pt-4 sm:pt-[24px] px-3 sm:px-[24px] flex flex-col gap-[16px]">
-        <h2 className={`w-full h-fit text-[18px] sm:text-[20px] font-semibold ${
+      <div className="w-full h-fit rounded-[20px] pt-[24px] px-[24px] flex flex-col gap-[16px]">
+        <h2 className={`w-full h-fit text-[20px] font-semibold ${
           isDark ? "text-white" : ""
         }`}>Statistics</h2>
-
-        {/* Supply / Borrow pie cards -- stack on mobile */}
-        <article className={`w-full h-fit flex flex-col sm:flex-row items-stretch sm:items-center rounded-[16px] gap-3 sm:gap-[12px] ${
+        <article className={`w-full h-fit flex items-center rounded-[16px] gap-[12px] ${
           isDark ? "bg-[#222222]" : "bg-[#FFFFFF]"
         }`} aria-label="Supply and Borrow Overview">
           <StatsCard
@@ -144,36 +142,36 @@ export const Details = () => {
             pie={true}
           />
         </article>
-
-        {/* Vault stats grid -- 1 col mobile, 2 col sm, 3 col md+ */}
-        <article className="w-full h-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-[15px]" aria-label="Vault Statistics">
-          {items.map((item, idx) => (
-            <StatsCard
-              key={idx}
-              heading={item.heading}
-              mainInfo={item.mainInfo}
-              subInfo={item.subInfo}
-              tooltip={item.tooltip}
-            />
-          ))}
+        <article className="w-full h-full grid grid-cols-3 grid-rows-3 gap-x-[15px]" aria-label="Vault Statistics">
+          {items.map((item, idx) => {
+            return (
+              <StatsCard
+                key={idx}
+                heading={item.heading}
+                mainInfo={item.mainInfo}
+                subInfo={item.subInfo}
+                tooltip={item.tooltip}
+              />
+            );
+          })}
         </article>
-
-        {/* Addresses grid -- 1 col mobile, 2 col sm, 3 col md+ */}
-        <article className="w-full h-fit rounded-[20px] pb-4 sm:pb-[24px]" aria-label="Contract Addresses">
-          <h3 className={`text-[18px] sm:text-[20px] font-semibold w-full h-fit ${
+        <article className="w-full h-fit rounded-[20px] pb-[24px]" aria-label="Contract Addresses">
+          <h3 className={`text-[20px] font-semibold w-full h-fit ${
             isDark ? "text-white" : ""
           }`}>
             Adresses
           </h3>
-          <div className="w-full h-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
-            {addresses.map((item, idx) => (
-              <StatsCard
-                key={idx}
-                heading={item.heading}
-                address={item.address}
-                tooltip={item.tooltip}
-              />
-            ))}
+          <div className="w-full h-full grid grid-cols-3 grid-rows-2">
+            {addresses.map((item, idx) => {
+              return (
+                <StatsCard
+                  key={idx}
+                  heading={item.heading}
+                  address={item.address}
+                  tooltip={item.tooltip}
+                />
+              );
+            })}
           </div>
         </article>
       </div>

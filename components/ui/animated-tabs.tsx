@@ -86,11 +86,8 @@ export const AnimatedTabs = ({
   // Render underline type
   if (type === "underline") {
     return (
-      <div className={`h-fit ${containerClassName}`}>
-        <div
-          className="w-full flex overflow-x-auto no-scrollbar"
-          onMouseLeave={() => setHoveredTab(null)}
-        >
+      <div className={` h-fit  ${containerClassName}`}>
+        <div className="w-full  flex" onMouseLeave={() => setHoveredTab(null)}>
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             const isHovered = hoveredTab === tab.id;
@@ -100,7 +97,7 @@ export const AnimatedTabs = ({
                 key={tab.id}
                 onClick={() => onTabChange(tab.id)}
                 onMouseEnter={() => setHoveredTab(tab.id)}
-                className={`whitespace-nowrap min-w-max px-3 sm:px-[20px] font-semibold flex items-center justify-center cursor-pointer relative ${tabClassName}`}
+                className={`whitespace-nowrap  px-[20px] font-semibold flex items-center justify-center cursor-pointer relative ${tabClassName}`}
                 animate={{
                   color: getTextColor(isActive, isHovered),
                   borderBottomWidth: isActive ? "2px" : "0px",
@@ -121,29 +118,27 @@ export const AnimatedTabs = ({
   
 
   // Render gradient/solid/ghost types
-  const containerPadding = (type === "solid" || type === "ghost") ? "p-[4px]" : "p-[6px]";
+  const containerPadding = (type === "solid" || type === "ghost") ? "p-[4px] w-fit h-fit" : "p-[6px]";
+  const containerWidth = (type === "solid" || type === "ghost") ? "w-full" : "w-full";
   const tabWidth = customTabWidth 
     ? customTabWidth 
-    : (type === "solid") ? "min-w-0 sm:w-[160px]" : type === "ghost" ? "min-w-0 sm:w-[180px]" : "";
-  const tabPadding = (type === "solid" || type === "ghost") ? "py-[10px] sm:py-[12px] px-[6px] sm:px-[8px]" : "";
-  const tabHeight = (type === "solid") ? "h-fit" : (type === "ghost") ? "h-[38px]" : "h-[48px] sm:h-[64px]";
-
-  const isGradient = type === "gradient";
+    : (type === "solid" ) ? "w-[160px]" : type === "ghost" ? "w-[180px]" : "";
+  const tabPadding = (type === "solid" || type === "ghost") ? "py-[12px] px-[8px]" : "";
+  const tabHeight = (type === "solid") ? "h-fit" :  (type === "ghost") ? "h-[38px]" : "h-[64px]";
+  const useFlex1 = (type !== "solid" && type !== "ghost");
 
   return (
     <div className={containerClassName}>
       <div
-        className={`border-[1px] w-full flex gap-1 sm:gap-[16px] ${containerPadding} rounded-[12px] h-fit relative ${
-          isGradient ? "overflow-x-auto no-scrollbar sm:overflow-hidden" : "overflow-hidden"
-        } ${
+        className={`border-[1px] ${containerWidth} flex gap-[16px] ${containerPadding} rounded-[12px] h-fit relative overflow-hidden ${
           isDark ? "bg-[#111111]" : "bg-white"
         }`}
         onMouseLeave={() => setHoveredTab(null)}
       >
-        {/* Gradient indicator -- hidden on mobile when scrollable */}
-        {isGradient && (
+        {/* Gradient indicator */}
+        {type === "gradient" && (
           <motion.div
-            className={`absolute top-[6px] left-[6px] h-[48px] sm:h-[64px] rounded-[12px] bg-gradient p-[2px] hidden sm:block ${indicatorClassName}`}
+            className={`absolute top-[6px] left-[6px] h-[64px] rounded-[12px] bg-gradient p-[2px] ${indicatorClassName}`}
             style={{ width: indicatorWidth }}
             animate={{ x: `${currentIndex * 100}%` }}
             transition={SPRING_CONFIG}
@@ -162,10 +157,10 @@ export const AnimatedTabs = ({
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
               onMouseEnter={() => setHoveredTab(tab.id)}
-              className={`${isGradient ? "min-w-max px-3 sm:px-0 sm:min-w-0 sm:flex-1" : `${tabWidth} flex-1`} ${tabPadding} whitespace-nowrap hover:cursor-pointer text-[12px] sm:text-[16px] font-semibold flex flex-col justify-center text-center ${tabHeight} rounded-[10px] relative z-10 ${tabClassName}`}
+              className={`${tabWidth} ${tabPadding} hover:cursor-pointer text-[16px] font-semibold flex flex-col justify-center text-center ${tabHeight} rounded-[10px] ${useFlex1 ? "flex-1" : ""} relative z-10 ${tabClassName}`}
               animate={{
                 color: getTextColor(isActive, isHovered),
-                background: isGradient ? (isActive ? (isDark ? "rgba(112,58,230,0.15)" : "rgba(112,58,230,0.08)") : getBackground(isActive, isHovered)) : getBackground(isActive, isHovered),
+                background: getBackground(isActive, isHovered),
               }}
               whileTap={{ scale: 0.95 }}
               transition={{ duration: 0.2 }}
