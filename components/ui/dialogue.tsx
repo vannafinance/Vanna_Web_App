@@ -17,14 +17,16 @@ interface Dialogue {
   onOpen?: () => void;
   buttonOnClick: () => void;
   onCheckboxChange?: (checked: boolean) => void;
+  buttonDisabled?: boolean;
+  loadingMessage?: string;
 }
 
 export const Dialogue = (props: Dialogue) => {
   const { isDark } = useTheme();
   const [isChecked, setIsChecked] = useState(false);
-
+  
   return (
-    <motion.div
+    <motion.div 
       className={`shadow-md flex flex-col gap-[20px] w-full max-h-[90vh] rounded-[20px] py-[36px] px-[20px] ${
         isDark ? "bg-[#111111]" : "bg-[#F7F7F7]"
       }`}
@@ -32,7 +34,7 @@ export const Dialogue = (props: Dialogue) => {
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
     >
-      <motion.div
+      <motion.div 
         className={`text-[24px] font-bold text-center mb-[24px] flex-shrink-0 ${
           isDark ? "text-white" : ""
         }`}
@@ -44,7 +46,7 @@ export const Dialogue = (props: Dialogue) => {
       </motion.div>
 
       {props.description && (
-        <motion.div
+        <motion.div 
           className={`text-[16px] font-medium ${
             isDark ? "text-white" : "text-[#333333]"
           }`}
@@ -55,12 +57,10 @@ export const Dialogue = (props: Dialogue) => {
           {props.description}
         </motion.div>
       )}
-
-      <div
-        className={`overflow-y-auto overflow-x-hidden pr-2 max-h-[600px] ${
-          isDark ? "text-white" : "text-[#333333]"
-        }`}
-      >
+      
+      <div className={`overflow-y-auto overflow-x-hidden pr-2 max-h-[600px] ${
+        isDark ? "text-white" : "text-[#333333]"
+      }`}>
         <ol className="list-decimal list-outside pl-5 space-y-3">
           {props.content.map((item, idx) => {
             return (
@@ -119,6 +119,19 @@ export const Dialogue = (props: Dialogue) => {
         </motion.div>
       )}
 
+      {props.loadingMessage && (
+        <motion.div
+          className={`text-[14px] font-medium text-center ${
+            isDark ? "text-[#919191]" : "text-[#76737B]"
+          }`}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.2 }}
+        >
+          {props.loadingMessage}
+        </motion.div>
+      )}
+
       <motion.div
         className="flex flex-col gap-[12px] flex-shrink-0 mt-[24px]"
         initial={{ opacity: 0, y: 10 }}
@@ -132,7 +145,7 @@ export const Dialogue = (props: Dialogue) => {
           type="solid"
           size="medium"
           text={props.buttonText}
-          disabled={props.checkboxContent ? !isChecked : false}
+          disabled={props.buttonDisabled || (props.checkboxContent ? !isChecked : false)}
           onClick={props.buttonOnClick}
         />
         <Button

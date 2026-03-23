@@ -1,0 +1,762 @@
+{
+    "abi": [
+        {
+            "type": "receive",
+            "stateMutability": "payable"
+        },
+        {
+            "type": "function",
+            "name": "accountManager",
+            "inputs": [],
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "address",
+                    "internalType": "address"
+                }
+            ],
+            "stateMutability": "view"
+        },
+        {
+            "type": "function",
+            "name": "activate",
+            "inputs": [],
+            "outputs": [],
+            "stateMutability": "nonpayable"
+        },
+        {
+            "type": "function",
+            "name": "activationBlock",
+            "inputs": [],
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "uint256",
+                    "internalType": "uint256"
+                }
+            ],
+            "stateMutability": "view"
+        },
+        {
+            "type": "function",
+            "name": "addAsset",
+            "inputs": [
+                {
+                    "name": "token",
+                    "type": "address",
+                    "internalType": "address"
+                }
+            ],
+            "outputs": [],
+            "stateMutability": "nonpayable"
+        },
+        {
+            "type": "function",
+            "name": "addBorrow",
+            "inputs": [
+                {
+                    "name": "token",
+                    "type": "address",
+                    "internalType": "address"
+                }
+            ],
+            "outputs": [],
+            "stateMutability": "nonpayable"
+        },
+        {
+            "type": "function",
+            "name": "assets",
+            "inputs": [
+                {
+                    "name": "",
+                    "type": "uint256",
+                    "internalType": "uint256"
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "address",
+                    "internalType": "address"
+                }
+            ],
+            "stateMutability": "view"
+        },
+        {
+            "type": "function",
+            "name": "borrows",
+            "inputs": [
+                {
+                    "name": "",
+                    "type": "uint256",
+                    "internalType": "uint256"
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "address",
+                    "internalType": "address"
+                }
+            ],
+            "stateMutability": "view"
+        },
+        {
+            "type": "function",
+            "name": "deactivate",
+            "inputs": [],
+            "outputs": [],
+            "stateMutability": "nonpayable"
+        },
+        {
+            "type": "function",
+            "name": "exec",
+            "inputs": [
+                {
+                    "name": "target",
+                    "type": "address",
+                    "internalType": "address"
+                },
+                {
+                    "name": "amt",
+                    "type": "uint256",
+                    "internalType": "uint256"
+                },
+                {
+                    "name": "data",
+                    "type": "bytes",
+                    "internalType": "bytes"
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "bool",
+                    "internalType": "bool"
+                },
+                {
+                    "name": "",
+                    "type": "bytes",
+                    "internalType": "bytes"
+                }
+            ],
+            "stateMutability": "nonpayable"
+        },
+        {
+            "type": "function",
+            "name": "getAssets",
+            "inputs": [],
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "address[]",
+                    "internalType": "address[]"
+                }
+            ],
+            "stateMutability": "view"
+        },
+        {
+            "type": "function",
+            "name": "getBorrows",
+            "inputs": [],
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "address[]",
+                    "internalType": "address[]"
+                }
+            ],
+            "stateMutability": "view"
+        },
+        {
+            "type": "function",
+            "name": "hasAsset",
+            "inputs": [
+                {
+                    "name": "",
+                    "type": "address",
+                    "internalType": "address"
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "bool",
+                    "internalType": "bool"
+                }
+            ],
+            "stateMutability": "view"
+        },
+        {
+            "type": "function",
+            "name": "hasNoDebt",
+            "inputs": [],
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "bool",
+                    "internalType": "bool"
+                }
+            ],
+            "stateMutability": "view"
+        },
+        {
+            "type": "function",
+            "name": "init",
+            "inputs": [
+                {
+                    "name": "_accountManager",
+                    "type": "address",
+                    "internalType": "address"
+                }
+            ],
+            "outputs": [],
+            "stateMutability": "nonpayable"
+        },
+        {
+            "type": "function",
+            "name": "removeAsset",
+            "inputs": [
+                {
+                    "name": "token",
+                    "type": "address",
+                    "internalType": "address"
+                }
+            ],
+            "outputs": [],
+            "stateMutability": "nonpayable"
+        },
+        {
+            "type": "function",
+            "name": "removeBorrow",
+            "inputs": [
+                {
+                    "name": "token",
+                    "type": "address",
+                    "internalType": "address"
+                }
+            ],
+            "outputs": [],
+            "stateMutability": "nonpayable"
+        },
+        {
+            "type": "function",
+            "name": "sweepTo",
+            "inputs": [
+                {
+                    "name": "toAddress",
+                    "type": "address",
+                    "internalType": "address"
+                }
+            ],
+            "outputs": [],
+            "stateMutability": "nonpayable"
+        },
+        {
+            "type": "error",
+            "name": "AccountManagerOnly",
+            "inputs": []
+        },
+        {
+            "type": "error",
+            "name": "ContractAlreadyInitialized",
+            "inputs": []
+        },
+        {
+            "type": "error",
+            "name": "EthTransferFailure",
+            "inputs": []
+        }
+    ],
+    "bytecode": {
+        "object": "0x60808060405234601557610ba6908161001a8239f35b5f80fdfe6080604090808252600480361015610021575b505050361561001f575f80fd5b005b5f3560e01c9182630565bb67146108e0575081630f15f4c0146108b8578163191e9d7c1461085b57816319ab453c1461080a578163298410e51461077d5781634a5e42b11461067857816351b42b00146106435781635205c9b61461062457816367e4ac2c146105a357816380faa3d21461058657816391c2c4691461055e578163a567fb4714610524578163c982e27a14610434578163cbbf728014610250578163cf35bdd014610210578163e30cbfa51461017c575063eae93e7e146100ea578080610012565b34610178575f366003190112610178578051600380548083525f918252602080840194927fc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b92915b82821061015857610154868661014a828b0383610a85565b5191829182610a41565b0390f35b83546001600160a01b031687529586019560019384019390910190610132565b5f80fd5b8234610178576020366003190112610178576101966109ad565b6001549091906001600160a01b03163303610201575060035491600160401b8310156101ee57506101d082600161001f9401600355610a0c565b90919060018060a01b038084549260031b9316831b921b1916179055565b604190634e487b7160e01b5f525260245ffd5b5163fae067e560e01b81529050fd5b9050346101785760203660031901126101785735906002548210156101785761023a6020926109c3565b905491519160018060a01b039160031b1c168152f35b8234610178576020806003193601126101785761026b6109ad565b600180546001600160a01b0390811633036104245760025490838116835f5b878a8a87841061033e57828a866002545f600255806102fd575b505082514792810167ffffffffffffffff8111828210176102ea575f93849384809481948952525af16102d5610abb565b50156102dd57005b5163af2349ad60e01b8152fd5b604186634e487b7160e01b5f525260245ffd5b60025f527f405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace908101905b81811061033457506102a4565b5f81558201610327565b8692866044610364945f876103528a6109c3565b9054906103738c8460039c8d926109c3565b929092309354911b1c16610afa565b9851988997889663a9059cbb60e01b88528701526024860152891b1c165af16103e9575b506103b3826103a5856109c3565b9054309291851b1c16610afa565b156103c3575b505001849061028a565b6103cc836109c3565b9054911b1c165f52898852885f2060ff198154169055838b6103b9565b8a809295508193503d831161041d575b6104038183610a85565b81010312610178575180151503610178578386928c610397565b503d6103f9565b845163fae067e560e01b81528690fd5b9050346101785760203660031901126101785761044f6109ad565b9060018060a01b03600193816001541633036102015750600391825493825f9116905b85811061047b57005b818461048683610a0c565b905490881b1c1614610499578601610472565b929450509180945054925f1993848101908111610511576104ce92916104c16101d092610a0c565b905490881b1c1691610a0c565b82549081156104fe575001906104fb6104e683610a0c565b81549060018060a01b039060031b1b19169055565b55005b603190634e487b7160e01b5f525260245ffd5b601184634e487b7160e01b5f525260245ffd5b8234610178576020366003190112610178576020916001600160a01b036105496109ad565b165f52825260ff815f20541690519015158152f35b8234610178575f3660031901126101785760015490516001600160a01b039091168152602090f35b8234610178575f366003190112610178576020905f549051908152f35b8234610178575f366003190112610178578051600280548083525f918252602080840194927f405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace92915b82821061060457610154868661014a828b0383610a85565b83546001600160a01b0316875295860195600193840193909101906105ec565b8234610178575f36600319011261017857602090600354159051908152f35b8234610178575f366003190112610178576001546001600160a01b0316330361066b575f8055005b5163fae067e560e01b8152fd5b905034610178576020366003190112610178576106936109ad565b600180546001600160a01b0392908316330361076d5760028054918416935f5b8381106106d1575b5f8681526020889052889020805460ff19169055005b81866106dc836109c3565b929054600393841b1c16146106f3575084016106b3565b83549395505f199450909284810190811161075a57916101d09161071a61072695946109c3565b9054911b1c16916109c3565b8154801561074757019061073c6104e6836109c3565b555f808080806106bb565b603185634e487b7160e01b5f525260245ffd5b601188634e487b7160e01b5f525260245ffd5b845163fae067e560e01b81528490fd5b905034610178576020366003190112610178576107986109ad565b6001546001600160a01b039190821633036107fa57600254600160401b8110156107e757816101d08260016107d094016002556109c3565b165f526020525f20600160ff198254161790555f80f35b604184634e487b7160e01b5f525260245ffd5b835163fae067e560e01b81528390fd5b8234610178576020366003190112610178576108246109ad565b600154926001600160a01b039283851661084e5750506001600160a01b0319909216911617600155005b51631ee1e30360e21b8152fd5b9050346101785760203660031901126101785735906003548210156101785760035f527fc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b9091015490516001600160a01b03919091168152602090f35b8234610178575f366003190112610178576001546001600160a01b0316330361066b57435f55005b915034610178576060366003190112610178576108fb6109ad565b916044359167ffffffffffffffff9182841161017857366023850112156101785783820135928311610178573660248486010111610178576001546001600160a01b031633036109a1578560605f80886024898980885193849301833781018481520391602435905af161096d610abb565b8351938492151583528060208401526020825192838093860152018484015e5f828201840152601f01601f19168101030190f35b63fae067e560e01b8152fd5b600435906001600160a01b038216820361017857565b6002548110156109f85760025f527f405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace01905f90565b634e487b7160e01b5f52603260045260245ffd5b6003548110156109f85760035f527fc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b01905f90565b60209060206040818301928281528551809452019301915f5b828110610a68575050505090565b83516001600160a01b031685529381019392810192600101610a5a565b90601f8019910116810190811067ffffffffffffffff821117610aa757604052565b634e487b7160e01b5f52604160045260245ffd5b3d15610af5573d9067ffffffffffffffff8211610aa75760405191610aea601f8201601f191660200184610a85565b82523d5f602084013e565b606090565b6040516370a0823160e01b81526001600160a01b0392831660048201529160209183916024918391165afa908115610b65575f91610b36575090565b90506020813d602011610b5d575b81610b5160209383610a85565b81010312610178575190565b3d9150610b44565b6040513d5f823e3d90fdfea2646970667358221220b0c82d9fed1fcf93b8ea3f615dcd386289f318e057bc306c728197cf1d37f13a64736f6c63430008190033",
+        "sourceMap": "428:6408:41:-:0;;;;;;;;;;;;;;;;;",
+        "linkReferences": {}
+    },
+    "deployedBytecode": {
+        "object": "0x6080604090808252600480361015610021575b505050361561001f575f80fd5b005b5f3560e01c9182630565bb67146108e0575081630f15f4c0146108b8578163191e9d7c1461085b57816319ab453c1461080a578163298410e51461077d5781634a5e42b11461067857816351b42b00146106435781635205c9b61461062457816367e4ac2c146105a357816380faa3d21461058657816391c2c4691461055e578163a567fb4714610524578163c982e27a14610434578163cbbf728014610250578163cf35bdd014610210578163e30cbfa51461017c575063eae93e7e146100ea578080610012565b34610178575f366003190112610178578051600380548083525f918252602080840194927fc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b92915b82821061015857610154868661014a828b0383610a85565b5191829182610a41565b0390f35b83546001600160a01b031687529586019560019384019390910190610132565b5f80fd5b8234610178576020366003190112610178576101966109ad565b6001549091906001600160a01b03163303610201575060035491600160401b8310156101ee57506101d082600161001f9401600355610a0c565b90919060018060a01b038084549260031b9316831b921b1916179055565b604190634e487b7160e01b5f525260245ffd5b5163fae067e560e01b81529050fd5b9050346101785760203660031901126101785735906002548210156101785761023a6020926109c3565b905491519160018060a01b039160031b1c168152f35b8234610178576020806003193601126101785761026b6109ad565b600180546001600160a01b0390811633036104245760025490838116835f5b878a8a87841061033e57828a866002545f600255806102fd575b505082514792810167ffffffffffffffff8111828210176102ea575f93849384809481948952525af16102d5610abb565b50156102dd57005b5163af2349ad60e01b8152fd5b604186634e487b7160e01b5f525260245ffd5b60025f527f405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace908101905b81811061033457506102a4565b5f81558201610327565b8692866044610364945f876103528a6109c3565b9054906103738c8460039c8d926109c3565b929092309354911b1c16610afa565b9851988997889663a9059cbb60e01b88528701526024860152891b1c165af16103e9575b506103b3826103a5856109c3565b9054309291851b1c16610afa565b156103c3575b505001849061028a565b6103cc836109c3565b9054911b1c165f52898852885f2060ff198154169055838b6103b9565b8a809295508193503d831161041d575b6104038183610a85565b81010312610178575180151503610178578386928c610397565b503d6103f9565b845163fae067e560e01b81528690fd5b9050346101785760203660031901126101785761044f6109ad565b9060018060a01b03600193816001541633036102015750600391825493825f9116905b85811061047b57005b818461048683610a0c565b905490881b1c1614610499578601610472565b929450509180945054925f1993848101908111610511576104ce92916104c16101d092610a0c565b905490881b1c1691610a0c565b82549081156104fe575001906104fb6104e683610a0c565b81549060018060a01b039060031b1b19169055565b55005b603190634e487b7160e01b5f525260245ffd5b601184634e487b7160e01b5f525260245ffd5b8234610178576020366003190112610178576020916001600160a01b036105496109ad565b165f52825260ff815f20541690519015158152f35b8234610178575f3660031901126101785760015490516001600160a01b039091168152602090f35b8234610178575f366003190112610178576020905f549051908152f35b8234610178575f366003190112610178578051600280548083525f918252602080840194927f405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace92915b82821061060457610154868661014a828b0383610a85565b83546001600160a01b0316875295860195600193840193909101906105ec565b8234610178575f36600319011261017857602090600354159051908152f35b8234610178575f366003190112610178576001546001600160a01b0316330361066b575f8055005b5163fae067e560e01b8152fd5b905034610178576020366003190112610178576106936109ad565b600180546001600160a01b0392908316330361076d5760028054918416935f5b8381106106d1575b5f8681526020889052889020805460ff19169055005b81866106dc836109c3565b929054600393841b1c16146106f3575084016106b3565b83549395505f199450909284810190811161075a57916101d09161071a61072695946109c3565b9054911b1c16916109c3565b8154801561074757019061073c6104e6836109c3565b555f808080806106bb565b603185634e487b7160e01b5f525260245ffd5b601188634e487b7160e01b5f525260245ffd5b845163fae067e560e01b81528490fd5b905034610178576020366003190112610178576107986109ad565b6001546001600160a01b039190821633036107fa57600254600160401b8110156107e757816101d08260016107d094016002556109c3565b165f526020525f20600160ff198254161790555f80f35b604184634e487b7160e01b5f525260245ffd5b835163fae067e560e01b81528390fd5b8234610178576020366003190112610178576108246109ad565b600154926001600160a01b039283851661084e5750506001600160a01b0319909216911617600155005b51631ee1e30360e21b8152fd5b9050346101785760203660031901126101785735906003548210156101785760035f527fc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b9091015490516001600160a01b03919091168152602090f35b8234610178575f366003190112610178576001546001600160a01b0316330361066b57435f55005b915034610178576060366003190112610178576108fb6109ad565b916044359167ffffffffffffffff9182841161017857366023850112156101785783820135928311610178573660248486010111610178576001546001600160a01b031633036109a1578560605f80886024898980885193849301833781018481520391602435905af161096d610abb565b8351938492151583528060208401526020825192838093860152018484015e5f828201840152601f01601f19168101030190f35b63fae067e560e01b8152fd5b600435906001600160a01b038216820361017857565b6002548110156109f85760025f527f405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace01905f90565b634e487b7160e01b5f52603260045260245ffd5b6003548110156109f85760035f527fc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b01905f90565b60209060206040818301928281528551809452019301915f5b828110610a68575050505090565b83516001600160a01b031685529381019392810192600101610a5a565b90601f8019910116810190811067ffffffffffffffff821117610aa757604052565b634e487b7160e01b5f52604160045260245ffd5b3d15610af5573d9067ffffffffffffffff8211610aa75760405191610aea601f8201601f191660200184610a85565b82523d5f602084013e565b606090565b6040516370a0823160e01b81526001600160a01b0392831660048201529160209183916024918391165afa908115610b65575f91610b36575090565b90506020813d602011610b5d575b81610b5160209383610a85565b81010312610178575190565b3d9150610b44565b6040513d5f823e3d90fdfea2646970667358221220b0c82d9fed1fcf93b8ea3f615dcd386289f318e057bc306c728197cf1d37f13a64736f6c63430008190033",
+        "sourceMap": "428:6408:41:-:0;;;;;;;;;;;;;-1:-1:-1;428:6408:41;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;428:6408:41;;;;;;3307:7;428:6408;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::i;:::-;;;;;;;:::i;:::-;;;;;;;-1:-1:-1;;;;;428:6408:41;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;428:6408:41;;;;;;:::i;:::-;;;;;;-1:-1:-1;;;;;428:6408:41;1640:10;:28;1636:68;;428:6408;3797:7;428:6408;;-1:-1:-1;;;428:6408:41;;;;;;;;1654:14;428:6408;;;3797:7;428:6408;;:::i;:::-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1636:68;428:6408;-1:-1:-1;;;1677:27:41;;428:6408;-1:-1:-1;1677:27:41;428:6408;;;;;;;;-1:-1:-1;;428:6408:41;;;;;;1094:23;428:6408;1094:23;;;;;;428:6408;1094:23;;:::i;:::-;428:6408;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::i;:::-;;;;-1:-1:-1;;;;;428:6408:41;;;1640:10;:28;1636:68;;5683:6;428:6408;;;;;;;5718:13;;;;;;;;;428:6408;;;5683:6;428:6408;;5683:6;428:6408;;;;5706:277;-1:-1:-1;;428:6408:41;;6041:21;;428:6408;;;;;;;;;;;;;;;;;;;;;;;1258:33:81;;;;:::i;:::-;;1304:8;1301:47;;428:6408:41;1301:47:81;428:6408:41;-1:-1:-1;;;1321:27:81;;;428:6408:41;;;;;;;;;;;;;5683:6;428:6408;;;;;;;;;;;;;;;;;;;;;;;;5733:3;5763:9;;;428:6408;5811:9;5763;428:6408;5763:9;;;;:::i;:::-;428:6408;;;5811:34;428:6408;;;5811:9;;;;:::i;:::-;5839:4;;;;428:6408;;;;;;5811:34;:::i;:::-;428:6408;;;;;;;;;;5756:103;;;;428:6408;;;;;;;;;5756:103;;;;5733:3;5888:9;:34;:9;;;;:::i;:::-;428:6408;;5839:4;;428:6408;;;;;5888:34;:::i;:::-;:39;5884:88;;5733:3;;;428:6408;5710:6;;;;5884:88;5954:9;;;:::i;:::-;428:6408;;;;;;;;;;;;;;;;;;;;;5884:88;;;;5756:103;;;;;;;;;;;;;;;;;;;:::i;:::-;;;428:6408;;;;;;;;;;;5756:103;;;;;;;;;;;1636:68;428:6408;;-1:-1:-1;;;1677:27:41;;428:6408;;1677:27;428:6408;;;;;;;;-1:-1:-1;;428:6408:41;;;;;;:::i;:::-;;;;;;;1654:14;428:6408;;1654:14;428:6408;;1640:10;:28;1636:68;;4335:7;;428:6408;;;6615:6;;428:6408;;;6611:182;6623:7;;;;;;428:6408;6632:3;6655:6;;;;;:::i;:::-;428:6408;;;;;;;6655:15;6651:132;;6632:3;428:6408;6615:6;;6651:132;428:6408;;;;;;;;;;;;;;;;;;;;;6690:28;6699:19;;;6690:6;6699:19;;:::i;:::-;428:6408;;;;;;;6690:6;;:::i;:28::-;428:6408;;;;;;;;;;;;;;:::i;:::-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;428:6408:41;;;;;;-1:-1:-1;;;;;428:6408:41;;:::i;:::-;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;428:6408:41;;;;;;;;-1:-1:-1;;;;;428:6408:41;;;;;;;;;;;;;;;-1:-1:-1;;428:6408:41;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;428:6408:41;;;;;;3081:6;428:6408;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::i;:::-;;;-1:-1:-1;;;;;428:6408:41;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;428:6408:41;;;;;;4591:7;428:6408;4591:19;428:6408;;;;;;;;;;;;;-1:-1:-1;;428:6408:41;;;;;;-1:-1:-1;;;;;428:6408:41;1640:10;:28;1636:68;;428:6408;;;;1636:68;428:6408;-1:-1:-1;;;1677:27:41;;;428:6408;;;;;;;;-1:-1:-1;;428:6408:41;;;;;;:::i;:::-;;;;-1:-1:-1;;;;;428:6408:41;1654:14;428:6408;;1640:10;:28;1636:68;;4051:6;428:6408;;;;;;;6623:7;;;;;;6611:182;428:6408;;;;;;;;;;;;;-1:-1:-1;;428:6408:41;;;;6632:3;6655:6;;;;;:::i;:::-;428:6408;;;;;;;;;6655:15;6651:132;;6632:3;;428:6408;6615:6;;6651:132;428:6408;;;;-1:-1:-1;;;428:6408:41;-1:-1:-1;428:6408:41;;;;;;;;;;6699:19;6690:6;6699:19;;6690:28;6699:19;;;:::i;:::-;428:6408;;;;;;6690:6;;:::i;:28::-;428:6408;;;;;;;;;;;;:::i;:::-;;6763:5;;;;;;;428:6408;;;;;;;;;;;;;;;;;;;;;;;;1636:68;428:6408;;-1:-1:-1;;;1677:27:41;;428:6408;;1677:27;428:6408;;;;;;;;-1:-1:-1;;428:6408:41;;;;;;:::i;:::-;;;-1:-1:-1;;;;;428:6408:41;;;;1640:10;:28;1636:68;;3529:6;428:6408;-1:-1:-1;;;428:6408:41;;;;;;;;1654:14;428:6408;;;3529:6;428:6408;;:::i;:::-;;;;;;;;1654:14;428:6408;;;;;;;;;;;;;;;;;;;;;;;1636:68;428:6408;;-1:-1:-1;;;1677:27:41;;428:6408;;1677:27;428:6408;;;;;;;-1:-1:-1;;428:6408:41;;;;;;:::i;:::-;2317:14;428:6408;;-1:-1:-1;;;;;428:6408:41;;;;2313:88;;-1:-1:-1;;;;;;;;428:6408:41;;;;;;2317:14;428:6408;;2313:88;428:6408;-1:-1:-1;;;2366:35:41;;;428:6408;;;;;;;;-1:-1:-1;;428:6408:41;;;;;;1196:24;428:6408;1196:24;;;;;;428:6408;;;;;;;;;-1:-1:-1;;;;;428:6408:41;;;;;;;;;;;;;;;;-1:-1:-1;;428:6408:41;;;;;;-1:-1:-1;;;;;428:6408:41;1640:10;:28;1636:68;;2655:12;428:6408;;;;;;;;;;;-1:-1:-1;;428:6408:41;;;;;;:::i;:::-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;;;;428:6408:41;1640:10;:28;1636:68;;428:6408;;;;;;;;;;;;;;;;;;;;;;5317:29;428:6408;;;5317:29;;;;;:::i;:::-;428:6408;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;428:6408:41;;;;;;;1636:68;-1:-1:-1;;;1677:27:41;;;428:6408;;;;-1:-1:-1;;;;;428:6408:41;;;;;;:::o;:::-;5683:6;428:6408;;;;;;5683:6;-1:-1:-1;428:6408:41;;;;-1:-1:-1;428:6408:41;:::o;:::-;;;;;;;;;;;;;4335:7;428:6408;;;;;;4335:7;-1:-1:-1;428:6408:41;;;;-1:-1:-1;428:6408:41;:::o;:::-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::o;:::-;;;-1:-1:-1;;;;;428:6408:41;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::o;:::-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;428:6408:41;;;;;:::i;:::-;;;;-1:-1:-1;428:6408:41;;;;:::o;:::-;;;:::o;1361:132:81:-;428:6408:41;;-1:-1:-1;;;1456:30:81;;-1:-1:-1;;;;;428:6408:41;;;1456:30:81;;;428:6408:41;;1456:30:81;;428:6408:41;;;;;;;1456:30:81;;;;;;;-1:-1:-1;1456:30:81;;;1449:37;1361:132;:::o;1456:30::-;;;;;;;;;;;;;;;;;:::i;:::-;;;428:6408:41;;;;;1361:132:81;:::o;1456:30::-;;;-1:-1:-1;1456:30:81;;;428:6408:41;;;-1:-1:-1;428:6408:41;;;;",
+        "linkReferences": {}
+    },
+    "methodIdentifiers": {
+        "accountManager()": "91c2c469",
+        "activate()": "0f15f4c0",
+        "activationBlock()": "80faa3d2",
+        "addAsset(address)": "298410e5",
+        "addBorrow(address)": "e30cbfa5",
+        "assets(uint256)": "cf35bdd0",
+        "borrows(uint256)": "191e9d7c",
+        "deactivate()": "51b42b00",
+        "exec(address,uint256,bytes)": "0565bb67",
+        "getAssets()": "67e4ac2c",
+        "getBorrows()": "eae93e7e",
+        "hasAsset(address)": "a567fb47",
+        "hasNoDebt()": "5205c9b6",
+        "init(address)": "19ab453c",
+        "removeAsset(address)": "4a5e42b1",
+        "removeBorrow(address)": "c982e27a",
+        "sweepTo(address)": "cbbf7280"
+    },
+    "rawMetadata": "{\"compiler\":{\"version\":\"0.8.25+commit.b61c2a91\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[],\"name\":\"AccountManagerOnly\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"ContractAlreadyInitialized\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"EthTransferFailure\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"accountManager\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"activate\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"activationBlock\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"token\",\"type\":\"address\"}],\"name\":\"addAsset\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"token\",\"type\":\"address\"}],\"name\":\"addBorrow\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"assets\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"borrows\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"deactivate\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"target\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amt\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"}],\"name\":\"exec\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"},{\"internalType\":\"bytes\",\"name\":\"\",\"type\":\"bytes\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getAssets\",\"outputs\":[{\"internalType\":\"address[]\",\"name\":\"\",\"type\":\"address[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getBorrows\",\"outputs\":[{\"internalType\":\"address[]\",\"name\":\"\",\"type\":\"address[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"hasAsset\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"hasNoDebt\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_accountManager\",\"type\":\"address\"}],\"name\":\"init\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"token\",\"type\":\"address\"}],\"name\":\"removeAsset\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"token\",\"type\":\"address\"}],\"name\":\"removeBorrow\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"toAddress\",\"type\":\"address\"}],\"name\":\"sweepTo\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"stateMutability\":\"payable\",\"type\":\"receive\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{\"addAsset(address)\":{\"params\":{\"token\":\"Address of the ERC-20 token to add\"}},\"addBorrow(address)\":{\"params\":{\"token\":\"Address of the ERC-20 token to add\"}},\"exec(address,uint256,bytes)\":{\"params\":{\"amt\":\"Amount of Eth to send to the target contract\",\"data\":\"Encoded sig + params of the function to transact with in the target contract\",\"target\":\"Address of contract to transact with\"},\"returns\":{\"_0\":\"success True if transaction was successful, false otherwise\",\"_1\":\"retData Data returned by given target contract after the transaction\"}},\"getAssets()\":{\"returns\":{\"_0\":\"assets List of addresses\"}},\"getBorrows()\":{\"returns\":{\"_0\":\"borrows List of addresses\"}},\"hasNoDebt()\":{\"returns\":{\"_0\":\"hasNoDebt bool\"}},\"init(address)\":{\"details\":\"Can only be called as long as the address of the accountManager is 0x0\",\"params\":{\"_accountManager\":\"address of the account manager\"}},\"removeAsset(address)\":{\"params\":{\"token\":\"Address of the ERC-20 token to remove\"}},\"removeBorrow(address)\":{\"params\":{\"token\":\"Address of the ERC-20 token to remove\"}},\"sweepTo(address)\":{\"params\":{\"toAddress\":\"address of the account to send the assets to\"}}},\"stateVariables\":{\"accountManager\":{\"details\":\"If the value is 0x0 the contract is not initialized\"}},\"title\":\"Vanna Account\",\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"accountManager()\":{\"notice\":\"Address of account manager\"},\"activate()\":{\"notice\":\"Activates an account by setting the activationBlock to the current block number\"},\"activationBlock()\":{\"notice\":\"Block number for when the account is activated\"},\"addAsset(address)\":{\"notice\":\"Adds a given ERC-20 token to the assets list\"},\"addBorrow(address)\":{\"notice\":\"Adds a given ERC-20 token to the borrows list\"},\"assets(uint256)\":{\"notice\":\"A list of ERC-20 assets (Collaterals + Borrows) present in the account\"},\"borrows(uint256)\":{\"notice\":\"A list of borrowed ERC-20 assets present in the account\"},\"deactivate()\":{\"notice\":\"Deactivates an account by setting the activationBlock to 0\"},\"exec(address,uint256,bytes)\":{\"notice\":\"Generalized utility function to transact with a given contract\"},\"getAssets()\":{\"notice\":\"Returns a list of ERC-20 assets deposited and borrowed by the owner\"},\"getBorrows()\":{\"notice\":\"Returns a list of ERC-20 assets borrowed by the owner\"},\"hasAsset(address)\":{\"notice\":\"A mapping of ERC-20 assets present in the account\"},\"hasNoDebt()\":{\"notice\":\"Returns whether the account has debt or not by checking the length of the borrows list\"},\"init(address)\":{\"notice\":\"Initializes the account by setting the address of the account manager\"},\"removeAsset(address)\":{\"notice\":\"Removes a given ERC-20 token from the assets list\"},\"removeBorrow(address)\":{\"notice\":\"Removes a given ERC-20 token from the borrows list\"},\"sweepTo(address)\":{\"notice\":\"Utility function to transfer all assets to a specified account and delete all assets\"}},\"notice\":\"Contract that acts as a dynamic and distributed asset reserve which holds a user\\u2019s collateral and loaned assets\",\"version\":1}},\"settings\":{\"compilationTarget\":{\"src/core/Account.sol\":\"Account1\"},\"evmVersion\":\"cancun\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[\":@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/\",\":ds-test/=lib/forge-std/lib/ds-test/src/\",\":erc4626-tests/=lib/openzeppelin-contracts/lib/erc4626-tests/\",\":forge-std/=lib/forge-std/src/\",\":halmos-cheatcodes/=lib/openzeppelin-contracts/lib/halmos-cheatcodes/src/\",\":openzeppelin-contracts/=lib/openzeppelin-contracts/\",\":openzeppelin/=lib/openzeppelin-contracts/contracts/\",\":solidity-bytes-utils/=lib/controller/lib/solidity-bytes-utils/contracts/\",\":solmate/=lib/solmate/src/\",\":v3-core/=lib/oracle/lib/v3-core/\"],\"viaIR\":true},\"sources\":{\"src/core/Account.sol\":{\"keccak256\":\"0x91aef9cdaca33cf3c39ce6c96f51ef745016f5f8b3ff6cca97ae866ec494be11\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://3b9220b190a662c8285f0fb96aedb880151b3c16ed596002c33ad0982af6f32d\",\"dweb:/ipfs/Qme7h11UGyFdKfZb4kCGagst6NFH462K6m8ba7j5JvU1GC\"]},\"src/interface/core/IAccount.sol\":{\"keccak256\":\"0x29f355ddfced795473c904e6601780afe2ebbaf37ca248615d7b6fb9458e8e5b\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://36ad62388f0450e394e54bf0bfe3edb0c6d5f3597a2543e8813ed6b49f9baac8\",\"dweb:/ipfs/QmZZvA3SoxHbaKAHcEAXEnQSzFKgb18Jyu74hEUGwmRhN1\"]},\"src/interface/tokens/IERC20.sol\":{\"keccak256\":\"0xc7f611fe6c8176d4aaf28a063e5e9d4d8baa3952b4d26afd921b3fa2165f50bf\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://f06494a751f1f2564a4490ecb54e97aa3d3c005c40c047f54f227f5e592a938c\",\"dweb:/ipfs/QmZ88HRU5K8jd9HF1uxnPnL5qAhM4vX1tkWo1BKdyoLg2G\"]},\"src/utils/Errors.sol\":{\"keccak256\":\"0xd2d5eb79c1c0f682ba1eb3d1d49369957d3f7c6d858f5033e9088f532b04a773\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://e21fe1111ea1e14117d8e339b733fad0d79b2dff5c63120e1f934480852a126b\",\"dweb:/ipfs/QmaeJr7pQTubaqW3fZdWvfRqc82apPeT59yQHHmYnXZfdb\"]},\"src/utils/Helpers.sol\":{\"keccak256\":\"0x624dbb17168b1e0f95261754967aff74c550b8e19c92d301ee550460fd4adbb8\",\"license\":\"AGPL-3.0-only\",\"urls\":[\"bzz-raw://fe25c1e6d9471fd4ccb132f42a91c6100506c9de28c0b5c535fc95b4160fc46d\",\"dweb:/ipfs/QmaY4HkAwthGtFDgyi7nhFz8RRPR4rTT9PEryR8gJNRDoz\"]}},\"version\":1}",
+    "metadata": {
+        "compiler": {
+            "version": "0.8.25+commit.b61c2a91"
+        },
+        "language": "Solidity",
+        "output": {
+            "abi": [
+                {
+                    "inputs": [],
+                    "type": "error",
+                    "name": "AccountManagerOnly"
+                },
+                {
+                    "inputs": [],
+                    "type": "error",
+                    "name": "ContractAlreadyInitialized"
+                },
+                {
+                    "inputs": [],
+                    "type": "error",
+                    "name": "EthTransferFailure"
+                },
+                {
+                    "inputs": [],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "name": "accountManager",
+                    "outputs": [
+                        {
+                            "internalType": "address",
+                            "name": "",
+                            "type": "address"
+                        }
+                    ]
+                },
+                {
+                    "inputs": [],
+                    "stateMutability": "nonpayable",
+                    "type": "function",
+                    "name": "activate"
+                },
+                {
+                    "inputs": [],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "name": "activationBlock",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ]
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "token",
+                            "type": "address"
+                        }
+                    ],
+                    "stateMutability": "nonpayable",
+                    "type": "function",
+                    "name": "addAsset"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "token",
+                            "type": "address"
+                        }
+                    ],
+                    "stateMutability": "nonpayable",
+                    "type": "function",
+                    "name": "addBorrow"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "name": "assets",
+                    "outputs": [
+                        {
+                            "internalType": "address",
+                            "name": "",
+                            "type": "address"
+                        }
+                    ]
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "name": "borrows",
+                    "outputs": [
+                        {
+                            "internalType": "address",
+                            "name": "",
+                            "type": "address"
+                        }
+                    ]
+                },
+                {
+                    "inputs": [],
+                    "stateMutability": "nonpayable",
+                    "type": "function",
+                    "name": "deactivate"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "target",
+                            "type": "address"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "amt",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "bytes",
+                            "name": "data",
+                            "type": "bytes"
+                        }
+                    ],
+                    "stateMutability": "nonpayable",
+                    "type": "function",
+                    "name": "exec",
+                    "outputs": [
+                        {
+                            "internalType": "bool",
+                            "name": "",
+                            "type": "bool"
+                        },
+                        {
+                            "internalType": "bytes",
+                            "name": "",
+                            "type": "bytes"
+                        }
+                    ]
+                },
+                {
+                    "inputs": [],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "name": "getAssets",
+                    "outputs": [
+                        {
+                            "internalType": "address[]",
+                            "name": "",
+                            "type": "address[]"
+                        }
+                    ]
+                },
+                {
+                    "inputs": [],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "name": "getBorrows",
+                    "outputs": [
+                        {
+                            "internalType": "address[]",
+                            "name": "",
+                            "type": "address[]"
+                        }
+                    ]
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "",
+                            "type": "address"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "name": "hasAsset",
+                    "outputs": [
+                        {
+                            "internalType": "bool",
+                            "name": "",
+                            "type": "bool"
+                        }
+                    ]
+                },
+                {
+                    "inputs": [],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "name": "hasNoDebt",
+                    "outputs": [
+                        {
+                            "internalType": "bool",
+                            "name": "",
+                            "type": "bool"
+                        }
+                    ]
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "_accountManager",
+                            "type": "address"
+                        }
+                    ],
+                    "stateMutability": "nonpayable",
+                    "type": "function",
+                    "name": "init"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "token",
+                            "type": "address"
+                        }
+                    ],
+                    "stateMutability": "nonpayable",
+                    "type": "function",
+                    "name": "removeAsset"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "token",
+                            "type": "address"
+                        }
+                    ],
+                    "stateMutability": "nonpayable",
+                    "type": "function",
+                    "name": "removeBorrow"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "toAddress",
+                            "type": "address"
+                        }
+                    ],
+                    "stateMutability": "nonpayable",
+                    "type": "function",
+                    "name": "sweepTo"
+                },
+                {
+                    "inputs": [],
+                    "stateMutability": "payable",
+                    "type": "receive"
+                }
+            ],
+            "devdoc": {
+                "kind": "dev",
+                "methods": {
+                    "addAsset(address)": {
+                        "params": {
+                            "token": "Address of the ERC-20 token to add"
+                        }
+                    },
+                    "addBorrow(address)": {
+                        "params": {
+                            "token": "Address of the ERC-20 token to add"
+                        }
+                    },
+                    "exec(address,uint256,bytes)": {
+                        "params": {
+                            "amt": "Amount of Eth to send to the target contract",
+                            "data": "Encoded sig + params of the function to transact with in the target contract",
+                            "target": "Address of contract to transact with"
+                        },
+                        "returns": {
+                            "_0": "success True if transaction was successful, false otherwise",
+                            "_1": "retData Data returned by given target contract after the transaction"
+                        }
+                    },
+                    "getAssets()": {
+                        "returns": {
+                            "_0": "assets List of addresses"
+                        }
+                    },
+                    "getBorrows()": {
+                        "returns": {
+                            "_0": "borrows List of addresses"
+                        }
+                    },
+                    "hasNoDebt()": {
+                        "returns": {
+                            "_0": "hasNoDebt bool"
+                        }
+                    },
+                    "init(address)": {
+                        "details": "Can only be called as long as the address of the accountManager is 0x0",
+                        "params": {
+                            "_accountManager": "address of the account manager"
+                        }
+                    },
+                    "removeAsset(address)": {
+                        "params": {
+                            "token": "Address of the ERC-20 token to remove"
+                        }
+                    },
+                    "removeBorrow(address)": {
+                        "params": {
+                            "token": "Address of the ERC-20 token to remove"
+                        }
+                    },
+                    "sweepTo(address)": {
+                        "params": {
+                            "toAddress": "address of the account to send the assets to"
+                        }
+                    }
+                },
+                "version": 1
+            },
+            "userdoc": {
+                "kind": "user",
+                "methods": {
+                    "accountManager()": {
+                        "notice": "Address of account manager"
+                    },
+                    "activate()": {
+                        "notice": "Activates an account by setting the activationBlock to the current block number"
+                    },
+                    "activationBlock()": {
+                        "notice": "Block number for when the account is activated"
+                    },
+                    "addAsset(address)": {
+                        "notice": "Adds a given ERC-20 token to the assets list"
+                    },
+                    "addBorrow(address)": {
+                        "notice": "Adds a given ERC-20 token to the borrows list"
+                    },
+                    "assets(uint256)": {
+                        "notice": "A list of ERC-20 assets (Collaterals + Borrows) present in the account"
+                    },
+                    "borrows(uint256)": {
+                        "notice": "A list of borrowed ERC-20 assets present in the account"
+                    },
+                    "deactivate()": {
+                        "notice": "Deactivates an account by setting the activationBlock to 0"
+                    },
+                    "exec(address,uint256,bytes)": {
+                        "notice": "Generalized utility function to transact with a given contract"
+                    },
+                    "getAssets()": {
+                        "notice": "Returns a list of ERC-20 assets deposited and borrowed by the owner"
+                    },
+                    "getBorrows()": {
+                        "notice": "Returns a list of ERC-20 assets borrowed by the owner"
+                    },
+                    "hasAsset(address)": {
+                        "notice": "A mapping of ERC-20 assets present in the account"
+                    },
+                    "hasNoDebt()": {
+                        "notice": "Returns whether the account has debt or not by checking the length of the borrows list"
+                    },
+                    "init(address)": {
+                        "notice": "Initializes the account by setting the address of the account manager"
+                    },
+                    "removeAsset(address)": {
+                        "notice": "Removes a given ERC-20 token from the assets list"
+                    },
+                    "removeBorrow(address)": {
+                        "notice": "Removes a given ERC-20 token from the borrows list"
+                    },
+                    "sweepTo(address)": {
+                        "notice": "Utility function to transfer all assets to a specified account and delete all assets"
+                    }
+                },
+                "version": 1
+            }
+        },
+        "settings": {
+            "remappings": [
+                "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+                "ds-test/=lib/forge-std/lib/ds-test/src/",
+                "erc4626-tests/=lib/openzeppelin-contracts/lib/erc4626-tests/",
+                "forge-std/=lib/forge-std/src/",
+                "halmos-cheatcodes/=lib/openzeppelin-contracts/lib/halmos-cheatcodes/src/",
+                "openzeppelin-contracts/=lib/openzeppelin-contracts/",
+                "openzeppelin/=lib/openzeppelin-contracts/contracts/",
+                "solidity-bytes-utils/=lib/controller/lib/solidity-bytes-utils/contracts/",
+                "solmate/=lib/solmate/src/",
+                "v3-core/=lib/oracle/lib/v3-core/"
+            ],
+            "optimizer": {
+                "enabled": true,
+                "runs": 200
+            },
+            "metadata": {
+                "bytecodeHash": "ipfs"
+            },
+            "compilationTarget": {
+                "src/core/Account.sol": "Account1"
+            },
+            "evmVersion": "cancun",
+            "libraries": {},
+            "viaIR": true
+        },
+        "sources": {
+            "src/core/Account.sol": {
+                "keccak256": "0x91aef9cdaca33cf3c39ce6c96f51ef745016f5f8b3ff6cca97ae866ec494be11",
+                "urls": [
+                    "bzz-raw://3b9220b190a662c8285f0fb96aedb880151b3c16ed596002c33ad0982af6f32d",
+                    "dweb:/ipfs/Qme7h11UGyFdKfZb4kCGagst6NFH462K6m8ba7j5JvU1GC"
+                ],
+                "license": "MIT"
+            },
+            "src/interface/core/IAccount.sol": {
+                "keccak256": "0x29f355ddfced795473c904e6601780afe2ebbaf37ca248615d7b6fb9458e8e5b",
+                "urls": [
+                    "bzz-raw://36ad62388f0450e394e54bf0bfe3edb0c6d5f3597a2543e8813ed6b49f9baac8",
+                    "dweb:/ipfs/QmZZvA3SoxHbaKAHcEAXEnQSzFKgb18Jyu74hEUGwmRhN1"
+                ],
+                "license": "MIT"
+            },
+            "src/interface/tokens/IERC20.sol": {
+                "keccak256": "0xc7f611fe6c8176d4aaf28a063e5e9d4d8baa3952b4d26afd921b3fa2165f50bf",
+                "urls": [
+                    "bzz-raw://f06494a751f1f2564a4490ecb54e97aa3d3c005c40c047f54f227f5e592a938c",
+                    "dweb:/ipfs/QmZ88HRU5K8jd9HF1uxnPnL5qAhM4vX1tkWo1BKdyoLg2G"
+                ],
+                "license": "MIT"
+            },
+            "src/utils/Errors.sol": {
+                "keccak256": "0xd2d5eb79c1c0f682ba1eb3d1d49369957d3f7c6d858f5033e9088f532b04a773",
+                "urls": [
+                    "bzz-raw://e21fe1111ea1e14117d8e339b733fad0d79b2dff5c63120e1f934480852a126b",
+                    "dweb:/ipfs/QmaeJr7pQTubaqW3fZdWvfRqc82apPeT59yQHHmYnXZfdb"
+                ],
+                "license": "MIT"
+            },
+            "src/utils/Helpers.sol": {
+                "keccak256": "0x624dbb17168b1e0f95261754967aff74c550b8e19c92d301ee550460fd4adbb8",
+                "urls": [
+                    "bzz-raw://fe25c1e6d9471fd4ccb132f42a91c6100506c9de28c0b5c535fc95b4160fc46d",
+                    "dweb:/ipfs/QmaY4HkAwthGtFDgyi7nhFz8RRPR4rTT9PEryR8gJNRDoz"
+                ],
+                "license": "AGPL-3.0-only"
+            }
+        },
+        "version": 1
+    },
+    "id": 41
+}

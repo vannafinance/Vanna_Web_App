@@ -8,16 +8,22 @@ import { useTheme } from "@/contexts/theme-context";
 import { netVolumeData , netEarningsData } from "@/lib/constants/portfolio";
 
 interface ChartProps {
-  type: "overall-deposit" | "net-apy" | "my-supply" | "deposit-apy" | "net-volume" | "net-profit-loss";
+  type: "overall-deposit" | "net-apy" | "my-supply" | "deposit-apy" | "net-volume" | "net-profit-loss" | "farm" | "profitAndLoss";
   currencyTab?: boolean;
   height?: number;
   containerWidth?: string;
   containerHeight?: string;
+  heading?: string; // Custom heading for farm type
+  downtrend?: string; // Downtrend value (e.g., "0.07%") for farm type
+  uptrend?: string; // Uptrend value (e.g., "0.07%") for farm type
+  customData?: Array<{ date: string; amount: number }>; // Custom data override
+  supplyAPY?: number; // Live on-chain supply APY (decimal, e.g. 0.2394 = 23.94%)
+  borrowAPY?: number; // Live on-chain borrow APY (decimal, e.g. 0.2418 = 24.18%)
 }
 
 const filterOptions = ["3 Months", "6 Months", "1 Year", "All Time"];
 const dayOptions = ["1D", "7D", "30D", "1Y"];
-const depositApyOptions = ["Deposit APY", "Net APY"];
+const depositApyOptions = ["Deposit APY", "Borrow APY"];
 
 // Helper function to format date for display
 const formatDate = (dateString: string): string => {
@@ -88,7 +94,7 @@ const filterDataByDays = (
   });
 };
 
-export const Chart = ({ type, currencyTab, height, containerWidth, containerHeight }: ChartProps) => {
+export const Chart = ({ type, currencyTab, height, containerWidth, containerHeight, heading, downtrend, uptrend, customData, supplyAPY, borrowAPY }: ChartProps) => {
   const { isDark } = useTheme();
   const [selectedFilter, setSelectedFilter] = useState(filterOptions[0]);
   const [selectedCurrency, setSelectedCurrency] = useState<string>("usd");
@@ -100,13 +106,27 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
   const [dynamicHeight, setDynamicHeight] = useState<number>(height || 206);
   // Get data based on chart type
   const rawData = useMemo(() => {
+    // ✅ FIX: For my-supply, if customData is provided (even if empty), use it
+    // This ensures we show $0 when user has no position instead of mock data
+    if (type === "my-supply" && customData !== undefined) {
+      return customData.length > 0 ? customData : [];
+    }
+
+    // If custom data is provided for other types, use it
+    if (customData && customData.length > 0) {
+      return customData;
+    }
+
+    // Otherwise use default data
     switch (type) {
       case "overall-deposit":
         return depositData;
       case "net-apy":
         return netApyData;
-      case "my-supply":
+      case "farm":
         return depositData;
+      case "my-supply":
+        return []; // ✅ Return empty instead of mock data if no customData
       case "deposit-apy":
         return netApyData;
       case "net-volume":
@@ -116,7 +136,7 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
       default:
         return [];
     }
-  }, [type]);
+  }, [type, customData]);
 
   // Filter data based on selected time range or days
   const filteredData = useMemo(() => {
@@ -201,11 +221,13 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
       <header className="w-full h-fit flex justify-between flex-shrink-0">
         <div
           className={`w-full h-fit flex flex-col ${
-            type === "deposit-apy" ? "gap-[16px]" : ""
+            type === "deposit-apy" || type === "farm" ? "gap-[16px]" : ""
           }`}
         >
           <h2 className={`text-[12px] font-semibold ${isDark ? "text-white" : ""}`}>
-            {type === "overall-deposit" ? (
+            {type === "farm" ? (
+              heading || "Farm"
+            ) : type === "overall-deposit" ? (
               "Overall Deposit"
             ) : type === "net-apy" ? (
               "Net APY"
@@ -215,6 +237,8 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
               "Net Volume"
             ) : type === "net-profit-loss" ? (
               "Net Profit & Loss"
+            ) : type === "profitAndLoss" ? (
+              "P&L"
             ) : (
               <Dropdown
                 classname="text-[12px] font-semibold gap-[4px] w-[100px]"
@@ -225,7 +249,45 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
               />
             )}
           </h2>
-          {type !== "deposit-apy" && (
+          {type === "farm" && uptrend && (
+            <div className="w-full h-fit flex items-center gap-[4px]">
+              <svg
+                width="8"
+                height="8"
+                viewBox="0 0 8 8"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M4 0L7.4641 6H0.535898L4 0Z"
+                  fill="#10B981"
+                />
+              </svg>
+              <p className={`text-[12px] font-medium text-[#10B981]`}>
+                {uptrend}
+              </p>
+            </div>
+          )}
+          {type === "farm" && downtrend && (
+            <div className="w-full h-fit flex items-center gap-[4px]">
+              <svg
+                width="8"
+                height="8"
+                viewBox="0 0 8 8"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M4 8L0.535898 2H7.4641L4 8Z"
+                  fill="#FC5457"
+                />
+              </svg>
+              <p className={`text-[12px] font-medium text-[#FC5457]`}>
+                {downtrend}
+              </p>
+            </div>
+          )}
+          {type !== "deposit-apy" && type !== "farm" && (
             <p className={`w-full text-[20px] font-semibold ${isDark ? "text-white" : ""}`}>
               $
               {totalValue.toLocaleString(undefined, {
@@ -236,9 +298,24 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
           )}
           {type === "deposit-apy" && (
             <div className="w-full h-fit flex flex-col gap-[4px]">
-              <p className={`text-[16px] font-semibold ${isDark ? "text-white" : ""}`}>0%</p>
-              <time className={`text-[12px] font-medium ${isDark ? "text-gray-400" : "text-[#5C5B5B]"}`} dateTime="2025-03-11T15:14:00">
-                03/11/2025 15:14
+              <p className={`text-[16px] font-semibold ${isDark ? "text-white" : ""}`}>
+                {selectedDepositApy === "Deposit APY"
+                  ? supplyAPY != null && supplyAPY > 0
+                    ? `${(supplyAPY * 100).toFixed(2)}%`
+                    : "0%"
+                  : borrowAPY != null && borrowAPY > 0
+                    ? `${(borrowAPY * 100).toFixed(2)}%`
+                    : "0%"}
+              </p>
+              <time className={`text-[12px] font-medium ${isDark ? "text-gray-400" : "text-[#5C5B5B]"}`} dateTime={new Date().toISOString()}>
+                {new Date().toLocaleString("en-US", {
+                  month: "2-digit",
+                  day: "2-digit",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12: false,
+                })}
               </time>
             </div>
           )}
@@ -306,11 +383,13 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
               <header className="w-full h-fit flex justify-between">
                 <div
                   className={`w-full h-fit flex flex-col ${
-                    type === "deposit-apy" ? "gap-[16px]" : ""
+                    type === "deposit-apy" || type === "farm" ? "gap-[16px]" : ""
                   }`}
                 >
                   <h2 className={`text-[12px] font-semibold ${isDark ? "text-white" : ""}`}>
-                    {type === "overall-deposit" ? (
+                    {type === "farm" ? (
+                      heading || "Farm"
+                    ) : type === "overall-deposit" ? (
                       "Overall Deposit"
                     ) : type === "net-apy" ? (
                       "Net APY"
@@ -328,7 +407,45 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
                       />
                     )}
                   </h2>
-                  {type !== "deposit-apy" && (
+                  {type === "farm" && uptrend && (
+                    <div className="w-full h-fit flex items-center gap-[4px]">
+                      <svg
+                        width="8"
+                        height="8"
+                        viewBox="0 0 8 8"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M4 0L7.4641 6H0.535898L4 0Z"
+                          fill="#10B981"
+                        />
+                      </svg>
+                      <p className={`text-[12px] font-medium text-[#10B981]`}>
+                        {uptrend}
+                      </p>
+                    </div>
+                  )}
+                  {type === "farm" && downtrend && (
+                    <div className="w-full h-fit flex items-center gap-[4px]">
+                      <svg
+                        width="8"
+                        height="8"
+                        viewBox="0 0 8 8"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M4 8L0.535898 2H7.4641L4 8Z"
+                          fill="#FC5457"
+                        />
+                      </svg>
+                      <p className={`text-[12px] font-medium text-[#FC5457]`}>
+                        {downtrend}
+                      </p>
+                    </div>
+                  )}
+                  {type !== "deposit-apy" && type !== "farm" && (
                     <p className={`w-full text-[20px] font-semibold ${isDark ? "text-white" : ""}`}>
                       $
                       {totalValue.toLocaleString(undefined, {
@@ -412,11 +529,19 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
                   textColor={chartTextColor}
                 />
               ) : (
-                <p className={`w-full h-[450px] flex items-center justify-center text-sm ${
-                  isDark ? "text-gray-500" : "text-gray-400"
-                }`}>
-                  No data available
-                </p>
+                <div className={`w-full h-[450px] flex flex-col items-center justify-center gap-3`}>
+                  <div className={`text-4xl ${isDark ? "text-gray-700" : "text-gray-300"}`}>
+                    📊
+                  </div>
+                  <p className={`text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                    {type === "my-supply" ? "No supply position yet" : "No data available"}
+                  </p>
+                  {type === "my-supply" && (
+                    <p className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>
+                      Supply assets to start earning
+                    </p>
+                  )}
+                </div>
               )}
             </figure>
           </ExpandableModal>
@@ -438,11 +563,19 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
             textColor={chartTextColor}
           />
         ) : (
-          <p className={`w-full ${dynamicHeight?`h-[${dynamicHeight}px]` : "h-[393px]"} flex items-center justify-center text-sm ${
-            isDark ? "text-gray-500" : "text-gray-400"
-          }`}>
-            No data available
-          </p>
+          <div className={`w-full ${dynamicHeight?`h-[${dynamicHeight}px]` : "h-[393px]"} flex flex-col items-center justify-center gap-3`}>
+            <div className={`text-4xl ${isDark ? "text-gray-700" : "text-gray-300"}`}>
+              📊
+            </div>
+            <p className={`text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+              {type === "my-supply" ? "No supply position yet" : "No data available"}
+            </p>
+            {type === "my-supply" && (
+              <p className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>
+                Supply assets to start earning
+              </p>
+            )}
+          </div>
         )}
       </figure>
     </article>

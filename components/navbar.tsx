@@ -8,6 +8,23 @@ import { useState, useRef, useEffect } from "react";
 import { tradeItems } from "@/lib/constants";
 import { useTheme } from "@/contexts/theme-context";
 import { useUserStore } from "@/store/user";
+import { usePrivy, useWallets } from "@privy-io/react-auth";
+import { useAccount, usePublicClient, useWalletClient } from "wagmi";
+import AccountManager from "../abi/vanna/out/out/AccountManager.sol/AccountManager.json";
+import Registry from "../abi/vanna/out/out/Registry.sol/Registry.json";
+import {
+  arbAddressList,
+  baseAddressList,
+  opAddressList,
+} from ".././lib/web3Constants";
+import { useMarginAccountInfoStore } from "@/store/margin-account-info-store";
+import { toast } from "sonner";
+import { SunIcon, MoonIcon } from "@/components/icons";
+
+import { DepositModal } from "./ui/deposit-modal";
+import { NetworkDropdown } from "./network-dropdown";
+import { LoginModal } from "./auth/login-modal";
+import { UserMenu } from "./auth/user-menu";
 
 interface Navbar {
   items: {
@@ -17,6 +34,23 @@ interface Navbar {
   }[];
 }
 
+/** Margin lives at `/` and remains available at `/margin` for existing links. */
+function isBorderedNavItemActive(
+  pathname: string,
+  item: { title: string; link: string }
+): boolean {
+  if (item.title === "Trade") {
+    return (
+      pathname === item.link ||
+      tradeItems.some((tradeItem) => pathname === tradeItem.link)
+    );
+  }
+  if (item.title === "Margin") {
+    return pathname === "/" || pathname === "/margin";
+  }
+  return pathname === item.link;
+}
+
 export const Navbar = (props: Navbar) => {
   // Get current pathname for active link detection
   const pathname = usePathname();
@@ -24,6 +58,83 @@ export const Navbar = (props: Navbar) => {
   const { isDark, toggleTheme } = useTheme();
   const setUserAddress = useUserStore((state) => state.set);
   const userAddress = useUserStore((state) => state.address);
+  const [depositModalOpen, setDepositModalOpen] = useState(false);
+
+  // Detect OAuth redirect
+  const [oauthReturnProvider] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.has("privy_oauth_state")) {
+        return params.get("privy_oauth_provider") || "google";
+      }
+    }
+    return null;
+  });
+  const isOAuthReturn = oauthReturnProvider !== null;
+  const [loginModalOpen, setLoginModalOpen] = useState(isOAuthReturn);
+  const hasMarginAccount = useMarginAccountInfoStore(
+    (state) => state.hasMarginAccount
+  );
+  const setHasMarginAccount = useMarginAccountInfoStore((state) => state.set);
+
+  // Privy hooks
+  const { ready, authenticated, logout, user } = usePrivy();
+  const { wallets } = useWallets();
+
+  // Wagmi hooks
+  const { address, isConnected, chainId } = useAccount();
+  const { data: walletClient } = useWalletClient();
+  const publicClient = usePublicClient();
+
+  // Clean OAuth params from URL AFTER Privy completes authentication
+  useEffect(() => {
+    if (!isOAuthReturn) return;
+    if (!authenticated) return;
+    const url = new URL(window.location.href);
+    if (url.searchParams.has("privy_oauth_state")) {
+      url.searchParams.delete("privy_oauth_state");
+      url.searchParams.delete("privy_oauth_provider");
+      url.searchParams.delete("privy_oauth_code");
+      window.history.replaceState({}, "", url.pathname);
+    }
+  }, [isOAuthReturn, authenticated]);
+
+  // Sync wallet address and Privy user data to user store
+  useEffect(() => {
+    if (isConnected && address) {
+      setUserAddress({ address });
+    } else if (authenticated && wallets.length > 0) {
+      setUserAddress({ address: wallets[0].address });
+    } else {
+      setUserAddress({ address: null });
+    }
+  }, [isConnected, address, authenticated, wallets, setUserAddress]);
+
+  // Sync Privy user info to store
+  useEffect(() => {
+    if (authenticated && user) {
+      const authMethod = user.email
+        ? "email"
+        : user.google
+        ? "google"
+        : user.twitter
+        ? "twitter"
+        : user.apple
+        ? "apple"
+        : "wallet";
+      setUserAddress({
+        privyUserId: user.id,
+        authMethod,
+        email: user.email?.address || user.google?.email || null,
+      });
+    } else {
+      setUserAddress({
+        privyUserId: null,
+        authMethod: null,
+        email: null,
+      });
+    }
+  }, [authenticated, user, setUserAddress]);
 
   const groupedItems = {
     primary: props.items.filter((item) => item.group === "primary"),
@@ -32,6 +143,7 @@ export const Navbar = (props: Navbar) => {
   };
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Cleanup timeout on unmount
@@ -98,9 +210,9 @@ export const Navbar = (props: Navbar) => {
     };
 
   return (
-    <div className={`relative ${isDark ? "bg-[#111111]" : ""}`}>
+    <div className={`${isDark ? "bg-[#111111]" : ""}`}>
       <motion.div
-        className={`py-[12px] px-[40px] w-full h-fit flex justify-between items-center ${isDark ? "text-white" : ""}`}
+        className="py-[12px] px-[40px] w-full h-fit flex justify-between items-center"
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
@@ -147,6 +259,7 @@ export const Navbar = (props: Navbar) => {
             alt="Vanna"
             width={153.4}
             height={48}
+            className="w-[110px] h-auto sm:w-[130px] lg:w-[153px]"
             src={isDark ? "/logos/vanna-white.png" : "/logos/vanna.png"}
           />
         </motion.a>
@@ -154,7 +267,6 @@ export const Navbar = (props: Navbar) => {
         {/* Navigation items */}
         <div className="flex gap-[20px] items-center ">
           {groupedItems.primary.map((item, idx) => {
-            // Check if current item is active
             const isActive = pathname === item.link;
             return (
               <motion.div
@@ -189,7 +301,6 @@ export const Navbar = (props: Navbar) => {
           })}
           <div className="rounded-[8px] border-[1px] p-[8px] flex gap-[8px]">
             {groupedItems.bordered.map((item, idx) => {
-              // For Trade button, check if current path matches Trade link or any trade dropdown item
               const isActive =
                 item.title === "Trade"
                   ? pathname === item.link ||
@@ -231,7 +342,6 @@ export const Navbar = (props: Navbar) => {
                   }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  {/* Margin icon (only for Margin item) */}
                   {item.title == "Margin" && (
                     <div className="w-[16px] h-[16px] flex flex-col justify-center items-center">
                       <svg
@@ -318,7 +428,6 @@ export const Navbar = (props: Navbar) => {
             })}
           </div>
           {groupedItems.secondary.map((item, idx) => {
-            // Check if current item is active
             const isActive = pathname === item.link;
             return (
               <motion.div
@@ -353,29 +462,36 @@ export const Navbar = (props: Navbar) => {
           })}
         </div>
 
-        {/* Right section: Theme toggle and Login button */}
+        {/* Right section — xl+: theme toggle, chain selector, deposit/login */}
         <motion.div
-          className="flex gap-[8px] items-center"
+          className="hidden xl:flex gap-[8px] items-center"
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
         >
+          {/* Deposit button */}
           {userAddress && (
-            <Button
-              size="small"
-              type="navbar"
-              disabled={false}
-              onClick={() => {
-                // TODO: Implement deposit logic
-              }}
-              text="DEPOSIT"
-              ariaLabel="Deposit to your account"
-            ></Button>
+            <div className="hidden min-[550px]:block">
+              <Button
+                size="small"
+                type="navbar"
+                disabled={false}
+                onClick={() => setDepositModalOpen(true)}
+                text="DEPOSIT"
+                ariaLabel="Deposit to your account"
+              ></Button>
+            </div>
           )}
-          {/* Theme toggle button */}
+          {/* Network dropdown */}
+          {userAddress && (
+            <div className="hidden lg:block">
+              <NetworkDropdown />
+            </div>
+          )}
+          {/* Theme toggle button - hidden below lg, shown on lg+ */}
           <button
             type="button"
-            className="flex flex-col justify-center items-center rounded-[8px] py-[12px] px-[10px] h-[44px] border-[1px] cursor-pointer"
+            className="hidden lg:flex flex-col justify-center items-center rounded-[8px] py-[12px] px-[10px] h-[44px] border-[1px] cursor-pointer"
             onClick={toggleTheme}
             aria-label={
               isDark ? "Switch to light theme" : "Switch to dark theme"
@@ -391,24 +507,8 @@ export const Navbar = (props: Navbar) => {
               whileTap={{ scale: 0.9 }}
               className="w-[24px] h-[24px] flex flex-col justify-center items-center "
             >
-              {/* Sun icon (dark mode) */}
               {isDark ? (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={1.5}
-                  stroke="#FF007A"
-                  width={16}
-                  height={16}
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 3v2.25m6.364 6.364l-1.591 1.591M21 12h-2.25m-6.364 6.364l-1.591 1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"
-                  />
-                </svg>
+                <SunIcon />
               ) : (
                 // Moon icon (light mode)
                 <svg
@@ -430,32 +530,94 @@ export const Navbar = (props: Navbar) => {
               )}
             </motion.div>
           </button>
-          {/* Login button */}
-          {!userAddress ? (
+          {/* Login/User section - hidden below lg, shown on lg+ */}
+          {!authenticated ? (
+            <div className="hidden lg:block">
+              <Button
+                size="small"
+                type="navbar"
+                disabled={!ready}
+                onClick={() => setLoginModalOpen(true)}
+                text="Login"
+                ariaLabel="Login to your account"
+              ></Button>
+            </div>
+          ) : (
+            <div className="hidden lg:block">
+              <UserMenu />
+            </div>
+          )}
+        </motion.div>
+
+        {/* Right section — below xl: login + hamburger */}
+        <motion.div
+          className="flex xl:hidden gap-[8px] items-center"
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
+        >
+          {userAddress && (
             <Button
               size="small"
               type="navbar"
               disabled={false}
-              onClick={() => {
-                setUserAddress({
-                  address: "0x1234567890123456789012345678901234567890",
-                });
-              }}
-              text="Login"
+              onClick={() => setDepositModalOpen(true)}
+              text="DEPOSIT"
+              ariaLabel="Deposit to your account"
+            ></Button>
+          )}
+          {!authenticated ? (
+            <Button
+              size="small"
+              type="gradient"
+              disabled={!ready}
+              onClick={() => setLoginModalOpen(true)}
+              text="LOGIN"
               ariaLabel="Login to your account"
             ></Button>
           ) : (
-            <div
-              onClick={() => {
-                setUserAddress({ address: null });
-              }}
-              className={`cursor-pointer py-[12px] px-[24px] text-[16px] font-semibold rounded-[8px] h-full w-fit ${
-                isDark ? "bg-[#222222] text-white" : "bg-[#F4F4F4]"
-              }`}
-            >
-              {userAddress.slice(0, 6) + "..." + userAddress.slice(-4)}
-            </div>
+            <UserMenu />
           )}
+          {/* Hamburger menu button */}
+          <motion.button
+            type="button"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="flex flex-col justify-center items-center rounded-[8px] py-[12px] px-[10px] h-[44px] border-[1px] cursor-pointer"
+            aria-label="Toggle mobile menu"
+            aria-expanded={isMobileMenuOpen}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <div className="w-[24px] h-[24px] flex flex-col justify-center items-center gap-[4px]">
+              <motion.span
+                className={`w-full h-[2px] rounded-full ${
+                  isDark ? "bg-white" : "bg-black"
+                }`}
+                animate={{
+                  rotate: isMobileMenuOpen ? 45 : 0,
+                  y: isMobileMenuOpen ? 6 : 0,
+                }}
+                transition={{ duration: 0.2 }}
+              />
+              <motion.span
+                className={`w-full h-[2px] rounded-full ${
+                  isDark ? "bg-white" : "bg-black"
+                }`}
+                animate={{ opacity: isMobileMenuOpen ? 0 : 1 }}
+                transition={{ duration: 0.2 }}
+              />
+              <motion.span
+                className={`w-full h-[2px] rounded-full ${
+                  isDark ? "bg-white" : "bg-black"
+                }`}
+                animate={{
+                  rotate: isMobileMenuOpen ? -45 : 0,
+                  y: isMobileMenuOpen ? -6 : 0,
+                }}
+                transition={{ duration: 0.2 }}
+              />
+            </div>
+          </motion.button>
         </motion.div>
       </motion.div>
       <AnimatePresence>
@@ -471,11 +633,7 @@ export const Navbar = (props: Navbar) => {
             transition={{ duration: 0.22, ease: "easeOut" }}
             onMouseEnter={handleDropdownMouseEnter}
             onMouseLeave={handleDropdownMouseLeave}
-            className={`w-full absolute py-[8px] flex justify-center gap-[4px] ${
-              isDark 
-                ? "bg-[#111111] border-t-[1px] border-b-[1px]" 
-                : "border-t-[1px] border-[#F4F4F4] border-b-[1px] border-[#F4F4F4]"
-            }`}
+            className="w-full absolute border-t-[1px] border-[#F4F4F4] border-b-[1px] border-[#F4F4F4] py-[8px] flex justify-center gap-[4px] "
           >
             {tradeItems.map((item, idx) => {
               const isActive = pathname === item.link;
@@ -489,8 +647,8 @@ export const Navbar = (props: Navbar) => {
                   }}
                   onKeyDown={handleNavKeyDown(item)}
                   className={`${
-                    isActive ? "bg-[#FFE6F2] text-[#FF007A]" : isDark ? "text-white" : ""
-                  } cursor-pointer hover:text-[#FF007A] py-[8px] px-[16px] text-[14px] font-medium rounded-[8px]`}
+                    isActive ? "bg-[#FFE6F2] text-[#FF007A]" : ""
+                  } cursor-pointer hover:text-[#FF007A] py-[8px] px-[16px] text-[14px] font-medium rounded-[8px] `}
                   initial={{ opacity: 0, y: -6 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -6 }}
@@ -512,6 +670,16 @@ export const Navbar = (props: Navbar) => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Modals */}
+      <LoginModal
+        isOpen={loginModalOpen}
+        onClose={() => setLoginModalOpen(false)}
+      />
+      <DepositModal
+        isOpen={depositModalOpen}
+        onClose={() => setDepositModalOpen(false)}
+      />
     </div>
   );
 };

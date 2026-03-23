@@ -33,12 +33,15 @@ const MBSelectionGridComponent = ({
         isDark ? "bg-[#222222]" : "bg-[#F4F4F4]"
       }`}
     >
+    <section className={`p-2 sm:p-[10px] rounded-[12px] grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-[15px] ${
+      isDark ? "bg-[#222222]" : "bg-[#F4F4F4]"
+    }`}>
       {items.map((item, index) => {
         const itemId = `${item.asset}-${item.amount}`;
         const isSelected = selectedIds.has(itemId);
 
         return (
-          <article key={index} className="flex gap-[10px] items-center">
+          <article key={index} className="flex gap-2 sm:gap-[10px] items-center">
             {mode === "Deposit" ? (
               <Checkbox
                 checked={isSelected}
@@ -63,6 +66,9 @@ const MBSelectionGridComponent = ({
                 isDark ? "text-white" : ""
               }`}
             >
+            <div className={`text-[14px] sm:text-[16px] font-semibold ${
+              isDark ? "text-white" : ""
+            }`}>
               {item.amount} {item.asset}
             </div>
             <div
@@ -70,6 +76,9 @@ const MBSelectionGridComponent = ({
                 isDark ? "bg-[#111111] text-white" : "bg-[#FFFFFF]"
               }`}
             >
+            <div className={`rounded-[4px] py-[2px] px-[4px] text-[10px] font-medium flex-shrink-0 ${
+              isDark ? "bg-[#111111] text-white" : "bg-[#FFFFFF]"
+            }`}>
               {item.amountInUsd} USD
             </div>
           </article>

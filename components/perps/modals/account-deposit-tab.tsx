@@ -1,0 +1,167 @@
+"use client";
+
+import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
+import { Dropdown } from "@/components/ui/dropdown";
+import { AccountType, TokenOption } from "@/lib/types";
+import {
+  CHAIN_OPTIONS,
+  TOKEN_OPTIONS,
+  ACCOUNT_TYPE_OPTIONS,
+  DEPOSIT_TIME_CHAINS,
+} from "@/lib/constants/perps";
+import { useTheme } from "@/contexts/theme-context";
+
+export interface DepositTabRef {
+  getData: () => {
+    accountType: AccountType;
+    chain: string;
+    token: string;
+    amount: string;
+  };
+}
+
+interface DepositTabProps {
+  onValidChange: (isValid: boolean) => void;
+}
+
+export const DepositTab = forwardRef<DepositTabRef, DepositTabProps>(
+  ({ onValidChange }, ref) => {
+    const { isDark } = useTheme();
+    const [amount, setAmount] = useState("");
+    const [accountType, setAccountType] =
+      useState<AccountType>("Portfolio Balance");
+    const [selectedChain, setSelectedChain] = useState(CHAIN_OPTIONS[0].name);
+    const [selectedToken, setSelectedToken] = useState<TokenOption>(
+      TOKEN_OPTIONS[0],
+    );
+
+    const balance = "1000";
+    const depositTimeEstimate = DEPOSIT_TIME_CHAINS[selectedChain];
+    const isValid = !!amount && parseFloat(amount) > 0;
+
+    useEffect(() => {
+      onValidChange(isValid);
+    }, [isValid, onValidChange]);
+
+    useImperativeHandle(ref, () => ({
+      getData: () => ({
+        accountType,
+        chain: selectedChain,
+        token: selectedToken.symbol,
+        amount,
+      }),
+    }));
+
+    const handleTokenSelect = (value: string) => {
+      const token = TOKEN_OPTIONS.find((t) => t.symbol === value);
+      if (token) setSelectedToken(token);
+    };
+
+    const handleMaxClick = () => {
+      setAmount(balance);
+    };
+
+    return (
+      <div className="flex flex-col gap-4">
+        {/* Account Type Dropdown */}
+        <Dropdown
+          items={ACCOUNT_TYPE_OPTIONS as unknown as string[]}
+          selectedOption={accountType}
+          setSelectedOption={
+            setAccountType as React.Dispatch<React.SetStateAction<string>>
+          }
+          classname={`!w-full !justify-between !rounded-lg border px-4 py-3 text-[12px] leading-[18px] font-medium ${isDark ? "border-[#333333] bg-[#111111]" : "border-[#E2E2E2] bg-white"}`}
+          dropdownClassname="text-[12px] leading-[18px]"
+          menuClassname={`top-full left-0 mt-1 w-full border rounded-lg ${isDark ? "border-[#333333]" : "border-[#E2E2E2]"}`}
+          arrowClassname="size-4"
+        />
+
+        {/* Chain Selector Dropdown */}
+        <Dropdown
+          items={CHAIN_OPTIONS.map((c) => c.name)}
+          selectedOption={selectedChain}
+          setSelectedOption={setSelectedChain}
+          classname={`!w-full !justify-between !rounded-lg border px-4 py-3 text-[12px] leading-[18px] font-medium ${isDark ? "border-[#333333] bg-[#111111]" : "border-[#E2E2E2] bg-white"}`}
+          dropdownClassname="text-[12px] leading-[18px] gap-2"
+          menuClassname={`top-full left-0 mt-1 w-full border rounded-lg ${isDark ? "border-[#333333]" : "border-[#E2E2E2]"}`}
+          arrowClassname="size-4"
+        />
+
+        {/* Amount Input with Token Selector */}
+        <div className="flex flex-col gap-1">
+          <div className={`flex items-center justify-between rounded-lg border px-4 py-3 ${isDark ? "border-[#333333] bg-[#111111]" : "border-[#E2E2E2] bg-white"}`}>
+            <input
+              type="text"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="Amount"
+              className={`flex-1 text-[12px] leading-[18px] font-medium placeholder:text-[#A7A7A7] outline-none bg-transparent ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}
+            />
+            <div className="w-fit flex items-center">
+              <Dropdown
+                items={TOKEN_OPTIONS.map((t) => t.symbol)}
+                selectedOption={selectedToken.symbol}
+                setSelectedOption={
+                  handleTokenSelect as React.Dispatch<
+                    React.SetStateAction<string>
+                  >
+                }
+                classname="gap-1 pl-2 text-[12px] leading-[18px] font-medium"
+                dropdownClassname="text-[12px] leading-[18px] gap-2"
+                menuClassname={`right-0 mt-2 min-w-[100px] border rounded-lg ${isDark ? "border-[#333333]" : "border-[#E2E2E2]"}`}
+                arrowClassname="size-4"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Balance Row with Max Value */}
+        <div className="flex items-center justify-between">
+          <span className={`text-[12px] leading-[18px] font-medium ${isDark ? "text-[#A7A7A7]" : "text-[#6F6F6F]"}`}>
+            Balance
+          </span>
+          <div className="flex items-center gap-2">
+            <span className={`text-[12px] leading-[18px] font-semibold ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
+              {balance} {selectedToken.symbol}
+            </span>
+            <button
+              type="button"
+              onClick={handleMaxClick}
+              className="cursor-pointer bg-[#FFE6F2] rounded-sm px-2 py-1 text-[10px] leading-[15px] font-semibold text-[#FF007A] hover:bg-[#FFD6E8] transition-colors"
+            >
+              Max Value
+            </button>
+          </div>
+        </div>
+
+        {/* Estimated Deposit Time Info */}
+        {depositTimeEstimate && (
+          <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${isDark ? "bg-[#3D2E00] border border-[#5C4500]" : "bg-[#FFF8E6] border border-[#FFE4A0]"}`}>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <circle cx="8" cy="8" r="7" stroke="#F5A623" strokeWidth="1.5" />
+              <path
+                d="M8 5V8.5"
+                stroke="#F5A623"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+              <circle cx="8" cy="11" r="0.75" fill="#F5A623" />
+            </svg>
+            <span className={`text-[11px] leading-[16px] font-medium ${isDark ? "text-[#F5C842]" : "text-[#8B6914]"}`}>
+              Estimated deposit time for {selectedChain} is{" "}
+              {depositTimeEstimate}
+            </span>
+          </div>
+        )}
+      </div>
+    );
+  },
+);
+
+DepositTab.displayName = "DepositTab";

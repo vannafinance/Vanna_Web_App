@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { useTheme } from "@/contexts/theme-context";
+import { CloseIcon } from "@/components/icons";
 
 interface ExpandableModalProps {
   /**
@@ -118,21 +119,7 @@ export const ExpandableModal = ({
                     : "bg-white hover:bg-gray-50"
                 }`}
               >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M12 4L4 12M4 4L12 12"
-                    stroke={isDark ? "#FFFFFF" : "#19191A"}
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                <CloseIcon stroke={isDark ? "#FFFFFF" : "#19191A"} />
               </button>
 
               {/* Modal Header (Optional) */}

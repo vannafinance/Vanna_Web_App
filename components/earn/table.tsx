@@ -3,6 +3,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  useRef,
   memo,
 } from "react";
 import { AnimatedTabs } from "../ui/animated-tabs";
@@ -15,6 +16,8 @@ import { SupplyApy } from "./supply-apy";
 import { PieChart } from "../ui/pie-chart";
 import { ProgressBar } from "../ui/progress-bar";
 import { useTheme } from "@/contexts/theme-context";
+import { Dropdown } from '../ui/dropdown';
+import { NetworkDropdown } from "../network-dropdown";
 
 const ITEMS_PER_PAGE = 4;
 
@@ -27,6 +30,13 @@ const FILTER_OPTIONS = {
   allChainsFilters: ["All", "ETH", "USDC", "USDT"],
   all: ["Vault Deposit", "Vault Collateral", "Vault Total", "Vault Withdraw"],
   allFilters: ["All"],
+  vaults: ["USDC", "USDTO", "kHYPE", "USDe", "wHYPE", "wstHYPE", "HYPE"],
+  vaultsFilters: ["All", "USDC","USDT", "HYPE"],
+  curator: ["9summits"],
+  curatorFilters: ["All"],
+  provider: ["Kraken"],
+  providerFilters: ["All"],
+  protocol: ["v3", "v2"]
 };
 
 interface TableProps {
@@ -43,8 +53,15 @@ interface TableProps {
     filters?: string[];
     customizeDropdown?: boolean;
     supplyApyTab?: boolean;
+    supplyApyLabel?: string; // Custom label for "Supply APY is"
+    anythingLabel?: string; // Custom label for "Anything"
     allChainDropdown?: boolean;
+    filterTabType?: "solid" | "underline" | "ghost"; // For Lending/LP tabs
   };
+  filterTabTypeOptions?: { id: string; label: string }[]; // e.g., ["Lending/Single Assets", "LP/Multiple Assets"]
+  activeFilterTab?: string;
+  onFilterTabTypeChange?: (filterTabId: string) => void;
+  filterDropdownPosition?: "left" | "right"; // Control dropdown position (default: "left")
   tableHeadings: { label: string; id: string; icon?: boolean }[];
   tableBody: {
     rows: {
@@ -52,8 +69,10 @@ interface TableProps {
         chain?: string;
         icon?: string;
         title?: string;
+        titles?: string[]; // Multiple titles separated by slash (e.g., ["USDT", "BNB"]) - icons auto-derived from iconPaths
         description?: string;
         tag?: string | number;
+        tags?: (string | number)[]; // Multiple tags
         clickable?: string;
         onlyIcons?: string[];
         percentage?: number;
@@ -73,6 +92,10 @@ type FiltersState = {
   deposit: string[];
   all: string[];
   customize: string[];
+  vaults: string[];
+  curator: string[];
+  provider: string[];
+  protocol: string[];
 };
 
 type SupplyApyFilter = {
@@ -102,6 +125,14 @@ const applyFilters = (
     hasSupplyApyColumn && supplyApyFilter.percentage > 0;
   const hasAllFilter =
     filtersState.all.length > 0 && !filtersState.all.includes("All");
+  const hasVaultsFilter =
+    filtersState.vaults.length > 0 && !filtersState.vaults.includes("All");
+  const hasCuratorFilter =
+    filtersState.curator.length > 0 && !filtersState.curator.includes("All");
+  const hasProviderFilter =
+    filtersState.provider.length > 0 && !filtersState.provider.includes("All");
+  const hasProtocolFilter =
+    filtersState.protocol.length > 0 && !filtersState.protocol.includes("All");
 
   if (
     !searchLower &&
@@ -109,7 +140,11 @@ const applyFilters = (
     !hasDepositFilter &&
     !hasCollateralFilter &&
     !hasSupplyApyFilter &&
-    !hasAllFilter
+    !hasAllFilter &&
+    !hasVaultsFilter &&
+    !hasCuratorFilter &&
+    !hasProviderFilter &&
+    !hasProtocolFilter
   ) {
     return rows;
   }
@@ -147,14 +182,45 @@ const applyFilters = (
       const supplyApyCell = row.cell[supplyApyColumnIndex];
       if (!supplyApyCell?.title) return false;
 
-      const percentageMatch = supplyApyCell.title.match(/(\d+\.?\d*)%/);
-      if (!percentageMatch) return false;
+      let cellValue = 0;
+      const cellTitle = supplyApyCell.title;
 
-      const cellPercentage = parseFloat(percentageMatch[1]);
+      // Check for percentage (e.g., "5.5%")
+      const percentageMatch = cellTitle.match(/(\d+\.?\d*)%/);
+      if (percentageMatch) {
+        cellValue = parseFloat(percentageMatch[1]);
+      } else {
+        // Check for Million (e.g., "$1.2M" or "1.2M")
+        const millionMatch = cellTitle.match(/\$?(\d+\.?\d*)\s*M/i);
+        if (millionMatch) {
+          cellValue = parseFloat(millionMatch[1]);
+        } else {
+          // Check for Billion (e.g., "$1.2B" or "1.2B")
+          const billionMatch = cellTitle.match(/\$?(\d+\.?\d*)\s*B/i);
+          if (billionMatch) {
+            cellValue = parseFloat(billionMatch[1]);
+          } else {
+            // Check for Thousand (e.g., "$1.2K" or "1.2K")
+            const thousandMatch = cellTitle.match(/\$?(\d+\.?\d*)\s*K/i);
+            if (thousandMatch) {
+              cellValue = parseFloat(thousandMatch[1]);
+            } else {
+              // Check for plain numbers (e.g., "$1000" or "1000")
+              const numberMatch = cellTitle.match(/\$?(\d+\.?\d*)/);
+              if (numberMatch) {
+                cellValue = parseFloat(numberMatch[1]);
+              } else {
+                return false; // No valid number found
+              }
+            }
+          }
+        }
+      }
+
       const isValid =
         supplyApyFilter.greaterThan
-          ? cellPercentage > supplyApyFilter.percentage
-          : cellPercentage < supplyApyFilter.percentage;
+          ? cellValue > supplyApyFilter.percentage
+          : cellValue < supplyApyFilter.percentage;
 
       if (!isValid) return false;
     }
@@ -168,6 +234,68 @@ const applyFilters = (
         );
       });
       if (!matches) return false;
+    }
+
+    // Vaults filter - checks if vault name matches
+    if (hasVaultsFilter) {
+      const vaultName = row.cell[0]?.title?.toUpperCase() || "";
+      if (!filtersState.vaults.some((v) => vaultName.includes(v.toUpperCase())))
+        return false;
+    }
+
+    // Protocol filter - checks first tag (index 0) for protocol match
+    if (hasProtocolFilter) {
+      let protocolFound = false;
+      for (const cell of row.cell) {
+        if (cell.tags && cell.tags.length > 0) {
+          const protocolTag = String(cell.tags[0]).toLowerCase();
+          if (filtersState.protocol.some((p) => protocolTag.includes(p.toLowerCase()))) {
+            protocolFound = true;
+            break;
+          }
+        }
+      }
+      if (!protocolFound) return false;
+    }
+
+    // Curator filter - checks third tag (index 2) for curator match
+    if (hasCuratorFilter) {
+      let curatorFound = false;
+      for (const cell of row.cell) {
+        if (cell.tags && cell.tags.length > 2) {
+          const curatorTag = String(cell.tags[2]).toLowerCase();
+          if (filtersState.curator.some((c) => curatorTag.includes(c.toLowerCase()))) {
+            curatorFound = true;
+            break;
+          }
+        }
+      }
+      if (!curatorFound) return false;
+    }
+
+    // Provider filter - checks fourth tag (index 3) or third tag (index 2) if only 3 tags exist
+    if (hasProviderFilter) {
+      let providerFound = false;
+      for (const cell of row.cell) {
+        if (cell.tags) {
+          let providerTag: string | null = null;
+          
+          // If 4 or more tags, provider is at index 3
+          if (cell.tags.length >= 4) {
+            providerTag = String(cell.tags[3]).toLowerCase();
+          }
+          // If only 3 tags, provider is at index 2
+          else if (cell.tags.length === 3) {
+            providerTag = String(cell.tags[2]).toLowerCase();
+          }
+          
+          if (providerTag && filtersState.provider.some((p) => providerTag.includes(p.toLowerCase()))) {
+            providerFound = true;
+            break;
+          }
+        }
+      }
+      if (!providerFound) return false;
     }
 
     return true;
@@ -191,13 +319,13 @@ const CellContent = ({
 }) => {
   const hasPercentage = cell.percentage !== undefined;
   const showValueBlock =
-    cell.title || (showPieChart && hasPercentage) || (showProgressBar && hasPercentage);
+    cell.title || cell.titles || (showPieChart && hasPercentage) || (showProgressBar && hasPercentage);
 
-  if (!showValueBlock && !cell.onlyIcons && !cell.tag) return null;
+  if (!showValueBlock && !cell.onlyIcons && !cell.tag && !cell.tags) return null;
 
   if (cell.onlyIcons) {
     return (
-      <div className="w-fit h-fit flex justify-end items-center">
+      <div className="w-fit h-fit flex justify-start items-center">
         {cell.onlyIcons.map((icon: string, iconIdx: number) => (
           <Image
             key={iconIdx}
@@ -254,6 +382,26 @@ const CellContent = ({
                   textSize="text-[8px]"
                 />
               </div>
+            ) : cell.titles && cell.titles.length > 0 ? (
+              // Multiple icons derived from titles - half-half display
+              <div className="flex items-center -space-x-[8px]">
+                {cell.titles.map((titleName: string, iconIdx: number) => {
+                  const iconPath = iconPaths[titleName];
+                  if (!iconPath) return null;
+                  return (
+                    <Image
+                      key={iconIdx}
+                      src={iconPath}
+                      alt={titleName}
+                      width={16}
+                      height={16}
+                      className={`rounded-full ${
+                        isDark ? "border-[1px] border-black" : "border-[1px] border-white"
+                      }`}
+                    />
+                  );
+                })}
+              </div>
             ) : iconPaths[cell.title] || cell.icon ? (
               <Image
                 src={cell.icon || iconPaths[cell.title]}
@@ -264,17 +412,20 @@ const CellContent = ({
               />
             ) : null}
 
-            {(!showProgressBar || cell.title) && (
-              <div className={`w-fit h-fit flex flex-col gap-[4px] text-[14px] font-medium ${
+            {(!showProgressBar || cell.title || cell.titles) && (
+              <div className={` w-fit h-fit flex flex-col gap-[4px] text-[14px] font-medium ${
                 isDark 
                   ? hasHover 
                     ? "text-white group-hover:text-[#181822]" 
                     : "text-white"
                   : "text-[#181822]"
               }`}>
-                <div className="break-words break-all">
-                  {cell.title ??
-                    (hasPercentage ? `${cell.percentage}%` : "")}
+                <div className="whitespace-nowrap">
+                  {cell.titles ? (
+                    cell.titles.join(" / ")
+                  ) : (
+                    cell.title ?? (hasPercentage ? `${cell.percentage}%` : "")
+                  )}
                 </div>
                 {cell.description && (
                   <div className={`py-[3px] text-[10px] font-medium ${
@@ -311,9 +462,19 @@ const CellContent = ({
         </div>
       )}
 
-      {cell.tag && !cell.onlyIcons && (
-        <div className="w-fit h-fit rounded-[6px] py-[2px] px-[6px] font-medium text-[12px] bg-[#703AE6] text-white">
-          {cell.tag}
+      {(cell.tag || cell.tags) && !cell.onlyIcons && (
+        <div className="w-fit h-fit flex gap-[4px] flex-wrap">
+          {cell.tags ? (
+            cell.tags.map((tag: string | number, idx: number) => (
+              <div key={idx} className="w-fit h-fit rounded-[6px] py-[2px] px-[6px] font-medium text-[12px] bg-[#703AE6] text-white">
+                {tag}
+              </div>
+            ))
+          ) : (
+            <div className="w-fit h-fit rounded-[6px] py-[2px] px-[6px] font-medium text-[12px] bg-[#703AE6] text-white">
+              {cell.tag}
+            </div>
+          )}
         </div>
       )}
     </>
@@ -370,9 +531,9 @@ const TableRow = memo(
             key={idx}
             className={`flex flex-col gap-[6px] h-full ${
               visibleHeadings.length - 1 === idx && !showProgressBar
-                ? "w-[120px] min-w-[120px] items-end"
+                ? "w-[120px] min-w-[120px] items-start"
                 : visibleHeadings.length - 1 === idx && showProgressBar
-                ? "w-full min-w-[120px] items-end"
+                ? "w-full min-w-[120px] items-start"
                 : "w-full min-w-[120px] items-start"
             }`}
           >
@@ -406,6 +567,10 @@ export const Table = memo((props: TableProps) => {
     deposit: [],
     all: [],
     customize: [],
+    vaults: [],
+    curator: [],
+    provider: [],
+    protocol: [],
   });
   const [supplyApyFilter, setSupplyApyFilter] = useState<SupplyApyFilter>({
     percentage: 0,
@@ -419,12 +584,30 @@ export const Table = memo((props: TableProps) => {
     columnId: null,
     direction: "asc",
   });
+  const [showLeftShadow, setShowLeftShadow] = useState(false);
+  const [showRightShadow, setShowRightShadow] = useState(true);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
-  const supplyApyColumnIndex = useMemo(
-    () => props.tableHeadings.findIndex((h) => h.id === "supply-apy"),
-    [props.tableHeadings]
-  );
+  const supplyApyColumnIndex = useMemo(() => {
+    // If custom label is provided, find column by label match
+    if (props.filters?.supplyApyLabel) {
+      return props.tableHeadings.findIndex((h) => 
+        h.label.toLowerCase().includes(props.filters!.supplyApyLabel!.toLowerCase())
+      );
+    }
+    // Otherwise use default "supply-apy" id
+    return props.tableHeadings.findIndex((h) => h.id === "supply-apy");
+  }, [props.tableHeadings, props.filters?.supplyApyLabel]);
+  
   const hasSupplyApyColumn = supplyApyColumnIndex !== -1;
+
+  // Handle scroll to show/hide shadow indicators
+  const handleScroll = useCallback(() => {
+    if (!scrollContainerRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+    setShowLeftShadow(scrollLeft > 0);
+    setShowRightShadow(scrollLeft < scrollWidth - clientWidth - 1);
+  }, []);
 
   const debouncedSearchHandler = useDebounce((value: string) => {
     setDebouncedSearchValue(value);
@@ -563,9 +746,14 @@ export const Table = memo((props: TableProps) => {
   const { filters } = props;
   const showAllChainDropdown = filters?.allChainDropdown;
   const showCustomizeDropdown = filters?.customizeDropdown;
+  const showFilterTabType = filters?.filterTabType;
   const hasCollateral = filters?.filters?.includes("Collateral") ?? false;
   const hasDeposit = filters?.filters?.includes("Deposit") ?? false;
   const hasAll = filters?.filters?.includes("All") ?? false;
+  const hasVaults = filters?.filters?.includes("Vaults") ?? false;
+  const hasCurator = filters?.filters?.includes("Curator") ?? false;
+  const hasProvider = filters?.filters?.includes("Provider") ?? false;
+  const hasProtocol = filters?.filters?.includes("Protocol") ?? false;
 
   const customizeOptions = useMemo(
     () => props.tableHeadings.map((h) => h.label),
@@ -577,6 +765,29 @@ export const Table = memo((props: TableProps) => {
   const hasTabs = Boolean(props.heading.tabsItems);
 
   const hasData = sortedData.length > 0;
+
+  // Handle scroll to show/hide shadow indicators
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container || !hasData) return;
+
+    const timeoutId = setTimeout(() => {
+      handleScroll();
+    }, 100);
+
+    container.addEventListener("scroll", handleScroll);
+
+    const resizeObserver = new ResizeObserver(() => {
+      handleScroll();
+    });
+    resizeObserver.observe(container);
+
+    return () => {
+      clearTimeout(timeoutId);
+      container.removeEventListener("scroll", handleScroll);
+      resizeObserver.disconnect();
+    };
+  }, [handleScroll, hasData, sortedData.length]);
 
   return (
     <section className="w-full h-fit flex flex-col gap-[24px]" aria-label={props.heading.heading || "Data Table"}>
@@ -596,6 +807,7 @@ export const Table = memo((props: TableProps) => {
                   currentDropdownItem={filtersState.collateral}
                   dropDownType="collateral"
                   onDropdownItemChange={updateFilter("collateral")}
+                  dropdownPosition={props.filterDropdownPosition || "left"}
                 />
               )}
               {hasDeposit && (
@@ -605,6 +817,7 @@ export const Table = memo((props: TableProps) => {
                   currentDropdownItem={filtersState.deposit}
                   dropDownType="deposit"
                   onDropdownItemChange={updateFilter("deposit")}
+                  dropdownPosition={props.filterDropdownPosition || "left"}
                 />
               )}
               {hasAll && (
@@ -614,6 +827,48 @@ export const Table = memo((props: TableProps) => {
                   currentDropdownItem={filtersState.all}
                   dropDownType="All"
                   onDropdownItemChange={updateFilter("all")}
+                  dropdownPosition={props.filterDropdownPosition || "left"}
+                />
+              )}
+              {hasVaults && (
+                <FilterDropdown
+                  dropdownOptions={FILTER_OPTIONS.vaults}
+                  dropdownOptionsFilters={FILTER_OPTIONS.vaultsFilters}
+                  currentDropdownItem={filtersState.vaults}
+                  dropDownType="vaults"
+                  onDropdownItemChange={updateFilter("vaults")}
+                  dropdownPosition={props.filterDropdownPosition || "left"}
+                />
+              )}
+              {hasCurator && (
+                <FilterDropdown
+                  dropdownOptions={FILTER_OPTIONS.curator}
+                  dropdownOptionsFilters={FILTER_OPTIONS.curatorFilters}
+                  currentDropdownItem={filtersState.curator}
+                  dropDownType="curator"
+                  onDropdownItemChange={updateFilter("curator")}
+                  dropdownPosition={props.filterDropdownPosition || "left"}
+                />
+              )}
+              {hasProvider && (
+                <FilterDropdown
+                  dropdownOptions={FILTER_OPTIONS.provider}
+                  dropdownOptionsFilters={FILTER_OPTIONS.providerFilters}
+                  currentDropdownItem={filtersState.provider}
+                  dropDownType="provider"
+                  onDropdownItemChange={updateFilter("provider")}
+                  dropdownPosition={props.filterDropdownPosition || "left"}
+                />
+              )}
+              {hasProtocol && (
+                <FilterDropdown
+                  dropdownOptions={FILTER_OPTIONS.protocol}
+                  currentDropdownItem={filtersState.protocol}
+                  dropDownType="protocol"
+                  onDropdownItemChange={updateFilter("protocol")}
+                  showDropdownFilters={false}
+                  showSearchBar={false}
+                  dropdownPosition={props.filterDropdownPosition || "left"}
                 />
               )}
               {showCustomizeDropdown && customizeOptions.length > 0 && (
@@ -623,6 +878,7 @@ export const Table = memo((props: TableProps) => {
                   currentDropdownItem={filtersState.customize}
                   dropDownType="customize"
                   onDropdownItemChange={updateFilter("customize")}
+                  dropdownPosition={props.filterDropdownPosition || "left"}
                 />
               )}
             </div>
@@ -642,21 +898,39 @@ export const Table = memo((props: TableProps) => {
         </nav>
       )}
 
+      {/* Here is the Network Dropdown list for earn page  */}
+
       {showAllChainDropdown && (
-        <header className="flex justify-between items-center">
-          <div className="flex items-center gap-[12px]" role="search" aria-label="Table Search and Filters">
-            <FilterDropdown
-              dropdownOptions={FILTER_OPTIONS.allChains}
-              dropdownOptionsFilters={FILTER_OPTIONS.allChainsFilters}
-              currentDropdownItem={filtersState.allChains}
-              dropDownType="all-chains"
-              onDropdownItemChange={updateFilter("allChains")}
-            />
-            <SearchBar
-              placeholder="Pools"
-              value={searchValue}
-              onChange={handleSearchChange}
-            />
+        <header className={`flex flex-wrap ${showFilterTabType && showAllChainDropdown ? "flex-col gap-[16px]" : "min-[550px]:justify-between min-[550px]:items-center gap-[16px] min-[550px]:gap-0"}`}>
+          <div className={`flex ${showFilterTabType && showAllChainDropdown ? "justify-between w-full" : "items-center gap-[12px]"}`}>
+            <div className="flex items-center gap-[12px]" role="search" aria-label="Table Search and Filters">
+              <FilterDropdown
+                dropdownOptions={FILTER_OPTIONS.allChains}
+                dropdownOptionsFilters={FILTER_OPTIONS.allChainsFilters}
+                currentDropdownItem={filtersState.allChains}
+                dropDownType="all-chains"
+                onDropdownItemChange={updateFilter("allChains")}
+              />
+              <SearchBar
+                placeholder="Pools"
+                value={searchValue}
+                onChange={handleSearchChange}
+              />
+
+
+
+            </div>
+            {showFilterTabType && props.filterTabTypeOptions && (
+              <AnimatedTabs
+                tabs={props.filterTabTypeOptions}
+                activeTab={props.activeFilterTab || props.filterTabTypeOptions[0].id}
+                onTabChange={(tabId: string) => props.onFilterTabTypeChange?.(tabId)}
+                type={props.filters?.filterTabType}
+                tabClassName="text-[12px]"
+                containerClassName="w-fit"
+                customTabWidth="w-[200px]"
+              />
+            )}
           </div>
           <div className="flex items-center gap-[16px]" role="toolbar" aria-label="Additional Table Filters">
             {hasCollateral && (
@@ -666,6 +940,7 @@ export const Table = memo((props: TableProps) => {
                 currentDropdownItem={filtersState.collateral}
                 dropDownType="collateral"
                 onDropdownItemChange={updateFilter("collateral")}
+                dropdownPosition={props.filterDropdownPosition || "left"}
               />
             )}
             {hasDeposit && (
@@ -675,6 +950,7 @@ export const Table = memo((props: TableProps) => {
                 currentDropdownItem={filtersState.deposit}
                 dropDownType="deposit"
                 onDropdownItemChange={updateFilter("deposit")}
+                dropdownPosition={props.filterDropdownPosition || "left"}
               />
             )}
             {hasAll && (
@@ -684,6 +960,48 @@ export const Table = memo((props: TableProps) => {
                 currentDropdownItem={filtersState.all}
                 dropDownType="All"
                 onDropdownItemChange={updateFilter("all")}
+                dropdownPosition={props.filterDropdownPosition || "left"}
+              />
+            )}
+            {hasVaults && (
+              <FilterDropdown
+                dropdownOptions={FILTER_OPTIONS.vaults}
+                dropdownOptionsFilters={FILTER_OPTIONS.vaultsFilters}
+                currentDropdownItem={filtersState.vaults}
+                dropDownType="vaults"
+                onDropdownItemChange={updateFilter("vaults")}
+                dropdownPosition={props.filterDropdownPosition || "left"}
+              />
+            )}
+            {hasCurator && (
+              <FilterDropdown
+                dropdownOptions={FILTER_OPTIONS.curator}
+                dropdownOptionsFilters={FILTER_OPTIONS.curatorFilters}
+                currentDropdownItem={filtersState.curator}
+                dropDownType="curator"
+                onDropdownItemChange={updateFilter("curator")}
+                dropdownPosition={props.filterDropdownPosition || "left"}
+              />
+            )}
+            {hasProvider && (
+              <FilterDropdown
+                dropdownOptions={FILTER_OPTIONS.provider}
+                dropdownOptionsFilters={FILTER_OPTIONS.providerFilters}
+                currentDropdownItem={filtersState.provider}
+                dropDownType="provider"
+                onDropdownItemChange={updateFilter("provider")}
+                dropdownPosition={props.filterDropdownPosition || "left"}
+              />
+            )}
+            {hasProtocol && (
+              <FilterDropdown
+                dropdownOptions={FILTER_OPTIONS.protocol}
+                currentDropdownItem={filtersState.protocol}
+                dropDownType="protocol"
+                onDropdownItemChange={updateFilter("protocol")}
+                showDropdownFilters={false}
+                showSearchBar={false}
+                dropdownPosition={props.filterDropdownPosition || "left"}
               />
             )}
             {showCustomizeDropdown && customizeOptions.length > 0 && (
@@ -693,12 +1011,15 @@ export const Table = memo((props: TableProps) => {
                 currentDropdownItem={filtersState.customize}
                 dropDownType="customize"
                 onDropdownItemChange={updateFilter("customize")}
+                dropdownPosition={props.filterDropdownPosition || "left"}
               />
             )}
             {filters?.supplyApyTab && (
               <SupplyApy
                 setSupplyApyFilter={setSupplyApyFilter}
                 supplyApy={supplyApyFilter}
+                supplyApyLabel={filters?.supplyApyLabel}
+                anythingLabel={filters?.anythingLabel}
               />
             )}
           </div>
@@ -717,10 +1038,10 @@ export const Table = memo((props: TableProps) => {
                 return (
                   <th
                     key={item.id}
-                    className={`text-[14px] font-medium ${
+                    className={`whitespace-nowrap text-[14px] font-medium ${
                       props.tableHeadingTextColor || "text-[#999999]"
                     } min-w-[120px] h-fit flex ${
-                      isLast ? "justify-end w-[120px]" : "justify-start w-full"
+                      isLast ? "justify-end w-[120px]" : "justify-start w-full whitespace-nowrap"
                     } gap-[4px] items-center`}
                   >
                     {item.icon && (

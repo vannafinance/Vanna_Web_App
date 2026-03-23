@@ -1,0 +1,283 @@
+{
+    "abi": [
+        {
+            "type": "constructor",
+            "inputs": [
+                {
+                    "name": "_beacon",
+                    "type": "address",
+                    "internalType": "address"
+                }
+            ],
+            "stateMutability": "nonpayable"
+        },
+        {
+            "type": "function",
+            "name": "beacon",
+            "inputs": [],
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "address",
+                    "internalType": "address"
+                }
+            ],
+            "stateMutability": "view"
+        },
+        {
+            "type": "function",
+            "name": "create",
+            "inputs": [
+                {
+                    "name": "accountManager",
+                    "type": "address",
+                    "internalType": "address"
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "account",
+                    "type": "address",
+                    "internalType": "address"
+                }
+            ],
+            "stateMutability": "nonpayable"
+        },
+        {
+            "type": "event",
+            "name": "AccountCreated",
+            "inputs": [
+                {
+                    "name": "account",
+                    "type": "address",
+                    "indexed": true,
+                    "internalType": "address"
+                },
+                {
+                    "name": "accountManager",
+                    "type": "address",
+                    "indexed": true,
+                    "internalType": "address"
+                }
+            ],
+            "anonymous": false
+        }
+    ],
+    "bytecode": {
+        "object": "0x608034606f57601f6106e838819003918201601f19168301916001600160401b03831184841017607357808492602094604052833981010312606f57516001600160a01b03811690819003606f575f80546001600160a01b03191691909117905560405161066090816100888239f35b5f80fd5b634e487b7160e01b5f52604160045260245ffdfe6080806040526004361015610012575f80fd5b5f3560e01c90816359659e90146100ec5750639ed9331814610032575f80fd5b346100e85760203660031901126100e8576001600160a01b03600435818116908190036100e857815f54166040519061051c80830183811067ffffffffffffffff8211176100d457604092849261010f843981528460208201520301905ff09182156100c9576020921660405191817fac631f3001b55ea1509cf3d7e74898f85392a61a76e8149181ae1259622dabc85f80a38152f35b6040513d5f823e3d90fd5b634e487b7160e01b5f52604160045260245ffd5b5f80fd5b346100e8575f3660031901126100e8575f546001600160a01b03168152602090f3fe60803461013a5761051c601f38829003908101601f19168301906001600160401b0382118483101761013e578084916040948594855283398101031261013a57610054602061004d84610152565b9301610152565b6001600160a01b03908082168015610129577f7e644d79422f17c01e4894b5f4f588d331ebfa28653d42ae832dc59e38c9798f847fb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d610392835490868351921682526020820152a1558216918215610118577fa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d505551907f1cf3b03a6cf19fa2baba4df148e9dcabedea7f8a5c07840e207e5c089be95d3e5f80a26103b590816101678239f35b815163d92e233d60e01b8152600490fd5b835163d92e233d60e01b8152600490fd5b5f80fd5b634e487b7160e01b5f52604160045260245ffd5b51906001600160a01b038216820361013a5756fe60806040526004361015610018575b3661035857610358565b5f3560e01c80632d6b3a6b146100675780636e9960c3146100625780638f2839701461005d578063aaf10f42146100585763d14823f80361000e576101e7565b6101bb565b610108565b6100b0565b346100ac575f3660031901126100ac577fa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d50546001600160a01b03166080908152602090f35b5f80fd5b346100ac575f3660031901126100ac577fb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103546040516001600160a01b039091168152602090f35b6001600160a01b038116036100ac57565b346100ac5760203660031901126100ac57600435610125816100f7565b7fb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d610380546001600160a01b0390811690338290036101a95783168015610197577f7e644d79422f17c01e4894b5f4f588d331ebfa28653d42ae832dc59e38c9798f9160409182519182526020820152a155005b60405163d92e233d60e01b8152600490fd5b604051633057182d60e21b8152600490fd5b346100ac575f3660031901126100ac5760206101d56102a0565b6040516001600160a01b039091168152f35b346100ac5760203660031901126100ac57600435610204816100f7565b7fb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103546001600160a01b0390811633036101a9578116908115610197577fa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d50557f1cf3b03a6cf19fa2baba4df148e9dcabedea7f8a5c07840e207e5c089be95d3e5f80a2005b908160209103126100ac575161029d816100f7565b90565b7fa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d5054604051635c60da1b60e01b815290602090829060049082905f906001600160a01b03165af190811561034d575f916102f8575090565b602091503d8211610345575b601f8201601f191681019167ffffffffffffffff8311828410176103315761029d92604052810190610288565b634e487b7160e01b5f52604160045260245ffd5b3d9150610304565b6040513d5f823e3d90fd5b6103606102a0565b5f8060405192368285378336915af4903d91825f833e1561037d57f35bfdfea2646970667358221220109da4e28404442780d09d3e78ed80373e08fad8b3c8b5dbc2751b9b145e62f964736f6c63430008190033a2646970667358221220b6a9526f54edb5ed0c3e312b817dab32863ccd73118d5aff3a33a4b9736c5c3b64736f6c63430008190033",
+        "sourceMap": "334:1504:42:-:0;;;;;;;;;;;;;-1:-1:-1;;334:1504:42;;;;-1:-1:-1;;;;;334:1504:42;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;;;;334:1504:42;;;;;;;;-1:-1:-1;334:1504:42;;-1:-1:-1;;;;;;334:1504:42;;;;;;;;;;;;;;;;;-1:-1:-1;334:1504:42;;;;;;-1:-1:-1;334:1504:42;;;;;-1:-1:-1;334:1504:42",
+        "linkReferences": {}
+    },
+    "deployedBytecode": {
+        "object": "0x6080806040526004361015610012575f80fd5b5f3560e01c90816359659e90146100ec5750639ed9331814610032575f80fd5b346100e85760203660031901126100e8576001600160a01b03600435818116908190036100e857815f54166040519061051c80830183811067ffffffffffffffff8211176100d457604092849261010f843981528460208201520301905ff09182156100c9576020921660405191817fac631f3001b55ea1509cf3d7e74898f85392a61a76e8149181ae1259622dabc85f80a38152f35b6040513d5f823e3d90fd5b634e487b7160e01b5f52604160045260245ffd5b5f80fd5b346100e8575f3660031901126100e8575f546001600160a01b03168152602090f3fe60803461013a5761051c601f38829003908101601f19168301906001600160401b0382118483101761013e578084916040948594855283398101031261013a57610054602061004d84610152565b9301610152565b6001600160a01b03908082168015610129577f7e644d79422f17c01e4894b5f4f588d331ebfa28653d42ae832dc59e38c9798f847fb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d610392835490868351921682526020820152a1558216918215610118577fa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d505551907f1cf3b03a6cf19fa2baba4df148e9dcabedea7f8a5c07840e207e5c089be95d3e5f80a26103b590816101678239f35b815163d92e233d60e01b8152600490fd5b835163d92e233d60e01b8152600490fd5b5f80fd5b634e487b7160e01b5f52604160045260245ffd5b51906001600160a01b038216820361013a5756fe60806040526004361015610018575b3661035857610358565b5f3560e01c80632d6b3a6b146100675780636e9960c3146100625780638f2839701461005d578063aaf10f42146100585763d14823f80361000e576101e7565b6101bb565b610108565b6100b0565b346100ac575f3660031901126100ac577fa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d50546001600160a01b03166080908152602090f35b5f80fd5b346100ac575f3660031901126100ac577fb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103546040516001600160a01b039091168152602090f35b6001600160a01b038116036100ac57565b346100ac5760203660031901126100ac57600435610125816100f7565b7fb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d610380546001600160a01b0390811690338290036101a95783168015610197577f7e644d79422f17c01e4894b5f4f588d331ebfa28653d42ae832dc59e38c9798f9160409182519182526020820152a155005b60405163d92e233d60e01b8152600490fd5b604051633057182d60e21b8152600490fd5b346100ac575f3660031901126100ac5760206101d56102a0565b6040516001600160a01b039091168152f35b346100ac5760203660031901126100ac57600435610204816100f7565b7fb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103546001600160a01b0390811633036101a9578116908115610197577fa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d50557f1cf3b03a6cf19fa2baba4df148e9dcabedea7f8a5c07840e207e5c089be95d3e5f80a2005b908160209103126100ac575161029d816100f7565b90565b7fa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d5054604051635c60da1b60e01b815290602090829060049082905f906001600160a01b03165af190811561034d575f916102f8575090565b602091503d8211610345575b601f8201601f191681019167ffffffffffffffff8311828410176103315761029d92604052810190610288565b634e487b7160e01b5f52604160045260245ffd5b3d9150610304565b6040513d5f823e3d90fd5b6103606102a0565b5f8060405192368285378336915af4903d91825f833e1561037d57f35bfdfea2646970667358221220109da4e28404442780d09d3e78ed80373e08fad8b3c8b5dbc2751b9b145e62f964736f6c63430008190033a2646970667358221220b6a9526f54edb5ed0c3e312b817dab32863ccd73118d5aff3a33a4b9736c5c3b64736f6c63430008190033",
+        "sourceMap": "334:1504:42:-:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;334:1504:42;;;;-1:-1:-1;;;;;334:1504:42;;;;;;;;;;;;;;;;;1735:39;;;;;;;;;;;;;;334:1504;1735:39;;;;;;334:1504;;;;;;;1735:39;;;334:1504;1735:39;;;;;;334:1504;;;;;1790:39;;;334:1504;1790:39;;334:1504;;;1735:39;334:1504;;;;;;;;;1735:39;334:1504;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;334:1504:42;;;;;;-1:-1:-1;;;;;334:1504:42;;;;;",
+        "linkReferences": {}
+    },
+    "methodIdentifiers": {
+        "beacon()": "59659e90",
+        "create(address)": "9ed93318"
+    },
+    "rawMetadata": "{\"compiler\":{\"version\":\"0.8.25+commit.b61c2a91\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_beacon\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"accountManager\",\"type\":\"address\"}],\"name\":\"AccountCreated\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"beacon\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"accountManager\",\"type\":\"address\"}],\"name\":\"create\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{\"constructor\":{\"params\":{\"_beacon\":\"address of account beacon\"}},\"create(address)\":{\"details\":\"Emits AccountCreated(account, accountManager) event\",\"params\":{\"accountManager\":\"Address of account manager\"},\"returns\":{\"account\":\"Address of account created\"}}},\"title\":\"Account Factory\",\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"beacon()\":{\"notice\":\"Address of account beacon\"},\"constructor\":{\"notice\":\"Contract constructor\"},\"create(address)\":{\"notice\":\"Account creator\"}},\"notice\":\"Factory that creates Account as a beacon proxy\",\"version\":1}},\"settings\":{\"compilationTarget\":{\"src/core/AccountFactory.sol\":\"AccountFactory\"},\"evmVersion\":\"cancun\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[\":@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/\",\":ds-test/=lib/forge-std/lib/ds-test/src/\",\":erc4626-tests/=lib/openzeppelin-contracts/lib/erc4626-tests/\",\":forge-std/=lib/forge-std/src/\",\":halmos-cheatcodes/=lib/openzeppelin-contracts/lib/halmos-cheatcodes/src/\",\":openzeppelin-contracts/=lib/openzeppelin-contracts/\",\":openzeppelin/=lib/openzeppelin-contracts/contracts/\",\":solidity-bytes-utils/=lib/controller/lib/solidity-bytes-utils/contracts/\",\":solmate/=lib/solmate/src/\",\":v3-core/=lib/oracle/lib/v3-core/\"],\"viaIR\":true},\"sources\":{\"src/core/AccountFactory.sol\":{\"keccak256\":\"0xc33823dfd33b3f6a4f12bb0fd2042fc4d2f8c1c5400ced70be3167cae5d95217\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://7319a1d34e7f94bc2c943fadf17e1acf5d359a5765e14174e9ad76f7bb82990a\",\"dweb:/ipfs/Qmf8PWLdr9pxJh8WEPrWuea2EN34C8Y1khcyC7cXHspScs\"]},\"src/interface/core/IAccount.sol\":{\"keccak256\":\"0x29f355ddfced795473c904e6601780afe2ebbaf37ca248615d7b6fb9458e8e5b\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://36ad62388f0450e394e54bf0bfe3edb0c6d5f3597a2543e8813ed6b49f9baac8\",\"dweb:/ipfs/QmZZvA3SoxHbaKAHcEAXEnQSzFKgb18Jyu74hEUGwmRhN1\"]},\"src/interface/core/IAccountFactory.sol\":{\"keccak256\":\"0xc79896b78e79c9b90b5adcd9eade19e21c832598111098d5477bc89c658ebeee\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://abf8d9fa04658ed9b67f767d8402cb2e426d351e98ba0054138c3f7039f8b6db\",\"dweb:/ipfs/QmSYFsN7JpFj5cmf9C3B5FKJYGjHCXmupyPZBeFF9ZZfTE\"]},\"src/interface/proxy/IBeacon.sol\":{\"keccak256\":\"0x14ac6100975f3c38e10a71e9c66b4baa831d4229de1c95aa2db17590956e769d\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://6edf8e7c55090979b7c00ef1804ef071aedbdb625e5a3d11c6ff4c97369a94fd\",\"dweb:/ipfs/QmWP7MymcCiTE3vNqTWWDfq3s7uVPFH5yWBLy2kCJYbPrP\"]},\"src/proxy/BaseProxy.sol\":{\"keccak256\":\"0x275e18a642ee0adad7dbc00f1ca0f8e27ac3443b6528aefdec3799cc5f583117\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://148ebee156ec958a5ef20a19f57cccbc5a3ae5743ac348e8c3662eb26f9e392e\",\"dweb:/ipfs/QmPFNLEk6NC7ndjBZCuMW6aHw1m9HkHJd4ktyLivpJnaQq\"]},\"src/proxy/BeaconProxy.sol\":{\"keccak256\":\"0x442a7ed8bda2c624342012ea2bbb35f250c5957c6c1022a8907c5066cbb31523\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://ae87f3b00e5f6249ec5474b95ef0c0f322e372665d2c6448a0084e75ecb3f0e9\",\"dweb:/ipfs/QmUNC52hnPmHgYofYSALNoRB3R4xQS8WRJhAxqBMUVQU7X\"]},\"src/utils/Errors.sol\":{\"keccak256\":\"0xd2d5eb79c1c0f682ba1eb3d1d49369957d3f7c6d858f5033e9088f532b04a773\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://e21fe1111ea1e14117d8e339b733fad0d79b2dff5c63120e1f934480852a126b\",\"dweb:/ipfs/QmaeJr7pQTubaqW3fZdWvfRqc82apPeT59yQHHmYnXZfdb\"]},\"src/utils/Storage.sol\":{\"keccak256\":\"0xf77b79da67d0a78cd01b07f58572125dbddb7cffe81e63ee5e2fd94ce2cbbf94\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://fd6bbb3a54b77fbebf6747d7dec816d925faa799954e98b4dbc83cc80b3c3914\",\"dweb:/ipfs/QmezCiy6Lopi8zvpFQbpeYx8vxeSGkspRmMHndpfsNKVoZ\"]}},\"version\":1}",
+    "metadata": {
+        "compiler": {
+            "version": "0.8.25+commit.b61c2a91"
+        },
+        "language": "Solidity",
+        "output": {
+            "abi": [
+                {
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "_beacon",
+                            "type": "address"
+                        }
+                    ],
+                    "stateMutability": "nonpayable",
+                    "type": "constructor"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "account",
+                            "type": "address",
+                            "indexed": true
+                        },
+                        {
+                            "internalType": "address",
+                            "name": "accountManager",
+                            "type": "address",
+                            "indexed": true
+                        }
+                    ],
+                    "type": "event",
+                    "name": "AccountCreated",
+                    "anonymous": false
+                },
+                {
+                    "inputs": [],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "name": "beacon",
+                    "outputs": [
+                        {
+                            "internalType": "address",
+                            "name": "",
+                            "type": "address"
+                        }
+                    ]
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "accountManager",
+                            "type": "address"
+                        }
+                    ],
+                    "stateMutability": "nonpayable",
+                    "type": "function",
+                    "name": "create",
+                    "outputs": [
+                        {
+                            "internalType": "address",
+                            "name": "account",
+                            "type": "address"
+                        }
+                    ]
+                }
+            ],
+            "devdoc": {
+                "kind": "dev",
+                "methods": {
+                    "constructor": {
+                        "params": {
+                            "_beacon": "address of account beacon"
+                        }
+                    },
+                    "create(address)": {
+                        "details": "Emits AccountCreated(account, accountManager) event",
+                        "params": {
+                            "accountManager": "Address of account manager"
+                        },
+                        "returns": {
+                            "account": "Address of account created"
+                        }
+                    }
+                },
+                "version": 1
+            },
+            "userdoc": {
+                "kind": "user",
+                "methods": {
+                    "beacon()": {
+                        "notice": "Address of account beacon"
+                    },
+                    "constructor": {
+                        "notice": "Contract constructor"
+                    },
+                    "create(address)": {
+                        "notice": "Account creator"
+                    }
+                },
+                "version": 1
+            }
+        },
+        "settings": {
+            "remappings": [
+                "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+                "ds-test/=lib/forge-std/lib/ds-test/src/",
+                "erc4626-tests/=lib/openzeppelin-contracts/lib/erc4626-tests/",
+                "forge-std/=lib/forge-std/src/",
+                "halmos-cheatcodes/=lib/openzeppelin-contracts/lib/halmos-cheatcodes/src/",
+                "openzeppelin-contracts/=lib/openzeppelin-contracts/",
+                "openzeppelin/=lib/openzeppelin-contracts/contracts/",
+                "solidity-bytes-utils/=lib/controller/lib/solidity-bytes-utils/contracts/",
+                "solmate/=lib/solmate/src/",
+                "v3-core/=lib/oracle/lib/v3-core/"
+            ],
+            "optimizer": {
+                "enabled": true,
+                "runs": 200
+            },
+            "metadata": {
+                "bytecodeHash": "ipfs"
+            },
+            "compilationTarget": {
+                "src/core/AccountFactory.sol": "AccountFactory"
+            },
+            "evmVersion": "cancun",
+            "libraries": {},
+            "viaIR": true
+        },
+        "sources": {
+            "src/core/AccountFactory.sol": {
+                "keccak256": "0xc33823dfd33b3f6a4f12bb0fd2042fc4d2f8c1c5400ced70be3167cae5d95217",
+                "urls": [
+                    "bzz-raw://7319a1d34e7f94bc2c943fadf17e1acf5d359a5765e14174e9ad76f7bb82990a",
+                    "dweb:/ipfs/Qmf8PWLdr9pxJh8WEPrWuea2EN34C8Y1khcyC7cXHspScs"
+                ],
+                "license": "MIT"
+            },
+            "src/interface/core/IAccount.sol": {
+                "keccak256": "0x29f355ddfced795473c904e6601780afe2ebbaf37ca248615d7b6fb9458e8e5b",
+                "urls": [
+                    "bzz-raw://36ad62388f0450e394e54bf0bfe3edb0c6d5f3597a2543e8813ed6b49f9baac8",
+                    "dweb:/ipfs/QmZZvA3SoxHbaKAHcEAXEnQSzFKgb18Jyu74hEUGwmRhN1"
+                ],
+                "license": "MIT"
+            },
+            "src/interface/core/IAccountFactory.sol": {
+                "keccak256": "0xc79896b78e79c9b90b5adcd9eade19e21c832598111098d5477bc89c658ebeee",
+                "urls": [
+                    "bzz-raw://abf8d9fa04658ed9b67f767d8402cb2e426d351e98ba0054138c3f7039f8b6db",
+                    "dweb:/ipfs/QmSYFsN7JpFj5cmf9C3B5FKJYGjHCXmupyPZBeFF9ZZfTE"
+                ],
+                "license": "MIT"
+            },
+            "src/interface/proxy/IBeacon.sol": {
+                "keccak256": "0x14ac6100975f3c38e10a71e9c66b4baa831d4229de1c95aa2db17590956e769d",
+                "urls": [
+                    "bzz-raw://6edf8e7c55090979b7c00ef1804ef071aedbdb625e5a3d11c6ff4c97369a94fd",
+                    "dweb:/ipfs/QmWP7MymcCiTE3vNqTWWDfq3s7uVPFH5yWBLy2kCJYbPrP"
+                ],
+                "license": "MIT"
+            },
+            "src/proxy/BaseProxy.sol": {
+                "keccak256": "0x275e18a642ee0adad7dbc00f1ca0f8e27ac3443b6528aefdec3799cc5f583117",
+                "urls": [
+                    "bzz-raw://148ebee156ec958a5ef20a19f57cccbc5a3ae5743ac348e8c3662eb26f9e392e",
+                    "dweb:/ipfs/QmPFNLEk6NC7ndjBZCuMW6aHw1m9HkHJd4ktyLivpJnaQq"
+                ],
+                "license": "MIT"
+            },
+            "src/proxy/BeaconProxy.sol": {
+                "keccak256": "0x442a7ed8bda2c624342012ea2bbb35f250c5957c6c1022a8907c5066cbb31523",
+                "urls": [
+                    "bzz-raw://ae87f3b00e5f6249ec5474b95ef0c0f322e372665d2c6448a0084e75ecb3f0e9",
+                    "dweb:/ipfs/QmUNC52hnPmHgYofYSALNoRB3R4xQS8WRJhAxqBMUVQU7X"
+                ],
+                "license": "MIT"
+            },
+            "src/utils/Errors.sol": {
+                "keccak256": "0xd2d5eb79c1c0f682ba1eb3d1d49369957d3f7c6d858f5033e9088f532b04a773",
+                "urls": [
+                    "bzz-raw://e21fe1111ea1e14117d8e339b733fad0d79b2dff5c63120e1f934480852a126b",
+                    "dweb:/ipfs/QmaeJr7pQTubaqW3fZdWvfRqc82apPeT59yQHHmYnXZfdb"
+                ],
+                "license": "MIT"
+            },
+            "src/utils/Storage.sol": {
+                "keccak256": "0xf77b79da67d0a78cd01b07f58572125dbddb7cffe81e63ee5e2fd94ce2cbbf94",
+                "urls": [
+                    "bzz-raw://fd6bbb3a54b77fbebf6747d7dec816d925faa799954e98b4dbc83cc80b3c3914",
+                    "dweb:/ipfs/QmezCiy6Lopi8zvpFQbpeYx8vxeSGkspRmMHndpfsNKVoZ"
+                ],
+                "license": "MIT"
+            }
+        },
+        "version": 1
+    },
+    "id": 42
+}

@@ -1,4 +1,4 @@
-import { DropdownOptions, iconPaths } from "@/lib/constants";
+import { iconPaths } from "@/lib/constants";
 import { Dropdown } from "../ui/dropdown";
 import { useState, useEffect, useCallback } from "react";
 import { LeverageSlider } from "../ui/leverage-slider";
@@ -10,12 +10,19 @@ import { useTheme } from "@/contexts/theme-context";
 
 type Mode = "Deposit" | "Borrow";
 
+// Theme hook will be called inside the component
+
 interface BorrowBoxProps {
   mode?: Mode;
   leverage: number;
   setLeverage: (value: number) => void;
   totalDeposit: number;
   onBorrowItemsChange?: (items: BorrowInfo[]) => void;
+  onAssetChange?: (asset: string) => void;
+  borrowAmount?: number;
+  maxBorrowAmount?: number;
+  assetPrice?: number;
+  supportedTokens?: string[];
 }
 
 export const BorrowBox = ({
@@ -24,8 +31,16 @@ export const BorrowBox = ({
   setLeverage,
   totalDeposit,
   onBorrowItemsChange,
+  onAssetChange,
+  borrowAmount,
+  maxBorrowAmount,
+  assetPrice = 0,
+  supportedTokens = [],
 }: BorrowBoxProps) => {
   const { isDark } = useTheme();
+
+  // Use supportedTokens for dropdown, fallback to empty array
+  const tokenOptions = supportedTokens.length > 0 ? supportedTokens : ["USDC"];
   const config = MODE_CONFIG[mode];
 
   // Form state
@@ -36,6 +51,16 @@ export const BorrowBox = ({
   const [inputValues, setInputValues] = useState<Record<number, number>>({});
   const [percentageInputValues, setPercentageInputValues] = useState<Record<number, number>>({});
   const [usdInputValues, setUsdInputValues] = useState<Record<number, number>>({});
+
+  // Update input values when borrowAmount prop changes (for Deposit mode)
+  useEffect(() => {
+    if (mode === "Deposit" && borrowAmount !== undefined) {
+      setInputValues((prev) => ({
+        ...prev,
+        0: borrowAmount,
+      }));
+    }
+  }, [mode, borrowAmount]);
 
   // Combined useEffect: Create BorrowInfo items and notify parent
   useEffect(() => {
@@ -52,7 +77,7 @@ export const BorrowBox = ({
 
         newBorrowItems.push({
           assetData: {
-            asset: `0x${selectedOption}`,
+            asset: selectedOption,
             amount: inputValue.toString(),
           },
           percentage: Number(percentage.toFixed(2)),
@@ -65,7 +90,12 @@ export const BorrowBox = ({
     if (onBorrowItemsChange) {
       onBorrowItemsChange(newBorrowItems);
     }
-  }, [selectedOptions, inputValues, config.maxItems, totalDeposit, onBorrowItemsChange]);
+
+    // Initial asset notification for Deposit mode if not set
+    if (mode === "Deposit" && onAssetChange && !selectedOptions[0]) {
+      onAssetChange(tokenOptions[0]);
+    }
+  }, [selectedOptions, inputValues, config.maxItems, totalDeposit, onBorrowItemsChange, mode, onAssetChange]);
 
   // Calculate total borrowed value inline (simple calculation)
   const totalBorrowedValue = mode === "Borrow" 
@@ -92,20 +122,36 @@ export const BorrowBox = ({
         const currentValue = prev[idx];
         const selected =
           typeof option === "function"
-            ? option(currentValue || DropdownOptions[0])
+            ? option(currentValue || tokenOptions[0])
             : option;
+
+        // Notify parent about asset change (useful for Deposit mode)
+        if (idx === 0 && onAssetChange) {
+          onAssetChange(selected);
+        }
+
         return {
           ...prev,
           [idx]: selected,
         };
       });
     };
-  }, []);
+  }, [onAssetChange]);
 
   // Handler for input change - memoized to prevent re-renders
   const handleInputChange = useCallback((idx: number) => {
     return (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = Number(e.target.value) || 0;
+      
+      // Validation: Check if new total exceeds maxBorrowAmount
+      if (mode === "Borrow" && maxBorrowAmount && maxBorrowAmount > 0) {
+        const otherValue = idx === 0 ? (inputValues[1] || 0) : (inputValues[0] || 0);
+        if (value + otherValue > maxBorrowAmount) {
+           // Don't update if exceeding limit
+           return;
+        }
+      }
+
       setInputValues((prev) => ({
         ...prev,
         [idx]: value,
@@ -127,13 +173,13 @@ export const BorrowBox = ({
     const inputValue = e.target.value;
     // Allow empty string for better UX while typing
     if (inputValue === "") {
-      setLeverage(0);
+      setLeverage(1);
       return;
     }
     const value = Number(inputValue);
-    // Validate: must be a number, between 0 and MAX_LEVERAGE
+    // Validate: must be a number, between 1 and MAX_LEVERAGE (minimum leverage is 1x)
     if (!isNaN(value)) {
-      const clampedValue = Math.max(0, Math.min(MAX_LEVERAGE, value));
+      const clampedValue = Math.max(1, Math.min(MAX_LEVERAGE, value));
       setLeverage(clampedValue);
     }
   }, [setLeverage, MAX_LEVERAGE]);
@@ -163,8 +209,8 @@ export const BorrowBox = ({
                 <Dropdown
 
                   dropdownClassname="text-[14px] gap-[10px] "
-                  items={DropdownOptions}
-                  selectedOption={selectedOptions[0] || DropdownOptions[0]}
+                  items={tokenOptions}
+                  selectedOption={selectedOptions[0] || tokenOptions[0]}
                   setSelectedOption={handleSetSelectedOption(0)}
                   classname="text-[16px] font-medium gap-[8px]"
                 />
@@ -194,9 +240,11 @@ export const BorrowBox = ({
                 </motion.div>
                 
               </motion.button>
-              <div className={`text-[12px] font-medium ${
-                isDark ? "text-[#919191]" : "text-neutral-400"
-              }`}>18000 USDC</div> 
+              <div className="text-[12px] font-medium text-neutral-400">
+                {maxBorrowAmount && maxBorrowAmount > 0 
+                  ? `${maxBorrowAmount.toFixed(2)} ${selectedOptions[0] || ''}`
+                  : "0.00"}
+              </div> 
               </div>
               
             </motion.div>
@@ -215,7 +263,7 @@ export const BorrowBox = ({
                 <div className="flex gap-[12px]">
                   {Array.from({ length: 1 }).map((_, idx) => {
                     const selectedOption =
-                      selectedOptions[0] || DropdownOptions[0];
+                      selectedOptions[0] || tokenOptions[0];
                     const inputValue = inputValues[0] || 0;
 
                     return (
@@ -231,8 +279,8 @@ export const BorrowBox = ({
                             <Image
                               src={iconPaths[selectedOption]}
                               alt={selectedOption}
-                              width={16}
-                              height={16}
+                              width={26}
+                              height={26}
                             />
                           </div>
 
@@ -240,13 +288,11 @@ export const BorrowBox = ({
                             isDark ? "text-white" : ""
                           }`}>
                             <div>
-                              {inputValue > 0 ? inputValue : "0"}{" "}
+                              {inputValue > 0 ? inputValue.toFixed(4) : "0"}{" "}
                                 {selectedOption}
                             </div>
-                            <div className={`text-[10px] ${
-                              isDark ? "text-[#919191]" : "text-[#111111]"
-                            }`}>
-                              {inputValue > 0 ? inputValue.toFixed(2) : "0.00"} USD
+                            <div className="text-[10px] text-[#111111]">
+                              {inputValue > 0 ? (inputValue * (assetPrice || 1)).toFixed(4) : "0.00"} USD
                             </div>
                           </div>
                         </div>
@@ -275,7 +321,7 @@ export const BorrowBox = ({
               <div className="flex gap-[12px]">
                 {Array.from({ length: config.maxItems }).map((_, idx) => {
                   const selectedOption =
-                    selectedOptions[idx] || DropdownOptions[0];
+                    selectedOptions[idx] || tokenOptions[0];
                   const inputValue = inputValues[idx] || 0;
 
                   return (
@@ -334,10 +380,8 @@ export const BorrowBox = ({
             {/* Total borrowed value */}
             {showTotal && (
               <div className="flex flex-col justify-end items-end gap-[12px]">
-                <div className={`text-[14px] font-medium ${
-                  isDark ? "text-white" : ""
-                }`}>
-                  Total Borrowable Amount:
+                <div className="text-[14px] font-medium">
+                  Total Borrow Amount:
                 </div>
                 <div className={`text-[14px] font-medium ${
                   isDark ? "text-white" : ""
@@ -347,6 +391,12 @@ export const BorrowBox = ({
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
                   })}
+                </div>
+                <div className="text-[12px] font-medium text-[#76737B]">
+                    Max Borrowable: ${maxBorrowAmount?.toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    }) || "0.00"}
                 </div>
               </div>
             )}
@@ -364,13 +414,13 @@ export const BorrowBox = ({
         >
           {/* Map through max items */}
           {Array.from({ length: config.maxItems }).map((_, idx) => {
-              const selectedOption = selectedOptions[idx] || DropdownOptions[0];
+              const selectedOption = selectedOptions[idx] || tokenOptions[0];
               const inputValue = inputValues[idx] || 0;
               
               // Calculate item data inline (no need for displayItems)
               const item: BorrowInfo | null = selectedOption && inputValue > 0 ? {
                 assetData: {
-                  asset: `0x${selectedOption}`,
+                  asset: selectedOption,
                   amount: inputValue.toString(),
                 },
                 percentage: totalDeposit > 0 ? Number(((inputValue / totalDeposit) * 100).toFixed(2)) : 0,
@@ -395,9 +445,9 @@ export const BorrowBox = ({
                       <div>
                         <Dropdown
                           dropdownClassname="text-[14px] gap-[10px] "
-                          items={DropdownOptions}
+                          items={tokenOptions}
                           selectedOption={
-                            selectedOptions[idx] || DropdownOptions[0]
+                            selectedOptions[idx] || tokenOptions[0]
                           }
                           setSelectedOption={handleSetSelectedOption(idx)}
                           classname="text-[16px] font-medium gap-[8px]"
@@ -481,9 +531,7 @@ export const BorrowBox = ({
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4, delay: 0.2 }}
       >
-        <div className={`flex gap-[2px] items-center rounded-[8px] border-[1px] p-[2px] ${
-          isDark ? "bg-[#111111]" : "bg-white"
-        }`}>
+        <div className={`flex gap-[2px] items-center ${isDark ? "bg-[#111111] border-[#333333]" : "bg-white border-[#E2E2E2]"} rounded-[8px] border-[1px] p-[2px]`}>
           {/* - Button */}
           <motion.button
             type="button"
@@ -492,15 +540,13 @@ export const BorrowBox = ({
                 setLeverage(leverage - 1);
               }
             }}
-            disabled={leverage === 1}
-            className={`w-[20px] h-[40px] flex items-center justify-center rounded-[6px] text-[16px] font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
-              isDark ? "text-white hover:bg-[#222222]" : "hover:bg-[#F7F7F7]"
-            }`}
-            whileHover={{ scale: leverage === 1 ? 1.05 : 1 }}
-            whileTap={{ scale: leverage === 1 ? 0.95 : 1 }}
-            aria-label="Increase leverage"
+            disabled={leverage <= 1}
+            className={`w-[20px] h-[40px] flex items-center justify-center rounded-[6px] text-[16px] font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${isDark ? "text-white hover:bg-[#222222]" : "hover:bg-[#F7F7F7]"}`}
+            whileHover={{ scale: leverage > 1 ? 1.05 : 1 }}
+            whileTap={{ scale: leverage > 1 ? 0.95 : 1 }}
+            aria-label="Decrease leverage"
           >
-            -
+            −
           </motion.button>
           
           {/* Input */}
@@ -510,9 +556,7 @@ export const BorrowBox = ({
             min={1}
             max={MAX_LEVERAGE}
             onChange={handleLeverageChange}
-            className={`w-[40px] h-[40px] focus:outline-none bg-transparent p-[10px] text-[16px] font-medium text-center border-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
-              isDark ? "text-white" : ""
-            }`}
+            className={`w-[40px] h-[40px] focus:outline-none bg-transparent p-[10px] text-[16px] font-medium text-center border-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${isDark ? "text-white" : ""}`}
           />
           
           {/* + Button */}
@@ -527,9 +571,9 @@ export const BorrowBox = ({
             className={`w-[20px] h-[40px] flex items-center justify-center rounded-[6px] text-[16px] font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
               isDark ? "text-white hover:bg-[#222222]" : "hover:bg-[#F7F7F7]"
             }`}
-            whileHover={{ scale: leverage >= MAX_LEVERAGE ? 1.05 : 1 }}
-            whileTap={{ scale: leverage >= MAX_LEVERAGE ? 0.95 : 1 }}
-            aria-label="Decrease leverage"
+            whileHover={{ scale: leverage < MAX_LEVERAGE ? 1.05 : 1 }}
+            whileTap={{ scale: leverage < MAX_LEVERAGE ? 0.95 : 1 }}
+            aria-label="Increase leverage"
           >
             +
           </motion.button>

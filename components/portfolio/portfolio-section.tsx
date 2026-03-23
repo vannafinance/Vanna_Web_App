@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { useUserStore } from "@/store/user";
+import { useTheme } from "@/contexts/theme-context";
 import { Button } from "../ui/button";
 import { AccountStats } from "../margin/account-stats";
 import { Chart } from "../earn/chart";
 import { AnimatedTabs } from "../ui/animated-tabs";
 import { PORTFOLIO_STATS_ITEMS } from "@/lib/constants/portfolio";
-import { useTheme } from "@/contexts/theme-context";
 import { LenderTab } from "./lender-tab";
 import { TraderTab } from "./trader-tab";
 

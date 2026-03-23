@@ -21,7 +21,7 @@ interface ExpandableSection {
 
 interface InfoProps {
   data: {
-    [key: string]: number | null | undefined;
+    [key: string]: number | string | null | undefined;
   };
   items?: InfoItem[];
   expandableSections?: ExpandableSection[];
@@ -31,10 +31,15 @@ interface InfoProps {
 // Format value using the format helper - defined outside component
 const formatFieldValue = (
   id: string,
-  value: number | null | undefined
+  value: number | string | null | undefined
 ): string => {
+  // If value is already a string, return it directly
+  if (typeof value === "string") {
+    return value;
+  }
+
   const formatType = FIELD_FORMAT_MAP[id] as FormatType | undefined;
-  
+
   if (!formatType) {
     // Fallback to default number formatting
     return formatValue(value, { type: "number" });
@@ -88,8 +93,8 @@ export const InfoCard = ({
             transition: { duration: 0.3, delay: idx * 0.05 },
           })}
     >
-      <div className="text-[14px] font-medium">{item.name}</div>
-      <div className="text-[14px] font-medium">
+      <div className="text-[13px] sm:text-[14px] font-medium">{item.name}</div>
+      <div className="text-[13px] sm:text-[14px] font-medium flex-shrink-0">
         {formatFieldValue(item.id, data[item.id])}
       </div>
     </motion.div>
@@ -100,7 +105,7 @@ export const InfoCard = ({
       {/* Main info items */}
       {items && items.length > 0 && (
         <motion.article
-          className={`flex flex-col gap-[24px] w-full h-full p-[24px] border-[1px] rounded-[16px] ${
+          className={`flex flex-col gap-4 sm:gap-[24px] w-full h-full p-3 sm:p-[24px] border-[1px] rounded-[16px] ${
             isDark ? "bg-[#222222]" : "bg-[#F7F7F7]"
           }`}
           initial={{ opacity: 0, y: 20 }}
@@ -117,7 +122,7 @@ export const InfoCard = ({
         expandableSections.map((section, sectionIdx) => (
           <motion.article
             key={section.title}
-            className={`flex flex-col gap-[24px] w-full h-full p-[24px] border-[1px] rounded-[16px] ${
+            className={`flex flex-col gap-4 sm:gap-[24px] w-full h-full p-3 sm:p-[24px] border-[1px] rounded-[16px] ${
               isDark ? "bg-[#222222]" : "bg-[#F7F7F7]"
             }`}
             initial={{ opacity: 0, y: 20 }}

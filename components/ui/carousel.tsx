@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { EducationIcon } from "@/components/icons";
 
 interface Carousel {
   items: {
@@ -44,7 +45,7 @@ export const Carousel = (props: Carousel) => {
 
   return (
     <div 
-      className="flex flex-col justify-center items-center shadow-md relative w-full h-[240px] rounded-[24px] bg-[#7B44E1D1] overflow-hidden py-[24px] px-[40px]"
+      className="flex flex-col justify-center items-center shadow-md relative w-full h-auto min-h-[200px] sm:h-[240px] rounded-[24px] bg-[#7B44E1D1] overflow-hidden py-6 sm:py-[24px] px-5 sm:px-[40px]"
       onMouseEnter={stopAutoplay}
       onMouseLeave={startAutoplay}
     >
@@ -56,31 +57,20 @@ export const Carousel = (props: Carousel) => {
         className="absolute inset-0 w-full h-full opacity-18 object-cover"
       />
       <div
-        className="relative z-10 w-full h-fit flex justify-between items-center"
+        className="relative z-10 w-full h-fit flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0"
         role="region"
         aria-label="Carousel"
         aria-live="polite"
       >
-        <div className="w-fit h-fit flex gap-[24px]">
-          <div className="w-[84px] h-[84px] p-[12px] bg-[#F4F4F4] rounded-full flex flex-col justify-center items-center">
-            <svg
-              width="44"
-              height="37"
-              viewBox="0 0 44 37"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M22 0L0 12.3333L8 16.8144V29.1478L22 37L36 29.1478V16.8144L40 14.5739V28.7778H44V12.3333L22 0ZM35.64 12.3333L22 19.98L8.36 12.3333L22 4.68667L35.64 12.3333ZM32 26.7222L22 32.3133L12 26.7222V19.055L22 24.6667L32 19.055V26.7222Z"
-                fill="#E63ABB"
-              />
-            </svg>
+        <div className="w-full sm:w-fit h-fit flex items-center gap-4 sm:gap-[24px]">
+          <div className="w-[56px] h-[56px] sm:w-[84px] sm:h-[84px] p-2 sm:p-[12px] bg-[#F4F4F4] rounded-full flex flex-col justify-center items-center flex-shrink-0">
+            <EducationIcon />
           </div>
 
           <AnimatePresence mode="wait">
             <motion.div
               key={currentIndex}
-              className="text-white font-bold text-[28px] w-[204px] h-[70px]"
+              className="text-white font-bold text-[22px] sm:text-[28px] w-full sm:w-[204px]"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
@@ -91,12 +81,12 @@ export const Carousel = (props: Carousel) => {
           </AnimatePresence>
         </div>
 
-        <div className="h-[84px] border-[1px] rotate-[-90]" />
+        <div className="hidden sm:block h-[84px] border-[1px] rotate-[-90]" />
         
         <AnimatePresence mode="wait">
           <motion.div
             key={currentIndex}
-            className="text-[20px] text-white font-semibold w-[728px]"
+            className="text-[14px] sm:text-[20px] text-white/90 sm:text-white font-medium sm:font-semibold w-full sm:w-[728px] pb-2 sm:pb-0"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
@@ -108,7 +98,7 @@ export const Carousel = (props: Carousel) => {
       </div>
       {/* Carousel indicators */}
       <div
-        className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2"
+        className="absolute bottom-3 sm:bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2"
         role="tablist"
         aria-label="Carousel navigation"
       >

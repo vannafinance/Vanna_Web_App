@@ -73,16 +73,14 @@ export default function createNewStore<S>(
       | {
           name: string;
           version: number;
-          migrate?: (persistedState: any, version: number) => S;
+          migrate?: (persistedState: any, version: number) => any;
         };
   }
 ) {
-  const store: Store<S> = (setState: Setter<S>, getState: Getter<S>) => ({
+  let input: any = (setState: Setter<S>, getState: Getter<S>) => ({
     ...state,
     ...getActions(setState, getState, state),
   });
-
-  let input = store as any;
 
   if (options) {
     if (options.persist) {

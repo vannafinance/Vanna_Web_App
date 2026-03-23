@@ -11,11 +11,25 @@ export const TABLE_ROW_HEADINGS = [
   "Action",
 ] as const;
 
-export const COIN_ICONS = {
+export const HISTORY_TABLE_HEADINGS = [
+  "Date",
+  "Type",
+  "Token",
+  "Amount",
+  "Tx Hash",
+] as const;
+
+export const COIN_ICONS: Record<string, string> = {
+  // Real token symbols (from chain)
+  "WETH": "/icons/eth-icon.png",
+  "ETH": "/icons/eth-icon.png",
+  "USDC": "/icons/usdc-icon.svg",
+  "USDT": "/icons/usdt-icon.svg",
+  // Legacy keys (for hardcoded/fallback data)
   "0xETH": "/icons/eth-icon.png",
   "0xUSDC": "/icons/usdc-icon.svg",
   "0xUSDT": "/icons/usdt-icon.svg",
-} as const;
+};
 
 // ============================================
 // Collateral Box Constants
@@ -426,33 +440,29 @@ export const BALANCE_TYPE_OPTIONS = ["WB", "MB"] as const;
 // Breakdown Data Constants
 // ============================================
 export const DEPOSIT_AMOUNT_BREAKDOWN_DROPDOWN_DATA = [
-  { name: "APE", value: 1200, valueInUSD: 1200 },
-  { name: "Polygon", value: 400, valueInUSD: 400 },
+  { name: "Base", value: 1200, valueInUSD: 1200 },
+  { name: "Arbitrum", value: 400, valueInUSD: 400 },
   { name: "Optimism", value: 180, valueInUSD: 180 },
 ] as const;
 
 export const DEPOSIT_AMOUNT_BREAKDOWN_DATA = {
   heading: "Your Deposit Amount Breakdown",
   asset: "USDT",
-  totalDeposit: 2000,
+  totalDeposit: 1780,
   breakdown: [
-    { name: "APE", value: 1200 },
-    { name: "Polygon", value: 400 },
+    { name: "Base", value: 1200 },
+    { name: "Arbitrum", value: 400 },
     { name: "Optimism", value: 180 },
-    { name: "Avalanche", value: 120 },
-    { name: "Scroll", value: 100 },
   ],
 } as const;
 
 export const UNIFIED_BALANCE_BREAKDOWN_DATA = {
   heading: "Unified Balance Breakdown",
   asset: "USDT",
-  totalDeposit: 7000,
+  totalDeposit: 5800,
   breakdown: [
-    { name: "APE", value: 3500 },
-    { name: "Polygon", value: 1500 },
+    { name: "Base", value: 3500 },
+    { name: "Arbitrum", value: 1500 },
     { name: "Optimism", value: 800 },
-    { name: "Avalanche", value: 700 },
-    { name: "Scroll", value: 500 },
   ],
 } as const;

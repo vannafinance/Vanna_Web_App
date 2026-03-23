@@ -1,5 +1,3 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
 # dependencies
 /node_modules
 /.pnp
@@ -23,15 +21,19 @@
 # misc
 .DS_Store
 *.pem
+Thumbs.db
+Desktop.ini
 
-# debug
+# debug logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# env files — secrets, API keys, credentials
+.env
+.env.*
+!.env.example
 
 # vercel
 .vercel
@@ -39,3 +41,41 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Claude Code / AI tooling
+.claude/
+.mcp.json
+.auto-claude/
+.auto-claude-security.json
+.auto-claude-status
+.claude_settings.json
+.worktrees/
+.security-key
+logs/security/
+
+# certificates (local HTTPS dev)
+certificates/
+
+# OS files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# platform-specific binaries (should not be committed)
+lightningcss-*
+
+# temporary / notes
+Balancestore.md
+
+# docs / analysis files (not for production)
+docs/AERODROME_INTEGRATION_GUIDE.md
+docs/Morphov2integrationGuide.md
+ListFunctionAbi.text
+STATE_MANAGEMENT_ANALYSIS.md

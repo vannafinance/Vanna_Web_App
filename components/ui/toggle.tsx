@@ -1,21 +1,21 @@
-'use client'
+"use client";
 
 import React, { useState } from "react";
 import { useTheme } from "@/contexts/theme-context";
 
 // Toggle Props
 interface ToggleProps {
-    onToggle: (state: boolean) => void;
-    defaultChecked?: boolean;
-    size?: "small" | "medium" | "large";
-    disabled?: boolean;
+  onToggle: (state: boolean) => void;
+  defaultChecked?: boolean;
+  size?: "small" | "medium" | "large";
+  disabled?: boolean;
 }
 
 // Circle size
 const circleSize = {
-    small: "w-4 h-4",
-    medium: "w-5 h-5",
-    large: "w-6 h-6",
+  small: "w-4 h-4",
+  medium: "w-5 h-5",
+  large: "w-6 h-6",
 };
 
 // Wrapper size (Figma: 48×24 for small)
@@ -46,46 +46,46 @@ const getBackgroundColor = (isChecked: boolean, disabled: boolean, isDark: boole
 };
 
 const ToggleButton = ({
-    onToggle,
-    defaultChecked = false,
-    size = "medium",
-    disabled = false,
+  onToggle,
+  defaultChecked = false,
+  size = "medium",
+  disabled = false,
 }: ToggleProps) => {
     const { isDark } = useTheme();
     const [isChecked, setIsChecked] = useState(defaultChecked);
 
-    const handleToggle = () => {
-        if (disabled) return;
-        const newState = !isChecked;
-        setIsChecked(newState);
-        onToggle(newState);
-    };
+  const handleToggle = () => {
+    if (disabled) return;
+    const newState = !isChecked;
+    setIsChecked(newState);
+    onToggle(newState);
+  };
 
-    return (
-        <button
-            onClick={handleToggle}
-            disabled={disabled}
-            role="switch"
-            aria-checked={isChecked}
-            aria-label={isChecked ? "Toggle is on" : "Toggle is off"}
-            className={`
+  return (
+    <button
+      type="button"
+      onClick={handleToggle}
+      disabled={disabled}
+      role="switch"
+      aria-checked={isChecked}
+      aria-label={isChecked ? "Toggle is on" : "Toggle is off"}
+      className={`
         ${wrapperSize[size]}
         relative inline-flex items-center rounded-full transition-all duration-300 ease-in-out
         ${getBackgroundColor(isChecked, disabled, isDark)}
         ${disabled ? "cursor-not-allowed" : "cursor-pointer"}
         focus:outline-none focus:ring-2 focus:ring-[#F845FC] focus:ring-offset-2
       `}
-        >
-            <span
-                className={`
+    >
+      <span
+        className={`
     ${circleSize[size]}
     inline-block bg-white rounded-full shadow-md transform transition-transform duration-300 ease-in-out
     ${isChecked ? translateValues[size] : "translate-x-1"}
   `}
-            />
-
-        </button>
-    );
+      />
+    </button>
+  );
 };
 
 export default ToggleButton;

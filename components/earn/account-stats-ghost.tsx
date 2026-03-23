@@ -9,32 +9,54 @@ interface AccountStatsItem {
 
 interface AccountStatsGhostProps {
   items: AccountStatsItem[];
-  type?: "standard" | "background";
+  type?: "standard" | "background" | "background-light";
   gridCols?: string; // e.g., "grid-cols-3", "grid-cols-2", etc.
   gridRows?: string; // e.g., "grid-rows-1", "grid-rows-2", etc.
 }
 
-export const AccountStatsGhost = ({ items, type = "standard", gridCols = "grid-cols-3", gridRows = "grid-rows-1" }: AccountStatsGhostProps) => {
+export const AccountStatsGhost = ({ items, type = "standard", gridCols, gridRows }: AccountStatsGhostProps) => {
   const { isDark } = useTheme();
   
-  const containerClass = type === "background"
-    ? `w-full h-full grid ${gridCols} ${gridRows} gap-[20px] place-items-center px-[10px] py-[20px] rounded-[24px] border-[1px] ${isDark ? "bg-[#222222]" : "bg-[#F7F7F7]"}`
-    : "w-full h-full flex justify-between";
+  // Determine if we should use grid layout
+  const useGrid = type === "background" || type === "background-light" || (gridCols && gridRows);
+  
+  // Default grid classes if not provided
+  const defaultGridCols = gridCols || "grid-cols-3";
+  const defaultGridRows = gridRows || "grid-rows-1";
+  
+  // Build container class
+  let containerClass = "w-full h-full";
+  
+  if (useGrid) {
+    containerClass += ` grid ${defaultGridCols} ${defaultGridRows} gap-[20px]`;
+    if (type === "background" || type === "background-light") {
+      containerClass += " place-items-center px-[10px] py-[20px] rounded-[24px] border-[1px]";
+      containerClass += isDark 
+        ? " bg-[#222222]" 
+        : type === "background-light" 
+        ? " bg-[#FFFFFF]" 
+        : " bg-[#F7F7F7]";
+    }
+  } else {
+    containerClass += " flex justify-between";
+  }
   
   return (
     <section className={containerClass} aria-label="Statistics Overview">
       {items.map((items) => {
-        const articleClass = type === "background"
-          ? "w-full h-fit flex flex-col gap-[12px] px-[20px]"
+        const articleClass = useGrid
+          ? "w-full h-fit flex flex-col gap-[12px]"
           : "w-[240px] h-fit flex flex-col gap-[12px]";
+        
+        const articlePadding = type === "background" || type === "background-light" ? "px-[20px]" : "";
         
         return (
           <article
             key={items.id}
-            className={articleClass}
+            className={`${articleClass} ${articlePadding}`}
           >
             <h3 className={`text-[12px] font-medium ${
-              isDark ? "text-[#919191]" : "text-[#5C5B5B]"
+              isDark ? "text-[#919191]" : "text-[#919191]"
             }`}>
               {items.name}
             </h3>
