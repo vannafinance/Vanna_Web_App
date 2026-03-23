@@ -1,3 +1,29 @@
+// ============================================
+// Portfolio Account Stats Constants
+// ============================================
+export const PORTFOLIO_STATS_ITEMS = [
+  {
+    id: "totalPortfolioBalance",
+    name: "Total Portfolio Balance",
+    icon: "/margin/dollar.png",
+  },
+  {
+    id: "netAvailableCollateral",
+    name: "Net Available Collateral",
+    icon: "/margin/health.png",
+  },
+  {
+    id: "marginAccountBalance",
+    name: "Margin Account Balance",
+    icon: "/margin/bag.png",
+  },
+  {
+    id: "availablePortfolioBalance",
+    name: "Available Portfolio Balance",
+    icon: "/margin/retry.png",
+  },
+] as const;
+
 export const netEarningsData = [
     // JAN 2025
     { date: "2025-01-01", amount: 1200 },
