@@ -10,6 +10,8 @@ interface StatsCardProps {
   pie?: boolean;
   tooltip?: string;
   address?: string;
+  fullAddress?: string;
+  explorerUrl?: string;
 }
 
 export const StatsCard = ({
@@ -19,6 +21,8 @@ export const StatsCard = ({
   subInfo,
   pie,
   address,
+  fullAddress,
+  explorerUrl,
 }: StatsCardProps) => {
   const { isDark } = useTheme();
   if (pie && percentage) {
@@ -95,10 +99,16 @@ export const StatsCard = ({
                 {address.slice(0, 6)}...{address.slice(-4)}
               </div>
               <div className="w-fit h-fit flex gap-[5px]">
-                <div className="cursor-pointer w-[12px] h-[12px] flex items-center  ">
-                  <LinkIcon fill={isDark ? "#FFFFFF" : "#111111"} />
-                </div>
-                <div className="cursor-pointer w-[12px] h-[12px] flex items-center  ">
+                {explorerUrl && fullAddress ? (
+                  <a href={`${explorerUrl}/address/${fullAddress}`} target="_blank" rel="noopener noreferrer" className="cursor-pointer w-[12px] h-[12px] flex items-center">
+                    <LinkIcon fill={isDark ? "#FFFFFF" : "#111111"} />
+                  </a>
+                ) : (
+                  <div className="cursor-pointer w-[12px] h-[12px] flex items-center">
+                    <LinkIcon fill={isDark ? "#FFFFFF" : "#111111"} />
+                  </div>
+                )}
+                <div className="cursor-pointer w-[12px] h-[12px] flex items-center" onClick={() => fullAddress && navigator.clipboard.writeText(fullAddress)}>
                   <CopyIcon stroke={isDark ? "#FFFFFF" : "#111111"} />
                 </div>
               </div>

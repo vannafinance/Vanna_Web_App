@@ -19,7 +19,7 @@ import { MARGIN_ACCOUNT_INFO_ITEMS, MARGIN_ACCOUNT_MORE_DETAILS_ITEMS } from "@/
 import { InfoCard } from "@/components/margin/info-card";
 import { motion } from "framer-motion";
 import { AnimatedTabs } from "@/components/ui/animated-tabs";
-const farmDetailItems = [
+const farmDetailItems: { heading: string; mainInfo: string; subInfo: string; tooltip?: string }[] = [
   { heading: "Total Value Locked", mainInfo: "$2.45M", subInfo: "Pool TVL" },
   { heading: "24h Volume", mainInfo: "$850K", subInfo: "Trading Volume" },
   { heading: "APR", mainInfo: "12.5%", subInfo: "Annual Yield" },

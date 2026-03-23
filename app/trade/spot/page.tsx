@@ -1,7 +1,12 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useTheme } from "@/contexts/theme-context";
-import { SpotSwapView } from "@/components/spot/spot-nonorderbook";
+
+const SpotSwapView = dynamic(
+  () => import("@/components/spot/spot-nonorderbook").then((mod) => mod.SpotSwapView),
+  { ssr: false }
+);
 
 const Spot = () => {
   const { isDark } = useTheme();

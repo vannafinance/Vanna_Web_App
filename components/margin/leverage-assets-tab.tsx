@@ -349,7 +349,7 @@ export const LeverageAssetsTab = () => {
     const addressList = getAddressList(chainId);
     if (!addressList) return { allowed: false, error: "Unsupported chain" };
 
-    const decimals = TOKEN_DECIMALS[asset] ?? 18;
+    const decimals = TOKEN_DECIMALS[asset as keyof typeof TOKEN_DECIMALS] ?? 18;
     const parsed = parseUnits(amount, decimals);
 
     // Get token address (for ETH, use WETH address or special handling)
@@ -425,7 +425,7 @@ export const LeverageAssetsTab = () => {
       throw new Error(preflightResult.error || "Borrow not allowed");
     }
 
-    const decimals = TOKEN_DECIMALS[asset] ?? 18;
+    const decimals = TOKEN_DECIMALS[asset as keyof typeof TOKEN_DECIMALS] ?? 18;
     const parsed = parseUnits(amount, decimals);
 
     // Get token address (use WETH for ETH)
@@ -659,7 +659,7 @@ export const LeverageAssetsTab = () => {
     const addressList = getAddressList(chainId);
     if (!addressList) throw new Error("Unsupported chain");
 
-    const decimals = TOKEN_DECIMALS[asset] ?? 18;
+    const decimals = TOKEN_DECIMALS[asset as keyof typeof TOKEN_DECIMALS] ?? 18;
     const parsed = parseUnits(amount, decimals);
 
     if (asset === "ETH" || asset === "WETH") {
