@@ -16,14 +16,14 @@ interface Button {
 
 export const Button = (props: Button) => {
   const { isDark } = useTheme();
-  
+
   // Ghost button styling based on theme
-  const ghostButtonStyle = props.disabled 
-    ? "disabled:text-[#A7A7A7]" 
+  const ghostButtonStyle = props.disabled
+    ? "disabled:text-[#A7A7A7]"
     : isDark
     ? "text-white hover:bg-[#333333] hover:text-white active:bg-[#333333] active:text-white focus:text-white"
     : "text-black hover:bg-[#F1EBFD] hover:text-[#703AE6] active:bg-[#F1EBFD] active:text-[#703AE6] focus:text-[#703AE6]";
-  
+
   return (
     <motion.button
       whileTap={{ scale: 0.95 }}

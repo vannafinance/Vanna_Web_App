@@ -1,3 +1,4 @@
+import { useTheme } from "@/contexts/theme-context";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { useEffect, useRef } from "react";
@@ -27,6 +28,7 @@ export const SortDropdown = ({
   search,
   onSearchChange,
 }: SortDropdownProps) => {
+  const { isDark } = useTheme();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -54,7 +56,7 @@ export const SortDropdown = ({
     <div ref={dropdownRef} className="relative">
       <button
         onClick={() => onToggle(!isOpen)}
-        className="cursor-pointer flex items-center gap-1 h-[47px] px-4 py-2 bg-white border border-[#E2E2E2] rounded-lg text-[12px] leading-[18px] text-[#111111] font-semibold"
+        className={`cursor-pointer flex items-center gap-1 h-[47px] px-4 py-2 border rounded-lg text-[12px] leading-[18px] font-semibold ${isDark ? "bg-[#222222] border-[#333333] text-[#FFFFFF]" : "bg-white border-[#E2E2E2] text-[#111111]"}`}
       >
         {selectedSortOption && selectedSortOption.icon ? (
           <Image
@@ -62,6 +64,7 @@ export const SortDropdown = ({
             alt={selectedSortOption.label}
             width={20}
             height={20}
+            className={isDark ? "brightness-0 invert" : ""}
           />
         ) : (
           <span>Sort</span>
@@ -91,22 +94,23 @@ export const SortDropdown = ({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="absolute top-full left-0 mt-1 w-[299px] bg-[#F4F4F4] border border-[#E2E2E2] shadow-[0px_7px_15px_rgba(0,0,0,0.08),0px_28px_28px_rgba(0,0,0,0.07)]  z-50 p-4 rounded-xl flex flex-col gap-[15px]"
+            className={`absolute top-full left-0 mt-1 w-[299px] border shadow-[0px_7px_15px_rgba(0,0,0,0.08),0px_28px_28px_rgba(0,0,0,0.07)] z-50 p-4 rounded-xl flex flex-col gap-[15px] ${isDark ? "bg-[#222222] border-[#333333]" : "bg-[#F4F4F4] border-[#E2E2E2]"}`}
           >
             {/* Search */}
-            <div className="flex items-center h-12  gap-2.5 px-2 py-3 rounded-lg bg-[#FFFFFF] border-b border-[#E2E2E2]">
+            <div className={`flex items-center h-12 gap-2.5 px-2 py-3 rounded-lg border-b ${isDark ? "bg-[#111111] border-[#333333]" : "bg-[#FFFFFF] border-[#E2E2E2]"}`}>
               <Image
                 src="/icons/search.svg"
                 alt="search"
                 width={24}
                 height={24}
+                className={isDark ? "brightness-0 invert" : ""}
               />
               <input
                 type="text"
                 placeholder="Search"
                 value={search}
                 onChange={(e) => onSearchChange(e.target.value)}
-                className="flex-1 text-[14px] leading-[21px] font-medium outline-none placeholder:text-[#A7A7A7]"
+                className={`flex-1 text-[14px] leading-[21px] font-medium outline-none placeholder:text-[#A7A7A7] ${isDark ? "bg-transparent text-[#FFFFFF]" : ""}`}
               />
             </div>
             {/* Options */}
@@ -119,10 +123,12 @@ export const SortDropdown = ({
                     onToggle(false);
                     onSearchChange("");
                   }}
-                  className={`cursor-pointer w-full flex items-center justify-between  text-[14px] leading-[21px] font-medium rounded-md hover:bg-[#F1EBFD] ${
+                  className={`cursor-pointer w-full flex items-center justify-between text-[14px] leading-[21px] font-medium rounded-md ${isDark ? "hover:bg-[#333333]" : "hover:bg-[#F1EBFD]"} ${
                     selected === option.id
                       ? "text-[#703AE6]"
-                      : "text-[#111111]"
+                      : isDark
+                        ? "text-[#FFFFFF]"
+                        : "text-[#111111]"
                   }`}
                 >
                   <span>{option.label}</span>
@@ -132,6 +138,7 @@ export const SortDropdown = ({
                       alt=""
                       width={20}
                       height={20}
+                      className={isDark ? "brightness-0 invert" : ""}
                     />
                   )}
                 </button>

@@ -6,6 +6,7 @@ import html2canvas from "html2canvas";
 import PositionPnlCard from "../position-pnl-card";
 import { Modal } from "../../ui/modal";
 import { Checkbox } from "../../ui/Checkbox";
+import { useTheme } from "@/contexts/theme-context";
 
 type SharePositionModalProps = {
   open: boolean;
@@ -29,6 +30,7 @@ export const SharePositionModal = ({
   onClose,
   card,
 }: SharePositionModalProps) => {
+  const { isDark } = useTheme();
   const [showLeverage, setShowLeverage] = useState(true);
   const [showPnlAmount, setShowPnlAmount] = useState(true);
   const [showPrices, setShowPrices] = useState(true);
@@ -89,9 +91,11 @@ export const SharePositionModal = ({
     [],
   );
 
+  const textPrimary = isDark ? "text-[#FFFFFF]" : "text-[#111111]";
+
   return (
     <Modal open={open} onClose={onClose}>
-      <div className="w-[700px] max-w-[92vw] rounded-[20px] bg-white px-4 py-3">
+      <div className={`w-[700px] max-w-[92vw] rounded-[20px] ${isDark ? "bg-[#222222]" : "bg-white"} px-4 py-3`}>
         {/* header */}
         <div className="flex items-start justify-end">
           <button
@@ -100,7 +104,7 @@ export const SharePositionModal = ({
             className="h-9 w-9 rounded-full  cursor-pointer flex items-center justify-center hover:bg-black/5 transition"
             aria-label="Close"
           >
-            <span className="text-[20px] leading-none text-[#6F6F6F]">×</span>
+            <span className={`text-[20px] leading-none ${isDark ? "text-[#A7A7A7]" : "text-[#6F6F6F]"}`}>×</span>
           </button>
         </div>
 
@@ -118,10 +122,10 @@ export const SharePositionModal = ({
 
         {/* options */}
         <div className="mt-2 w-full flex flex-col items-start justify-center pl-15 ">
-          <p className="text-[14px] font-semibold text-[#111111]">
+          <p className={`text-[14px] font-semibold ${textPrimary}`}>
             You can choose whether to share the following information
           </p>
-          <div className="mt-3 flex flex-wrap items-center gap-8 text-[13px] text-[#111111]">
+          <div className={`mt-3 flex flex-wrap items-center gap-8 text-[13px] ${textPrimary}`}>
             <Checkbox
               label="Leverage"
               checked={showLeverage}
@@ -164,7 +168,7 @@ export const SharePositionModal = ({
                   className="w-full h-full object-cover"
                 />
               </div>
-              <span className="text-[12px] leading-[18px] font-medium text-[#111111]">
+              <span className={`text-[12px] leading-[18px] font-medium ${textPrimary}`}>
                 {item.label}
               </span>
             </button>

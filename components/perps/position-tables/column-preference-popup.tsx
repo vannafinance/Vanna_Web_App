@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
+import { useTheme } from "@/contexts/theme-context";
 import ToggleButton from "../../ui/toggle";
 import { useState, useEffect, useRef } from "react";
 import { ColumnPreferenceItem } from "@/lib/types";
@@ -27,6 +28,7 @@ export default function ColumnPreferencesPopup({
   isOpen,
   onToggle,
 }: Props) {
+  const { isDark } = useTheme();
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -131,7 +133,7 @@ export default function ColumnPreferencesPopup({
           alt="filter"
           width={24}
           height={24}
-          className="w-7 h-3.5"
+          className={`w-7 h-3.5 ${isDark ? "brightness-0 invert" : ""}`}
         />
       </button>
 
@@ -142,19 +144,19 @@ export default function ColumnPreferencesPopup({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
             transition={{ duration: 0.2 }}
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-[580px] bg-[#F7F7F7] rounded-[20px] z-9999 p-6 shadow-[0px_-7px_15px_rgba(0,0,0,0.08),0px_-28px_28px_rgba(0,0,0,0.07)]"
+            className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-[580px] rounded-[20px] z-9999 p-6 shadow-[0px_-7px_15px_rgba(0,0,0,0.08),0px_-28px_28px_rgba(0,0,0,0.07)] ${isDark ? "bg-[#222222] border border-[#333333]" : "bg-[#F7F7F7]"}`}
           >
             <div className="flex gap-4">
               {/* Displayed Section */}
               <div className="flex-1 flex flex-col gap-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-[12px] leading-[18px] font-semibold text-[#111111]">
+                  <span className={`text-[12px] leading-[18px] font-semibold ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
                     Displayed({displayedColumns.length})
                   </span>
                   <button
                     type="button"
                     onClick={onReset}
-                    className="text-[12px] leading-[18px] font-semibold text-[#111111] hover:text-[#703AE6] cursor-pointer"
+                    className={`text-[12px] leading-[18px] font-semibold hover:text-[#703AE6] cursor-pointer ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}
                   >
                     Reset
                   </button>
@@ -179,12 +181,12 @@ export default function ColumnPreferencesPopup({
                       className={`flex items-center justify-between transition-colors py-1.5 ${
                         draggedItem === column.id
                           ? "opacity-50"
-                          : dragOverIndex === index
-                            ? "bg-[#F1EBFD] rounded-md px-2 py-1"
+                            : dragOverIndex === index
+                            ? isDark ? "bg-[#333333] rounded-md px-2 py-1" : "bg-[#F1EBFD] rounded-md px-2 py-1"
                             : ""
                       }`}
                     >
-                      <span className="text-[12px] leading-[18px]  font-medium text-[#111111]">
+                      <span className={`text-[12px] leading-[18px] font-medium ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
                         {column.label}
                       </span>
                       <div className="flex items-center gap-2">
@@ -205,7 +207,7 @@ export default function ColumnPreferencesPopup({
                             alt="drag"
                             width={18}
                             height={12}
-                            className="cursor-grab active:cursor-grabbing"
+                            className={`cursor-grab active:cursor-grabbing ${isDark ? "brightness-0 invert" : ""}`}
                           />
                         )}
                       </div>
@@ -215,11 +217,11 @@ export default function ColumnPreferencesPopup({
               </div>
 
               {/* Divider */}
-              <div className="w-px bg-[#E2E2E2]" />
+              <div className={`w-px ${isDark ? "bg-[#333333]" : "bg-[#E2E2E2]"}`} />
 
               {/* Hidden Section */}
               <div className="flex-1 flex flex-col gap-4">
-                <span className="text-[12px] leading-[18px] font-semibold text-[#111111]">
+                <span className={`text-[12px] leading-[18px] font-semibold ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
                   Hidden ({hiddenColumns.length})
                 </span>
 
@@ -229,7 +231,7 @@ export default function ColumnPreferencesPopup({
                       key={column.id}
                       className="flex items-center justify-between"
                     >
-                      <span className="text-[12px] leading-[18px] font-medium text-[#111111]">
+                      <span className={`text-[12px] leading-[18px] font-medium ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
                         {column.label}
                       </span>
                       <ToggleButton

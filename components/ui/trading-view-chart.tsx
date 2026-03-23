@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useEffect, useRef, memo } from "react";
+import { useTheme } from "@/contexts/theme-context";
 
 function TradingViewChart() {
   const container = useRef<HTMLDivElement>(null);
+  const { theme } = useTheme();
 
   useEffect(() => {
     if (!container.current) return;
@@ -19,10 +21,10 @@ function TradingViewChart() {
       symbol: "COINBASE:BTCUSD",
       interval: "D",
       timezone: "Etc/UTC",
-      theme: "light",
+      theme: theme,
       style: "1",
       locale: "en",
-      backgroundColor: "#FFFFFF",
+      backgroundColor: theme === "dark" ? "#000000" : "#FFFFFF",
       allow_symbol_change: true,
       save_image: false,
       calendar: false,
@@ -39,7 +41,7 @@ function TradingViewChart() {
         container.current.innerHTML = "";
       }
     };
-  }, []);
+  }, [theme]);
 
   return (
     <div

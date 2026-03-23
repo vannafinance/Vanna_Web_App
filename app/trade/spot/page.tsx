@@ -1,9 +1,9 @@
 "use client";
 
-import Orderbook from "@/components/spot/OrderBook";
-import OrderPlacementForm from "@/components/spot/OrderPlacementForm";
-import PositionTables from "@/components/spot/PositionTables";
-import Toolbar from "@/components/spot/Toolbar";
+import Orderbook from "@/components/spot/spot-orderbook/OrderBook";
+import OrderPlacementForm from "@/components/spot/spot-orderbook/OrderPlacementForm";
+import PositionTables from "@/components/spot/spot-orderbook/PositionTables";
+import Toolbar from "@/components/spot/spot-orderbook/Toolbar";
 import TradingViewChart from "@/components/ui/trading-view-chart";
 
 const spot = () => {

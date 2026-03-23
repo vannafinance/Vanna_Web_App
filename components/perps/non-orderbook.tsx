@@ -1,5 +1,7 @@
 "use client";
 
+import { useTheme } from "@/contexts/theme-context";
+
 export type OrderEventType = "OPEN" | "CLOSE" | "LIQ" | "SL";
 
 export interface NonOrderBookRowType {
@@ -51,10 +53,12 @@ function formatSize(value: number) {
 }
 
 export function NonOrderBook() {
+  const { isDark } = useTheme();
+  
   return (
     <div className="flex flex-col gap-1">
       {/* Header */}
-      <div className="grid grid-cols-4 text-[10px] leading-[15px] text-[#5C5B5B] font-medium">
+      <div className={`grid grid-cols-4 text-[10px] leading-[15px] font-medium ${isDark ? "text-[#919191]" : "text-[#5C5B5B]"}`}>
         <span className="py-1 pl-1">Type</span>
         <span className="py-1">Price</span>
         <span className="py-1 text-center ">Size(USDC)</span>
@@ -76,7 +80,7 @@ export function NonOrderBook() {
               className="grid grid-cols-4 text-[10px] leading-[15px] font-medium"
             >
               {/* Type */}
-              <span className="py-1 pl-1 text-[#111111]">{row.type}</span>
+              <span className={`py-1 pl-1 ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>{row.type}</span>
 
               {/* Price */}
               <span className={`py-1 ${priceColor}`}>
@@ -84,12 +88,12 @@ export function NonOrderBook() {
               </span>
 
               {/* Size */}
-              <span className=" py-1 pl-1 text-center text-[#111111]">
+              <span className={`py-1 pl-1 text-center ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
                 {formatSize(row.size)}
               </span>
 
               {/* Time */}
-              <span className="text-right  py-1 pl-1 text-[#5C5B5B]">
+              <span className={`text-right py-1 pl-1 ${isDark ? "text-[#919191]" : "text-[#5C5B5B]"}`}>
                 {formatTime(row.timestamp)}
               </span>
             </div>

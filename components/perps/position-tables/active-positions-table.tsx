@@ -1,5 +1,6 @@
 "use client";
 
+import { useTheme } from "@/contexts/theme-context";
 import { useState } from "react";
 import Image from "next/image";
 import { Column } from "../../ui/Table";
@@ -55,6 +56,7 @@ const getActivePositionsColumns = (
   onOpenTpSlModal: (position: ActivePositionType, mode: TpSlMode) => void,
   onOpenShareCard: (position: ActivePositionType) => void,
   onOpenLeverageModal: (position: ActivePositionType) => void,
+  isDark: boolean,
 ): Column<ActivePositionType>[] => [
   {
     id: "futures",
@@ -169,6 +171,7 @@ const getActivePositionsColumns = (
               alt="share"
               width={16}
               height={16}
+              className={isDark ? "brightness-0 invert" : ""}
             />
           </button>
         </div>
@@ -216,7 +219,7 @@ const getActivePositionsColumns = (
       <button
         type="button"
         onClick={() => onOpenTpSlModal(row, "entire_position")}
-        className="cursor-pointer flex items-center bg-[#FFFFFF] border-[0.75px] border-[#E2E2E2] rounded-md py-2 pl-1 pr-3 gap-1 text-[12px] leading-[18px] font-medium text-[#111111] hover:text-[#703AE6]"
+        className={`cursor-pointer flex items-center border-[0.75px] rounded-md py-2 pl-1 pr-3 gap-1 text-[12px] leading-[18px] font-medium hover:text-[#703AE6] ${isDark ? "bg-[#222222] border-[#333333] text-[#FFFFFF]" : "bg-[#FFFFFF] border-[#E2E2E2] text-[#111111]"}`}
       >
         <Image src="/icons/add-icon.svg" alt="add" width={16} height={16} />
         <span>Add</span>
@@ -230,7 +233,7 @@ const getActivePositionsColumns = (
       <button
         type="button"
         onClick={() => onOpenTpSlModal(row, "partial_position")}
-        className="cursor-pointer flex items-center bg-[#FFFFFF] border-[0.75px] border-[#E2E2E2] rounded-md py-2 pl-1 pr-3 gap-1 text-[12px] leading-[18px] font-medium text-[#111111] hover:text-[#703AE6]"
+        className={`cursor-pointer flex items-center border-[0.75px] rounded-md py-2 pl-1 pr-3 gap-1 text-[12px] leading-[18px] font-medium hover:text-[#703AE6] ${isDark ? "bg-[#222222] border-[#333333] text-[#FFFFFF]" : "bg-[#FFFFFF] border-[#E2E2E2] text-[#111111]"}`}
       >
         <Image src="/icons/add-icon.svg" alt="add" width={16} height={16} />
         <span>Add</span>
@@ -244,7 +247,7 @@ const getActivePositionsColumns = (
       <button
         type="button"
         onClick={() => onOpenTpSlModal(row, "trailing")}
-        className="cursor-pointer flex items-center bg-[#FFFFFF] border-[0.75px] border-[#E2E2E2] rounded-md py-2 pl-1 pr-3 gap-1 text-[12px] leading-[18px] font-medium text-[#111111] hover:text-[#703AE6]"
+        className={`cursor-pointer flex items-center border-[0.75px] rounded-md py-2 pl-1 pr-3 gap-1 text-[12px] leading-[18px] font-medium hover:text-[#703AE6] ${isDark ? "bg-[#222222] border-[#333333] text-[#FFFFFF]" : "bg-[#FFFFFF] border-[#E2E2E2] text-[#111111]"}`}
       >
         <Image src="/icons/add-icon.svg" alt="add" width={16} height={16} />
         <span>Add</span>
@@ -258,7 +261,7 @@ const getActivePositionsColumns = (
       <button
         type="button"
         onClick={() => onOpenTpSlModal(row, "mmr_sl")}
-        className="cursor-pointer flex items-center bg-[#FFFFFF] border-[0.75px] border-[#E2E2E2] rounded-md py-2 pl-1 pr-3 gap-1 text-[12px] leading-[18px] font-medium text-[#111111] hover:text-[#703AE6]"
+        className={`cursor-pointer flex items-center border-[0.75px] rounded-md py-2 pl-1 pr-3 gap-1 text-[12px] leading-[18px] font-medium hover:text-[#703AE6] ${isDark ? "bg-[#222222] border-[#333333] text-[#FFFFFF]" : "bg-[#FFFFFF] border-[#E2E2E2] text-[#111111]"}`}
       >
         <Image src="/icons/add-icon.svg" alt="add" width={16} height={16} />
         <span>Add</span>
@@ -275,14 +278,14 @@ const getActivePositionsColumns = (
         <button
           type="button"
           onClick={() => onOpenModal(row, "market")}
-          className="cursor-pointer flex items-center bg-[#FFFFFF] border-[0.75px] border-[#E2E2E2] rounded-md py-2 px-3  text-[12px] leading-[18px] font-medium text-[#111111] hover:text-[#703AE6]"
+          className={`cursor-pointer flex items-center border-[0.75px] rounded-md py-2 px-3 text-[12px] leading-[18px] font-medium hover:text-[#703AE6] ${isDark ? "bg-[#222222] border-[#333333] text-[#FFFFFF]" : "bg-[#FFFFFF] border-[#E2E2E2] text-[#111111]"}`}
         >
           Market
         </button>
         <button
           type="button"
           onClick={() => onOpenModal(row, "limit")}
-          className="cursor-pointer flex items-center bg-[#FFFFFF] border-[0.75px] border-[#E2E2E2] rounded-md py-2 px-3  text-[12px] leading-[18px] font-medium text-[#111111] hover:text-[#703AE6]"
+          className={`cursor-pointer flex items-center border-[0.75px] rounded-md py-2 px-3 text-[12px] leading-[18px] font-medium hover:text-[#703AE6] ${isDark ? "bg-[#222222] border-[#333333] text-[#FFFFFF]" : "bg-[#FFFFFF] border-[#E2E2E2] text-[#111111]"}`}
         >
           Limit
         </button>
@@ -740,11 +743,14 @@ export default function ActivePositionsTable({
     });
   };
 
+  const { isDark } = useTheme();
+
   const allColumns = getActivePositionsColumns(
     handleOpenModal,
     handleOpenTpSlModal,
     handleOpenShareCard,
     handleOpenLeverageModal,
+    isDark,
   );
 
   // Filter columns based on visibility preferences
@@ -829,7 +835,7 @@ export default function ActivePositionsTable({
 
   return (
     <>
-      <div className="p-2 rounded-lg border border-[#E2E2E2] bg-[#F7F7F7]">
+      <div className={`p-2 rounded-lg border ${isDark ? "border-[#333333] bg-[#222222]" : "border-[#E2E2E2] bg-[#F7F7F7]"}`}>
         <Table
           columns={activePositionsColumns}
           data={filteredData}
@@ -851,7 +857,7 @@ export default function ActivePositionsTable({
       </Modal>
 
       {/* TP/SL Modal */}
-      <Modal open={tpslModal.isOpen} onClose={handleCloseTpSlModal}>
+      <Modal open={tpslModal.isOpen} onClose={handleCloseTpSlModal} bottomSheet>
         {tpslModal.position && (
           <TpSlModal
             defaultMode={tpslModal.mode}
