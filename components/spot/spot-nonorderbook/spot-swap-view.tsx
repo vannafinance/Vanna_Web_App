@@ -2,8 +2,8 @@
 
 import { useTheme } from "@/contexts/theme-context";
 import { useState } from "react";
-import { SwapCard } from "./SwapCard";
-import { MOCK_DEXES } from "./mock-data";
+import { SwapCard } from "./swap-card";
+import { DEXES } from "@/lib/constants/spot";
 
 interface SpotSwapViewProps {
   baseSymbol?: string;
@@ -15,11 +15,11 @@ export const SpotSwapView = ({
   onSwitchToOrderbook,
 }: SpotSwapViewProps) => {
   const { isDark } = useTheme();
-  const [selectedDex, setSelectedDex] = useState(MOCK_DEXES[0]?.id || "uniswap");
+  const [selectedDex, setSelectedDex] = useState(DEXES[0]?.id || "uniswap");
 
   return (
     <div
-      className={`w-full min-h-[calc(100vh-80px)] flex flex-col items-center px-4 py-8 md:py-12 ${
+      className={`w-full min-h-[calc(100vh-80px)] flex flex-col items-center px-3 sm:px-4 py-6 sm:py-8 md:py-12 ${
         isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"
       }`}
     >
@@ -46,7 +46,7 @@ export const SpotSwapView = ({
         <SwapCard
           baseSymbol={baseSymbol}
           selectedDex={selectedDex}
-          dexes={MOCK_DEXES}
+          dexes={DEXES}
           onDexChange={setSelectedDex}
           onSwitchToOrderbook={onSwitchToOrderbook}
         />

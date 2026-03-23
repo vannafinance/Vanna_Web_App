@@ -8,11 +8,11 @@ export const navbarItems = [
 ];
 
 export const tradeItems = [
-  {title: "Spot", link: "/trade/spot" },
-    { title: "Futures", link: "/trade/futures" },
-    { title: "Options", link: "/trade/options" },
-    {title:"Defi Greeks", link: "/trade/defi-greeks" },
-]
+  { title: "Spot", link: "/trade/spot" },
+  { title: "Perps", link: "/trade/perps/btcusdc" },
+  { title: "Options", link: "/trade/options" },
+  { title: "Defi Greeks", link: "/trade/defi-greeks" },
+];
 
 export const DropdownOptions = [
   "USDT",

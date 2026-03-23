@@ -2,7 +2,7 @@
 
 import { useTheme } from "@/contexts/theme-context";
 import { Modal } from "@/components/ui/modal";
-import { SlippageSelector } from "./SlippageSelector";
+import { SlippageSelector } from "./slippage-selector";
 
 interface SwapSettingsProps {
   isOpen: boolean;

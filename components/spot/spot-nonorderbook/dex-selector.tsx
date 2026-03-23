@@ -3,7 +3,7 @@
 import { useTheme } from "@/contexts/theme-context";
 import { motion } from "framer-motion";
 import { useRef } from "react";
-import { DexOption } from "./types";
+import { DexOption } from "@/lib/types";
 
 interface DexSelectorProps {
   dexes: DexOption[];

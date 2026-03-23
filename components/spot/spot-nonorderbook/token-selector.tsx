@@ -1,7 +1,7 @@
 "use client";
 
 import { useTheme } from "@/contexts/theme-context";
-import { Token } from "./types";
+import { Token } from "@/lib/types";
 
 interface TokenSelectorProps {
   token: Token | null;

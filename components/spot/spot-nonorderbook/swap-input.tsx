@@ -1,9 +1,16 @@
 "use client";
 
 import { useTheme } from "@/contexts/theme-context";
-import { Token } from "./types";
-import { TokenSelector } from "./TokenSelector";
+import { Token } from "@/lib/types";
+import { TokenSelector } from "./token-selector";
 import { motion } from "framer-motion";
+
+const PRESET_COLORS: Record<number, string> = {
+  25: "bg-[#703AE6]",
+  50: "bg-[#FC5457]",
+  75: "bg-[#E63ABB]",
+  100: "bg-[#FF007A]",
+};
 
 interface SwapInputProps {
   label: string;
@@ -13,10 +20,11 @@ interface SwapInputProps {
   balance: string | null;
   isReadOnly?: boolean;
   isLoading?: boolean;
+  activePercent?: number | null;
   onTokenSelect: () => void;
   onAmountChange?: (val: string) => void;
-  onMaxClick?: () => void;
-  showMax?: boolean;
+  onPercentClick?: (percent: number) => void;
+  showPresets?: boolean;
 }
 
 export const SwapInput = ({
@@ -27,10 +35,11 @@ export const SwapInput = ({
   balance,
   isReadOnly = false,
   isLoading = false,
+  activePercent = null,
   onTokenSelect,
   onAmountChange,
-  onMaxClick,
-  showMax = false,
+  onPercentClick,
+  showPresets = false,
 }: SwapInputProps) => {
   const { isDark } = useTheme();
 
@@ -43,18 +52,47 @@ export const SwapInput = ({
 
   return (
     <div
-      className={`rounded-2xl p-4 flex flex-col gap-2 transition-colors ${
+      className={`rounded-2xl p-3 sm:p-4 flex flex-col gap-1.5 sm:gap-2 transition-colors ${
         isDark
           ? "bg-[#1A1A1A] border border-[#2A2A2A] hover:border-[#333333]"
           : "bg-[#F7F7F7] border border-[#EEEEEE] hover:border-[#E2E2E2]"
       }`}
     >
-      {/* Label */}
-      <span
-        className={`text-[12px] font-medium leading-[18px] ${isDark ? "text-[#A7A7A7]" : "text-[#777777]"}`}
-      >
-        {label}
-      </span>
+      {/* Label + Preset buttons row */}
+      <div className="flex items-center justify-between">
+        <span
+          className={`text-[12px] font-medium leading-[18px] ${isDark ? "text-[#A7A7A7]" : "text-[#777777]"}`}
+        >
+          {label}
+        </span>
+
+        {showPresets && balance !== null && (
+          <div className="flex items-center gap-1 sm:gap-1.5">
+            {[25, 50, 75, 100].map((percent) => {
+              const isActive = activePercent === percent;
+              return (
+                <motion.button
+                  key={percent}
+                  type="button"
+                  onClick={() => onPercentClick?.(percent)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.93 }}
+                  transition={{ duration: 0.1 }}
+                  className={`px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-md sm:rounded-lg text-[9px] sm:text-[10px] font-semibold leading-[14px] cursor-pointer transition-all ${
+                    isActive
+                      ? `${PRESET_COLORS[percent]} text-white`
+                      : isDark
+                        ? "bg-[#2A2A2A] text-[#A7A7A7] hover:text-white border border-[#333333]"
+                        : "bg-[#F0F0F0] text-[#888888] hover:text-[#555555] border border-[#E2E2E2]"
+                  }`}
+                >
+                  {percent === 100 ? "Max" : `${percent}%`}
+                </motion.button>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
       {/* Token + Amount row */}
       <div className="flex items-center justify-between gap-3">
@@ -76,7 +114,7 @@ export const SwapInput = ({
               value={amount}
               onChange={handleInputChange}
               readOnly={isReadOnly}
-              className={`w-full text-right text-[28px] md:text-[32px] font-semibold leading-none bg-transparent outline-none placeholder:opacity-30 ${
+              className={`w-full text-right text-[22px] sm:text-[28px] md:text-[32px] font-semibold leading-none bg-transparent outline-none placeholder:opacity-30 ${
                 isReadOnly ? "cursor-default" : ""
               } ${isDark ? "text-white placeholder:text-[#555555]" : "text-[#111111] placeholder:text-[#CCCCCC]"}`}
             />
@@ -94,16 +132,6 @@ export const SwapInput = ({
               Balance: {balance}
             </span>
           )}
-          {showMax && balance !== null && (
-            <motion.button
-              type="button"
-              onClick={onMaxClick}
-              whileTap={{ scale: 0.95 }}
-              className="text-[12px] font-semibold leading-[18px] text-[#703AE6] hover:text-[#8D61EB] cursor-pointer transition-colors"
-            >
-              MAX
-            </motion.button>
-          )}
         </div>
         {amountUsd && (
           <span
@@ -113,6 +141,7 @@ export const SwapInput = ({
           </span>
         )}
       </div>
+
     </div>
   );
 };

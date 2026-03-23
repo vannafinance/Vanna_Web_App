@@ -2,7 +2,7 @@
 
 import { useTheme } from "@/contexts/theme-context";
 import { motion } from "framer-motion";
-import { SwapButtonState } from "./types";
+import { SwapButtonState } from "@/lib/types";
 
 interface SwapButtonProps {
   state: SwapButtonState;
@@ -73,7 +73,7 @@ export const SwapButton = ({ state, onClick, tokenSymbol, isLoading }: SwapButto
       onClick={onClick}
       disabled={isDisabled}
       whileTap={!isDisabled ? { scale: 0.98 } : undefined}
-      className={`w-full h-[52px] rounded-2xl text-[16px] font-semibold leading-none transition-all cursor-pointer flex items-center justify-center gap-2 ${bgClass} ${textClass} ${
+      className={`w-full h-[46px] sm:h-[52px] rounded-xl sm:rounded-2xl text-[14px] sm:text-[16px] font-semibold leading-none transition-all cursor-pointer flex items-center justify-center gap-2 ${bgClass} ${textClass} ${
         isDisabled ? "cursor-not-allowed" : ""
       }`}
     >
