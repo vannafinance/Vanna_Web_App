@@ -23,54 +23,59 @@ const TradingPairInfo = ({
   const { isDark } = useTheme();
 
   return (
-    <div className={`border rounded-lg p-4 flex flex-col xl:flex-row flex-1 gap-3 xl:gap-5 ${isDark ? "bg-[#222222] border-[#333333]" : "bg-[#F7F7F7] border-[#E2E2E2]"}`}>
-      <div className="flex gap-5">
+    <div
+      className={`border rounded-lg p-4 flex flex-col xl:flex-row flex-1 gap-3 xl:gap-5 ${isDark ? "bg-[#222222] border-[#333333]" : "bg-[#F7F7F7] border-[#E2E2E2]"}`}
+    >
+      <div className="flex gap-2">
         <button
           type="button"
           onClick={onOpenPairSelector}
-          className="flex items-center gap-3 px-4 cursor-pointer outline-none"
+          className="flex items-center gap-3 xl:px-4 cursor-pointer outline-none"
         >
           <Image src={icon} alt={pair} height={24} width={24} />
           <div>
-            <div className={`${isDark ? "text-[#FFFFFF]" : "text-[#111111]"} text-[16px] leading-6 font-semibold`}>
+            <div
+              className={`${isDark ? "text-[#FFFFFF]" : "text-[#111111]"} text-[16px] leading-6 font-semibold`}
+            >
               {pair.toUpperCase()}
             </div>
-            <div className={`text-[12px] leading-[18px] font-medium text-left ${isDark ? "text-[#919191]" : "text-[#57585C]"}`}>
+            <div
+              className={`text-[12px] leading-[18px] font-medium text-left ${isDark ? "text-[#919191]" : "text-[#57585C]"}`}
+            >
               {market}
             </div>
           </div>
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
+          <Image
+            src="/icons/down-arrow.svg"
+            alt="arrow"
+            height={16}
+            width={16}
             className={`transition-transform duration-200 ease-in-out ${
               isOpen ? "rotate-180" : "rotate-0"
             }`}
-          >
-            <path
-              d="M13.3335 5.33301L8.00016 10.6663L2.66683 5.33301"
-              stroke={isDark ? "#FFFFFF" : "#19191A"}
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+            style={isDark ? { filter: "brightness(0) invert(1)" } : undefined}
+          />
         </button>
         <div className="flex flex-col text-[#01BC8D] ">
           <div className="text-[16px] leading-6 font-semibold">3,377.88</div>
           <div className="flex gap-px">
-            <div className="text-[12px] leading-[18px] font-medium">+52.47 </div>
-            <div className="text-[12px] leading-[18px] font-medium">(+1.58%)</div>
+            <div className="text-[12px] leading-[18px] font-medium">
+              +52.47{" "}
+            </div>
+            <div className="text-[12px] leading-[18px] font-medium">
+              (+1.58%)
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-x-5 gap-y-2 xl:contents">
+      <div
+        className={`grid grid-cols-3 gap-x-6 gap-y-4 pt-3 border-t xl:contents xl:border-t-0 xl:pt-0 ${isDark ? "border-[#333333]" : "border-[#E2E2E2]"}`}
+      >
         {stats.map((stat) => (
-          <div key={stat.label} className="flex flex-col gap-1 ">
+          <div key={stat.label} className="flex flex-col gap-0.5">
             <div className="flex items-center gap-1 whitespace-nowrap">
-              <span className="text-[#A7A7A7] font-medium text-[12px] leading-[18px]">
+              <span className="text-[#A7A7A7] font-medium text-[11px] leading-4">
                 {stat.label}
               </span>
               {stat.dropdown && (
@@ -84,7 +89,9 @@ const TradingPairInfo = ({
                 />
               )}
             </div>
-            <div className={`font-medium text-[12px] leading-[18px] ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
+            <div
+              className={`font-medium text-[12px] leading-[18px] ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}
+            >
               {stat.value}
             </div>
           </div>

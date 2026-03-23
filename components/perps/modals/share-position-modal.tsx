@@ -121,11 +121,11 @@ export const SharePositionModal = ({
         </div>
 
         {/* options */}
-        <div className="mt-2 w-full flex flex-col items-start justify-center pl-15 ">
-          <p className={`text-[14px] font-semibold ${textPrimary}`}>
-            You can choose whether to share the following information
+        <div className={`mt-4 sm:mt-2 mx-2 sm:mx-0 rounded-xl sm:rounded-none p-3 sm:p-0 sm:pl-15 flex flex-col items-start ${isDark ? "bg-[#1A1A1A] sm:bg-transparent" : "bg-[#F5F5F5] sm:bg-transparent"}`}>
+          <p className={`text-[13px] sm:text-[14px] font-semibold ${textPrimary}`}>
+            You can choose whether to share the following information or not
           </p>
-          <div className={`mt-3 flex flex-wrap items-center gap-8 text-[13px] ${textPrimary}`}>
+          <div className={`mt-2.5 sm:mt-3 flex flex-wrap items-center gap-5 sm:gap-8 text-[13px] ${textPrimary}`}>
             <Checkbox
               label="Leverage"
               checked={showLeverage}
@@ -145,12 +145,12 @@ export const SharePositionModal = ({
         </div>
 
         {/* share grid */}
-        <div className="mt-2 grid grid-cols-4 gap-x-5 gap-y-3 md:grid-cols-6 px-10.5 pb-4">
+        <div className="mt-4 sm:mt-2 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-x-2 gap-y-4 sm:gap-x-5 sm:gap-y-3 px-2 sm:px-10.5 pb-4">
           {shareItems.map((item) => (
             <button
               key={item.key}
               type="button"
-              className="cursor-pointer group flex flex-col items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="cursor-pointer group flex flex-col items-center gap-1.5 sm:gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={() => {
                 if (item.key === "download") {
                   handleDownload();
@@ -165,10 +165,10 @@ export const SharePositionModal = ({
                   alt={item.label}
                   width={44}
                   height={44}
-                  className="w-full h-full object-cover"
+                  className={`w-full h-full object-cover ${isDark && (item.key === "copy" || item.key === "download") ? "brightness-0 invert" : ""}`}
                 />
               </div>
-              <span className={`text-[12px] leading-[18px] font-medium ${textPrimary}`}>
+              <span className={`text-[11px] sm:text-[12px] leading-[16px] sm:leading-[18px] font-medium ${textPrimary}`}>
                 {item.label}
               </span>
             </button>

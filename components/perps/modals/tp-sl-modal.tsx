@@ -120,7 +120,8 @@ export const TpSlModal = ({
         tabs={TP_SL_TABS}
         activeTab={selectedMode}
         onTabChange={(tabId) => setSelectedMode(tabId as TpSlMode)}
-        tabClassName="flex-1 text-[10px] md:text-[12px]"
+        containerClassName="!overflow-hidden"
+        tabClassName="flex-1 min-w-0 text-[10px] md:text-[12px] !whitespace-normal leading-tight"
       />
 
       {/* fields based on selected mode */}

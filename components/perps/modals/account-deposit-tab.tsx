@@ -7,10 +7,8 @@ import {
   CHAIN_OPTIONS,
   TOKEN_OPTIONS,
   ACCOUNT_TYPE_OPTIONS,
+  DEPOSIT_TIME_CHAINS,
 } from "@/lib/constants/perps";
-import { useNexus, useNexusBalanceBreakdown } from "@/lib/nexus";
-import { SUPPORTED_CHAIN_NAMES } from "@/lib/chains/chains";
-import { useBalanceStore } from "@/store/balance-store";
 import { useTheme } from "@/contexts/theme-context";
 
 export interface DepositTabRef {
@@ -37,25 +35,8 @@ export const DepositTab = forwardRef<DepositTabRef, DepositTabProps>(
       TOKEN_OPTIONS[0],
     );
 
-    // Nexus unified balance (real cross-chain balance)
-    const { initialized: nexusReady } = useNexus();
-    const { total: unifiedBalance, breakdown } = useNexusBalanceBreakdown(
-      selectedToken.symbol
-    );
-
-    // Current-chain wallet balance
-    const currentChainBalance = useBalanceStore((s) => s.getBalance)(selectedToken.symbol, "WB");
-
-    // Only need bridging if deposit amount exceeds current chain balance
-    const depositAmount = parseFloat(amount) || 0;
-    const needsBridging = nexusReady && depositAmount > currentChainBalance && currentChainBalance < unifiedBalance;
-
-    // Use current-chain balance when sufficient, unified when needed
-    const effectiveBalance = nexusReady && unifiedBalance > currentChainBalance
-      ? unifiedBalance
-      : currentChainBalance;
-    const balance = nexusReady ? effectiveBalance.toFixed(4) : "--";
-
+    const balance = "1000";
+    const depositTimeEstimate = DEPOSIT_TIME_CHAINS[selectedChain];
     const isValid = !!amount && parseFloat(amount) > 0;
 
     useEffect(() => {
@@ -77,9 +58,7 @@ export const DepositTab = forwardRef<DepositTabRef, DepositTabProps>(
     };
 
     const handleMaxClick = () => {
-      if (nexusReady) {
-        setAmount(effectiveBalance.toString());
-      }
+      setAmount(balance);
     };
 
     return (
@@ -97,7 +76,7 @@ export const DepositTab = forwardRef<DepositTabRef, DepositTabProps>(
           arrowClassname="size-4"
         />
 
-        {/* Chain Selector - Destination chain (Base, Arb, OP) */}
+        {/* Chain Selector Dropdown */}
         <Dropdown
           items={CHAIN_OPTIONS.map((c) => c.name)}
           selectedOption={selectedChain}
@@ -139,7 +118,7 @@ export const DepositTab = forwardRef<DepositTabRef, DepositTabProps>(
         {/* Balance Row with Max Value */}
         <div className="flex items-center justify-between">
           <span className={`text-[12px] leading-[18px] font-medium ${isDark ? "text-[#A7A7A7]" : "text-[#6F6F6F]"}`}>
-            {nexusReady && unifiedBalance > currentChainBalance ? "Unified Balance" : "Balance"}
+            Balance
           </span>
           <div className="flex items-center gap-2">
             <span className={`text-[12px] leading-[18px] font-semibold ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
@@ -148,39 +127,16 @@ export const DepositTab = forwardRef<DepositTabRef, DepositTabProps>(
             <button
               type="button"
               onClick={handleMaxClick}
-              disabled={!nexusReady}
-              className="cursor-pointer bg-[#FFE6F2] rounded-sm px-2 py-1 text-[10px] leading-[15px] font-semibold text-[#FF007A] hover:bg-[#FFD6E8] transition-colors disabled:opacity-50"
+              className="cursor-pointer bg-[#FFE6F2] rounded-sm px-2 py-1 text-[10px] leading-[15px] font-semibold text-[#FF007A] hover:bg-[#FFD6E8] transition-colors"
             >
               Max Value
             </button>
           </div>
         </div>
 
-        {/* Per-chain balance breakdown — only show when bridging is relevant */}
-        {nexusReady && breakdown.length > 1 && unifiedBalance > currentChainBalance && (
-          <div className={`flex flex-col gap-1 px-3 py-2 rounded-lg border ${isDark ? "bg-[#1A1A1A] border-[#333333]" : "bg-[#F7F7F7] border-[#E5E5E5]"}`}>
-            <span className={`text-[10px] leading-[15px] font-medium ${isDark ? "text-[#A7A7A7]" : "text-[#6F6F6F]"}`}>
-              Balance across {breakdown.length} chain{breakdown.length > 1 ? "s" : ""}
-            </span>
-            {breakdown.map((b) => (
-              <div
-                key={b.chainId}
-                className="flex items-center justify-between"
-              >
-                <span className={`text-[11px] leading-[16px] font-medium ${isDark ? "text-[#CCCCCC]" : "text-[#333]"}`}>
-                  {SUPPORTED_CHAIN_NAMES[b.chainId] || b.chainName}
-                </span>
-                <span className={`text-[11px] leading-[16px] font-semibold ${isDark ? "text-[#FFFFFF]" : "text-[#111]"}`}>
-                  {parseFloat(b.balance).toFixed(4)} {selectedToken.symbol}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Smart deposit info — only show when bridging will actually happen */}
-        {needsBridging && (
-          <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${isDark ? "bg-[#1A1030] border-[#3D2A6E]" : "bg-[#F0EBFD] border-[#D4C4F7]"}`}>
+        {/* Estimated Deposit Time Info */}
+        {depositTimeEstimate && (
+          <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${isDark ? "bg-[#3D2E00] border border-[#5C4500]" : "bg-[#FFF8E6] border border-[#FFE4A0]"}`}>
             <svg
               width="16"
               height="16"
@@ -188,17 +144,18 @@ export const DepositTab = forwardRef<DepositTabRef, DepositTabProps>(
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
             >
-              <circle cx="8" cy="8" r="7" stroke="#703AE6" strokeWidth="1.5" />
+              <circle cx="8" cy="8" r="7" stroke="#F5A623" strokeWidth="1.5" />
               <path
                 d="M8 5V8.5"
-                stroke="#703AE6"
+                stroke="#F5A623"
                 strokeWidth="1.5"
                 strokeLinecap="round"
               />
-              <circle cx="8" cy="11" r="0.75" fill="#703AE6" />
+              <circle cx="8" cy="11" r="0.75" fill="#F5A623" />
             </svg>
-            <span className={`text-[11px] leading-[16px] font-medium ${isDark ? "text-[#B8A0E0]" : "text-[#4A2A8A]"}`}>
-              Smart deposit via Avail Nexus — will bridge from other chains
+            <span className={`text-[11px] leading-[16px] font-medium ${isDark ? "text-[#F5C842]" : "text-[#8B6914]"}`}>
+              Estimated deposit time for {selectedChain} is{" "}
+              {depositTimeEstimate}
             </span>
           </div>
         )}

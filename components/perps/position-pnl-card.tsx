@@ -47,7 +47,7 @@ export default function PositionPnlCard({
     <div
       className="relative w-full max-w-[560px] overflow-hidden rounded-[24px]
                  border border-[#404040]
-                 px-7 pt-6 pb-5 text-white
+                 px-4 sm:px-7 pt-5 sm:pt-6 pb-4 sm:pb-5 text-white
                  "
       style={{
         background: isProfit
@@ -90,7 +90,7 @@ export default function PositionPnlCard({
         )}
       </div>
 
-      <div className="relative z-5 mt-5 flex items-center gap-3 text-[11px] text-[#D0D0D0]">
+      <div className="relative z-5 mt-3 sm:mt-5 flex items-center gap-2 sm:gap-3 flex-wrap text-[10px] sm:text-[11px] text-[#D0D0D0]">
         <span>{pair}</span>
         <span className="h-1 w-1 rounded-full bg-[#555]" />
         <span>{marketType}</span>
@@ -106,10 +106,10 @@ export default function PositionPnlCard({
         )}
       </div>
 
-      <div className="relative z-5 mt-6">
+      <div className="relative z-5 mt-4 sm:mt-6">
         {showPnlAmount && (
           <p
-            className="text-[12px] leading-[18px] font-medium"
+            className="text-[11px] sm:text-[12px] leading-[18px] font-medium"
             style={{ color: isProfit ? "#32E2EE" : "#FFC6C7" }}
           >
             {pnlAmount >= 0 ? "+" : "-"}
@@ -117,7 +117,7 @@ export default function PositionPnlCard({
           </p>
         )}
         <p
-          className={`${showPnlAmount ? "mt-1" : ""} text-[44px] font-semibold leading-none`}
+          className={`${showPnlAmount ? "mt-1" : ""} text-[32px] sm:text-[44px] font-semibold leading-none`}
           style={{ color: accentColor }}
         >
           {pnlPercentage >= 0 ? "+" : "-"}
@@ -126,16 +126,16 @@ export default function PositionPnlCard({
       </div>
 
       {showPrices && (
-        <div className="relative z-5 mt-6 grid grid-cols-2 gap-x-10 gap-y-3 text-[12px] leading-[18px] max-w-[300px]">
+        <div className="relative z-5 mt-4 sm:mt-6 grid grid-cols-2 gap-x-6 sm:gap-x-10 gap-y-3 text-[11px] sm:text-[12px] leading-[18px] max-w-[300px]">
           <div>
             <p className="text-[#9A9A9A]">Entry Price</p>
-            <p className="text-[16px] font-semibold">
+            <p className="text-[14px] sm:text-[16px] font-semibold">
               {formatNumber(entryPrice)}
             </p>
           </div>
           <div>
             <p className="text-[#9A9A9A]">Current Price</p>
-            <p className="text-[16px] font-semibold">
+            <p className="text-[14px] sm:text-[16px] font-semibold">
               {formatNumber(currentPrice)}
             </p>
           </div>
@@ -157,7 +157,7 @@ export default function PositionPnlCard({
       </div>
 
       <div
-        className="relative z-5 mt-6 flex items-center gap-3 rounded-2xl px-4 py-3 text-[11px] "
+        className="relative z-5 mt-4 sm:mt-6 flex items-center gap-3 rounded-2xl px-3 sm:px-4 py-2.5 sm:py-3 text-[11px] "
         style={{
           background:
             "linear-gradient(to bottom, rgba(0,0,0,0.7), rgba(29,29,29,0.1))",

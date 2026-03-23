@@ -69,8 +69,8 @@ export const TransferTab = forwardRef<TransferTabRef, TransferTabProps>(
             <span className={`text-[10px] leading-[15px] font-medium ${isDark ? "text-[#A7A7A7]" : "text-[#6F6F6F]"}`}>
               From
             </span>
-            <div className={`rounded-lg border px-4 py-3 ${isDark ? "border-[#333333] bg-[#111111]" : "border-[#E2E2E2] bg-white"}`}>
-              <p className={`text-[12px] leading-[18px] font-medium ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
+            <div className={`rounded-lg border px-3 py-3 ${isDark ? "border-[#333333] bg-[#111111]" : "border-[#E2E2E2] bg-white"}`}>
+              <p className={`text-[12px] leading-[18px] font-medium truncate ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
                 {transferFrom}
               </p>
             </div>
@@ -79,7 +79,7 @@ export const TransferTab = forwardRef<TransferTabRef, TransferTabProps>(
           <button
             type="button"
             onClick={handleSwapTransfer}
-            className={`cursor-pointer p-2 mb-1 rounded-lg transition-colors ${isDark ? "hover:bg-[#333333]" : "hover:bg-[#E2E2E2]"}`}
+            className={`cursor-pointer p-2 mb-1 rounded-lg transition-colors shrink-0 ${isDark ? "hover:bg-[#333333]" : "hover:bg-[#E2E2E2]"}`}
             aria-label="Swap from and to"
           >
             <svg
@@ -103,8 +103,8 @@ export const TransferTab = forwardRef<TransferTabRef, TransferTabProps>(
             <span className={`text-[10px] leading-[15px] font-medium ${isDark ? "text-[#A7A7A7]" : "text-[#6F6F6F]"}`}>
               To
             </span>
-            <div className={`rounded-lg border px-4 py-3 ${isDark ? "border-[#333333] bg-[#111111]" : "border-[#E2E2E2] bg-white"}`}>
-              <p className={`text-[12px] leading-[18px] font-medium ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
+            <div className={`rounded-lg border px-3 py-3 ${isDark ? "border-[#333333] bg-[#111111]" : "border-[#E2E2E2] bg-white"}`}>
+              <p className={`text-[12px] leading-[18px] font-medium truncate ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
                 {transferTo}
               </p>
             </div>

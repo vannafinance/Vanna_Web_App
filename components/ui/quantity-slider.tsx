@@ -90,14 +90,14 @@ export const QuantitySlider = ({
 
   return (
     <motion.div
-      className="w-full pb-2.5 px-1.5 pointer-events-none"
+      className="w-full pb-2.5 pl-1.5 pr-4 pointer-events-none"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
     >
       {/* Slider Track Container */}
       <div
-        className="relative pt-2 flex flex-col gap-2 pointer-events-auto"
+        className="relative pt-2 flex flex-col gap-4 pointer-events-auto"
         ref={sliderRef}
       >
         {/* Track Background */}

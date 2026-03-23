@@ -488,6 +488,7 @@ export default function TradingPairSearch({
             alt="fav"
             width={20}
             height={20}
+            style={isDark ? { filter: "brightness(0) invert(1)" } : undefined}
           />
         </button>
         <span className="shrink-0">
