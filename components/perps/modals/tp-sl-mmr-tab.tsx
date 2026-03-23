@@ -1,24 +1,29 @@
 import { useState } from "react";
 import { QuantitySlider } from "../../ui/quantity-slider";
+import { useTheme } from "@/contexts/theme-context";
 
 export const MmrSlTab = () => {
+  const { isDark } = useTheme();
   const [triggerMmr, setTriggerMmr] = useState<number | null>(null);
+
+  const textPrimary = isDark ? "text-[#FFFFFF]" : "text-[#111111]";
+  const inputBg = isDark ? "border-[#333333] bg-[#111111]" : "border-[#E2E2E2] bg-white";
 
   return (
     <>
       <div className="flex flex-col gap-1">
         <div className="flex justify-between">
-          <span className="text-[10px] leading-[15px] font-medium text-[#111111]">
+          <span className={`text-[10px] leading-[15px] font-medium ${textPrimary}`}>
             Trigger MMR
           </span>
           <div className="flex items-center gap-1">
-           
-            <span className="text-[10px] leading-[100%] font-medium text-[#111111]">
+
+            <span className={`text-[10px] leading-[100%] font-medium ${textPrimary}`}>
               Current MMR: 0%
             </span>
           </div>
         </div>
-        <div className="h-9 flex gap-2 items-center rounded-lg border border-[#E2E2E2] bg-white px-2">
+        <div className={`h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
           <span className="text-[12px] text-[#A7A7A7] leading-[18px] font-medium shrink-0">
             Trigger MMR
           </span>
@@ -28,7 +33,7 @@ export const MmrSlTab = () => {
             onChange={(e) =>
               setTriggerMmr(e.target.value ? Number(e.target.value) : null)
             }
-            className="flex-1 min-w-0 text-[12px] leading-[18px] font-medium outline-none"
+            className={`flex-1 min-w-0 text-[12px] leading-[18px] font-medium outline-none bg-transparent ${textPrimary}`}
           />
           <span className="text-[10px] leading-[15px] font-medium shrink-0">
             %
@@ -48,7 +53,7 @@ export const MmrSlTab = () => {
           <span className="text-[12px] leading-[18px] font-medium text-[#919191]">
             Trigger Price:
           </span>
-          <span className="text-[12px] leading-[18px] font-semibold text-[#111111]">
+          <span className={`text-[12px] leading-[18px] font-semibold ${textPrimary}`}>
             -- USDT
           </span>
         </div>

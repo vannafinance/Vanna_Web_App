@@ -2,6 +2,7 @@
 
 import { Button } from "./button";
 import { ReactNode } from "react";
+import { useTheme } from "@/contexts/theme-context";
 
 interface BaseModalContentProps {
   title: ReactNode;
@@ -30,19 +31,19 @@ export const BaseModalContent = ({
   gap = "gap-6",
   hideButtons = false,
 }: BaseModalContentProps) => {
-  const containerClasses = `rounded-[20px] bg-[#F7F7F7] p-5 flex flex-col ${gap}`;
-  const style = { width };
+  const { isDark } = useTheme();
+  const containerClasses = `rounded-[20px] p-5 flex flex-col overflow-hidden ${gap} ${isDark ? "bg-[#222222] border border-[#333333]" : "bg-[#F7F7F7]"}`;
 
   return (
-    <div className={containerClasses} style={style}>
+    <div className={containerClasses} style={{ width: "100%", maxWidth: width }}>
       {/* Title */}
-      <div className="text-[16px] leading-[24px] font-semibold text-[#111111] flex items-center gap-1.5">
+      <div className={`text-[16px] leading-[24px] font-semibold flex items-center gap-1.5 ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
         {title}
       </div>
 
       {/* Subtitle (optional) */}
       {subtitle && (
-        <p className="text-[14px] leading-[21px] font-semibold text-[#111111]">
+        <p className={`text-[14px] leading-[21px] font-semibold ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
           {subtitle}
         </p>
       )}

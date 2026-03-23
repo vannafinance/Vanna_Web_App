@@ -14,8 +14,10 @@ import {
 import { Checkbox } from "../../ui/Checkbox";
 import { Dropdown } from "../../ui/dropdown";
 import { QuantitySlider } from "../../ui/quantity-slider";
+import { useTheme } from "@/contexts/theme-context";
 
 export const PartialPositionTab = () => {
+  const { isDark } = useTheme();
   // Partial Position - Take Profit states
   const [partialTpLimitOrder, setPartialTpLimitOrder] = useState(false);
   const [partialTpTriggerPrice, setPartialTpTriggerPrice] = useState("");
@@ -50,12 +52,15 @@ export const PartialPositionTab = () => {
     null,
   );
 
+  const textPrimary = isDark ? "text-[#FFFFFF]" : "text-[#111111]";
+  const inputBg = isDark ? "border-[#333333] bg-[#111111]" : "border-[#E2E2E2] bg-white";
+
   return (
     <div className="flex flex-col gap-5 max-h-[400px] overflow-y-auto scrollbar-thin px-1">
       {/* Take-Profit Section */}
       <div className="flex flex-col gap-2">
         <div className="flex justify-between items-center">
-          <label className="text-[10px] leading-[15px] font-medium text-[#111111]">
+          <label className={`text-[10px] leading-[15px] font-medium ${textPrimary}`}>
             Take-Profit
           </label>
           <div className="text-[10px] leading-[15px] font-semibold">
@@ -68,8 +73,8 @@ export const PartialPositionTab = () => {
           </div>
         </div>
         {/* Trigger Price + ROI row */}
-        <div className="flex gap-1">
-          <div className="flex-1 h-9 flex gap-2 items-center rounded-lg border border-[#E2E2E2] bg-white px-2">
+        <div className="flex flex-col md:flex-row gap-1">
+          <div className={`md:flex-1 h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
             <span className="text-[12px] text-[#A7A7A7] leading-[18px] font-medium shrink-0">
               Trigger Price
             </span>
@@ -77,7 +82,7 @@ export const PartialPositionTab = () => {
               type="number"
               value={partialTpTriggerPrice}
               onChange={(e) => setPartialTpTriggerPrice(e.target.value)}
-              className="flex-1 min-w-0 text-[12px] leading-[18px] font-medium outline-none"
+              className={`flex-1 min-w-0 text-[12px] leading-[18px] font-medium outline-none bg-transparent ${textPrimary}`}
             />
             <div className="shrink-0 flex items-center">
               <Dropdown
@@ -92,7 +97,7 @@ export const PartialPositionTab = () => {
               />
             </div>
           </div>
-          <div className="w-[180px] shrink-0 h-9 flex gap-2 items-center rounded-lg border border-[#E2E2E2] bg-white px-2">
+          <div className={`w-full md:w-[180px] md:shrink-0 h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
             <span className="text-[12px] text-[#A7A7A7] leading-[18px] font-medium shrink-0">
               ROI
             </span>
@@ -102,7 +107,7 @@ export const PartialPositionTab = () => {
               onChange={(e) =>
                 setPartialTpRoi(e.target.value ? Number(e.target.value) : null)
               }
-              className="flex-1 min-w-0 text-[12px] leading-[18px] font-medium outline-none"
+              className={`flex-1 min-w-0 text-[12px] leading-[18px] font-medium outline-none bg-transparent ${textPrimary}`}
             />
             <div className="flex items-center">
               <Dropdown
@@ -129,8 +134,8 @@ export const PartialPositionTab = () => {
         {/* Price + ROI row (shown when Limit-Order is checked) */}
         {partialTpLimitOrder && (
           <>
-            <div className="flex gap-1">
-              <div className="flex-1 h-9 flex gap-2 items-center rounded-lg border border-[#E2E2E2] bg-white px-2">
+            <div className="flex flex-col md:flex-row gap-1">
+              <div className={`md:flex-1 h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
                 {partialTpOrderType === "Limit" ? (
                   <>
                     <span className="text-[12px] text-[#A7A7A7] leading-[18px] font-medium shrink-0">
@@ -140,7 +145,7 @@ export const PartialPositionTab = () => {
                       type="number"
                       value={partialTpPrice}
                       onChange={(e) => setPartialTpPrice(e.target.value)}
-                      className="flex-1 min-w-0 text-[12px] leading-[18px] font-medium outline-none"
+                      className={`flex-1 min-w-0 text-[12px] leading-[18px] font-medium outline-none bg-transparent ${textPrimary}`}
                     />
                     <span className="text-[12px] text-[#A7A7A7] leading-[18px] font-medium shrink-0">
                       SUSDT
@@ -156,11 +161,11 @@ export const PartialPositionTab = () => {
                     classname="flex-1 w-full! justify-between! text-[12px] leading-[18px] font-medium"
                     dropdownClassname="text-[12px] font-semibold"
                     arrowClassname="size-4"
-                    menuClassname="top-full left-0 mt-1 w-full border border-[#E2E2E2] rounded-lg"
+                    menuClassname={`top-full left-0 mt-1 w-full border ${isDark ? "border-[#333333]" : "border-[#E2E2E2]"} rounded-lg`}
                   />
                 )}
               </div>
-              <div className="w-[180px] shrink-0 h-9 flex gap-2 items-center rounded-lg border border-[#E2E2E2] bg-white px-2">
+              <div className={`w-full md:w-[180px] md:shrink-0 h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
                 <Dropdown
                   items={TP_SL_ORDER_TYPE_OPTIONS}
                   selectedOption={partialTpOrderType}
@@ -170,17 +175,17 @@ export const PartialPositionTab = () => {
                   classname="flex-1 w-full! justify-between! text-[12px] leading-[18px] font-medium"
                   dropdownClassname="text-[12px] font-semibold"
                   arrowClassname="size-4"
-                  menuClassname="top-full left-0 mt-1 w-full border border-[#E2E2E2] rounded-lg"
+                  menuClassname={`top-full left-0 mt-1 w-full border ${isDark ? "border-[#333333]" : "border-[#E2E2E2]"} rounded-lg`}
                 />
               </div>
             </div>
           </>
         )}
         {/* Quantity */}
-        <label className="text-[10px] leading-[15px] font-medium text-[#111111]">
+        <label className={`text-[10px] leading-[15px] font-medium ${textPrimary}`}>
           Quantity
         </label>
-        <div className="h-9 flex gap-2 items-center rounded-lg border border-[#E2E2E2] bg-white px-2">
+        <div className={`h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
           <span className="text-[12px] text-[#A7A7A7] leading-[18px] font-medium shrink-0">
             Quantity
           </span>
@@ -192,7 +197,7 @@ export const PartialPositionTab = () => {
                 e.target.value ? Number(e.target.value) : null,
               )
             }
-            className="flex-1 min-w-0 text-[12px] leading-[18px] font-medium outline-none"
+            className={`flex-1 min-w-0 text-[12px] leading-[18px] font-medium outline-none bg-transparent ${textPrimary}`}
           />
           <span className="text-[12px] text-[#A7A7A7] leading-[18px] font-medium shrink-0">
             SUSDT
@@ -211,7 +216,7 @@ export const PartialPositionTab = () => {
       {/* Stop-Loss Section */}
       <div className="flex flex-col gap-2">
         <div className="flex justify-between items-center">
-          <label className="text-[10px] leading-[15px] font-medium text-[#111111]">
+          <label className={`text-[10px] leading-[15px] font-medium ${textPrimary}`}>
             Stop-Loss
           </label>
           <div className="text-[10px] leading-[15px] font-semibold">
@@ -224,8 +229,8 @@ export const PartialPositionTab = () => {
           </div>
         </div>
         {/* Trigger Price + ROI row */}
-        <div className="flex gap-1">
-          <div className="flex-1 h-9 flex gap-2 items-center rounded-lg border border-[#E2E2E2] bg-white px-2">
+        <div className="flex flex-col md:flex-row gap-1">
+          <div className={`md:flex-1 h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
             <span className="text-[12px] text-[#A7A7A7] leading-[18px] font-medium shrink-0">
               Trigger Price
             </span>
@@ -233,7 +238,7 @@ export const PartialPositionTab = () => {
               type="number"
               value={partialSlTriggerPrice}
               onChange={(e) => setPartialSlTriggerPrice(e.target.value)}
-              className="flex-1 min-w-0 text-[12px] leading-[18px] font-medium outline-none"
+              className={`flex-1 min-w-0 text-[12px] leading-[18px] font-medium outline-none bg-transparent ${textPrimary}`}
             />
             <div className="shrink-0 flex items-center">
               <Dropdown
@@ -248,7 +253,7 @@ export const PartialPositionTab = () => {
               />
             </div>
           </div>
-          <div className="w-[180px] shrink-0 h-9 flex gap-2 items-center rounded-lg border border-[#E2E2E2] bg-white px-2">
+          <div className={`w-full md:w-[180px] md:shrink-0 h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
             <span className="text-[12px] text-[#A7A7A7] leading-[18px] font-medium shrink-0">
               ROI
             </span>
@@ -258,7 +263,7 @@ export const PartialPositionTab = () => {
               onChange={(e) =>
                 setPartialSlRoi(e.target.value ? Number(e.target.value) : null)
               }
-              className="flex-1 min-w-0 text-[12px] leading-[18px] font-medium outline-none"
+              className={`flex-1 min-w-0 text-[12px] leading-[18px] font-medium outline-none bg-transparent ${textPrimary}`}
             />
             <div className="flex items-center">
               <Dropdown
@@ -285,8 +290,8 @@ export const PartialPositionTab = () => {
         {/* Price + ROI row (shown when Limit-Order is checked) */}
         {partialSlLimitOrder && (
           <>
-            <div className="flex gap-1">
-              <div className="flex-1 h-9 flex gap-2 items-center rounded-lg border border-[#E2E2E2] bg-white px-2">
+            <div className="flex flex-col md:flex-row gap-1">
+              <div className={`md:flex-1 h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
                 {partialSlOrderType === "Limit" ? (
                   <>
                     <span className="text-[12px] text-[#A7A7A7] leading-[18px] font-medium shrink-0">
@@ -296,7 +301,7 @@ export const PartialPositionTab = () => {
                       type="number"
                       value={partialSlPrice}
                       onChange={(e) => setPartialSlPrice(e.target.value)}
-                      className="flex-1 min-w-0 text-[12px] leading-[18px] font-medium outline-none"
+                      className={`flex-1 min-w-0 text-[12px] leading-[18px] font-medium outline-none bg-transparent ${textPrimary}`}
                     />
                     <span className="text-[12px] text-[#A7A7A7] leading-[18px] font-medium shrink-0">
                       SUSDT
@@ -312,11 +317,11 @@ export const PartialPositionTab = () => {
                     classname="flex-1 w-full! justify-between! text-[12px] leading-[18px] font-medium"
                     dropdownClassname="text-[12px] font-semibold"
                     arrowClassname="size-4"
-                    menuClassname="top-full left-0 mt-1 w-full border border-[#E2E2E2] rounded-lg"
+                    menuClassname={`top-full left-0 mt-1 w-full border ${isDark ? "border-[#333333]" : "border-[#E2E2E2]"} rounded-lg`}
                   />
                 )}
               </div>
-              <div className="w-[180px] shrink-0 h-9 flex gap-2 items-center rounded-lg border border-[#E2E2E2] bg-white px-2">
+              <div className={`w-full md:w-[180px] md:shrink-0 h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
                 <Dropdown
                   items={TP_SL_ORDER_TYPE_OPTIONS}
                   selectedOption={partialSlOrderType}
@@ -326,17 +331,17 @@ export const PartialPositionTab = () => {
                   classname="flex-1 w-full! justify-between! text-[12px] leading-[18px] font-medium"
                   dropdownClassname="text-[12px] font-semibold"
                   arrowClassname="size-4"
-                  menuClassname="top-full left-0 mt-1 w-full border border-[#E2E2E2] rounded-lg"
+                  menuClassname={`top-full left-0 mt-1 w-full border ${isDark ? "border-[#333333]" : "border-[#E2E2E2]"} rounded-lg`}
                 />
               </div>
             </div>
           </>
         )}
         {/* Quantity */}
-        <label className="text-[10px] leading-[15px] font-medium text-[#111111]">
+        <label className={`text-[10px] leading-[15px] font-medium ${textPrimary}`}>
           Quantity
         </label>
-        <div className="h-9 flex gap-2 items-center rounded-lg border border-[#E2E2E2] bg-white px-2">
+        <div className={`h-9 flex gap-2 items-center rounded-lg border ${inputBg} px-2`}>
           <span className="text-[12px] text-[#A7A7A7] leading-[18px] font-medium shrink-0">
             Quantity
           </span>
@@ -348,7 +353,7 @@ export const PartialPositionTab = () => {
                 e.target.value ? Number(e.target.value) : null,
               )
             }
-            className="flex-1 min-w-0 text-[12px] leading-[18px] font-medium outline-none"
+            className={`flex-1 min-w-0 text-[12px] leading-[18px] font-medium outline-none bg-transparent ${textPrimary}`}
           />
           <span className="text-[12px] text-[#A7A7A7] leading-[18px] font-medium shrink-0">
             SUSDT
@@ -369,7 +374,7 @@ export const PartialPositionTab = () => {
         <span className="text-[12px] leading-[18px] font-medium text-[#919191]">
           Positions Size:
         </span>
-        <span className="text-[12px] leading-[18px] font-semibold text-[#111111]">
+        <span className={`text-[12px] leading-[18px] font-semibold ${textPrimary}`}>
           0.003 SBTC
         </span>
       </div>

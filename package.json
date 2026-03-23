@@ -3,12 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build --no-turbopack",
+    "dev": "next dev --experimental-https",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "vercel-install": "npm install --force"
-
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.78.0",

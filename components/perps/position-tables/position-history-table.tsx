@@ -1,3 +1,4 @@
+import { useTheme } from "@/contexts/theme-context";
 import { Column } from "../../ui/Table";
 import { Table } from "../../ui/Table";
 
@@ -123,8 +124,10 @@ const positionHistoryData: PositionHistoryType[] = Array.from(
 );
 
 export default function PositionHistoryTable() {
+  const { isDark } = useTheme();
+  
   return (
-    <div className="p-2 rounded-lg border border-[#E2E2E2] bg-[#F7F7F7]">
+    <div className={`p-2 rounded-lg border ${isDark ? "border-[#333333] bg-[#222222]" : "border-[#E2E2E2] bg-[#F7F7F7]"}`}>
       <Table
         columns={positionHistoryColumns}
         data={positionHistoryData}

@@ -4,6 +4,7 @@ import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Dropdown } from "@/components/ui/dropdown";
 import { AccountType, TokenOption } from "@/lib/types";
 import { TOKEN_OPTIONS } from "@/lib/constants/perps";
+import { useTheme } from "@/contexts/theme-context";
 
 export interface TransferTabRef {
   getData: () => {
@@ -20,7 +21,7 @@ interface TransferTabProps {
 
 export const TransferTab = forwardRef<TransferTabRef, TransferTabProps>(
   ({ onValidChange }, ref) => {
-    // Form state
+    const { isDark } = useTheme();
     const [amount, setAmount] = useState("");
     const [transferFrom, setTransferFrom] =
       useState<AccountType>("Portfolio Balance");
@@ -29,17 +30,13 @@ export const TransferTab = forwardRef<TransferTabRef, TransferTabProps>(
       TOKEN_OPTIONS[0],
     );
 
-    // Mock balance - replace with actual balance
     const balance = "1000";
-
     const isValid = !!amount && parseFloat(amount) > 0;
 
-    // Notify parent when validity changes
     useEffect(() => {
       onValidChange(isValid);
     }, [isValid, onValidChange]);
 
-    // Expose getData to parent via ref
     useImperativeHandle(ref, () => ({
       getData: () => ({
         transferFrom,
@@ -68,23 +65,21 @@ export const TransferTab = forwardRef<TransferTabRef, TransferTabProps>(
       <div className="flex flex-col gap-4">
         {/* From/To Selector */}
         <div className="flex items-end gap-2">
-          {/* From */}
           <div className="flex-1 flex flex-col gap-1">
-            <span className="text-[10px] leading-[15px] font-medium text-[#6F6F6F]">
+            <span className={`text-[10px] leading-[15px] font-medium ${isDark ? "text-[#A7A7A7]" : "text-[#6F6F6F]"}`}>
               From
             </span>
-            <div className="rounded-lg border border-[#E2E2E2] bg-white px-4 py-3">
-              <p className="text-[12px] leading-[18px] font-medium text-[#111111]">
+            <div className={`rounded-lg border px-3 py-3 ${isDark ? "border-[#333333] bg-[#111111]" : "border-[#E2E2E2] bg-white"}`}>
+              <p className={`text-[12px] leading-[18px] font-medium truncate ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
                 {transferFrom}
               </p>
             </div>
           </div>
 
-          {/* Swap Button */}
           <button
             type="button"
             onClick={handleSwapTransfer}
-            className="cursor-pointer p-2 mb-1 hover:bg-[#E2E2E2] rounded-lg transition-colors"
+            className={`cursor-pointer p-2 mb-1 rounded-lg transition-colors shrink-0 ${isDark ? "hover:bg-[#333333]" : "hover:bg-[#E2E2E2]"}`}
             aria-label="Swap from and to"
           >
             <svg
@@ -96,7 +91,7 @@ export const TransferTab = forwardRef<TransferTabRef, TransferTabProps>(
             >
               <path
                 d="M7.5 3.33334L4.16667 6.66668M4.16667 6.66668L7.5 10M4.16667 6.66668H15.8333M12.5 16.6667L15.8333 13.3333M15.8333 13.3333L12.5 10M15.8333 13.3333H4.16667"
-                stroke="#111111"
+                stroke={isDark ? "#FFFFFF" : "#111111"}
                 strokeWidth="1.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -104,13 +99,12 @@ export const TransferTab = forwardRef<TransferTabRef, TransferTabProps>(
             </svg>
           </button>
 
-          {/* To */}
           <div className="flex-1 flex flex-col gap-1">
-            <span className="text-[10px] leading-[15px] font-medium text-[#6F6F6F]">
+            <span className={`text-[10px] leading-[15px] font-medium ${isDark ? "text-[#A7A7A7]" : "text-[#6F6F6F]"}`}>
               To
             </span>
-            <div className="rounded-lg border border-[#E2E2E2] bg-white px-4 py-3">
-              <p className="text-[12px] leading-[18px] font-medium text-[#111111]">
+            <div className={`rounded-lg border px-3 py-3 ${isDark ? "border-[#333333] bg-[#111111]" : "border-[#E2E2E2] bg-white"}`}>
+              <p className={`text-[12px] leading-[18px] font-medium truncate ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
                 {transferTo}
               </p>
             </div>
@@ -118,15 +112,14 @@ export const TransferTab = forwardRef<TransferTabRef, TransferTabProps>(
         </div>
 
         {/* Amount Input with Token Selector */}
-        <div className="flex items-center justify-between rounded-lg border border-[#E2E2E2] bg-white px-4 py-3">
+        <div className={`flex items-center justify-between rounded-lg border px-4 py-3 ${isDark ? "border-[#333333] bg-[#111111]" : "border-[#E2E2E2] bg-white"}`}>
           <input
             type="text"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             placeholder="Amount"
-            className="flex-1 text-[12px] leading-[18px] font-medium text-[#111111] placeholder:text-[#A7A7A7] outline-none bg-transparent"
+            className={`flex-1 text-[12px] leading-[18px] font-medium placeholder:text-[#A7A7A7] outline-none bg-transparent ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}
           />
-          {/* Token Selector */}
           <div className="w-fit flex items-center">
             <Dropdown
               items={TOKEN_OPTIONS.map((t) => t.symbol)}
@@ -138,7 +131,7 @@ export const TransferTab = forwardRef<TransferTabRef, TransferTabProps>(
               }
               classname="gap-1 pl-2 text-[12px] leading-[18px] font-medium"
               dropdownClassname="text-[12px] leading-[18px] gap-2"
-              menuClassname="right-0 mt-2 min-w-[100px] border border-[#E2E2E2] rounded-lg"
+              menuClassname={`right-0 mt-2 min-w-[100px] border rounded-lg ${isDark ? "border-[#333333]" : "border-[#E2E2E2]"}`}
               arrowClassname="size-4"
             />
           </div>
@@ -146,11 +139,11 @@ export const TransferTab = forwardRef<TransferTabRef, TransferTabProps>(
 
         {/* Transferable amount */}
         <div className="flex items-center justify-between">
-          <span className="text-[12px] leading-[18px] font-medium text-[#6F6F6F]">
+          <span className={`text-[12px] leading-[18px] font-medium ${isDark ? "text-[#A7A7A7]" : "text-[#6F6F6F]"}`}>
             Transferable amount
           </span>
           <div className="flex items-center gap-2">
-            <span className="text-[12px] leading-[18px] font-semibold text-[#111111]">
+            <span className={`text-[12px] leading-[18px] font-semibold ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
               --
             </span>
             <button

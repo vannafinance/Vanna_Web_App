@@ -27,19 +27,18 @@ export const Checkbox = ({
     inputRef.current?.focus();
   };
 
-  // Determine default border color based on theme
-  const defaultBorderColor = error 
-    ? "border-[#FC5457]" 
-    : borderColor 
-    ? "" 
-    : isDark 
-    ? "" 
+  const defaultBorderColor = error
+    ? "border-[#FC5457]"
+    : borderColor
+    ? ""
+    : isDark
+    ? "border-[#555555]"
     : "border-gray-300";
 
   return (
     <label
       onClick={handleFocusForward}
-      className={`flex items-center gap-3 select-none
+      className={`flex items-center gap-2 select-none
         ${isDisabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"}
       `}
     >
@@ -52,7 +51,7 @@ export const Checkbox = ({
 
       <span
         className={`
-          w-6 h-6 rounded-md flex items-center justify-center border-2 transition-all
+          w-5 h-5 rounded-md flex items-center justify-center border-2 transition-all
           ${defaultBorderColor}
 
           peer-hover:border-[#703AE6]
@@ -71,9 +70,7 @@ export const Checkbox = ({
       </span>
 
       {label && (
-        <span className={`${error ? "text-[#FC5457]" : isDark ? "text-white" : ""}`}>
-          {label}
-        </span>
+        <span className={`${error ? "text-[#FC5457]" : isDark ? "text-[#FFFFFF]" : ""}`}>{label}</span>
       )}
     </label>
   );

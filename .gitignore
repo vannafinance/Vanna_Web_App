@@ -9,23 +9,13 @@
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
-.claude/
+
 # testing
 /coverage
 
 # next.js
 /.next/
 /out/
-
-
-.mcp.json
-/.mcp.json
-
-
-/.next
-/.claude
-.claude
-.vscode
 
 # production
 /build
@@ -50,7 +40,14 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Auto Claude generated files
+# Claude Code
+.claude/
+.mcp.json
+
+# VSCode
+.vscode/
+
+# Auto Claude
 .auto-claude/
 .auto-claude-security.json
 .auto-claude-status
@@ -59,5 +56,5 @@ next-env.d.ts
 .security-key
 logs/security/
 
-
-./claude
+# certificates
+certificates/

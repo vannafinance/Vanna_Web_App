@@ -1,5 +1,6 @@
 "use client";
 
+import { useTheme } from "@/contexts/theme-context";
 import cn from "classnames";
 import React, { useRef, useState, useEffect } from "react";
 
@@ -36,6 +37,7 @@ export function Table<T>({
   className,
   emptyText = "",
 }: TableProps<T>) {
+  const { isDark } = useTheme();
   const containerRef = useRef<HTMLDivElement>(null);
   const [isScrolledToRight, setIsScrolledToRight] = useState(true);
 
@@ -72,17 +74,17 @@ export function Table<T>({
     >
       <table className="min-w-full table-fixed border-separate border-spacing-y-2 ">
         {/* HEADER */}
-        <thead className=" sticky top-0 z-20 bg-[#F7F7F7] ">
+        <thead className={`sticky top-0 z-20 ${isDark ? "bg-[#222222]" : "bg-[#F7F7F7]"}`}>
           <tr>
             {columns.map((col) => (
               <th
                 key={col.id}
                 className={cn(
-                  "px-2 py-1 text-[12px] leading-[18px] h-8 font-medium text-[#919191] text-left whitespace-nowrap border-b border-[#E8E8E8]",
+                  `px-2 py-1 text-[12px] leading-[18px] h-8 font-medium text-[#919191] text-left whitespace-nowrap border-b ${isDark ? "border-[#333333]" : "border-[#E8E8E8]"}`,
                   col.className ?? "min-w-[120px]",
                   col.align === "center" && "text-center",
                   col.align === "right" && "text-right",
-                  col.sticky && "sticky right-0 bg-[#F7F7F7] z-30",
+                  col.sticky && `sticky right-0 z-30 ${isDark ? "bg-[#222222]" : "bg-[#F7F7F7]"}`,
                   col.sticky && !isScrolledToRight && "shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]"
                 )}
               >
@@ -117,12 +119,12 @@ export function Table<T>({
                     <td
                       key={col.id}
                       className={cn(
-                        "text-[12px] text-left leading-[18px] font-medium text-[#222222] px-2 py-1 align-top ",
+                        `text-[12px] text-left leading-[18px] font-medium px-2 py-1 align-top ${isDark ? "text-[#FFFFFF]" : "text-[#222222]"}`,
 
                         col.className ?? "min-w-[120px]",
                         col.align === "center" && "text-center",
                         col.align === "right" && "text-right",
-                        col.sticky && "sticky right-0 bg-[#F7F7F7] z-10",
+                        col.sticky && `sticky right-0 z-10 ${isDark ? "bg-[#222222]" : "bg-[#F7F7F7]"}`,
                         col.sticky && !isScrolledToRight && "shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]"
                       )}
                     >

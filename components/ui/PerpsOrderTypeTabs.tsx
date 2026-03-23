@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import classNames from "classnames";
 import { PerpsOrderType } from "@/lib/types";
+import { useTheme } from "@/contexts/theme-context";
 
 const BASE_TABS = [
   { label: "Limit", value: "limit" },
@@ -25,6 +26,7 @@ type Props = {
 };
 
 export default function PerpsOrderTypeTabs({ value, onChange }: Props) {
+  const { isDark } = useTheme();
   const [open, setOpen] = useState(false);
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -60,7 +62,7 @@ export default function PerpsOrderTypeTabs({ value, onChange }: Props) {
   // Helper to get text color (matching animated-tabs underline type)
   const getTextColor = (isActive: boolean, isHovered: boolean) => {
     if (isActive) return "#703AE6";
-    if (isHovered) return "#000000";
+    if (isHovered) return isDark ? "#FFFFFF" : "#000000";
     return "#A7A7A7";
   };
 
@@ -98,7 +100,7 @@ export default function PerpsOrderTypeTabs({ value, onChange }: Props) {
 
   return (
     <div
-      className="relative w-full flex items-center border-b border-[#E2E2E2]"
+      className={`relative w-full flex items-center border-b ${isDark ? "border-[#333333]" : "border-[#E2E2E2]"}`}
       onMouseLeave={() => setHoveredTab(null)}
     >
       {/* Limit / Market */}
@@ -176,7 +178,7 @@ export default function PerpsOrderTypeTabs({ value, onChange }: Props) {
           {open &&
             createPortal(
               <div
-                className="fixed rounded-lg bg-white border border-[#E2E2E2] shadow-lg w-auto"
+                className={`fixed rounded-lg shadow-lg w-auto ${isDark ? "bg-[#222222] border border-[#333333]" : "bg-white border border-[#E2E2E2]"}`}
                 style={{
                   top: dropdownPos.top,
                   right: dropdownPos.right,
@@ -195,7 +197,7 @@ export default function PerpsOrderTypeTabs({ value, onChange }: Props) {
                       setOpen(false);
                     }}
                     className={classNames(
-                      "block px-4 py-2 text-left text-[12px] text-[#111111] hover:bg-[#F6F6F6] whitespace-nowrap cursor-pointer w-full",
+                      `block px-4 py-2 text-left text-[12px] whitespace-nowrap cursor-pointer w-full ${isDark ? "text-[#A7A7A7] hover:bg-[#333333]" : "text-[#111111] hover:bg-[#F6F6F6]"}`,
                       lastAdvanced.value === tab.value && "font-medium",
                     )}
                   >

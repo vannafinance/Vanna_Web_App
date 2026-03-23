@@ -8,7 +8,7 @@ import Image from "next/image";
 import { useMemo, useState, useCallback, useEffect } from "react";
 import { iconPaths } from "@/lib/constants";
 import { AccountStatsGhost } from "@/components/earn/account-stats-ghost";
-import { farmLiquidationStatsData, farmStatsData, farmAnalyticsStatsItems, LEVERAGE_HEALTH_STATS_ITEMS } from "@/lib/constants/farm";
+import { farmLiquidationStatsData, farmStatsData, LEVERAGE_HEALTH_STATS_ITEMS } from "@/lib/constants/farm";
 import { Chart } from "@/components/earn/chart";
 import { Table } from "@/components/earn/table";
 import { transactionTableBody, transactionTableHeadings } from "@/components/earn/acitivity-tab";
@@ -19,6 +19,14 @@ import { MARGIN_ACCOUNT_INFO_ITEMS, MARGIN_ACCOUNT_MORE_DETAILS_ITEMS } from "@/
 import { InfoCard } from "@/components/margin/info-card";
 import { motion } from "framer-motion";
 import { AnimatedTabs } from "@/components/ui/animated-tabs";
+const farmDetailItems: { heading: string; mainInfo: string; subInfo: string; tooltip?: string }[] = [
+  { heading: "Total Value Locked", mainInfo: "$2.45M", subInfo: "Pool TVL" },
+  { heading: "24h Volume", mainInfo: "$850K", subInfo: "Trading Volume" },
+  { heading: "APR", mainInfo: "12.5%", subInfo: "Annual Yield" },
+  { heading: "Pool Fee", mainInfo: "0.30%", subInfo: "Swap Fee Tier" },
+  { heading: "Liquidity", mainInfo: "$1.2M", subInfo: "Available" },
+  { heading: "Utilization", mainInfo: "68%", subInfo: "Pool Usage" },
+];
 import { StatsCard } from "@/components/ui/stats-card";
 import { FarmStatsCard } from "@/components/farm/stats";
 import { Button } from "@/components/ui/button";
@@ -553,7 +561,7 @@ export default function FarmDetailPage() {
               <h2 className={`w-full h-fit text-[18px] sm:text-[20px] font-semibold ${isDark ? "text-white" : ""
                 }`}>Statistics</h2>
               <article className="w-full h-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-[15px]" aria-label="Vault Statistics">
-                {farmAnalyticsStatsItems.map((item: { heading: string; mainInfo: string; subInfo?: string; tooltip?: string }, idx: number) => {
+                {farmDetailItems.map((item, idx) => {
                   return (
                     <StatsCard
                       key={idx}

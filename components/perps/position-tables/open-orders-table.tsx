@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { useState } from "react";
+import { useTheme } from "@/contexts/theme-context";
 import { Column } from "../../ui/Table";
 import { Table } from "../../ui/Table";
 import { Modal } from "../../ui/modal";
@@ -101,6 +102,7 @@ export type TwapOrderType = BaseOrderType & {
 // Column definitions for Limit/Market - function to allow callbacks
 const getLimitMarketColumns = (
   onChase: (orderId: string) => void,
+  isDark: boolean,
 ): Column<LimitMarketOrderType>[] => [
   {
     id: "dateTime",
@@ -212,7 +214,7 @@ const getLimitMarketColumns = (
     header: (
       <button
         type="button"
-        className="cursor-pointer px-3 py-2 rounded-lg text-[12px] leading-[18px] text-[#111111] hover:bg-[#F1EBFD] hover:text-[#703AE6]"
+        className={`cursor-pointer px-3 py-2 rounded-lg text-[12px] leading-[18px] ${isDark ? "text-[#FFFFFF] hover:bg-[#333333] hover:text-[#703AE6]" : "text-[#111111] hover:bg-[#F1EBFD] hover:text-[#703AE6]"}`}
       >
         Cancel all
       </button>
@@ -222,11 +224,11 @@ const getLimitMarketColumns = (
       <div className="flex gap-2 justify-end">
         <button
           onClick={() => onChase(row.id)}
-          className="cursor-pointer px-3 py-2 border-[0.75px] border-[#E2E2E2] bg-[#FFFFFF] rounded-md text-[12px] leading-[18px] text-[#111111]"
+          className={`cursor-pointer px-3 py-2 border-[0.75px] rounded-md text-[12px] leading-[18px] ${isDark ? "border-[#333333] bg-[#222222] text-[#FFFFFF]" : "border-[#E2E2E2] bg-[#FFFFFF] text-[#111111]"}`}
         >
           Chase
         </button>
-        <button className="cursor-pointer px-3 py-2 border-[0.75px] border-[#E2E2E2] bg-[#FFFFFF] rounded-md text-[12px] leading-[18px] text-[#111111]">
+        <button className={`cursor-pointer px-3 py-2 border-[0.75px] rounded-md text-[12px] leading-[18px] ${isDark ? "border-[#333333] bg-[#222222] text-[#FFFFFF]" : "border-[#E2E2E2] bg-[#FFFFFF] text-[#111111]"}`}>
           Cancel
         </button>
       </div>
@@ -237,7 +239,7 @@ const getLimitMarketColumns = (
 ];
 
 // Column definitions for Trailing Stop
-const trailingStopColumns: Column<TrailingStopOrderType>[] = [
+const getTrailingStopColumns = (isDark: boolean): Column<TrailingStopOrderType>[] => [
   {
     id: "dateTime",
     header: "Time",
@@ -324,7 +326,7 @@ const trailingStopColumns: Column<TrailingStopOrderType>[] = [
     header: (
       <button
         type="button"
-        className="cursor-pointer px-3 py-2 rounded-lg text-[12px] leading-[18px] text-[#111111] hover:bg-[#F1EBFD] hover:text-[#703AE6]"
+        className={`cursor-pointer px-3 py-2 rounded-lg text-[12px] leading-[18px] ${isDark ? "text-[#FFFFFF] hover:bg-[#333333] hover:text-[#703AE6]" : "text-[#111111] hover:bg-[#F1EBFD] hover:text-[#703AE6]"}`}
       >
         Cancel all
       </button>
@@ -332,7 +334,7 @@ const trailingStopColumns: Column<TrailingStopOrderType>[] = [
     sticky: true,
     render: () => (
       <div className="flex gap-2 justify-end">
-        <button className="cursor-pointer px-3 py-2 border-[0.75px] border-[#E2E2E2] bg-[#FFFFFF] rounded-md text-[12px] leading-[18px] text-[#111111]">
+        <button className={`cursor-pointer px-3 py-2 border-[0.75px] rounded-md text-[12px] leading-[18px] ${isDark ? "border-[#333333] bg-[#222222] text-[#FFFFFF]" : "border-[#E2E2E2] bg-[#FFFFFF] text-[#111111]"}`}>
           Cancel
         </button>
       </div>
@@ -343,7 +345,7 @@ const trailingStopColumns: Column<TrailingStopOrderType>[] = [
 ];
 
 // Column definitions for TP/SL
-const tpSlColumns: Column<TpSlOrderType>[] = [
+const getTpSlColumns = (isDark: boolean): Column<TpSlOrderType>[] => [
   {
     id: "dateTime",
     header: "Time",
@@ -430,7 +432,7 @@ const tpSlColumns: Column<TpSlOrderType>[] = [
     header: (
       <button
         type="button"
-        className="cursor-pointer px-3 py-2 rounded-lg text-[12px] leading-[18px] text-[#111111] hover:bg-[#F1EBFD] hover:text-[#703AE6]"
+        className={`cursor-pointer px-3 py-2 rounded-lg text-[12px] leading-[18px] ${isDark ? "text-[#FFFFFF] hover:bg-[#333333] hover:text-[#703AE6]" : "text-[#111111] hover:bg-[#F1EBFD] hover:text-[#703AE6]"}`}
       >
         Cancel all
       </button>
@@ -438,7 +440,7 @@ const tpSlColumns: Column<TpSlOrderType>[] = [
     sticky: true,
     render: () => (
       <div className="flex gap-2 justify-end">
-        <button className="cursor-pointer px-3 py-2 border-[0.75px] border-[#E2E2E2] bg-[#FFFFFF] rounded-md text-[12px] leading-[18px] text-[#111111]">
+        <button className={`cursor-pointer px-3 py-2 border-[0.75px] rounded-md text-[12px] leading-[18px] ${isDark ? "border-[#333333] bg-[#222222] text-[#FFFFFF]" : "border-[#E2E2E2] bg-[#FFFFFF] text-[#111111]"}`}>
           Cancel
         </button>
       </div>
@@ -449,7 +451,7 @@ const tpSlColumns: Column<TpSlOrderType>[] = [
 ];
 
 // Column definitions for Trigger
-const triggerColumns: Column<TriggerOrderType>[] = [
+const getTriggerColumns = (isDark: boolean): Column<TriggerOrderType>[] => [
   {
     id: "dateTime",
     header: "Time",
@@ -536,7 +538,7 @@ const triggerColumns: Column<TriggerOrderType>[] = [
     header: (
       <button
         type="button"
-        className="cursor-pointer px-3 py-2 rounded-lg text-[12px] leading-[18px] text-[#111111] hover:bg-[#F1EBFD] hover:text-[#703AE6]"
+        className={`cursor-pointer px-3 py-2 rounded-lg text-[12px] leading-[18px] ${isDark ? "text-[#FFFFFF] hover:bg-[#333333] hover:text-[#703AE6]" : "text-[#111111] hover:bg-[#F1EBFD] hover:text-[#703AE6]"}`}
       >
         Cancel all
       </button>
@@ -544,7 +546,7 @@ const triggerColumns: Column<TriggerOrderType>[] = [
     sticky: true,
     render: () => (
       <div className="flex gap-2 justify-end">
-        <button className="cursor-pointer px-3 py-2 border-[0.75px] border-[#E2E2E2] bg-[#FFFFFF] rounded-md text-[12px] leading-[18px] text-[#111111]">
+        <button className={`cursor-pointer px-3 py-2 border-[0.75px] rounded-md text-[12px] leading-[18px] ${isDark ? "border-[#333333] bg-[#222222] text-[#FFFFFF]" : "border-[#E2E2E2] bg-[#FFFFFF] text-[#111111]"}`}>
           Cancel
         </button>
       </div>
@@ -555,7 +557,7 @@ const triggerColumns: Column<TriggerOrderType>[] = [
 ];
 
 // Column definitions for Iceberg
-const icebergColumns: Column<IcebergOrderType>[] = [
+const getIcebergColumns = (isDark: boolean): Column<IcebergOrderType>[] => [
   {
     id: "dateTime",
     header: "Time",
@@ -641,7 +643,7 @@ const icebergColumns: Column<IcebergOrderType>[] = [
     header: (
       <button
         type="button"
-        className="cursor-pointer px-3 py-2 rounded-lg text-[12px] leading-[18px] text-[#111111] hover:bg-[#F1EBFD] hover:text-[#703AE6]"
+        className={`cursor-pointer px-3 py-2 rounded-lg text-[12px] leading-[18px] ${isDark ? "text-[#FFFFFF] hover:bg-[#333333] hover:text-[#703AE6]" : "text-[#111111] hover:bg-[#F1EBFD] hover:text-[#703AE6]"}`}
       >
         Cancel all
       </button>
@@ -649,7 +651,7 @@ const icebergColumns: Column<IcebergOrderType>[] = [
     sticky: true,
     render: () => (
       <div className="flex gap-2 justify-end">
-        <button className="cursor-pointer px-3 py-2 border-[0.75px] border-[#E2E2E2] bg-[#FFFFFF] rounded-md text-[12px] leading-[18px] text-[#111111]">
+        <button className={`cursor-pointer px-3 py-2 border-[0.75px] rounded-md text-[12px] leading-[18px] ${isDark ? "border-[#333333] bg-[#222222] text-[#FFFFFF]" : "border-[#E2E2E2] bg-[#FFFFFF] text-[#111111]"}`}>
           Cancel
         </button>
       </div>
@@ -660,7 +662,7 @@ const icebergColumns: Column<IcebergOrderType>[] = [
 ];
 
 // Column definitions for TWAP
-const twapColumns: Column<TwapOrderType>[] = [
+const getTwapColumns = (isDark: boolean): Column<TwapOrderType>[] => [
   {
     id: "dateTime",
     header: "Time",
@@ -747,7 +749,7 @@ const twapColumns: Column<TwapOrderType>[] = [
     sticky: true,
     render: () => (
       <div className="flex gap-2 justify-end">
-        <button className="cursor-pointer px-3 py-2 border-[0.75px] border-[#E2E2E2] bg-[#FFFFFF] rounded-md text-[12px] leading-[18px] text-[#111111]">
+        <button className={`cursor-pointer px-3 py-2 border-[0.75px] rounded-md text-[12px] leading-[18px] ${isDark ? "border-[#333333] bg-[#222222] text-[#FFFFFF]" : "border-[#E2E2E2] bg-[#FFFFFF] text-[#111111]"}`}>
           Cancel
         </button>
       </div>
@@ -840,6 +842,7 @@ interface OpenOrdersTableProps {
 export default function OpenOrdersTable({
   activeTab = "limitMarket",
 }: OpenOrdersTableProps) {
+  const { isDark } = useTheme();
   const [isChaseModalOpen, setIsChaseModalOpen] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
@@ -855,7 +858,7 @@ export default function OpenOrdersTable({
     setSelectedOrderId(null);
   };
 
-  const limitMarketColumns = getLimitMarketColumns(handleChaseClick);
+  const limitMarketColumns = getLimitMarketColumns(handleChaseClick, isDark);
 
   const renderTable = () => {
     switch (activeTab) {
@@ -871,7 +874,7 @@ export default function OpenOrdersTable({
       case "trailingStop":
         return (
           <Table
-            columns={trailingStopColumns}
+            columns={getTrailingStopColumns(isDark)}
             data={trailingStopData}
             getRowKey={(row) => row.id}
             emptyText="No trailing stop orders"
@@ -880,7 +883,7 @@ export default function OpenOrdersTable({
       case "tpSl":
         return (
           <Table
-            columns={tpSlColumns}
+            columns={getTpSlColumns(isDark)}
             data={tpSlData}
             getRowKey={(row) => row.id}
             emptyText="No TP/SL orders"
@@ -889,7 +892,7 @@ export default function OpenOrdersTable({
       case "trigger":
         return (
           <Table
-            columns={triggerColumns}
+            columns={getTriggerColumns(isDark)}
             data={triggerData}
             getRowKey={(row) => row.id}
             emptyText="No trigger orders"
@@ -898,7 +901,7 @@ export default function OpenOrdersTable({
       case "iceberg":
         return (
           <Table
-            columns={icebergColumns}
+            columns={getIcebergColumns(isDark)}
             data={icebergData}
             getRowKey={(row) => row.id}
             emptyText="No iceberg orders"
@@ -907,7 +910,7 @@ export default function OpenOrdersTable({
       case "twap":
         return (
           <Table
-            columns={twapColumns}
+            columns={getTwapColumns(isDark)}
             data={twapData}
             getRowKey={(row) => row.id}
             emptyText="No TWAP orders"
@@ -920,7 +923,7 @@ export default function OpenOrdersTable({
 
   return (
     <>
-      <div className="p-2 rounded-lg border border-[#E2E2E2] bg-[#F7F7F7]">
+      <div className={`p-2 rounded-lg border ${isDark ? "border-[#333333] bg-[#222222]" : "border-[#E2E2E2] bg-[#F7F7F7]"}`}>
         {renderTable()}
       </div>
 

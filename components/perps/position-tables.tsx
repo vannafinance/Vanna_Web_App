@@ -1,3 +1,4 @@
+import { useTheme } from "@/contexts/theme-context";
 import { useUserStore } from "@/store/user";
 import { useState, useMemo } from "react";
 import OpenOrdersTable from "./position-tables/open-orders-table";
@@ -29,6 +30,7 @@ import { PreferencesDropdown } from "./position-tables/preferences-dropdown";
 import ColumnPreferencesPopup from "./position-tables/column-preference-popup";
 
 const PositionTables = () => {
+  const { isDark } = useTheme();
   const userAddress = useUserStore((state) => state.address);
   const [activeTab, setActiveTab] = useState<MainTabType>("position");
   const [activeFilterTab, setActiveFilterTab] =
@@ -145,21 +147,29 @@ const PositionTables = () => {
   return (
     <div
       className={`w-full rounded-lg ${
-        !userAddress ? "bg-white" : "bg-[#F7F7F7]"
-      }    flex flex-col gap-1 p-2`}
+        !userAddress
+          ? isDark
+            ? "bg-[#222222]"
+            : "bg-white"
+          : isDark
+            ? "bg-[#222222]"
+            : "bg-[#F7F7F7]"
+      } flex flex-col gap-1 p-2`}
     >
       {/* Tabs */}
-      <div className="flex p-0.5 gap-6 justify-between">
-        <AnimatedTabs
-          type="ghost-compact"
-          tabs={filteredMainTabs}
-          activeTab={activeTab}
-          onTabChange={(tabId) => setActiveTab(tabId as MainTabType)}
-          containerClassName="!bg-transparent !p-0 !rounded-none"
-          tabClassName="py-2"
-        />
-        <div className="flex items-center gap-3">
-          {/* show current checkbox */}
+      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between p-0.5">
+        <div className="overflow-x-auto scrollbar-hide">
+          <AnimatedTabs
+            type="ghost-compact"
+            tabs={filteredMainTabs}
+            activeTab={activeTab}
+            onTabChange={(tabId) => setActiveTab(tabId as MainTabType)}
+            containerClassName="!bg-transparent !p-0 !rounded-none"
+            tabClassName="py-2 whitespace-nowrap"
+          />
+        </div>
+        <div className="hidden md:flex items-center gap-3 shrink-0">
+          {/* show current checkbox — md+ */}
           {activeTab !== "transactionHistory" && activeTab !== "assets" && (
             <div className="text-[12px] font-semibold">
               <Checkbox
@@ -181,18 +191,45 @@ const PositionTables = () => {
         </div>
       </div>
 
+      {/* Mobile: Show Current + Close All row */}
+      <div className="flex md:hidden items-center justify-between px-1">
+        {activeTab !== "transactionHistory" && activeTab !== "assets" ? (
+          <div className="text-[12px] font-semibold">
+            <Checkbox
+              label="Show Current"
+              checked={showCurrent}
+              onChange={(e) => setShowCurrent(e.target.checked)}
+            />
+          </div>
+        ) : (
+          <div />
+        )}
+        {activeTab === "position" && (
+          <button
+            onClick={() => setIsCloseAllModalOpen(true)}
+            className={`text-[12px] font-semibold cursor-pointer ${isDark ? "text-[#703AE6]" : "text-[#703AE6]"}`}
+          >
+            Close all
+          </button>
+        )}
+      </div>
+
       {/* Order Tabs - show for openOrders & orderHistory */}
       {(activeTab === "openOrders" || activeTab === "orderHistory") && (
-        <div className="flex gap-2 items-center">
-          <div className="flex h-[47px] bg-[#FFFFFF] p-1  rounded-lg border border-[#E2E2E2] ">
+        <div className="hidden md:flex flex-col gap-2 md:flex-row md:items-center">
+          <div
+            className={`flex h-[47px] p-1 rounded-lg border overflow-x-auto scrollbar-hide ${isDark ? "bg-[#111111] border-[#333333]" : "bg-[#FFFFFF] border-[#E2E2E2]"}`}
+          >
             {ORDER_TABS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveFilterTab(tab.id)}
-                className={`cursor-pointer px-4 py-3 text-[12px] leading-[100%] font-semibold rounded-lg transition-colors ${
+                className={`cursor-pointer px-4 py-3 text-[12px] leading-[100%] font-semibold rounded-lg transition-colors whitespace-nowrap ${
                   activeFilterTab === tab.id
                     ? "bg-[#703AE6] text-white"
-                    : "text-[#111111] hover:bg-gray-100"
+                    : isDark
+                      ? "text-[#FFFFFF] hover:bg-[#333333]"
+                      : "text-[#111111] hover:bg-gray-100"
                 }`}
               >
                 {tab.label}
@@ -219,9 +256,9 @@ const PositionTables = () => {
         </div>
       )}
 
-      {/* Filter & Sort - show for position tab */}
+      {/* Filter & Sort - show for position tab — md+ only */}
       {activeTab === "position" && (
-        <div className="flex justify-between">
+        <div className="hidden md:flex flex-wrap gap-2 justify-between">
           <div className="flex gap-2">
             {/* Filter Dropdown */}
             <FilterDropdown
@@ -277,8 +314,12 @@ const PositionTables = () => {
       )}
 
       {!userAddress ? (
-        <div className="flex-1 flex  items-center justify-center bg-gray-50 border border-[#E2E2E2] rounded-lg">
-          <button className="px-4 py-2 bg-[#F1EBFD] text-[#703AE6] font-semibold rounded-lg ">
+        <div
+          className={`w-full min-h-[400px] flex items-center justify-center rounded-lg border ${isDark ? "bg-[#222222] border-[#333333]" : "bg-gray-50 border-[#E2E2E2]"}`}
+        >
+          <button
+            className={`px-6 py-3 font-semibold rounded-lg transition-all hover:opacity-80 ${isDark ? "bg-[#3D2A6E] text-[#703AE6]" : "bg-[#F1EBFD] text-[#703AE6]"}`}
+          >
             Connect your Wallet
           </button>
         </div>

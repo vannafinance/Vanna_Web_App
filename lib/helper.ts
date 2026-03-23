@@ -1,4 +1,5 @@
 import { formatUnits, parseUnits } from "viem";
+import { OrderBookRowType } from "@/components/spot/spot-orderbook/OrderBook";
 import {
   ActivePositionType,
   OpenOrderType,

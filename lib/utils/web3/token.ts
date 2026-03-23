@@ -67,7 +67,7 @@ export type TokenSymbol = (typeof TOKEN_OPTIONS)[number];
 
 
 // This is for ERC-20 token
-export const TOKEN_DECIMALS: Record<TokenSymbol, number> = {
+export const TOKEN_DECIMALS: Record<string, number> = {
   ETH: 18,
   USDC: 6,
   USDT: 6,

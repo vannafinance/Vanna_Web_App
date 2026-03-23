@@ -466,3 +466,49 @@ export const LEVERAGE_HEALTH_STATS_ITEMS = [
   },
 ];
 
+export const farmStatsData = [
+  {
+    heading: "Total Value Locked",
+    value: "$2,450.00",
+    uptrend: "+3.2%",
+  },
+  {
+    heading: "Your Earnings",
+    value: "$128.50",
+    uptrend: "+1.8%",
+  },
+  {
+    heading: "APR",
+    value: "12.5%",
+  },
+  {
+    heading: "Pool Utilization",
+    value: "",
+    progressBar: {
+      percentage: 68,
+      value: "68%",
+    },
+  },
+];
+
+export const farmLiquidationStatsData = [
+  {
+    heading: "Liquidation Price",
+    value: "$1,250.00",
+    downtrend: "-5.2%",
+  },
+  {
+    heading: "Health Factor",
+    value: "1.85",
+    uptrend: "+0.12",
+  },
+  {
+    heading: "Margin Ratio",
+    value: "",
+    progressBar: {
+      percentage: 42,
+      value: "42%",
+    },
+  },
+];
+

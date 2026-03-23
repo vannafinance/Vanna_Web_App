@@ -1,3 +1,4 @@
+import { useTheme } from "@/contexts/theme-context";
 import { Column } from "../../ui/Table";
 import { Table } from "../../ui/Table";
 
@@ -788,6 +789,8 @@ interface OrderHistoryTableProps {
 export default function OrderHistoryTable({
   activeTab = "limitMarket",
 }: OrderHistoryTableProps) {
+  const { isDark } = useTheme();
+  
   const renderTable = () => {
     switch (activeTab) {
       case "limitMarket":
@@ -850,7 +853,7 @@ export default function OrderHistoryTable({
   };
 
   return (
-    <div className="p-2 rounded-lg border border-[#E2E2E2] bg-[#F7F7F7]">
+    <div className={`p-2 rounded-lg border ${isDark ? "border-[#333333] bg-[#222222]" : "border-[#E2E2E2] bg-[#F7F7F7]"}`}>
       {renderTable()}
     </div>
   );

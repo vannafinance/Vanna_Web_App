@@ -2,6 +2,7 @@ import { RegisterOptions, UseFormRegister } from "react-hook-form";
 import { BaseInput } from "./BaseInput";
 import { Dropdown } from "./dropdown";
 import { Register } from "viem";
+import { useTheme } from "@/contexts/theme-context";
 
 export interface SuffixOption<T extends string> {
   label: string;
@@ -35,6 +36,8 @@ export function InputWithUnit<T extends string>({
   selectedSuffix,
   onSuffixChange,
 }: InputWithUnitProps<T>) {
+  const { isDark } = useTheme();
+
   const selectedSuffixLabel =
     suffixOptions.find((o) => o.value === selectedSuffix)?.label ??
     suffixOptions[0]?.label ??
@@ -46,16 +49,16 @@ export function InputWithUnit<T extends string>({
         type="number"
         disabled={disabled}
         placeholder={placeholder}
-        className="
+        className={`
           flex-1 min-w-0 bg-transparent text-[12px] leading-[18px] font-medium
-          outline-none placeholder:text-[#C6C6C6]
-          disabled:text-[#9CA3AF]
-        "
+          outline-none disabled:text-[#9CA3AF]
+          ${isDark ? "text-[#FFFFFF] placeholder:text-[#333333]" : "placeholder:text-[#C6C6C6]"}
+        `}
         {...register(name, rules)}
       />
 
       {suffixMode === "static" && selectedSuffix && (
-        <span className="text-[8px] leading-3 font-medium text-[#111111]">
+        <span className={`text-[8px] leading-3 font-medium ${isDark ? "text-[#FFFFFF]" : "text-[#111111]"}`}>
           {selectedSuffix}
         </span>
       )}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTheme } from "@/contexts/theme-context";
 import { useState } from "react";
 import Image from "next/image";
 import { Column } from "../../ui/Table";
@@ -55,6 +56,7 @@ const getActivePositionsColumns = (
   onOpenTpSlModal: (position: ActivePositionType, mode: TpSlMode) => void,
   onOpenShareCard: (position: ActivePositionType) => void,
   onOpenLeverageModal: (position: ActivePositionType) => void,
+  isDark: boolean,
 ): Column<ActivePositionType>[] => [
   {
     id: "futures",
@@ -169,6 +171,7 @@ const getActivePositionsColumns = (
               alt="share"
               width={16}
               height={16}
+              className={isDark ? "brightness-0 invert" : ""}
             />
           </button>
         </div>
@@ -216,9 +219,9 @@ const getActivePositionsColumns = (
       <button
         type="button"
         onClick={() => onOpenTpSlModal(row, "entire_position")}
-        className="cursor-pointer flex items-center bg-[#FFFFFF] border-[0.75px] border-[#E2E2E2] rounded-md py-2 pl-1 pr-3 gap-1 text-[12px] leading-[18px] font-medium text-[#111111] hover:text-[#703AE6]"
+        className={`cursor-pointer flex items-center border-[0.75px] rounded-md py-2 pl-1 pr-3 gap-1 text-[12px] leading-[18px] font-medium hover:text-[#703AE6] ${isDark ? "bg-[#222222] border-[#333333] text-[#FFFFFF]" : "bg-[#FFFFFF] border-[#E2E2E2] text-[#111111]"}`}
       >
-        <Image src="/icons/add-icon.svg" alt="add" width={16} height={16} />
+        <Image src="/icons/add-icon.svg" alt="add" width={16} height={16} className={isDark ? "brightness-0 invert" : ""} />
         <span>Add</span>
       </button>
     ),
@@ -230,9 +233,9 @@ const getActivePositionsColumns = (
       <button
         type="button"
         onClick={() => onOpenTpSlModal(row, "partial_position")}
-        className="cursor-pointer flex items-center bg-[#FFFFFF] border-[0.75px] border-[#E2E2E2] rounded-md py-2 pl-1 pr-3 gap-1 text-[12px] leading-[18px] font-medium text-[#111111] hover:text-[#703AE6]"
+        className={`cursor-pointer flex items-center border-[0.75px] rounded-md py-2 pl-1 pr-3 gap-1 text-[12px] leading-[18px] font-medium hover:text-[#703AE6] ${isDark ? "bg-[#222222] border-[#333333] text-[#FFFFFF]" : "bg-[#FFFFFF] border-[#E2E2E2] text-[#111111]"}`}
       >
-        <Image src="/icons/add-icon.svg" alt="add" width={16} height={16} />
+        <Image src="/icons/add-icon.svg" alt="add" width={16} height={16} className={isDark ? "brightness-0 invert" : ""} />
         <span>Add</span>
       </button>
     ),
@@ -244,9 +247,9 @@ const getActivePositionsColumns = (
       <button
         type="button"
         onClick={() => onOpenTpSlModal(row, "trailing")}
-        className="cursor-pointer flex items-center bg-[#FFFFFF] border-[0.75px] border-[#E2E2E2] rounded-md py-2 pl-1 pr-3 gap-1 text-[12px] leading-[18px] font-medium text-[#111111] hover:text-[#703AE6]"
+        className={`cursor-pointer flex items-center border-[0.75px] rounded-md py-2 pl-1 pr-3 gap-1 text-[12px] leading-[18px] font-medium hover:text-[#703AE6] ${isDark ? "bg-[#222222] border-[#333333] text-[#FFFFFF]" : "bg-[#FFFFFF] border-[#E2E2E2] text-[#111111]"}`}
       >
-        <Image src="/icons/add-icon.svg" alt="add" width={16} height={16} />
+        <Image src="/icons/add-icon.svg" alt="add" width={16} height={16} className={isDark ? "brightness-0 invert" : ""} />
         <span>Add</span>
       </button>
     ),
@@ -258,9 +261,9 @@ const getActivePositionsColumns = (
       <button
         type="button"
         onClick={() => onOpenTpSlModal(row, "mmr_sl")}
-        className="cursor-pointer flex items-center bg-[#FFFFFF] border-[0.75px] border-[#E2E2E2] rounded-md py-2 pl-1 pr-3 gap-1 text-[12px] leading-[18px] font-medium text-[#111111] hover:text-[#703AE6]"
+        className={`cursor-pointer flex items-center border-[0.75px] rounded-md py-2 pl-1 pr-3 gap-1 text-[12px] leading-[18px] font-medium hover:text-[#703AE6] ${isDark ? "bg-[#222222] border-[#333333] text-[#FFFFFF]" : "bg-[#FFFFFF] border-[#E2E2E2] text-[#111111]"}`}
       >
-        <Image src="/icons/add-icon.svg" alt="add" width={16} height={16} />
+        <Image src="/icons/add-icon.svg" alt="add" width={16} height={16} className={isDark ? "brightness-0 invert" : ""} />
         <span>Add</span>
       </button>
     ),
@@ -275,14 +278,14 @@ const getActivePositionsColumns = (
         <button
           type="button"
           onClick={() => onOpenModal(row, "market")}
-          className="cursor-pointer flex items-center bg-[#FFFFFF] border-[0.75px] border-[#E2E2E2] rounded-md py-2 px-3  text-[12px] leading-[18px] font-medium text-[#111111] hover:text-[#703AE6]"
+          className={`cursor-pointer flex items-center border-[0.75px] rounded-md py-2 px-3 text-[12px] leading-[18px] font-medium hover:text-[#703AE6] ${isDark ? "bg-[#222222] border-[#333333] text-[#FFFFFF]" : "bg-[#FFFFFF] border-[#E2E2E2] text-[#111111]"}`}
         >
           Market
         </button>
         <button
           type="button"
           onClick={() => onOpenModal(row, "limit")}
-          className="cursor-pointer flex items-center bg-[#FFFFFF] border-[0.75px] border-[#E2E2E2] rounded-md py-2 px-3  text-[12px] leading-[18px] font-medium text-[#111111] hover:text-[#703AE6]"
+          className={`cursor-pointer flex items-center border-[0.75px] rounded-md py-2 px-3 text-[12px] leading-[18px] font-medium hover:text-[#703AE6] ${isDark ? "bg-[#222222] border-[#333333] text-[#FFFFFF]" : "bg-[#FFFFFF] border-[#E2E2E2] text-[#111111]"}`}
         >
           Limit
         </button>
@@ -740,11 +743,14 @@ export default function ActivePositionsTable({
     });
   };
 
+  const { isDark } = useTheme();
+
   const allColumns = getActivePositionsColumns(
     handleOpenModal,
     handleOpenTpSlModal,
     handleOpenShareCard,
     handleOpenLeverageModal,
+    isDark,
   );
 
   // Filter columns based on visibility preferences
@@ -829,13 +835,159 @@ export default function ActivePositionsTable({
 
   return (
     <>
-      <div className="p-2 rounded-lg border border-[#E2E2E2] bg-[#F7F7F7]">
+      {/* Desktop: Table view */}
+      <div className={`hidden md:block p-2 rounded-lg border ${isDark ? "border-[#333333] bg-[#222222]" : "border-[#E2E2E2] bg-[#F7F7F7]"}`}>
         <Table
           columns={activePositionsColumns}
           data={filteredData}
           getRowKey={(row) => row.id}
           emptyText="No positions"
         />
+      </div>
+
+      {/* Mobile: Card view */}
+      <div className="md:hidden flex flex-col gap-3">
+        {filteredData.length === 0 ? (
+          <div className={`p-6 rounded-lg border text-center text-xs text-[#919191] ${isDark ? "border-[#333333] bg-[#222222]" : "border-[#E2E2E2] bg-[#F7F7F7]"}`}>
+            No positions
+          </div>
+        ) : (
+          filteredData.map((row) => {
+            const isPnlProfit = !row.unrealizedPnl.amount.startsWith("-");
+            const pnlColor = isPnlProfit ? "text-[#01BC8D]" : "text-[#FC5457]";
+            const isRealizedProfit = !row.realizedPnl.amount.startsWith("-");
+            const realizedColor = isRealizedProfit ? "text-[#01BC8D]" : "text-[#FC5457]";
+
+            return (
+              <div
+                key={row.id}
+                className={`rounded-lg border p-4 flex flex-col gap-3 ${isDark ? "border-[#333333] bg-[#222222]" : "border-[#E2E2E2] bg-[#F7F7F7]"}`}
+              >
+                {/* Header: Pair name + badges */}
+                <div className="flex items-center justify-between">
+                  <div className="flex flex-col">
+                    <span className={`text-[14px] font-semibold ${isDark ? "text-white" : "text-[#111111]"}`}>
+                      {row.futures.pair}
+                    </span>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <span className={`text-[11px] font-medium px-1.5 py-0.5 rounded ${
+                        row.futures.side === "Long"
+                          ? "text-[#01BC8D] bg-[#01BC8D]/10"
+                          : "text-[#FC5457] bg-[#FC5457]/10"
+                      }`}>
+                        {row.futures.side}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenLeverageModal(row)}
+                        className={`cursor-pointer text-[11px] font-medium px-1.5 py-0.5 rounded flex items-center gap-0.5 ${isDark ? "text-white bg-[#333333]" : "text-[#111111] bg-[#E2E2E2]"}`}
+                      >
+                        {row.futures.leverage}
+                        <Image src="/icons/edit.svg" alt="edit" width={10} height={10} />
+                      </button>
+                      <span className={`text-[11px] font-medium px-1.5 py-0.5 rounded ${isDark ? "text-[#A7A7A7] bg-[#333333]" : "text-[#57585C] bg-[#E2E2E2]"}`}>
+                        {row.futures.mode}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="cursor-pointer p-1"
+                    onClick={() => handleOpenShareCard(row)}
+                  >
+                    <Image
+                      src="/perp/share-icon.svg"
+                      alt="share"
+                      width={16}
+                      height={16}
+                      className={isDark ? "brightness-0 invert" : ""}
+                    />
+                  </button>
+                </div>
+
+                {/* Unrealized PnL + ROE */}
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="text-[11px] text-[#A7A7A7] font-medium">Unrealized PnL (USDC)</div>
+                    <div className={`text-[16px] font-semibold ${pnlColor}`}>
+                      {row.unrealizedPnl.amount}
+                    </div>
+                    <div className={`text-[11px] font-medium ${isDark ? "text-[#A7A7A7]" : "text-[#57585C]"}`}>
+                      ≈{row.unrealizedPnl.usdValue}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-[11px] text-[#A7A7A7] font-medium">ROE</div>
+                    <div className={`text-[16px] font-semibold ${pnlColor}`}>
+                      {row.unrealizedPnl.percentage}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Stats grid */}
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
+                  <div>
+                    <div className="text-[11px] text-[#A7A7A7] font-medium">Position</div>
+                    <div className={`text-[12px] font-medium ${isDark ? "text-white" : "text-[#111111]"}`}>{row.positionSize.size}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-[11px] text-[#A7A7A7] font-medium">Margin (USDC)</div>
+                    <div className={`text-[12px] font-medium ${isDark ? "text-white" : "text-[#111111]"}`}>{row.margin.amount}</div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] text-[#A7A7A7] font-medium">Entry price</div>
+                    <div className={`text-[12px] font-medium ${isDark ? "text-white" : "text-[#111111]"}`}>{row.entryPrice}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-[11px] text-[#A7A7A7] font-medium">MMR</div>
+                    <div className={`text-[12px] font-medium ${isDark ? "text-white" : "text-[#111111]"}`}>{row.tieredMaintenanceMarginRate}</div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] text-[#A7A7A7] font-medium">Mark price</div>
+                    <div className={`text-[12px] font-medium ${isDark ? "text-white" : "text-[#111111]"}`}>{row.markPrice}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-[11px] text-[#A7A7A7] font-medium">Est. liquidation price</div>
+                    <div className={`text-[12px] font-medium ${isDark ? "text-white" : "text-[#111111]"}`}>{row.estLiquidationPrice}</div>
+                  </div>
+                </div>
+
+                {/* Realized PnL */}
+                <div className={`flex items-center justify-between py-2 px-3 rounded-md ${isDark ? "bg-[#1A1A1A]" : "bg-[#EFEFEF]"}`}>
+                  <span className="text-[11px] text-[#A7A7A7] font-medium">Realized PnL</span>
+                  <span className={`text-[12px] font-medium ${realizedColor}`}>
+                    {row.realizedPnl.amount}
+                  </span>
+                </div>
+
+                {/* Action buttons */}
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleOpenTpSlModal(row, "entire_position")}
+                    className={`cursor-pointer py-2.5 rounded-lg text-[12px] font-semibold text-center border ${isDark ? "bg-[#1A1A1A] border-[#333333] text-white" : "bg-white border-[#E2E2E2] text-[#111111]"}`}
+                  >
+                    TP/SL
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenModal(row, "limit")}
+                    className={`cursor-pointer py-2.5 rounded-lg text-[12px] font-semibold text-center border ${isDark ? "bg-[#1A1A1A] border-[#333333] text-white" : "bg-white border-[#E2E2E2] text-[#111111]"}`}
+                  >
+                    Reverse
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenModal(row, "market")}
+                    className={`cursor-pointer py-2.5 rounded-lg text-[12px] font-semibold text-center border ${isDark ? "bg-[#1A1A1A] border-[#333333] text-white" : "bg-white border-[#E2E2E2] text-[#111111]"}`}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        )}
       </div>
 
       {/* Close Position Modal */}
@@ -851,7 +1003,7 @@ export default function ActivePositionsTable({
       </Modal>
 
       {/* TP/SL Modal */}
-      <Modal open={tpslModal.isOpen} onClose={handleCloseTpSlModal}>
+      <Modal open={tpslModal.isOpen} onClose={handleCloseTpSlModal} bottomSheet>
         {tpslModal.position && (
           <TpSlModal
             defaultMode={tpslModal.mode}
