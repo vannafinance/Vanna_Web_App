@@ -73,3 +73,9 @@ lightningcss-*
 
 # temporary / notes
 Balancestore.md
+
+# docs / analysis files (not for production)
+docs/AERODROME_INTEGRATION_GUIDE.md
+docs/Morphov2integrationGuide.md
+ListFunctionAbi.text
+STATE_MANAGEMENT_ANALYSIS.md
