@@ -231,17 +231,6 @@ export default function EarnPage({ params }: { params: Promise<{ id: string }> }
                 </div>
               </div>
             </div>
-            <div className={`text-[16px] font-semibold w-fit h-[48px] rounded-[12px] py-[12px] pr-[16px] pl-[8px] flex gap-[4px] ${
-              isDark ? "bg-[#222222] text-white" : "bg-[#F4F4F4]"
-            }`}>
-              Network:{" "}
-              <Image
-                src={iconPath}
-                alt={`${vaultData.chain}-icon`}
-                width={20}
-                height={20}
-              />
-            </div>
           </div>
         </div>
       </header>
@@ -263,7 +252,7 @@ export default function EarnPage({ params }: { params: Promise<{ id: string }> }
                 containerClassName="w-full"
               />
             </nav>
-            {activeTab === "your-positions" && <YourPositions />}
+            {activeTab === "your-positions" && <YourPositions asset={asset} />}
             {activeTab === "details" && <Details selectedAsset={id as any} />}
             {activeTab === "activity" && <ActivityTab selectedAsset={asset} />}
             {activeTab === "analytics" && <AnalyticsTab selectedAsset={id as any} />}
@@ -271,7 +260,7 @@ export default function EarnPage({ params }: { params: Promise<{ id: string }> }
             {activeTab === "collateral-limits" && <CollateralLimitsTab selectedAsset={id as any} />}
           </article>
           <aside aria-label="Transaction Form">
-            <Form />
+            <Form asset={asset} />
           </aside>
         </div>
       </section>

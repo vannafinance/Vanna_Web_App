@@ -1,7 +1,8 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useAccount, useWalletClient, usePublicClient, useChainId } from "wagmi";
-import { Dropdown } from "../ui/dropdown";
+import Image from "next/image";
 import { DEPOSIT_PERCENTAGES, PERCENTAGE_COLORS } from "@/lib/constants/margin";
+import { iconPaths } from "@/lib/constants";
 import { InfoCard } from "../margin/info-card";
 import { Button } from "../ui/button";
 import { TransactionModal } from "../ui/transaction-modal";
@@ -9,10 +10,9 @@ import { useTheme } from "@/contexts/theme-context";
 import { EarnAsset } from "@/lib/types";
 import { withdraw } from "@/lib/utils/earn/transactions";
 import { useFetchUserVaultPosition, useFetchConvertToAssets } from "@/lib/utils/earn/earnFetchers";
-import { SUPPORTED_TOKENS_BY_CHAIN } from "@/lib/utils/web3/token";
 import { useVaultData } from "@/lib/hooks/useVaultData";
 
-export const WithdrawLiquidity = () => {
+export const WithdrawLiquidity = ({ asset }: { asset: EarnAsset }) => {
   const { isDark } = useTheme();
 
   // Wagmi hooks
@@ -21,21 +21,8 @@ export const WithdrawLiquidity = () => {
   const publicClient = usePublicClient();
   const chainId = useChainId();
 
-  // Get supported assets for current chain (asset isolation)
-  const supportedAssets = useMemo(() => {
-    const tokens = SUPPORTED_TOKENS_BY_CHAIN[chainId] || ["ETH", "USDC"];
-    return tokens.filter((t): t is EarnAsset => ["ETH", "USDC", "USDT"].includes(t));
-  }, [chainId]);
-
-  // Local state
-  const [selectedAsset, setSelectedAsset] = useState<EarnAsset>("ETH");
-
-  // Reset selected asset when chain changes if current asset not supported
-  useEffect(() => {
-    if (!supportedAssets.includes(selectedAsset)) {
-      setSelectedAsset(supportedAssets[0] || "ETH");
-    }
-  }, [chainId, supportedAssets, selectedAsset]);
+  // Asset is locked to the vault's token from the URL
+  const selectedAsset = asset;
   const [shares, setShares] = useState<string>("");
   const [selectedPercentage, setSelectedPercentage] = useState<number>(0);
   const [vTokenBalance, setVTokenBalance] = useState<number>(0);
@@ -200,7 +187,8 @@ export const WithdrawLiquidity = () => {
             setAssetsValue(positionResult.assetsValue);
           }
 
-          // ✅ No need to reload vault data - store auto-refreshes
+          // Notify position components to refetch
+          window.dispatchEvent(new CustomEvent("vanna:position-update"));
         }, 2000);
       } else {
         throw new Error(result.error || "Withdraw failed");
@@ -284,15 +272,18 @@ export const WithdrawLiquidity = () => {
         isDark ? "bg-[#111111]" : "bg-[#FFFFFF]"
       }`}>
         <div className="w-full h-full flex flex-col gap-[44px] justify-between">
-          {/* Asset selector */}
-          <div className="w-fit h-fit">
-            <Dropdown
-              items={supportedAssets}
-              setSelectedOption={(val) => setSelectedAsset(val as EarnAsset)}
-              selectedOption={selectedAsset}
-              classname="w-fit gap-[4px] items-center"
-              dropdownClassname="w-full"
+          {/* Asset display (locked to vault) */}
+          <div className="flex items-center gap-2">
+            <Image
+              src={iconPaths[selectedAsset] || "/icons/eth-icon.png"}
+              alt={selectedAsset}
+              width={20}
+              height={20}
+              className="rounded-full"
             />
+            <span className={`text-[16px] font-semibold ${isDark ? "text-white" : "text-[#181822]"}`}>
+              {selectedAsset}
+            </span>
           </div>
 
           {/* Amount input */}
@@ -312,10 +303,10 @@ export const WithdrawLiquidity = () => {
                 step="any"
                 min="0"
                 placeholder={`Enter v${selectedAsset} amount`}
-                disabled={loading}
+                disabled={!isConnected || loading}
                 className={`w-full h-fit placeholder:text-[#C7C7C7] text-[16px] font-medium outline-none ${
                   isDark ? "text-white bg-[#111111]" : "bg-white"
-                } ${loading ? "opacity-50" : ""}`}
+                } ${!isConnected || loading ? "opacity-50" : ""}`}
                 aria-describedby="withdraw-assets-value"
               />
             </div>
@@ -337,14 +328,14 @@ export const WithdrawLiquidity = () => {
                 type="button"
                 onClick={() => handlePercentageClick(item)}
                 key={item}
-                disabled={loading || vTokenBalance <= 0}
+                disabled={!isConnected || loading || vTokenBalance <= 0}
                 className={`flex justify-center items-center cursor-pointer text-[14px] font-semibold w-fit h-[44px] rounded-[12px] p-[10px] ${
                   selectedPercentage === item
                     ? `${PERCENTAGE_COLORS[item]} text-white`
                     : isDark
                     ? "bg-[#222222] text-white"
                     : "bg-[#F4F4F4] text-black"
-                } ${loading || vTokenBalance <= 0 ? "opacity-50 cursor-not-allowed" : ""}`}
+                } ${!isConnected || loading || vTokenBalance <= 0 ? "opacity-50 cursor-not-allowed" : ""}`}
                 aria-pressed={selectedPercentage === item}
               >
                 {item}%
@@ -362,12 +353,12 @@ export const WithdrawLiquidity = () => {
             <output className={`w-fit h-fit text-[12px] flex gap-[4px] font-semibold ${
               isDark ? "text-white" : "text-[#111111]"
             }`}>
-              {vTokenBalance.toFixed(4)} v{selectedAsset}
+              {isConnected ? `${vTokenBalance.toFixed(4)} v${selectedAsset}` : `-- v${selectedAsset}`}
             </output>
             <span className={`text-[10px] ${
               isDark ? "text-[#919191]" : "text-[#76737B]"
             }`}>
-              ≈ {assetsValue.toFixed(4)} {selectedAsset}
+              ≈ {isConnected ? assetsValue.toFixed(4) : "--"} {selectedAsset}
             </span>
           </div>
         </div>

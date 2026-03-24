@@ -510,6 +510,9 @@ export const LeverageAssetsTab = () => {
         setTxModalTitle("Borrow Successful");
         setTxModalMessage(`Successfully borrowed ${borrowAmount} ${borrowAsset}!`);
         setTxModalHash(txHash);
+
+        // Notify position components to refetch
+        setTimeout(() => window.dispatchEvent(new CustomEvent("vanna:position-update")), 2000);
       } catch (err: any) {
         console.error("[Borrow] Transaction error:", err);
         const isUserRejection =
@@ -579,6 +582,9 @@ export const LeverageAssetsTab = () => {
         setTxModalTitle("Transaction Successful");
         setTxModalMessage(`Successfully deposited ${collateralAmount} ${collateralAsset} and borrowed ${borrowAmount} ${borrowAsset}!`);
         setTxModalHash(txHash);
+
+        // Notify position components to refetch
+        setTimeout(() => window.dispatchEvent(new CustomEvent("vanna:position-update")), 2000);
       } catch (err: any) {
         console.error("[WB Mode] Deposit+Borrow error:", err);
         const isUserRejection =

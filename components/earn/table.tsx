@@ -28,8 +28,9 @@ const FILTER_OPTIONS = {
   depositFilters: ["All"],
   allChains: ["ETH", "USDC", "USDT"],
   allChainsFilters: ["All", "ETH", "USDC", "USDT"],
-  all: ["Vault Deposit", "Vault Collateral", "Vault Total", "Vault Withdraw"],
-  allFilters: ["All"],
+  // Note: allChains filter matches against row.cell[0].title (pool token name), not chain
+  all: ["ETH", "USDC", "USDT"],
+  allFilters: ["All", "ETH", "USDC", "USDT"],
   vaults: ["USDC", "USDTO", "kHYPE", "USDe", "wHYPE", "wstHYPE", "HYPE"],
   vaultsFilters: ["All", "USDC","USDT", "HYPE"],
   curator: ["9summits"],
@@ -162,8 +163,8 @@ const applyFilters = (
     }
 
     if (hasAllChainsFilter) {
-      const chain = row.cell[0]?.chain;
-      if (!chain || !filtersState.allChains.includes(chain)) return false;
+      const poolTitle = row.cell[0]?.title;
+      if (!poolTitle || !filtersState.allChains.includes(poolTitle)) return false;
     }
 
     if (hasDepositFilter) {
@@ -530,11 +531,7 @@ const TableRow = memo(
           <td
             key={idx}
             className={`flex flex-col gap-[6px] h-full ${
-              visibleHeadings.length - 1 === idx && !showProgressBar
-                ? "w-[120px] min-w-[120px] items-start"
-                : visibleHeadings.length - 1 === idx && showProgressBar
-                ? "w-full min-w-[120px] items-start"
-                : "w-full min-w-[120px] items-start"
+              "w-full min-w-[120px] items-start"
             }`}
           >
             <CellContent
@@ -1041,7 +1038,7 @@ export const Table = memo((props: TableProps) => {
                     className={`whitespace-nowrap text-[14px] font-medium ${
                       props.tableHeadingTextColor || "text-[#999999]"
                     } min-w-[120px] h-fit flex ${
-                      isLast ? "justify-end w-[120px]" : "justify-start w-full whitespace-nowrap"
+                      isLast ? "justify-start w-full" : "justify-start w-full whitespace-nowrap"
                     } gap-[4px] items-center`}
                   >
                     {item.icon && (

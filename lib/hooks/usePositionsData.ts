@@ -2,18 +2,19 @@
  * usePositionsData - Fetches REAL position data from the blockchain
  *
  * WHAT IT DOES:
- * 1. Gets user's margin account address from Registry contract
+ * 1. Gets user's margin account addresses from Registry contract
  * 2. Reads collateral assets (Account.getAssets + ERC20.balanceOf)
  * 3. Reads borrowed assets (Account.getBorrows + VToken.getBorrowBalance)
- * 4. Fetches token prices from /api/prices
- * 5. Calculates leverage (collateralUsd / equity) and interest
- * 6. Returns data shaped like the Position[] type for the table
+ * 4. Reads health status from RiskEngine (isAccountHealthy, getBalance, getBorrows)
+ * 5. Fetches token prices from /api/prices
+ * 6. SPLITS each borrow into its own position row for clear visibility
+ * 7. Returns data shaped like the Position[] type for the table
  *
- * WHERE DATA COMES FROM:
- * - Collateral: Account.getAssets() -> ERC20.balanceOf(marginAccount)
- * - Borrows: Account.getBorrows() -> VToken.getBorrowBalance(marginAccount)
- * - Prices: /api/prices endpoint
- * - Leverage: Calculated from collateralUsd / (collateralUsd - borrowUsd)
+ * SPLIT LOGIC:
+ * - Each margin account can have multiple borrows (USDC, ETH, USDT)
+ * - Instead of showing 1 row with all borrows merged, we show 1 row PER borrow
+ * - Collateral is shared across all borrows from the same account
+ * - If an account has collateral but no borrows, it shows as a single "Collateral Only" row
  */
 
 import { useState, useEffect, useCallback } from "react";
@@ -23,9 +24,10 @@ import Registry from "@/abi/vanna/out/out/Registry.sol/Registry.json";
 import Account from "@/abi/vanna/out/out/Account.sol/Account1.json";
 import VToken from "@/abi/vanna/out/out/VToken.sol/VToken.json";
 import VEther from "@/abi/vanna/out/out/VEther.sol/VEther.json";
+import RiskEngine from "@/abi/vanna/out/out/RiskEngine.sol/RiskEngine.json";
 import { getAddressList } from "@/lib/utils/web3/addressList";
 import { vTokenAddressByChain } from "@/lib/utils/web3/token";
-import type { Position, BorrowInfo } from "@/lib/types";
+import type { Position, BorrowInfo, CollateralInfo } from "@/lib/types";
 
 interface UsePositionsDataReturn {
   positions: Position[];
@@ -60,8 +62,6 @@ export function usePositionsData(): UsePositionsDataReturn {
 
     try {
       // STEP 1: Get margin account addresses from Registry
-      // Registry.accountsOwnedBy(userAddress) -> address[]
-      
       const accounts = (await publicClient.readContract({
         address: addressList.registryContractAddress as `0x${string}`,
         abi: Registry.abi,
@@ -75,10 +75,7 @@ export function usePositionsData(): UsePositionsDataReturn {
         return;
       }
 
-    
-      // STEP 2: Fetch prices from /api/prices
-      // Used to convert token amounts -> USD values
-    
+      // STEP 2: Fetch prices
       let prices: Record<string, number> = {};
       try {
         const pricesRes = await fetch("/api/prices");
@@ -89,7 +86,6 @@ export function usePositionsData(): UsePositionsDataReturn {
           throw new Error("No ETH price in response");
         }
       } catch {
-        // Fallback: try MUX directly
         try {
           const muxRes = await fetch("https://app.mux.network/api/liquidityAsset");
           const muxData = await muxRes.json();
@@ -104,35 +100,27 @@ export function usePositionsData(): UsePositionsDataReturn {
         }
       }
 
-      // =====================================================
-      // STEP 3: For each margin account, build a Position
-      // Each account = 1 position in the table
-      // =====================================================
-
-
+      // STEP 3: For each margin account, build split Position entries
       const positionsData: Position[] = [];
+      let globalPositionId = 1;
 
       for (let i = 0; i < accounts.length; i++) {
         const acc = accounts[i];
 
         try {
-           //Get collateral assets
-          // Account.getAssets() returns token addresses deposited
-          // Then ERC20.balanceOf(marginAccount) for each
+          // ── Fetch collateral assets ──
           const assetAddresses = (await publicClient.readContract({
             address: acc,
             abi: Account.abi,
             functionName: "getAssets",
           })) as `0x${string}`[];
 
-          // Fetch collateral details via multicall
           let collateralToken = "USD";
           let collateralAmount = 0;
           let collateralUsdValue = 0;
-          let displayedCollUsd = 0; // USD value of the displayed token only
+          const collaterals: CollateralInfo[] = [];
 
           if (assetAddresses.length > 0) {
-            // Build multicall for all collateral tokens: symbol, decimals, balanceOf
             const collateralCalls = assetAddresses.flatMap((tokenAddr) => [
               { address: tokenAddr, abi: erc20Abi, functionName: "symbol" as const },
               { address: tokenAddr, abi: erc20Abi, functionName: "decimals" as const },
@@ -149,8 +137,6 @@ export function usePositionsData(): UsePositionsDataReturn {
               allowFailure: true,
             });
 
-            // Parse: every 3 results = [symbol, decimals, balance] for one token
-            // We pick the LARGEST collateral (by USD) as the primary display
             let maxCollUsd = 0;
             let totalCollUsd = 0;
 
@@ -167,36 +153,41 @@ export function usePositionsData(): UsePositionsDataReturn {
                 const price = prices[lookupSym] || 0;
                 const usd = bal * price;
 
+                if (usd < 0.01) continue;
+
                 totalCollUsd += usd;
+
+                const roundedBal = bal < 1
+                  ? Math.round(bal * 1_000_000) / 1_000_000
+                  : Math.round(bal * 10_000) / 10_000;
+
+                collaterals.push({
+                  assetData: { asset: sym, amount: String(roundedBal) },
+                  usdValue: Math.round(usd * 100) / 100,
+                });
 
                 if (usd > maxCollUsd) {
                   maxCollUsd = usd;
                   collateralToken = sym;
-                  collateralAmount = bal;
-                  displayedCollUsd = usd;
+                  collateralAmount = roundedBal;
                 }
               }
             }
 
-            // Use displayed token's USD for the collateral label,
-            // but keep totalCollUsd for leverage calculation
             collateralUsdValue = totalCollUsd;
           }
 
-          // Get borrowed assets
-          // Account.getBorrows() returns VToken addresses
-          // VToken.getBorrowBalance(marginAccount) for each
+          // ── Fetch borrowed assets ──
           const borrowedAddresses = (await publicClient.readContract({
             address: acc,
             abi: Account.abi,
             functionName: "getBorrows",
           })) as `0x${string}`[];
 
-          const borrowed: BorrowInfo[] = [];
+          const allBorrows: BorrowInfo[] = [];
           let totalBorrowUsd = 0;
 
           if (borrowedAddresses.length > 0) {
-            // Get symbol + decimals for each borrowed token via multicall
             const metaCalls = borrowedAddresses.flatMap((tokenAddr) => [
               { address: tokenAddr, abi: erc20Abi, functionName: "symbol" as const },
               { address: tokenAddr, abi: erc20Abi, functionName: "decimals" as const },
@@ -207,14 +198,11 @@ export function usePositionsData(): UsePositionsDataReturn {
               allowFailure: true,
             });
 
-            // Now fetch borrow balances from VToken contracts
             const borrowBalanceCalls = borrowedAddresses.map((tokenAddr, idx) => {
               const symRes = metaResults[idx * 2];
               const sym = symRes.status === "success" ? (symRes.result as string) : "";
               const lookupSym = sym === "WETH" ? "ETH" : sym;
               const vTokenAddr = vTokenAddressByChain[chainId]?.[lookupSym];
-
-              // Use VEther ABI for ETH, VToken ABI for others
               const abi = lookupSym === "ETH" ? VEther.abi : VToken.abi;
 
               return {
@@ -230,7 +218,6 @@ export function usePositionsData(): UsePositionsDataReturn {
               allowFailure: true,
             });
 
-            // Combine metadata + balances into BorrowInfo[]
             for (let j = 0; j < borrowedAddresses.length; j++) {
               const symRes = metaResults[j * 2];
               const decRes = metaResults[j * 2 + 1];
@@ -250,67 +237,132 @@ export function usePositionsData(): UsePositionsDataReturn {
 
                 if (usd > 0.01) {
                   totalBorrowUsd += usd;
-                  // Round amount: 6 decimals for small values (ETH), 4 for larger (USDC)
                   const roundedBal = bal < 1
                     ? Math.round(bal * 1_000_000) / 1_000_000
                     : Math.round(bal * 10_000) / 10_000;
-                  borrowed.push({
+                  allBorrows.push({
                     assetData: { asset: sym, amount: String(roundedBal) },
-                    percentage: 0, // calculated below
+                    percentage: 0,
                     usdValue: Math.round(usd * 100) / 100,
                   });
                 }
               }
             }
 
-            // Calculate borrow percentages
             if (totalBorrowUsd > 0) {
-              for (const b of borrowed) {
+              for (const b of allBorrows) {
                 b.percentage = Math.round((b.usdValue / totalBorrowUsd) * 100);
               }
             }
           }
 
-          // -------------------------------------------------
-            // Calculate leverage & interest
-          // Leverage = collateralUsd / (collateralUsd - borrowUsd)
-          // Interest = estimated from borrow balance (includes accrued)
-          // -------------------------------------------------
-          const equity = collateralUsdValue - totalBorrowUsd;
-          const leverage = equity > 0 ? Math.round((collateralUsdValue / equity) * 10) / 10 : 0;
+          // ── Fetch health data from RiskEngine ──
+          let isHealthy = true;
+          let riskBalance = 0;
+          let riskBorrows = 0;
 
-          // Interest estimation: borrow balance already includes accrued interest
-          // We approximate interest as ~2% of total borrow (since we don't have original principal)
-          const interestAccrued = Math.round(totalBorrowUsd * 0.02 * 100) / 100;
+          try {
+            const riskEngineCalls = [
+              {
+                address: addressList.riskEngineContractAddress as `0x${string}`,
+                abi: RiskEngine.abi,
+                functionName: "isAccountHealthy" as const,
+                args: [acc] as const,
+              },
+              {
+                address: addressList.riskEngineContractAddress as `0x${string}`,
+                abi: RiskEngine.abi,
+                functionName: "getBalance" as const,
+                args: [acc] as const,
+              },
+              {
+                address: addressList.riskEngineContractAddress as `0x${string}`,
+                abi: RiskEngine.abi,
+                functionName: "getBorrows" as const,
+                args: [acc] as const,
+              },
+            ];
 
-          // Determine if position is "open"
-          // Open = has collateral OR borrows (active margin account)
-          // History = fully closed (no collateral AND no borrows) - requires subgraph for true history
-          //
-          // WHY: A margin account with collateral but no borrows is still an active position
-          // (the user deposited collateral and may borrow again). If we mark it as "closed"
-          // it disappears from History when a new borrow is taken, because the same account
-          // flips back to "open". Instead, any account with funds is considered open.
-          const isOpen = collateralUsdValue > 0.01 || totalBorrowUsd > 0.01;
+            const riskResults = await publicClient.multicall({
+              contracts: riskEngineCalls,
+              allowFailure: true,
+            });
 
-          // Skip truly empty accounts (no collateral and no borrows)
+            if (riskResults[0].status === "success") {
+              isHealthy = riskResults[0].result as boolean;
+            }
+            if (riskResults[1].status === "success") {
+              riskBalance = Number(formatUnits(riskResults[1].result as bigint, 18));
+            }
+            if (riskResults[2].status === "success") {
+              riskBorrows = Number(formatUnits(riskResults[2].result as bigint, 18));
+            }
+          } catch (riskErr) {
+            console.warn(`[usePositionsData] RiskEngine read failed for ${acc}:`, riskErr);
+          }
+
+          // Calculate health factor: balance / borrows (higher = safer)
+          const healthFactor = riskBorrows > 0 ? Math.round((riskBalance / riskBorrows) * 100) / 100 : 0;
+
+          // Skip truly empty accounts
           if (collateralUsdValue < 0.01 && totalBorrowUsd < 0.01) {
             continue;
           }
 
-          positionsData.push({
-            positionId: i + 1,
-            collateral: {
-              asset: collateralToken,
-              amount: String(Math.round(collateralAmount * 1000) / 1000),
-            },
-            collateralUsdValue: Math.round(displayedCollUsd * 100) / 100,
-            borrowed,
-            leverage,
-            interestAccrued,
-            isOpen,
-            user: address,
-          });
+          // ── SPLIT: Create one Position per borrow asset ──
+          if (allBorrows.length > 0) {
+            for (const borrow of allBorrows) {
+              const borrowUsd = borrow.usdValue;
+              const equity = collateralUsdValue - borrowUsd;
+              const leverage = equity > 0 ? Math.round((collateralUsdValue / equity) * 10) / 10 : 0;
+              const interestAccrued = Math.round(borrowUsd * 0.004 * 100) / 100;
+              const displaySym = borrow.assetData.asset === "WETH" ? "ETH" : borrow.assetData.asset;
+
+              positionsData.push({
+                positionId: globalPositionId++,
+                collateral: {
+                  asset: collateralToken,
+                  amount: String(collateralAmount),
+                },
+                collateralUsdValue: Math.round(collateralUsdValue * 100) / 100,
+                collaterals,
+                borrowed: [borrow],
+                leverage,
+                interestAccrued,
+                isOpen: true,
+                user: address,
+                // On-chain account details
+                accountAddress: acc,
+                isHealthy,
+                totalAccountBalanceUsd: Math.round(riskBalance * 100) / 100,
+                totalAccountBorrowUsd: Math.round(riskBorrows * 100) / 100,
+                healthFactor,
+                borrowAssetLabel: `${displaySym} Borrow`,
+              });
+            }
+          } else {
+            // Account with collateral but no borrows — show as single row
+            positionsData.push({
+              positionId: globalPositionId++,
+              collateral: {
+                asset: collateralToken,
+                amount: String(collateralAmount),
+              },
+              collateralUsdValue: Math.round(collateralUsdValue * 100) / 100,
+              collaterals,
+              borrowed: [],
+              leverage: 0,
+              interestAccrued: 0,
+              isOpen: collateralUsdValue > 0.01,
+              user: address,
+              accountAddress: acc,
+              isHealthy,
+              totalAccountBalanceUsd: Math.round(riskBalance * 100) / 100,
+              totalAccountBorrowUsd: Math.round(riskBorrows * 100) / 100,
+              healthFactor,
+              borrowAssetLabel: "Collateral Only",
+            });
+          }
         } catch (accError) {
           console.error(`[usePositionsData] Error fetching account ${acc}:`, accError);
         }
@@ -328,6 +380,13 @@ export function usePositionsData(): UsePositionsDataReturn {
   // Fetch on mount and when deps change
   useEffect(() => {
     fetchPositions();
+  }, [fetchPositions]);
+
+  // Auto-refresh when borrow/repay/deposit completes
+  useEffect(() => {
+    const handler = () => fetchPositions();
+    window.addEventListener("vanna:position-update", handler);
+    return () => window.removeEventListener("vanna:position-update", handler);
   }, [fetchPositions]);
 
   return { positions, isLoading, error, refetch: fetchPositions };

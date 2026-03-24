@@ -165,30 +165,6 @@ const networkOptions = [
     rpcUrl: "https://mainnet.base.org",
     blockExplorerUrl: "https://basescan.org",
   },
-  {
-    id: "arbitrum",
-    name: "Arbitrum One",
-    icon: "/icons/arbitrum-icon.svg",
-    chainId: 42161, // 0xa4b1 in hex
-    rpcUrl: "https://arb1.arbitrum.io/rpc",
-    blockExplorerUrl: "https://arbiscan.io",
-  },
-  {
-    id: "optimism",
-    name: "OP Mainnet",
-    icon: "/icons/optimism-icon.svg",
-    chainId: 10, // 0xa in hex
-    rpcUrl: "https://mainnet.optimism.io",
-    blockExplorerUrl: "https://optimistic.etherscan.io",
-  },
-  {
-    id: "katana",
-    name: "Katana",
-    icon: "/icons/katana.jpg",
-    chainId: 747474, // 0xB6B6A in hex
-    rpcUrl: "https://rpc.katana.network",
-    blockExplorerUrl: "https://explorer.katanarpc.com",
-  },
 ] as const;
 
    const BASE_NETWORK = "base";

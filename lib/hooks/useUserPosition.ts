@@ -106,6 +106,13 @@ export const useUserPosition = (asset: EarnAsset) => {
     loadPosition();
   }, [loadPosition]);
 
+  // Auto-refresh when deposit/withdraw completes
+  useEffect(() => {
+    const handler = () => loadPosition();
+    window.addEventListener("vanna:position-update", handler);
+    return () => window.removeEventListener("vanna:position-update", handler);
+  }, [loadPosition]);
+
   return {
     position,
     refetch: loadPosition,

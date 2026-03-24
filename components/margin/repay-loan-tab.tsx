@@ -420,6 +420,9 @@ export const RepayLoanTab = () => {
       setRepayAmount("");
       setIsPayNowPopupOpen(false);
 
+      // Notify position components to refetch
+      setTimeout(() => window.dispatchEvent(new CustomEvent("vanna:position-update")), 2000);
+
     } catch (error: any) {
       console.error(error);
 
