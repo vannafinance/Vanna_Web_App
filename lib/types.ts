@@ -22,19 +22,33 @@ export type MarginState = {
   maxWithdraw: number;
 };
 
+export interface CollateralInfo {
+  assetData: AssetAmount;
+  usdValue: number;
+}
+
 export interface Position {
   positionId: number;
 
-  collateral: AssetAmount;
-  collateralUsdValue: number;
+  collateral: AssetAmount;           // Primary collateral (largest by USD)
+  collateralUsdValue: number;        // Total collateral USD value
+  collaterals: CollateralInfo[];     // All collateral tokens
 
   borrowed: BorrowInfo[];
 
-  leverage: number;
+  ltv: number;              // Loan-to-Value: totalBorrowUsd / collateralUsd × 100 (%)
   interestAccrued: number;
 
   isOpen: boolean;
   user: string;
+
+  // On-chain account details
+  accountAddress?: string;           // Margin account contract address
+  isHealthy?: boolean;               // RiskEngine.isAccountHealthy()
+  totalAccountBalanceUsd?: number;   // RiskEngine.getBalance() in USD
+  totalAccountBorrowUsd?: number;    // RiskEngine.getBorrows() in USD
+  healthFactor?: number;             // Calculated: balance / borrows
+  borrowAssetLabel?: string;         // Label for split view (e.g. "USDC Borrow")
 }
 
 export type PositionsArray = Position[];

@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
+import { useWallets } from "@privy-io/react-auth";
+import { useWalletConnection } from "@/lib/hooks/useWalletConnection";
 import { erc20Abi, formatUnits, parseUnits, encodeFunctionData } from "viem";
 import { toast } from "sonner";
 
@@ -39,15 +41,27 @@ const PERCENTAGES = [25, 50, 75, 100] as const;
 
 export const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
   const { isDark } = useTheme();
-  const { address: walletAddress, chainId } = useAccount();
+  const { address: wagmiAddress, chainId: wagmiChainId } = useAccount();
+  const { wallets: privyWallets } = useWallets();
+  const { address: walletConnectionAddress } = useWalletConnection();
   const { data: walletClient } = useWalletClient();
   const publicClient = usePublicClient();
-  // Use wagmi's useAccount address (always in sync with wallet) instead of persisted user store
-  const address = walletAddress;
+
+  // Resolve address: prefer wagmi, fallback to useWalletConnection (covers Privy embedded wallets)
+  const address = wagmiAddress ?? walletConnectionAddress;
+
+  // Resolve chainId: prefer wagmi, fallback to Privy CAIP-2 chainId
+  const privyChainId = (() => {
+    const raw = privyWallets[0]?.chainId;
+    if (!raw) return undefined;
+    const num = parseInt(raw.split(":").pop() ?? "");
+    return isNaN(num) ? undefined : num;
+  })();
+  const chainId = wagmiChainId ?? privyChainId;
   const hasMarginAccount = useMarginAccountInfoStore((s) => s.hasMarginAccount);
 
   // Nexus — display + cross-chain bridge execution when needed
-  const { initialized: nexusReady, fetchBridgeBalances } = useNexus();
+  const { initialized: nexusReady, loading: nexusLoading, fetchBridgeBalances } = useNexus();
   const nexusBridge = useBridgeAndExecute();
   const [showBridgingDialogue, setShowBridgingDialogue] = useState(false);
 
@@ -104,11 +118,9 @@ export const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
     setWalletBalances(result);
   }, [publicClient, address, chainId]);
 
-  // Fetch balances when modal opens or chain/address changes
+  // Fetch wallet balances when modal opens (Nexus bridge balances managed by provider)
   useEffect(() => {
-    if (isOpen) {
-      fetchWalletBalances();
-    }
+    if (isOpen) fetchWalletBalances();
   }, [isOpen, fetchWalletBalances]);
 
   // Margin account fetch
@@ -121,6 +133,12 @@ export const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
   // Nexus balance breakdown (display only — same as collateral box)
   const { total: nexusTotal, breakdown: nexusBreakdown } =
     useNexusBalanceBreakdown(selectedToken);
+
+  // Other-chain balances (excluding current chain) — shown proactively
+  const otherChainBalances = nexusBreakdown.filter(
+    (b) => b.value > 0 && b.chainId !== (chainId ?? 0)
+  );
+  const hasOtherChainFunds = nexusReady && otherChainBalances.length > 0;
 
   // Balance logic — current chain wallet balance for deposit execution
   // Nexus total shown for informational display only (like collateral box)
@@ -325,7 +343,7 @@ export const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
           {/* Main modal */}
           {(
             <motion.div
-              className={`relative z-10 w-[440px] rounded-[24px] overflow-hidden ${
+              className={`relative z-10 w-[440px] max-w-[calc(100vw-32px)] rounded-[24px] overflow-hidden ${
                 isDark
                   ? "bg-[#0C0C0C] border border-[#1E1E1E]"
                   : "bg-white border border-[#EBEBEB]"
@@ -470,7 +488,7 @@ export const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
                             setActivePercent(null);
                           }}
                           placeholder="0.00"
-                          className={`flex-1 text-right text-[24px] font-semibold bg-transparent outline-none placeholder:text-[#CCC] ${
+                          className={`flex-1 min-w-0 text-right text-[24px] font-semibold bg-transparent outline-none placeholder:text-[#CCC] ${
                             isDark
                               ? "text-white placeholder:text-[#444]"
                               : "text-[#111]"
@@ -560,20 +578,95 @@ export const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
                       ))}
                     </div>
 
+                    {/* ── Cross-chain bridge panel ── */}
+                    {/* Always shown unless nexus confirmed no funds on other chains */}
+                    {!(nexusReady && !nexusLoading && otherChainBalances.length === 0) && (
+                      <div className={`rounded-[14px] border p-[14px] flex flex-col gap-[10px] ${
+                        isDark ? "bg-[#0D0A1A] border-[#2A1E4A]" : "bg-[#F8F4FF] border-[#E0D4FF]"
+                      }`}>
+
+                        {/* Header */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-[8px]">
+                            <div
+                              className="w-[20px] h-[20px] rounded-full flex items-center justify-center flex-shrink-0"
+                              style={{ background: "linear-gradient(135deg, #FC5457 10%, #703AE6 90%)" }}
+                            >
+                              <svg width="9" height="9" viewBox="0 0 12 12" fill="none">
+                                <path d="M2 6H10M10 6L7 3M10 6L7 9" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            </div>
+                            <span className={`text-[13px] font-semibold ${isDark ? "text-[#C4A8FF]" : "text-[#6B21E8]"}`}>
+                              Bridge from other chains
+                            </span>
+                          </div>
+
+                          {/* Right side: loading spinner OR total amount */}
+                          {nexusLoading && (
+                            <div className="w-[16px] h-[16px] rounded-full border-[2px] animate-spin flex-shrink-0"
+                              style={{ borderColor: "#703AE640", borderTopColor: "#703AE6" }}
+                            />
+                          )}
+                          {!nexusLoading && hasOtherChainFunds && (
+                            <span className={`text-[13px] font-bold ${isDark ? "text-white" : "text-[#111]"}`}>
+                              {formatBalance(otherChainBalances.reduce((s, b) => s + b.value, 0))} {selectedToken}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Per-chain balance rows — fade in once loaded */}
+                        {hasOtherChainFunds && (
+                          <div className="flex flex-col gap-[8px]">
+                            {otherChainBalances.map((b) => (
+                              <div key={b.chainId} className="flex items-center justify-between">
+                                <div className="flex items-center gap-[8px]">
+                                  {(iconPaths[SUPPORTED_CHAIN_NAMES[b.chainId]] || iconPaths[b.chainName]) ? (
+                                    <Image
+                                      src={iconPaths[SUPPORTED_CHAIN_NAMES[b.chainId]] || iconPaths[b.chainName]}
+                                      alt={b.chainName}
+                                      width={16}
+                                      height={16}
+                                      className="rounded-full flex-shrink-0"
+                                    />
+                                  ) : (
+                                    <div className={`w-[16px] h-[16px] rounded-full flex-shrink-0 ${isDark ? "bg-[#2A2A3A]" : "bg-[#DDD]"}`} />
+                                  )}
+                                  <span className={`text-[12px] font-medium ${isDark ? "text-[#9080B0]" : "text-[#7C5FA0]"}`}>
+                                    {SUPPORTED_CHAIN_NAMES[b.chainId] || b.chainName}
+                                  </span>
+                                </div>
+                                <span className={`text-[12px] font-semibold ${isDark ? "text-[#D0B8FF]" : "text-[#5B21B6]"}`}>
+                                  {parseFloat(b.balance).toFixed(4)} {selectedToken}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Hint text — stable, no layout shift */}
+                        <span className={`text-[11px] leading-[1.4] break-words w-full ${isDark ? "text-[#5A4878]" : "text-[#A090C8]"}`}>
+                          {hasOtherChainFunds
+                            ? "Enter an amount above your Base balance to auto-bridge via Avail Nexus"
+                            : "Funds on Arbitrum, Optimism, Ethereum & other chains auto-bridge via Avail Nexus"}
+                        </span>
+                      </div>
+                    )}
+
                     {/* Balance info */}
                     <div
                       className={`rounded-[14px] p-[14px] flex flex-col gap-[8px] ${
                         isDark ? "bg-[#111]" : "bg-[#F9F9F9]"
                       }`}
                     >
+                      {/* Current chain balance */}
                       <div className="flex items-center justify-between">
                         <span
                           className={`text-[12px] font-medium ${
                             isDark ? "text-[#666]" : "text-[#999]"
                           }`}
                         >
-                          {nexusReady && nexusTotal > currentChainBalance
-                            ? "Balance across chains"
+                          {hasOtherChainFunds
+                            ? `On ${SUPPORTED_CHAIN_NAMES[chainId ?? 0] || "this chain"}`
                             : "Wallet Balance"}
                         </span>
                         <span
@@ -581,66 +674,27 @@ export const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
                             isDark ? "text-white" : "text-[#111]"
                           }`}
                         >
-                          {formatBalance(
-                            nexusReady && nexusTotal > currentChainBalance
-                              ? nexusTotal
-                              : currentChainBalance
-                          )}{" "}
-                          {selectedToken}
+                          {formatBalance(currentChainBalance)} {selectedToken}
                         </span>
                       </div>
 
-                      {/* Per-chain breakdown (display only — same as collateral box) */}
-                      {nexusReady &&
-                        nexusBreakdown.length > 0 &&
-                        nexusTotal > currentChainBalance && (
-                          <div className="flex flex-col gap-[4px] pt-[4px]">
-                            {nexusBreakdown
-                              .filter((b) => b.value > 0)
-                              .map((b) => (
-                                <div
-                                  key={b.chainId}
-                                  className="flex items-center justify-between"
-                                >
-                                  <div className="flex items-center gap-[6px]">
-                                    {(iconPaths[SUPPORTED_CHAIN_NAMES[b.chainId]] ||
-                                      iconPaths[b.chainName]) && (
-                                      <Image
-                                        src={
-                                          iconPaths[SUPPORTED_CHAIN_NAMES[b.chainId]] ||
-                                          iconPaths[b.chainName]
-                                        }
-                                        alt={b.chainName}
-                                        width={14}
-                                        height={14}
-                                        className="rounded-full"
-                                      />
-                                    )}
-                                    <span
-                                      className={`text-[11px] font-medium ${
-                                        isDark ? "text-[#888]" : "text-[#777]"
-                                      }`}
-                                    >
-                                      {SUPPORTED_CHAIN_NAMES[b.chainId] || b.chainName}
-                                    </span>
-                                  </div>
-                                  <span
-                                    className={`text-[11px] font-medium ${
-                                      isDark ? "text-[#AAA]" : "text-[#555]"
-                                    }`}
-                                  >
-                                    {parseFloat(b.balance).toFixed(4)} {selectedToken}
-                                  </span>
-                                </div>
-                              ))}
-                          </div>
-                        )}
+                      {/* Total across chains (when other chains available) */}
+                      {hasOtherChainFunds && (
+                        <div className="flex items-center justify-between">
+                          <span className={`text-[12px] font-medium ${isDark ? "text-[#666]" : "text-[#999]"}`}>
+                            Total across chains
+                          </span>
+                          <span className={`text-[13px] font-bold ${isDark ? "text-[#C4A8FF]" : "text-[#703AE6]"}`}>
+                            {formatBalance(nexusTotal)} {selectedToken}
+                          </span>
+                        </div>
+                      )}
 
-                      {/* Nexus bridging indicator — only show when bridging is actually needed */}
-                      {nexusReady && needsBridging && (
+                      {/* Nexus bridging indicator — shown when this specific deposit needs bridging */}
+                      {needsBridging && (
                         <motion.div
-                          className={`flex items-center gap-[6px] px-[8px] py-[4px] rounded-[8px] ${
-                            isDark ? "bg-[#1A1035]" : "bg-[#F8F4FF]"
+                          className={`flex items-center gap-[6px] px-[8px] py-[5px] rounded-[8px] ${
+                            isDark ? "bg-[#1A1035]" : "bg-[#EDE9FF]"
                           }`}
                           initial={{ opacity: 0, y: -4 }}
                           animate={{ opacity: 1, y: 0 }}
@@ -654,35 +708,13 @@ export const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
                               <path d="M2 6H10M10 6L7 3M10 6L7 9" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                             </svg>
                           </div>
-                          <span className={`text-[10px] font-medium ${isDark ? "text-[#C4A8FF]" : "text-[#703AE6]"}`}>
-                            Will bridge from other chains via Nexus
+                          <span className={`text-[11px] font-medium ${isDark ? "text-[#C4A8FF]" : "text-[#703AE6]"}`}>
+                            Will bridge from other chains via Avail Nexus
                           </span>
                         </motion.div>
                       )}
 
-                      {/* Available on current chain */}
-                      {nexusReady && nexusTotal > currentChainBalance && (
-                        <div className="flex items-center justify-between pt-[4px] border-t border-dashed"
-                          style={{ borderColor: isDark ? "#222" : "#E0E0E0" }}
-                        >
-                          <span
-                            className={`text-[11px] font-medium ${
-                              isDark ? "text-[#666]" : "text-[#999]"
-                            }`}
-                          >
-                            Available on {SUPPORTED_CHAIN_NAMES[chainId ?? 0] || "this chain"}
-                          </span>
-                          <span
-                            className={`text-[12px] font-semibold ${
-                              isDark ? "text-white" : "text-[#111]"
-                            }`}
-                          >
-                            {formatBalance(currentChainBalance)} {selectedToken}
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Chain info */}
+                      {/* Destination */}
                       <div className="flex items-center justify-between">
                         <span
                           className={`text-[12px] font-medium ${
@@ -692,15 +724,9 @@ export const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
                           Destination
                         </span>
                         <div className="flex items-center gap-[6px]">
-                          {iconPaths[
-                            SUPPORTED_CHAIN_NAMES[chainId ?? 0]
-                          ] && (
+                          {iconPaths[SUPPORTED_CHAIN_NAMES[chainId ?? 0]] && (
                             <Image
-                              src={
-                                iconPaths[
-                                  SUPPORTED_CHAIN_NAMES[chainId ?? 0]
-                                ]
-                              }
+                              src={iconPaths[SUPPORTED_CHAIN_NAMES[chainId ?? 0]]}
                               alt="chain"
                               width={16}
                               height={16}
@@ -712,8 +738,7 @@ export const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
                               isDark ? "text-white" : "text-[#111]"
                             }`}
                           >
-                            {SUPPORTED_CHAIN_NAMES[chainId ?? 0] || "Unknown"}{" "}
-                            Margin Account
+                            {SUPPORTED_CHAIN_NAMES[chainId ?? 0] || "Unknown"} Margin Account
                           </span>
                         </div>
                       </div>

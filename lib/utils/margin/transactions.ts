@@ -1,6 +1,6 @@
 // transactions.ts (deposit, withdraw, borrow, repay, transfer)
 
-import { erc20Abi, parseUnits } from "viem";
+import { erc20Abi, parseUnits, encodeFunctionData } from "viem";
 import AccountManager from "@/abi/vanna/out/out/AccountManager.sol/AccountManager.json";
 import { TOKEN_DECIMALS, tokenAddressByChain } from "@/lib/utils/web3/token";
 import { useMarginStore } from "@/store/margin-account-state";
@@ -46,6 +46,23 @@ export const getAddresses = ({
     return addresses;
 };
 
+/**
+ * Estimate gas with a fallback — required for Privy embedded wallets.
+ * Without explicit gas, Privy sends gas=0, causing "intrinsic gas too low" errors.
+ */
+async function estimateGasWithFallback(
+    publicClient: any,
+    params: { account: `0x${string}`; to: `0x${string}`; data: `0x${string}` },
+    fallback: bigint
+): Promise<bigint> {
+    try {
+        const est = await publicClient.estimateGas(params);
+        return (est * 130n) / 100n; // +30% buffer
+    } catch {
+        return fallback;
+    }
+}
+
 // --- DEPOSIT ---
 
 export const depositTx = async ({
@@ -65,104 +82,117 @@ export const depositTx = async ({
         const addresses = getAddressList(chainId);
         if (!addresses) throw new Error("Unsupported chain");
 
-    const token = tokenAddressByChain[chainId!]?.[asset];
-    if (!token) throw new Error(`Unknown token mapping for ${asset}`);
+        const token = tokenAddressByChain[chainId!]?.[asset];
+        if (!token) throw new Error(`Unknown token mapping for ${asset}`);
 
-    const decimals = TOKEN_DECIMALS[asset];
-    const parsed = parseUnits(amount, decimals);
+        const decimals = TOKEN_DECIMALS[asset];
+        const parsed = parseUnits(amount, decimals);
+        const userAddress: `0x${string}` = walletClient.account.address;
 
-    console.log(`[Deposit] Token: ${token}, Amount: ${parsed.toString()} (${decimals} decimals)`);
+        console.log(`[Deposit] Token: ${token}, Amount: ${parsed.toString()} (${decimals} decimals)`);
 
-    // ✅ Check wallet balance before proceeding
-    const walletBalance = await publicClient.readContract({
-        address: token,
-        abi: erc20Abi,
-        functionName: "balanceOf",
-        args: [walletClient.account.address],
-    }) as bigint;
-
-    console.log(`[Deposit] Wallet balance: ${walletBalance.toString()}, Required: ${parsed.toString()}`);
-
-    if (walletBalance < parsed) {
-        const balanceInToken = Number(walletBalance) / Math.pow(10, decimals);
-        const requiredInToken = Number(parsed) / Math.pow(10, decimals);
-        throw new Error(
-            `Insufficient ${asset} balance. Have: ${balanceInToken.toFixed(6)}, Need: ${requiredInToken.toFixed(6)}`
-        );
-    }
-
-    // Check current allowance
-    const allowance = await publicClient.readContract({
-        address: token,
-        abi: erc20Abi,
-        functionName: "allowance",
-        args: [walletClient.account.address, addresses.accountManagerContractAddress],
-    }) as bigint;
-
-    console.log(`[Deposit] Current allowance: ${allowance.toString()}, Required: ${parsed.toString()}`);
-
-    // If allowance is insufficient, approve first
-    if (allowance < parsed) {
-        console.log(`[Deposit] Insufficient allowance, requesting approval...`);
-        const MAX_UINT256 = BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-
-        const approvalHash = await walletClient.writeContract({
+        // Check wallet balance
+        const walletBalance = await publicClient.readContract({
             address: token,
             abi: erc20Abi,
-            functionName: "approve",
-            args: [addresses.accountManagerContractAddress, MAX_UINT256],
+            functionName: "balanceOf",
+            args: [userAddress],
+        }) as bigint;
+
+        if (walletBalance < parsed) {
+            const balanceInToken = Number(walletBalance) / Math.pow(10, decimals);
+            const requiredInToken = Number(parsed) / Math.pow(10, decimals);
+            throw new Error(
+                `Insufficient ${asset} balance. Have: ${balanceInToken.toFixed(6)}, Need: ${requiredInToken.toFixed(6)}`
+            );
+        }
+
+        // Check allowance
+        const allowance = await publicClient.readContract({
+            address: token,
+            abi: erc20Abi,
+            functionName: "allowance",
+            args: [userAddress, addresses.accountManagerContractAddress],
+        }) as bigint;
+
+        console.log(`[Deposit] Allowance: ${allowance}, Required: ${parsed}`);
+
+        // Approve if needed
+        if (allowance < parsed) {
+            console.log(`[Deposit] Requesting approval...`);
+            const MAX_UINT256 = BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+
+            // ERC20 approve — estimate gas, fallback 120k
+            const approveGas = await estimateGasWithFallback(
+                publicClient,
+                {
+                    account: userAddress,
+                    to: token as `0x${string}`,
+                    data: encodeFunctionData({
+                        abi: erc20Abi,
+                        functionName: "approve",
+                        args: [addresses.accountManagerContractAddress, MAX_UINT256],
+                    }),
+                },
+                120000n
+            );
+
+            const approvalHash = await walletClient.writeContract({
+                address: token,
+                abi: erc20Abi,
+                functionName: "approve",
+                args: [addresses.accountManagerContractAddress, MAX_UINT256],
+                gas: approveGas,
+            });
+
+            console.log(`[Deposit] Approval tx: ${approvalHash}`);
+            await publicClient.waitForTransactionReceipt({ hash: approvalHash });
+            console.log(`[Deposit] Approval confirmed!`);
+        }
+
+        // Deposit — estimate gas, fallback 400k
+        const depositGas = await estimateGasWithFallback(
+            publicClient,
+            {
+                account: userAddress,
+                to: addresses.accountManagerContractAddress as `0x${string}`,
+                data: encodeFunctionData({
+                    abi: AccountManager.abi as any,
+                    functionName: "deposit",
+                    args: [marginAccount, token, parsed],
+                }),
+            },
+            400000n
+        );
+
+        console.log(`[Deposit] Submitting deposit...`);
+        const txHash = await walletClient.writeContract({
+            address: addresses.accountManagerContractAddress,
+            abi: AccountManager.abi,
+            functionName: "deposit",
+            args: [marginAccount, token, parsed],
+            gas: depositGas,
         });
 
-        console.log(`[Deposit] Approval transaction submitted: ${approvalHash}`);
-        console.log(`[Deposit] Waiting for approval confirmation...`);
+        console.log(`[Deposit] Tx: ${txHash}`);
+        await publicClient.waitForTransactionReceipt({ hash: txHash });
 
-        // ✅ CRITICAL FIX: Wait for approval transaction to confirm
-        await publicClient.waitForTransactionReceipt({ hash: approvalHash });
-        console.log(`[Deposit] Approval confirmed!`);
-    } else {
-        console.log(`[Deposit] Sufficient allowance already exists, skipping approval`);
-    }
-
-    // Now execute the deposit
-    console.log(`[Deposit] Submitting deposit transaction...`);
-    const txHash = await walletClient.writeContract({
-        address: addresses.accountManagerContractAddress,
-        abi: AccountManager.abi,
-        functionName: "deposit",
-        args: [marginAccount, token, parsed],
-    });
-
-    console.log(`[Deposit] Deposit transaction submitted: ${txHash}`);
-    console.log(`[Deposit] Waiting for deposit confirmation...`);
-
-    await publicClient.waitForTransactionReceipt({ hash: txHash });
-    console.log(`[Deposit] Deposit confirmed!`);
-
-    console.log(`[Deposit] Reloading margin state...`);
-    await useMarginStore.getState().reloadMarginState();
-
-    console.log(`[Deposit] ✅ Deposit complete!`);
-    return txHash;
+        await useMarginStore.getState().reloadMarginState();
+        console.log(`[Deposit] ✅ Complete!`);
+        return txHash;
 
     } catch (error: any) {
         console.error(`[Deposit] ❌ Error:`, error);
 
-        // Check if user rejected the transaction
         if (error?.code === 4001 || error?.message?.includes("User rejected") || error?.message?.includes("user rejected")) {
             throw new Error("Transaction cancelled by user");
         }
-
-        // Check for insufficient balance
         if (error?.message?.includes("Insufficient")) {
-            throw error; // Re-throw our custom balance error
+            throw error;
         }
-
-        // Check for contract errors
         if (error?.message?.includes("execution reverted")) {
-            throw new Error(`Contract error: ${error.shortMessage || error.message || "Unknown error"}`);
+            throw new Error(`Contract error: ${error.shortMessage || error.message}`);
         }
-
-        // Generic error
         throw new Error(`Deposit failed: ${error.message || "Unknown error"}`);
     }
 };
@@ -179,39 +209,63 @@ export const withdrawTx = async ({
 }: WithdrawTxParams) => {
     const marginAccount = await getMarginAccount({ fetchAccountCheck });
     const addresses = getAddressList(chainId);
+    if (!addresses) throw new Error("Unsupported chain");
 
     const decimals = TOKEN_DECIMALS[asset];
     const parsed = parseUnits(amount, decimals);
+    const userAddress: `0x${string}` = walletClient.account.address;
 
-    // special case for WETH / ETH
     if (asset === "WETH" || asset === "ETH") {
+        const withdrawEthGas = await estimateGasWithFallback(
+            publicClient,
+            {
+                account: userAddress,
+                to: addresses.accountManagerContractAddress as `0x${string}`,
+                data: encodeFunctionData({
+                    abi: AccountManager.abi as any,
+                    functionName: "withdrawEth",
+                    args: [marginAccount, parsed],
+                }),
+            },
+            300000n
+        );
+
         return walletClient.writeContract({
-            address: addresses!.accountManagerContractAddress,
+            address: addresses.accountManagerContractAddress,
             abi: AccountManager.abi,
             functionName: "withdrawEth",
             args: [marginAccount, parsed],
+            gas: withdrawEthGas,
         });
     }
 
     const token = tokenAddressByChain[chainId!]?.[asset];
     if (!token) throw new Error(`Unknown token mapping for ${asset}`);
 
-    const tx_hash=await walletClient.writeContract({
-        address: addresses!.accountManagerContractAddress,
+    const withdrawGas = await estimateGasWithFallback(
+        publicClient,
+        {
+            account: userAddress,
+            to: addresses.accountManagerContractAddress as `0x${string}`,
+            data: encodeFunctionData({
+                abi: AccountManager.abi as any,
+                functionName: "withdraw",
+                args: [marginAccount, token, parsed],
+            }),
+        },
+        300000n
+    );
+
+    const tx_hash = await walletClient.writeContract({
+        address: addresses.accountManagerContractAddress,
         abi: AccountManager.abi,
         functionName: "withdraw",
         args: [marginAccount, token, parsed],
+        gas: withdrawGas,
     });
 
-     await publicClient.waitForTransactionReceipt({ hash: tx_hash });
-
+    await publicClient.waitForTransactionReceipt({ hash: tx_hash });
     await useMarginStore.getState().reloadMarginState();
 
-    return tx_hash ;
-
-
-
+    return tx_hash;
 };
-
-
-

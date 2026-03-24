@@ -171,8 +171,8 @@ const FilterChip = memo(
 
 FilterChip.displayName = "FilterChip";
 
-// Static chain icons - compute once
-const CHAIN_ICONS = Object.entries(iconPaths).slice(0, 3);
+// Static pool icons - show Base chain icon (Base-only for now)
+const CHAIN_ICONS: [string, string][] = [["BASE", "/icons/base-icon.svg"]];
 
 export const FilterDropdown = memo((props: FilterDropdownProps) => {
   const { isDark } = useTheme();
@@ -206,7 +206,7 @@ export const FilterDropdown = memo((props: FilterDropdownProps) => {
   // Memoized display text
   const displayText = useMemo(() => {
     if (props.dropDownType === "all-chains") {
-      if (props.currentDropdownItem?.length === 0) return "All Chains";
+      if (props.currentDropdownItem?.length === 0) return "All Pools";
       if (props.currentDropdownItem.length > 2) {
         return `${props.currentDropdownItem.slice(0, 2).join(", ")} +${
           props.currentDropdownItem.length - 2
@@ -479,7 +479,7 @@ export const FilterDropdown = memo((props: FilterDropdownProps) => {
           {(props.showSearchBar !== false) && (
             <SearchBar
               value={searchValue}
-              placeholder={props.dropDownType}
+              placeholder={props.dropDownType === "all-chains" ? "pools" : props.dropDownType}
               onChange={handleSearchChange}
             />
           )}

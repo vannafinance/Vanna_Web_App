@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 import { useTheme } from "@/contexts/theme-context";
 import { usePrivy, useWallets, useLoginWithOAuth } from "@privy-io/react-auth";
 import { EmailLogin } from "./email-login";
 import { SocialLogin } from "./social-login";
 import { WalletLogin } from "./wallet-login";
 
-type AuthTab = "social" | "wallet";
 type ModalStep =
   | "login"
   | "verifying"
@@ -25,7 +25,6 @@ interface LoginModalProps {
 
 export function LoginModal({ isOpen, onClose, isOAuthReturn = false, oauthProvider = null }: LoginModalProps) {
   const { isDark } = useTheme();
-  const [activeTab, setActiveTab] = useState<AuthTab>("social");
   const { ready, authenticated, user } = usePrivy();
   const { wallets } = useWallets();
   const [step, setStep] = useState<ModalStep>(isOAuthReturn ? "verifying" : "login");
@@ -178,8 +177,6 @@ export function LoginModal({ isOpen, onClose, isOAuthReturn = false, oauthProvid
                 <LoginStep
                   key="login"
                   isDark={isDark}
-                  activeTab={activeTab}
-                  setActiveTab={setActiveTab}
                   onClose={onClose}
                   onSuccess={handleAuthSuccess}
                 />
@@ -227,122 +224,67 @@ export function LoginModal({ isOpen, onClose, isOAuthReturn = false, oauthProvid
 /* ─── Step 1: Login ─── */
 function LoginStep({
   isDark,
-  activeTab,
-  setActiveTab,
   onClose,
   onSuccess,
 }: {
   isDark: boolean;
-  activeTab: AuthTab;
-  setActiveTab: (tab: AuthTab) => void;
   onClose: () => void;
   onSuccess: () => void;
 }) {
   return (
     <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      transition={{ duration: 0.2 }}
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 16 }}
+      transition={{ duration: 0.22, ease: "easeOut" }}
     >
-      {/* Header */}
-      <div className="px-7 pt-6 pb-1">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2
-              className={`text-[22px] font-semibold tracking-tight ${
-                isDark ? "text-white" : "text-[#1F1F1F]"
-              }`}
-            >
-              Welcome to Vanna
-            </h2>
-            <p
-              className={`text-[13px] mt-1 ${
-                isDark ? "text-[#777777]" : "text-[#949494]"
-              }`}
-            >
-              Connect to start trading derivatives
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors cursor-pointer ${
-              isDark
-                ? "hover:bg-[#222222] text-[#777777]"
-                : "hover:bg-[#F4F4F4] text-[#949494]"
-            }`}
-            aria-label="Close login modal"
-          >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path
-                d="M1 1L13 13M13 1L1 13"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-            </svg>
-          </button>
-        </div>
-
-        {/* Tab Switcher */}
-        <div
-          className={`mt-6 flex p-1 rounded-xl ${
-            isDark ? "bg-[#1C1C1C]" : "bg-[#F4F4F4]"
+      {/* Close button */}
+      <div className="flex justify-end pt-4 pr-4">
+        <button
+          onClick={onClose}
+          className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors cursor-pointer ${
+            isDark
+              ? "hover:bg-[#222222] text-[#666666] hover:text-[#AAAAAA]"
+              : "hover:bg-[#F0F0F0] text-[#AAAAAA] hover:text-[#555555]"
           }`}
+          aria-label="Close login modal"
         >
-          <TabButton
-            label="Email & Social"
-            isActive={activeTab === "social"}
-            onClick={() => setActiveTab("social")}
-            isDark={isDark}
-          />
-          <TabButton
-            label="Wallet"
-            isActive={activeTab === "wallet"}
-            onClick={() => setActiveTab("wallet")}
-            isDark={isDark}
-          />
-        </div>
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+            <path d="M1 1L13 13M13 1L1 13" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
+        </button>
       </div>
 
-      {/* Content */}
-      <div className="px-7 pb-6 pt-3">
-        <AnimatePresence mode="wait">
-          {activeTab === "social" ? (
-            <motion.div
-              key="social"
-              initial={{ opacity: 0, x: -12 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 12 }}
-              transition={{ duration: 0.2 }}
-            >
-              <EmailLogin onSuccess={onSuccess} />
-              <Divider isDark={isDark} />
-              <SocialLogin onSuccess={onSuccess} />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="wallet"
-              initial={{ opacity: 0, x: 12 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -12 }}
-              transition={{ duration: 0.2 }}
-            >
-              <WalletLogin onSuccess={onSuccess} />
-            </motion.div>
-          )}
-        </AnimatePresence>
+      {/* Logo + title */}
+      <div className="flex flex-col items-center gap-3 pt-1 pb-6 px-6">
+        <Image
+          src={isDark ? "/logos/vanna-white.png" : "/logos/vanna.png"}
+          alt="Vanna"
+          width={110}
+          height={32}
+          className="object-contain"
+          priority
+        />
+        <h2 className={`text-[19px] font-semibold tracking-tight ${isDark ? "text-white" : "text-[#1F1F1F]"}`}>
+          Log in or sign up
+        </h2>
       </div>
 
-      {/* Footer */}
-      <div
-        className={`px-7 py-3 text-center text-[11px] border-t ${
-          isDark
-            ? "border-[#222222] text-[#595959]"
-            : "border-[#F4F4F4] text-[#949494]"
-        }`}
-      >
-        By continuing, you agree to Vanna&apos;s Terms of Service
+      {/* Single-column options list */}
+      <div className="px-5 pb-5 flex flex-col gap-[10px]">
+        <EmailLogin onSuccess={onSuccess} />
+        <SocialLogin onSuccess={onSuccess} />
+        <WalletLogin onSuccess={onSuccess} />
+      </div>
+
+      {/* Privy footer */}
+      <div className={`pb-5 flex items-center justify-center gap-1.5 text-[12px] ${
+        isDark ? "text-[#4A4A4A]" : "text-[#BBBBBB]"
+      }`}>
+        <span>Protected by</span>
+        <span className={`font-semibold ${isDark ? "text-[#666666]" : "text-[#999999]"}`}>
+          ● privy
+        </span>
       </div>
     </motion.div>
   );
@@ -771,66 +713,3 @@ function ReadyStep({
   );
 }
 
-/* ─── Shared Components ─── */
-function TabButton({
-  label,
-  isActive,
-  onClick,
-  isDark,
-}: {
-  label: string;
-  isActive: boolean;
-  onClick: () => void;
-  isDark: boolean;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={`relative flex-1 py-2.5 text-[13px] font-semibold rounded-lg transition-colors cursor-pointer ${
-        isActive
-          ? isDark
-            ? "text-white"
-            : "text-[#1F1F1F]"
-          : isDark
-          ? "text-[#595959] hover:text-[#777777]"
-          : "text-[#949494] hover:text-[#595959]"
-      }`}
-    >
-      {isActive && (
-        <motion.div
-          layoutId="auth-tab-indicator"
-          className={`absolute inset-0 rounded-lg ${
-            isDark ? "bg-[#222222]" : "bg-white"
-          }`}
-          style={{
-            boxShadow: isDark
-              ? "0 1px 3px rgba(0,0,0,0.3)"
-              : "0 1px 3px rgba(0,0,0,0.08)",
-          }}
-          transition={{ type: "spring", stiffness: 400, damping: 30 }}
-        />
-      )}
-      <span className="relative z-10">{label}</span>
-    </button>
-  );
-}
-
-function Divider({ isDark }: { isDark: boolean }) {
-  return (
-    <div className="flex items-center gap-3 my-3.5">
-      <div
-        className={`flex-1 h-px ${isDark ? "bg-[#222222]" : "bg-[#DFDFDF]"}`}
-      />
-      <span
-        className={`text-[11px] font-medium uppercase tracking-wider ${
-          isDark ? "text-[#595959]" : "text-[#A9A9A9]"
-        }`}
-      >
-        or
-      </span>
-      <div
-        className={`flex-1 h-px ${isDark ? "bg-[#222222]" : "bg-[#DFDFDF]"}`}
-      />
-    </div>
-  );
-}

@@ -23,9 +23,11 @@ import { useTheme } from "@/contexts/theme-context";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { useMarginStore } from "@/store/margin-account-state";
 import { usePublicClient, useChainId } from "wagmi";
+import { useWalletConnection } from "@/lib/hooks/useWalletConnection";
 import { useFetchAccountCheck, useFetchCollateralState, useFetchBorrowState } from "@/lib/utils/margin/marginFetchers";
 import BorrowDashboard from "@/components/margin/TestBorrowedDashboard";
 import { DebugBorrowComparison } from "@/components/margin/debug-borrow-comparison";
+import { LoginModal } from "@/components/auth/login-modal";
 
 const Margin = () => {
   const { isDark } = useTheme();
@@ -55,6 +57,9 @@ const Margin = () => {
     }
   }, [switchToRepayTab]);
 
+  // Use real-time connection state — NOT the persisted Zustand store which can be stale after logout
+  const { isConnected: isWalletConnected, privyReady } = useWalletConnection();
+  // Keep userAddress for data-fetching hooks that need the actual address value
   const userAddress = useUserStore((state) => state.address);
   const chainId = useChainId();
   const publicClient = usePublicClient();
@@ -87,10 +92,10 @@ const Margin = () => {
     console.log('[Margin Page] Fetchers registered');
   }, [fetchAccountCheck, fetchCollateralState, fetchBorrowState]);
 
-  // Initial data load when wallet connects
+  // Initial data load when wallet connects — only run when truly connected
   useEffect(() => {
-    if (!publicClient || !chainId || !userAddress) {
-      console.log('[Margin Page] Waiting for wallet connection...', { publicClient: !!publicClient, chainId, userAddress });
+    if (!publicClient || !chainId || !isWalletConnected || !userAddress) {
+      console.log('[Margin Page] Waiting for wallet connection...', { publicClient: !!publicClient, chainId, isWalletConnected });
       return;
     }
 
@@ -216,6 +221,7 @@ const Margin = () => {
   }, [accountStats, isLoadingMargin]);
 
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
 
   return (
     <main className="w-full pb-[72px] lg:pb-0">
@@ -280,7 +286,7 @@ const Margin = () => {
         <Carousel items={[...CAROUSEL_ITEMS]} autoplayInterval={5000} />
       </motion.section>
 
-      {userAddress && (
+      {isWalletConnected && (
         <motion.section
           className="px-4 sm:px-8 lg:px-[80px] w-full h-auto pb-2 sm:pb-0"
           initial={{ opacity: 0, y: 30 }}
@@ -359,15 +365,14 @@ const Margin = () => {
           />
         </BottomSheet>
 
-        {/* Two column layout: Leverage form and Info card */}
-        <div className="hidden lg:flex gap-[36px] relative" ref={leverageCollateralRef}>
-          {/* Left: Leverage collateral form */}
+        {/* Two-column layout — always visible. Button inside form is the wallet gate. */}
+        <div className="hidden lg:flex gap-[36px]" ref={leverageCollateralRef}>
           <LeverageCollateral
             switchToRepayTab={switchToRepayTab}
             onTabSwitched={() => setSwitchToRepayTab(false)}
           />
 
-          {/* Right: Margin account info card - sticky */}
+          {/* Right: Margin account info card */}
           <motion.aside
             className="flex flex-col gap-[20px] w-full h-fit sticky top-[80px] self-start"
             initial={{ opacity: 0, x: 20 }}
@@ -375,7 +380,6 @@ const Margin = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.4, ease: "easeOut" }}
           >
-            {/* Info card header */}
             <motion.header
               className="flex gap-[10px] items-start"
               initial={{ opacity: 0, y: 20 }}
@@ -383,22 +387,14 @@ const Margin = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.4, ease: "easeOut" }}
             >
-              {/* Vanna logo icon */}
               <motion.div
-                className={`border-[1px] flex flex-col justify-center items-center p-2 rounded-[11px] w-[62px] h-[62px] ${
-                  ""
-                }`}
+                className="border-[1px] flex flex-col justify-center items-center p-2 rounded-[11px] w-[62px] h-[62px]"
                 initial={{ scale: 0, rotate: -180 }}
                 whileInView={{ scale: 1, rotate: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, type: "spring", stiffness: 200 }}
               >
-                <Image
-                  alt={"vanna"}
-                  src={"/logos/vanna-icon.png"}
-                  width={34.82}
-                  height={31.28}
-                />
+                <Image alt="vanna" src="/logos/vanna-icon.png" width={34.82} height={31.28} />
               </motion.div>
               <div className="flex flex-col flex-1">
                 <div className="flex items-center gap-2">
@@ -406,38 +402,17 @@ const Margin = () => {
                     Margin Account Info
                   </h2>
                   {isLoadingMargin && (
-                    <motion.svg
-                      className="animate-spin h-5 w-5 text-[#703AE6]"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </motion.svg>
+                    <svg className="animate-spin h-5 w-5 text-[#703AE6]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
                   )}
                 </div>
-                <p className={`w-full text-[16px] font-medium text-[#A3A3A3]`}>
+                <p className="w-full text-[16px] font-medium text-[#A3A3A3]">
                   {isLoadingMargin ? "Fetching latest data..." : "Stay updated details and status."}
                 </p>
               </div>
             </motion.header>
-
-            {/* Info card with expandable sections */}
             <InfoCard
               data={marginAccountInfo}
               items={[...MARGIN_ACCOUNT_INFO_ITEMS]}
@@ -463,7 +438,7 @@ const Margin = () => {
         </div>
 
         {/* Positions table section */}
-        {userAddress && (
+        {isWalletConnected && (
           <motion.section
             className="w-full h-fit "
             initial={{ opacity: 0, y: 30 }}
@@ -478,6 +453,11 @@ const Margin = () => {
           </motion.section>
         )}
       </section>
+
+      <LoginModal
+        isOpen={loginModalOpen}
+        onClose={() => setLoginModalOpen(false)}
+      />
     </main>
   );
 };

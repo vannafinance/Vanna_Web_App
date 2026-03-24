@@ -249,13 +249,7 @@ async function fetchViaPublicRpc(
   });
 
   console.log(`[usePositionHistory] User events: ${userLogs.length} out of ${allLogs.length} total`);
-
-  // If user has events, return them. Otherwise return recent contract activity.
-  if (userLogs.length > 0) return userLogs;
-
-  // Fallback: return latest 10 contract-wide events so table isn't empty
-  console.log(`[usePositionHistory] No user events, showing recent contract activity`);
-  return allLogs.slice(-10);
+  return userLogs;
 }
 
 // =====================================================
@@ -445,18 +439,6 @@ export function usePositionHistory(): UsePositionHistoryReturn {
           }
           console.log(`[usePositionHistory] After Blockscout merge: ${allItems.length} events`);
 
-          // If still no user events, fetch contract-wide from Blockscout
-          if (allItems.length === 0) {
-            const anyBorrows = await fetchViaBlockscout(chainId, contractAddress, BORROW_TOPIC0);
-            await new Promise(r => setTimeout(r, 300));
-            const anyRepays = await fetchViaBlockscout(chainId, contractAddress, REPAY_TOPIC0);
-            const anyItems = [
-              ...anyBorrows.map((log) => rawLogToItem(log, chainId, prices)),
-              ...anyRepays.map((log) => rawLogToItem(log, chainId, prices)),
-            ];
-            allItems.push(...anyItems);
-            console.log(`[usePositionHistory] Blockscout contract-wide: ${allItems.length} events`);
-          }
         } catch (err) {
           console.warn("[usePositionHistory] Strategy 2 failed:", err);
         }

@@ -30,11 +30,11 @@ describe("isObject", () => {
   });
 
   it("returns false for primitives", () => {
-    expect(isObject(null)).toBe(false);
-    expect(isObject(undefined)).toBe(false);
-    expect(isObject(42)).toBe(false);
-    expect(isObject("string")).toBe(false);
-    expect(isObject(true)).toBe(false);
+    expect(isObject(null)).toBeFalsy();
+    expect(isObject(undefined)).toBeFalsy();
+    expect(isObject(42)).toBeFalsy();
+    expect(isObject("string")).toBeFalsy();
+    expect(isObject(true)).toBeFalsy();
   });
 });
 

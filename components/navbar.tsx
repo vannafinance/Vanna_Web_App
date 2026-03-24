@@ -491,7 +491,9 @@ export const Navbar = (props: Navbar) => {
           {/* Theme toggle button - hidden below lg, shown on lg+ */}
           <button
             type="button"
-            className="hidden lg:flex flex-col justify-center items-center rounded-[8px] py-[12px] px-[10px] h-[44px] border-[1px] cursor-pointer"
+            className={`hidden lg:flex flex-col justify-center items-center rounded-[8px] py-[12px] px-[10px] h-[44px] border-[1px] cursor-pointer ${
+              isDark ? "border-[#333333]" : "border-[#E5E7EB]"
+            }`}
             onClick={toggleTheme}
             aria-label={
               isDark ? "Switch to light theme" : "Switch to dark theme"
@@ -508,7 +510,7 @@ export const Navbar = (props: Navbar) => {
               className="w-[24px] h-[24px] flex flex-col justify-center items-center "
             >
               {isDark ? (
-                <SunIcon />
+                <SunIcon stroke="white" />
               ) : (
                 // Moon icon (light mode)
                 <svg
@@ -633,7 +635,11 @@ export const Navbar = (props: Navbar) => {
             transition={{ duration: 0.22, ease: "easeOut" }}
             onMouseEnter={handleDropdownMouseEnter}
             onMouseLeave={handleDropdownMouseLeave}
-            className="w-full absolute border-t-[1px] border-[#F4F4F4] border-b-[1px] border-[#F4F4F4] py-[8px] flex justify-center gap-[4px] "
+            className={`w-full absolute border-t-[1px] border-b-[1px] py-[8px] flex justify-center gap-[4px] z-[100] ${
+              isDark
+                ? "bg-[#111111] border-[#2A2A2A]"
+                : "bg-white border-[#F4F4F4]"
+            }`}
           >
             {tradeItems.map((item, idx) => {
               const isActive = pathname === item.link;
@@ -647,8 +653,12 @@ export const Navbar = (props: Navbar) => {
                   }}
                   onKeyDown={handleNavKeyDown(item)}
                   className={`${
-                    isActive ? "bg-[#FFE6F2] text-[#FF007A]" : ""
-                  } cursor-pointer hover:text-[#FF007A] py-[8px] px-[16px] text-[14px] font-medium rounded-[8px] `}
+                    isActive
+                      ? "bg-[#FFE6F2] text-[#FF007A]"
+                      : isDark
+                      ? "text-white"
+                      : "text-[#1F1F1F]"
+                  } cursor-pointer hover:text-[#FF007A] py-[8px] px-[16px] text-[14px] font-medium rounded-[8px]`}
                   initial={{ opacity: 0, y: -6 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -6 }}

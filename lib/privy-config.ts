@@ -1,15 +1,6 @@
 import type { PrivyClientConfig } from "@privy-io/react-auth";
 import {
-  mainnet,
-  arbitrum,
-  avalanche,
   base,
-  bsc,
-  fantom,
-  gnosis,
-  optimism,
-  polygon,
-  zora,
 } from "wagmi/chains";
 
 export const privyConfig: PrivyClientConfig = {
@@ -27,16 +18,7 @@ export const privyConfig: PrivyClientConfig = {
   },
   defaultChain: base,
   supportedChains: [
-    mainnet,
-    arbitrum,
-    avalanche,
     base,
-    bsc,
-    fantom,
-    gnosis,
-    optimism,
-    polygon,
-    zora,
   ],
   walletConnectCloudProjectId:
     process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID,

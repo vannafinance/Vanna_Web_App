@@ -1,7 +1,8 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useAccount, useWalletClient, usePublicClient, useChainId } from "wagmi";
-import { Dropdown } from "../ui/dropdown";
+import Image from "next/image";
 import { DEPOSIT_PERCENTAGES, PERCENTAGE_COLORS } from "@/lib/constants/margin";
+import { iconPaths } from "@/lib/constants";
 import { InfoCard } from "../margin/info-card";
 import { Button } from "../ui/button";
 import { AmountBreakdownDialogue } from "../ui/amount-breakdown-dialogue";
@@ -11,12 +12,11 @@ import { useTheme } from "@/contexts/theme-context";
 import { EarnAsset } from "@/lib/types";
 import { supply } from "@/lib/utils/earn/transactions";
 import { useFetchUserWalletBalance, useFetchConvertToShares } from "@/lib/utils/earn/earnFetchers";
-import { SUPPORTED_TOKENS_BY_CHAIN } from "@/lib/utils/web3/token";
 import { useVaultData } from "@/lib/hooks/useVaultData";
 import { useNexus, useNexusBalanceBreakdown } from "@/lib/nexus";
 import { SUPPORTED_CHAIN_NAMES } from "@/lib/chains/chains";
 
-export const SupplyLiquidityTab = () => {
+export const SupplyLiquidityTab = ({ asset }: { asset: EarnAsset }) => {
    const { isDark } = useTheme();
 
   // Wagmi hooks
@@ -25,21 +25,8 @@ export const SupplyLiquidityTab = () => {
   const publicClient = usePublicClient();
   const chainId = useChainId();
 
-  // Get supported assets for current chain (asset isolation)
-  const supportedAssets = useMemo(() => {
-    const tokens = SUPPORTED_TOKENS_BY_CHAIN[chainId] || ["ETH", "USDC"];
-    return tokens.filter((t): t is EarnAsset => ["ETH", "USDC", "USDT"].includes(t));
-  }, [chainId]);
-
-  // Local state
-  const [selectedAsset, setSelectedAsset] = useState<EarnAsset>("ETH");
-
-  // Reset selected asset when chain changes if current asset not supported
-  useEffect(() => {
-    if (!supportedAssets.includes(selectedAsset)) {
-      setSelectedAsset(supportedAssets[0] || "ETH");
-    }
-  }, [chainId, supportedAssets, selectedAsset]);
+  // Asset is locked to the vault's token from the URL
+  const selectedAsset = asset;
 
   const [amount, setAmount] = useState<string>("");
   const [selectedPercentage, setSelectedPercentage] = useState<number>(0);
@@ -103,11 +90,8 @@ export const SupplyLiquidityTab = () => {
     return value.toFixed(decimals).replace(/\.?0+$/, "");
   };
 
-  // Effective balance: use Nexus unified balance when WB is selected and Nexus is ready
-  const effectiveBalance =
-    selectedBalance === "WB" && nexusReady
-      ? nexusUnifiedBalance
-      : walletBalance;
+  // WB = on-chain wallet balance, PB = portfolio balance (to be integrated later)
+  const effectiveBalance = walletBalance;
 
   const handlePercentageClick = (percent: number) => {
     setSelectedPercentage(percent);
@@ -165,6 +149,9 @@ export const SupplyLiquidityTab = () => {
         setTimeout(async () => {
           const balanceResult = await fetchWalletBalance();
           if (balanceResult) setWalletBalance(balanceResult.balanceFormatted);
+
+          // Notify position components to refetch
+          window.dispatchEvent(new CustomEvent("vanna:position-update"));
         }, 2000);
       } else {
         throw new Error(result.error || "Supply failed");
@@ -247,16 +234,18 @@ export const SupplyLiquidityTab = () => {
         }`}>
         <div className="w-full h-full flex flex-col gap-[44px] justify-between">
           <div className="w-full h-fit">
-            <label htmlFor="asset-select" className="sr-only">
-              Select Asset
-            </label>
-            <Dropdown
-              items={supportedAssets}
-              setSelectedOption={(val) => setSelectedAsset(val as EarnAsset)}
-              selectedOption={selectedAsset}
-              classname="w-fit gap-[4px] items-center"
-              dropdownClassname="w-full"
-            />
+            <div className="flex items-center gap-[8px]">
+              <Image
+                src={iconPaths[selectedAsset] || "/icons/eth-icon.png"}
+                alt={selectedAsset}
+                width={20}
+                height={20}
+                className="rounded-full"
+              />
+              <span className={`text-[16px] font-semibold ${isDark ? "text-white" : "text-[#181822]"}`}>
+                {selectedAsset}
+              </span>
+            </div>
           </div>
           <div className="w-full h-fit flex flex-col gap-[8px]">
             <div className="w-full h-fit">
@@ -274,9 +263,9 @@ export const SupplyLiquidityTab = () => {
                 step="any"
                 min="0"
                 placeholder="Enter amount"
-                disabled={loading}
+                disabled={!isConnected || loading}
                 className={`w-full h-fit placeholder:text-[#C7C7C7] text-[16px] font-medium outline-none ${isDark ? "text-white bg-[#111111]" : "bg-white"
-                  } ${loading ? "opacity-50" : ""}`}
+                  } ${!isConnected || loading ? "opacity-50" : ""}`}
                 aria-describedby="usd-value"
               />
             </div>
@@ -294,13 +283,13 @@ export const SupplyLiquidityTab = () => {
                 type="button"
                 onClick={() => handlePercentageClick(item)}
                 key={item}
-                disabled={loading || effectiveBalance <= 0}
+                disabled={!isConnected || loading || effectiveBalance <= 0}
                 className={`flex justify-center items-center cursor-pointer text-[14px] font-semibold w-fit h-[44px] rounded-[12px] p-[10px] ${selectedPercentage === item
                   ? `${PERCENTAGE_COLORS[item]} text-white`
                   : isDark
                     ? "bg-[#222222] text-white"
                     : "bg-[#F4F4F4] text-black"
-                  } ${loading || effectiveBalance <= 0 ? "opacity-50 cursor-not-allowed" : ""}`}
+                  } ${!isConnected || loading || effectiveBalance <= 0 ? "opacity-50 cursor-not-allowed" : ""}`}
                 aria-pressed={selectedPercentage === item}
               >
                 {item}%
@@ -313,7 +302,8 @@ export const SupplyLiquidityTab = () => {
               <button
                 type="button"
                 onClick={() => setSelectedBalance("PB")}
-                className={`w-[28px] h-fit rounded-[4px] p-[4px] text-[12px] font-medium cursor-pointer ${selectedBalance === "PB"
+                disabled={!isConnected}
+                className={`w-[28px] h-fit rounded-[4px] p-[4px] text-[12px] font-medium ${!isConnected ? "opacity-50 cursor-not-allowed" : "cursor-pointer"} ${selectedBalance === "PB"
                   ? "bg-[#F1EBFD] text-[#703AE6]"
                   : isDark
                     ? "bg-[#222222] text-white"
@@ -341,7 +331,8 @@ export const SupplyLiquidityTab = () => {
               <button
                 type="button"
                 onClick={() => setSelectedBalance("WB")}
-                className={`w-[28px] h-fit rounded-[4px] p-[4px] text-[12px] font-medium cursor-pointer ${selectedBalance === "WB"
+                disabled={!isConnected}
+                className={`w-[28px] h-fit rounded-[4px] p-[4px] text-[12px] font-medium ${!isConnected ? "opacity-50 cursor-not-allowed" : "cursor-pointer"} ${selectedBalance === "WB"
                   ? "bg-[#F1EBFD] text-[#703AE6]"
                   : isDark
                     ? "bg-[#222222] text-white"
@@ -362,13 +353,11 @@ export const SupplyLiquidityTab = () => {
                 disabled={selectedBalance !== "WB"}
               >
                 {selectedBalance === "WB"
-                  ? nexusReady && nexusUnifiedBalance > walletBalance
-                    ? "Unified Balance:"
-                    : "Wallet Balance:"
+                  ? "Wallet Balance:"
                   : "Balance:"}
               </button>
               <span className={isDark ? "text-white" : "text-[#363636]"}>
-                {effectiveBalance.toFixed(4)} {selectedAsset}
+                {isConnected ? `${effectiveBalance.toFixed(4)} ${selectedAsset}` : `-- ${selectedAsset}`}
               </span>
             </output>
           </div>

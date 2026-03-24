@@ -3,17 +3,18 @@ import { AnimatedTabs } from "../ui/animated-tabs";
 import { SupplyLiquidityTab } from "./supply-liquidity-tab";
 import { WithdrawLiquidity } from "./withdraw-liqudity";
 import { useTheme } from "@/contexts/theme-context";
+import { EarnAsset } from "@/lib/types";
 
 const tabs = [
   { label: "Supply Liquidity ", id: "supply-liquidity" },
   { label: "Withdraw Liquidity", id: "withdraw-liquidity" },
 ];
 
-export const Form = () => {
+export const Form = ({ asset }: { asset: EarnAsset }) => {
   const { isDark } = useTheme();
   const [activeTab, setActiveTab] = useState<string>("supply-liquidity");
   return (
-    <section 
+    <section
       className={`w-full max-w-[480px] h-fit rounded-[20px] border-[1px] p-[20px] flex flex-col gap-[20px] ${
         isDark ? "bg-[#222222]" : "bg-[#F4F4F4]"
       }`}
@@ -26,8 +27,8 @@ export const Form = () => {
           onTabChange={setActiveTab}
         />
       </nav>
-      {activeTab === "supply-liquidity" && <SupplyLiquidityTab />}
-      {activeTab === "withdraw-liquidity" && <WithdrawLiquidity />}
+      {activeTab === "supply-liquidity" && <SupplyLiquidityTab asset={asset} />}
+      {activeTab === "withdraw-liquidity" && <WithdrawLiquidity asset={asset} />}
     </section>
   );
 };
