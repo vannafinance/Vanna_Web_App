@@ -7,6 +7,9 @@ import { useCollateralBorrowStore } from "@/store/collateral-borrow-store";
 import { COIN_ICONS } from "@/lib/constants/margin";
 import { useTheme } from "@/contexts/theme-context";
 import { Position } from "@/lib/types";
+import { SpotSection } from "./spot-section";
+import { PerpsSection } from "./perps-section";
+import { FarmSection } from "./farm-section";
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
@@ -335,6 +338,12 @@ export const TraderTab = () => {
             tableBody={positionsTableBody}
           />
         </div>
+      ) : activeSubTab === "Spot" ? (
+        <SpotSection />
+      ) : activeSubTab === "Perps" ? (
+        <PerpsSection />
+      ) : activeSubTab === "Farm" ? (
+        <FarmSection />
       ) : (
         <div className={`w-full h-[300px] rounded-[16px] border-[1px] flex items-center justify-center ${
           isDark ? "bg-[#222222] border-[#333]" : "bg-[#f7f7f7] border-[#e2e2e2]"

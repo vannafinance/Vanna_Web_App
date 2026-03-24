@@ -5,10 +5,18 @@ import { depositData, netApyData } from "@/lib/constants/earn";
 import { AnimatedTabs } from "../ui/animated-tabs";
 import { ExpandableModal } from "../ui/expandable-modal";
 import { useTheme } from "@/contexts/theme-context";
-import { netVolumeData , netEarningsData } from "@/lib/constants/portfolio";
+import { netVolumeData, netEarningsData } from "@/lib/constants/portfolio";
 
 interface ChartProps {
-  type: "overall-deposit" | "net-apy" | "my-supply" | "deposit-apy" | "net-volume" | "net-profit-loss" | "farm" | "profitAndLoss";
+  type:
+    | "overall-deposit"
+    | "net-apy"
+    | "my-supply"
+    | "deposit-apy"
+    | "net-volume"
+    | "net-profit-loss"
+    | "farm"
+    | "profitAndLoss";
   currencyTab?: boolean;
   height?: number;
   containerWidth?: string;
@@ -36,7 +44,7 @@ const formatDate = (dateString: string): string => {
 // Helper function to filter data based on selected filter
 const filterDataByTimeRange = (
   data: Array<{ date: string; amount: number }>,
-  filter: string
+  filter: string,
 ): Array<{ date: string; amount: number }> => {
   const now = new Date();
   let startDate = new Date();
@@ -66,7 +74,7 @@ const filterDataByTimeRange = (
 // Helper function to filter data based on selected days
 const filterDataByDays = (
   data: Array<{ date: string; amount: number }>,
-  days: string
+  days: string,
 ): Array<{ date: string; amount: number }> => {
   const now = new Date();
   let startDate = new Date();
@@ -94,13 +102,25 @@ const filterDataByDays = (
   });
 };
 
-export const Chart = ({ type, currencyTab, height, containerWidth, containerHeight, heading, downtrend, uptrend, customData, supplyAPY, borrowAPY }: ChartProps) => {
+export const Chart = ({
+  type,
+  currencyTab,
+  height,
+  containerWidth,
+  containerHeight,
+  heading,
+  downtrend,
+  uptrend,
+  customData,
+  supplyAPY,
+  borrowAPY,
+}: ChartProps) => {
   const { isDark } = useTheme();
   const [selectedFilter, setSelectedFilter] = useState(filterOptions[0]);
   const [selectedCurrency, setSelectedCurrency] = useState<string>("usd");
   const [selectedDays, setSelectedDays] = useState<string>(dayOptions[3]);
   const [selectedDepositApy, setSelectedDepositApy] = useState<string>(
-    depositApyOptions[0]
+    depositApyOptions[0],
   );
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const [dynamicHeight, setDynamicHeight] = useState<number>(height || 206);
@@ -215,16 +235,20 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
   const chartTextColor = isDark ? "#FFFFFF" : "#181822";
 
   return (
-    <article className={`flex flex-col gap-[24px] rounded-[16px] p-[16px] border-[1px] ${
-      isDark ? "bg-transparent" : "bg-[#FFFFFF]"
-    } ${containerWidth} ${containerHeight}`}>
+    <article
+      className={`flex flex-col gap-[24px] rounded-[16px] p-[16px] border-[1px] ${
+        isDark ? "bg-transparent" : "bg-[#FFFFFF]"
+      } ${containerWidth} ${containerHeight}`}
+    >
       <header className="w-full h-fit flex justify-between flex-shrink-0">
         <div
           className={`w-full h-fit flex flex-col ${
             type === "deposit-apy" || type === "farm" ? "gap-[16px]" : ""
           }`}
         >
-          <h2 className={`text-[12px] font-semibold ${isDark ? "text-white" : ""}`}>
+          <h2
+            className={`text-[12px] font-semibold ${isDark ? "text-white" : ""}`}
+          >
             {type === "farm" ? (
               heading || "Farm"
             ) : type === "overall-deposit" ? (
@@ -258,10 +282,7 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
               >
-                <path
-                  d="M4 0L7.4641 6H0.535898L4 0Z"
-                  fill="#10B981"
-                />
+                <path d="M4 0L7.4641 6H0.535898L4 0Z" fill="#10B981" />
               </svg>
               <p className={`text-[12px] font-medium text-[#10B981]`}>
                 {uptrend}
@@ -277,10 +298,7 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
               >
-                <path
-                  d="M4 8L0.535898 2H7.4641L4 8Z"
-                  fill="#FC5457"
-                />
+                <path d="M4 8L0.535898 2H7.4641L4 8Z" fill="#FC5457" />
               </svg>
               <p className={`text-[12px] font-medium text-[#FC5457]`}>
                 {downtrend}
@@ -288,7 +306,9 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
             </div>
           )}
           {type !== "deposit-apy" && type !== "farm" && (
-            <p className={`w-full text-[20px] font-semibold ${isDark ? "text-white" : ""}`}>
+            <p
+              className={`w-full text-[20px] font-semibold ${isDark ? "text-white" : ""}`}
+            >
               $
               {totalValue.toLocaleString(undefined, {
                 minimumFractionDigits: 2,
@@ -298,7 +318,9 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
           )}
           {type === "deposit-apy" && (
             <div className="w-full h-fit flex flex-col gap-[4px]">
-              <p className={`text-[16px] font-semibold ${isDark ? "text-white" : ""}`}>
+              <p
+                className={`text-[16px] font-semibold ${isDark ? "text-white" : ""}`}
+              >
                 {selectedDepositApy === "Deposit APY"
                   ? supplyAPY != null && supplyAPY > 0
                     ? `${(supplyAPY * 100).toFixed(2)}%`
@@ -307,7 +329,10 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
                     ? `${(borrowAPY * 100).toFixed(2)}%`
                     : "0%"}
               </p>
-              <time className={`text-[12px] font-medium ${isDark ? "text-gray-400" : "text-[#5C5B5B]"}`} dateTime={new Date().toISOString()}>
+              <time
+                className={`text-[12px] font-medium ${isDark ? "text-gray-400" : "text-[#5C5B5B]"}`}
+                dateTime={new Date().toISOString()}
+              >
                 {new Date().toLocaleString("en-US", {
                   month: "2-digit",
                   day: "2-digit",
@@ -326,16 +351,15 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
               {currencyTab && (
                 <div className="w-[220px]">
                   <AnimatedTabs
-                  type="ghost"
-                  tabs={[
-                    { id: "usd", label: "USD" },
-                    { id: "usdc", label: "USDC" },
-                  ]}
-                  activeTab={selectedCurrency}
-                  onTabChange={(tabId: string) => setSelectedCurrency(tabId)}
-                />
+                    type="ghost"
+                    tabs={[
+                      { id: "usd", label: "USD" },
+                      { id: "usdc", label: "USDC" },
+                    ]}
+                    activeTab={selectedCurrency}
+                    onTabChange={(tabId: string) => setSelectedCurrency(tabId)}
+                  />
                 </div>
-                
               )}
               <div className="p-[10px] h-fit rounded-[6px] border-[1px]">
                 <Dropdown
@@ -349,7 +373,10 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
             </>
           )}
           {type === "deposit-apy" && (
-            <nav className="w-fit h-fit flex gap-[6px]" aria-label="Time Period Selection">
+            <nav
+              className="w-fit h-fit flex gap-[6px]"
+              aria-label="Time Period Selection"
+            >
               {dayOptions.map((item, idx) => {
                 return (
                   <button
@@ -360,8 +387,8 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
                       selectedDays === item
                         ? "text-white bg-[#703AE6]"
                         : isDark
-                        ? "text-white bg-[#1A1A1A] border-[1px]"
-                        : "text-black bg-white border-[1px]"
+                          ? "text-white bg-[#1A1A1A] border-[1px]"
+                          : "text-black bg-white border-[1px]"
                     }`}
                     aria-pressed={selectedDays === item}
                   >
@@ -383,10 +410,14 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
               <header className="w-full h-fit flex justify-between">
                 <div
                   className={`w-full h-fit flex flex-col ${
-                    type === "deposit-apy" || type === "farm" ? "gap-[16px]" : ""
+                    type === "deposit-apy" || type === "farm"
+                      ? "gap-[16px]"
+                      : ""
                   }`}
                 >
-                  <h2 className={`text-[12px] font-semibold ${isDark ? "text-white" : ""}`}>
+                  <h2
+                    className={`text-[12px] font-semibold ${isDark ? "text-white" : ""}`}
+                  >
                     {type === "farm" ? (
                       heading || "Farm"
                     ) : type === "overall-deposit" ? (
@@ -416,10 +447,7 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
                         fill="none"
                         xmlns="http://www.w3.org/2000/svg"
                       >
-                        <path
-                          d="M4 0L7.4641 6H0.535898L4 0Z"
-                          fill="#10B981"
-                        />
+                        <path d="M4 0L7.4641 6H0.535898L4 0Z" fill="#10B981" />
                       </svg>
                       <p className={`text-[12px] font-medium text-[#10B981]`}>
                         {uptrend}
@@ -435,10 +463,7 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
                         fill="none"
                         xmlns="http://www.w3.org/2000/svg"
                       >
-                        <path
-                          d="M4 8L0.535898 2H7.4641L4 8Z"
-                          fill="#FC5457"
-                        />
+                        <path d="M4 8L0.535898 2H7.4641L4 8Z" fill="#FC5457" />
                       </svg>
                       <p className={`text-[12px] font-medium text-[#FC5457]`}>
                         {downtrend}
@@ -446,7 +471,9 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
                     </div>
                   )}
                   {type !== "deposit-apy" && type !== "farm" && (
-                    <p className={`w-full text-[20px] font-semibold ${isDark ? "text-white" : ""}`}>
+                    <p
+                      className={`w-full text-[20px] font-semibold ${isDark ? "text-white" : ""}`}
+                    >
                       $
                       {totalValue.toLocaleString(undefined, {
                         minimumFractionDigits: 2,
@@ -456,15 +483,22 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
                   )}
                   {type === "deposit-apy" && (
                     <div className="w-full h-fit flex flex-col gap-[4px]">
-                      <p className={`text-[16px] font-semibold ${isDark ? "text-white" : ""}`}>0%</p>
-                      <time className={`text-[12px] font-medium ${isDark ? "text-gray-400" : "text-[#5C5B5B]"}`} dateTime="2025-03-11T15:14:00">
+                      <p
+                        className={`text-[16px] font-semibold ${isDark ? "text-white" : ""}`}
+                      >
+                        0%
+                      </p>
+                      <time
+                        className={`text-[12px] font-medium ${isDark ? "text-gray-400" : "text-[#5C5B5B]"}`}
+                        dateTime="2025-03-11T15:14:00"
+                      >
                         03/11/2025 15:14
                       </time>
                     </div>
                   )}
                 </div>
                 <div className="flex items-top gap-[8px]">
-                  {type !== "deposit-apy" &&  (
+                  {type !== "deposit-apy" && (
                     <>
                       {currencyTab && (
                         <AnimatedTabs
@@ -484,14 +518,19 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
                           dropdownClassname="text-[12px] font-semibold w-full"
                           classname="text-[12px] font-semibold gap-[4px]"
                           items={filterOptions}
-                          setSelectedOption={(value) => setSelectedFilter(value)}
+                          setSelectedOption={(value) =>
+                            setSelectedFilter(value)
+                          }
                           selectedOption={selectedFilter}
                         />
                       </div>
                     </>
                   )}
                   {type === "deposit-apy" && (
-                    <nav className="w-fit h-fit flex gap-[6px]" aria-label="Time Period Selection">
+                    <nav
+                      className="w-fit h-fit flex gap-[6px]"
+                      aria-label="Time Period Selection"
+                    >
                       {dayOptions.map((item, idx) => {
                         return (
                           <button
@@ -502,8 +541,8 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
                               selectedDays === item
                                 ? "text-white bg-[#703AE6]"
                                 : isDark
-                                ? "text-white bg-[#1A1A1A] border-[1px]"
-                                : "text-black bg-white border-[1px]"
+                                  ? "text-white bg-[#1A1A1A] border-[1px]"
+                                  : "text-black bg-white border-[1px]"
                             }`}
                             aria-pressed={selectedDays === item}
                           >
@@ -529,15 +568,21 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
                   textColor={chartTextColor}
                 />
               ) : (
-                <div className={`w-full h-[450px] flex flex-col items-center justify-center gap-3`}>
-                  <div className={`text-4xl ${isDark ? "text-gray-700" : "text-gray-300"}`}>
-                    📊
-                  </div>
-                  <p className={`text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-                    {type === "my-supply" ? "No supply position yet" : "No data available"}
+                <div
+                  className={`w-full h-[450px] flex flex-col items-center justify-center gap-3`}
+                >
+
+                  <p
+                    className={`text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                  >
+                    {type === "my-supply"
+                      ? "No supply position yet"
+                      : "No data available"}
                   </p>
                   {type === "my-supply" && (
-                    <p className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>
+                    <p
+                      className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}
+                    >
                       Supply assets to start earning
                     </p>
                   )}
@@ -550,7 +595,14 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
       <figure
         ref={chartContainerRef}
         className={`w-full ${containerHeight === "h-full" ? "flex-1 min-h-0" : ""}`}
-        style={containerHeight !== "h-full" ? { height: height ? `${height}px` : "203px", minHeight: height ? `${height}px` : "203px" } : {}}
+        style={
+          containerHeight !== "h-full"
+            ? {
+                height: height ? `${height}px` : "203px",
+                minHeight: height ? `${height}px` : "203px",
+              }
+            : {}
+        }
       >
         {Object.keys(chartData).length > 0 ? (
           <ReusableChart
@@ -563,15 +615,25 @@ export const Chart = ({ type, currencyTab, height, containerWidth, containerHeig
             textColor={chartTextColor}
           />
         ) : (
-          <div className={`w-full ${dynamicHeight?`h-[${dynamicHeight}px]` : "h-[393px]"} flex flex-col items-center justify-center gap-3`}>
-            <div className={`text-4xl ${isDark ? "text-gray-700" : "text-gray-300"}`}>
+          <div
+            className={`w-full ${dynamicHeight ? `h-[${dynamicHeight}px]` : "h-[393px]"} flex flex-col items-center justify-center gap-3`}
+          >
+            <div
+              className={`text-4xl ${isDark ? "text-gray-700" : "text-gray-300"}`}
+            >
               📊
             </div>
-            <p className={`text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-              {type === "my-supply" ? "No supply position yet" : "No data available"}
+            <p
+              className={`text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}
+            >
+              {type === "my-supply"
+                ? "No supply position yet"
+                : "No data available"}
             </p>
             {type === "my-supply" && (
-              <p className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>
+              <p
+                className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}
+              >
                 Supply assets to start earning
               </p>
             )}
