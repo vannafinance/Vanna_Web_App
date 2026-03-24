@@ -20,8 +20,9 @@ import Image from "next/image";
 import { useCollateralBorrowStore } from "@/store/collateral-borrow-store";
 import { MBSelectionGrid } from "./mb-selection-grid";
 import { useMarginAccountInfoStore } from "@/store/margin-account-info-store";
-import { useUserStore } from "@/store/user";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
+import { usePrivy, useWallets } from "@privy-io/react-auth";
+import { useWalletConnection } from "@/lib/hooks/useWalletConnection";
 import AccountManager from "../../abi/vanna/out/out/AccountManager.sol/AccountManager.json";
 import Registry from "../../abi/vanna/out/out/Registry.sol/Registry.json";
 import ERC20 from "../../abi/vanna/out/out/ERC20.sol/ERC20.json"
@@ -89,7 +90,9 @@ export const LeverageAssetsTab = () => {
   const [borrowItems, setBorrowItems] = useState<BorrowInfo[]>([]);
   const [borrowAsset, setBorrowAsset] = useState<string>("USDC");
   const [leverage, setLeverage] = useState(2);
-  const address = useUserStore((state) => state.address);
+  const { login } = usePrivy();
+  // Real-time connection state — not the persisted Zustand store
+  const { isConnected: isWalletConnected, address } = useWalletConnection();
   const marginState = useMarginStore((s) => s.marginState);
   const [marginAccountAddress, setMarginAccountAddress] = useState<`0x${string}` | undefined>(undefined);
   // Initialize prices with stablecoin defaults
@@ -99,9 +102,21 @@ export const LeverageAssetsTab = () => {
   });
 
   // Wagmi hooks
-  const { chainId } = useAccount();
+  const { chainId: wagmiChainId } = useAccount();
+  const { wallets: privyWallets } = useWallets();
   const { data: walletClient } = useWalletClient();
   const publicClient = usePublicClient();
+
+  // Resolve chainId: wagmi (EOA wallets) OR Privy embedded wallet
+  // Privy chainId is CAIP-2 format e.g. "eip155:8453" — parse the numeric part
+  const privyChainId = (() => {
+    const raw = privyWallets[0]?.chainId;
+    if (!raw) return undefined;
+    const parts = raw.split(":");
+    const num = parseInt(parts[parts.length - 1]);
+    return isNaN(num) ? undefined : num;
+  })();
+  const chainId = wagmiChainId ?? privyChainId;
 
   // Loading states
   const [loading, setLoading] = useState(false);
@@ -231,16 +246,35 @@ export const LeverageAssetsTab = () => {
 
       setLoadingMessage("Preparing transaction...");
 
+      // Privy embedded wallets require explicit gas — simulateContract returns gas=0
+      // causing "intrinsic gas too low" / "gas required exceeds allowance (0)" errors.
+      let gasLimit: bigint = 500000n; // safe fallback for openAccount
+      try {
+        const est = await publicClient.estimateGas({
+          account: address as `0x${string}`,
+          to: addressList.accountManagerContractAddress as `0x${string}`,
+          data: encodeFunctionData({
+            abi: AccountManager.abi as any,
+            functionName: "openAccount",
+            args: [address],
+          }),
+        });
+        gasLimit = (est * 130n) / 100n; // +30% buffer
+      } catch {
+        // use 500000n fallback
+      }
+
       const { request } = await publicClient.simulateContract({
         address: addressList.accountManagerContractAddress as `0x${string}`,
         abi: AccountManager.abi,
         functionName: "openAccount",
         args: [address],
-        account: address,
+        account: address as `0x${string}`,
+        gas: gasLimit,
       });
 
       setLoadingMessage("Please confirm transaction in your wallet...");
-      const txHash = await walletClient.writeContract(request);
+      const txHash = await walletClient.writeContract({ ...request, gas: gasLimit });
 
       setLoadingMessage("Transaction submitted. Waiting for confirmation...");
       await publicClient.waitForTransactionReceipt({ hash: txHash });
@@ -2230,21 +2264,23 @@ export const LeverageAssetsTab = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.4, delay: 0.3, ease: "easeOut" }}
         >
-          <Button
-            disabled={!address || loading}
-            size="large"
-            text={
-              loading
-                ? "Processing..."
-                : !address
-                  ? "Connect Wallet"
-                  : hasMarginAccount
-                    ? "Deposit & Earn"
-                    : "Create your Margin Account"
-            }
-            type="gradient"
-            onClick={handlecreateAccount}
-          />
+          {!isWalletConnected ? (
+            /* Disconnected — grey button matching reference UI pattern */
+            <button
+              onClick={login}
+              className="w-full py-[14px] rounded-[12px] text-[15px] font-semibold text-white bg-[#AAAAAA] hover:bg-[#999999] active:scale-[0.99] transition-all cursor-pointer"
+            >
+              Connect Wallet
+            </button>
+          ) : (
+            <Button
+              disabled={loading}
+              size="large"
+              text={loading ? "Processing..." : hasMarginAccount ? "Deposit & Earn" : "Create your Margin Account"}
+              type="gradient"
+              onClick={handlecreateAccount}
+            />
+          )}
         </motion.section>
       </motion.div>
 

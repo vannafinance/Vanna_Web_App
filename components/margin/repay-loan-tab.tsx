@@ -36,6 +36,7 @@ import { Dropdown } from "../ui/dropdown";
 import { Popup } from "@/components/ui/popup";
 import { useMarginStore } from "@/store/margin-account-state";
 import { useAccount, usePublicClient } from "wagmi";
+import { useWalletConnection } from "@/lib/hooks/useWalletConnection";
 import { useBalanceStore } from "@/store/balance-store";
 import { SUPPORTED_TOKENS_BY_CHAIN } from "@/lib/utils/web3/token";
 import { useWalletClient } from "wagmi";
@@ -439,6 +440,8 @@ export const RepayLoanTab = () => {
     }
   };
 
+  const { isConnected: isWalletConnected, login: privyLogin } = useWalletConnection();
+
   return (
     <motion.section
       className="w-full flex flex-col gap-[24px] pt-8"
@@ -638,13 +641,22 @@ export const RepayLoanTab = () => {
             whileHover={isDisabled ? {} : { scale: 1.02 }}
             whileTap={isDisabled ? {} : { scale: 0.98 }}
           >
-            <Button
-              text="Pay Now"
-              size="large"
-              type="gradient"
-              onClick={handlePayNowClick}
-              disabled={isDisabled}
-            />
+            {!isWalletConnected ? (
+              <button
+                onClick={privyLogin}
+                className="w-full py-[14px] rounded-[12px] text-[15px] font-semibold text-white bg-[#AAAAAA] hover:bg-[#999999] transition-all cursor-pointer"
+              >
+                Connect Wallet
+              </button>
+            ) : (
+              <Button
+                text="Pay Now"
+                size="large"
+                type="gradient"
+                onClick={handlePayNowClick}
+                disabled={isDisabled}
+              />
+            )}
           </motion.div>
 
           <motion.div

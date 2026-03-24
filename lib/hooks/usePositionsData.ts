@@ -310,11 +310,15 @@ export function usePositionsData(): UsePositionsDataReturn {
           }
 
           // ── SPLIT: Create one Position per borrow asset ──
+          // LTV = totalBorrowUsd / collateralUsd × 100 — account-wide, honest metric.
+          // Max LTV enforced by protocol = 90%. Comparable across all collateral types.
+          const accountLtv = collateralUsdValue > 0
+            ? Math.round((totalBorrowUsd / collateralUsdValue) * 100 * 10) / 10
+            : 0;
+
           if (allBorrows.length > 0) {
             for (const borrow of allBorrows) {
               const borrowUsd = borrow.usdValue;
-              const equity = collateralUsdValue - borrowUsd;
-              const leverage = equity > 0 ? Math.round((collateralUsdValue / equity) * 10) / 10 : 0;
               const interestAccrued = Math.round(borrowUsd * 0.004 * 100) / 100;
               const displaySym = borrow.assetData.asset === "WETH" ? "ETH" : borrow.assetData.asset;
 
@@ -327,7 +331,7 @@ export function usePositionsData(): UsePositionsDataReturn {
                 collateralUsdValue: Math.round(collateralUsdValue * 100) / 100,
                 collaterals,
                 borrowed: [borrow],
-                leverage,
+                ltv: accountLtv,
                 interestAccrued,
                 isOpen: true,
                 user: address,
@@ -351,7 +355,7 @@ export function usePositionsData(): UsePositionsDataReturn {
               collateralUsdValue: Math.round(collateralUsdValue * 100) / 100,
               collaterals,
               borrowed: [],
-              leverage: 0,
+              ltv: 0,
               interestAccrued: 0,
               isOpen: collateralUsdValue > 0.01,
               user: address,

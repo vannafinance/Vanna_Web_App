@@ -36,7 +36,7 @@ export interface Position {
 
   borrowed: BorrowInfo[];
 
-  leverage: number;
+  ltv: number;              // Loan-to-Value: totalBorrowUsd / collateralUsd × 100 (%)
   interestAccrued: number;
 
   isOpen: boolean;

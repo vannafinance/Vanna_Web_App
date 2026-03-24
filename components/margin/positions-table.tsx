@@ -19,8 +19,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { Button } from "../ui/button";
 import { usePositionsData } from "@/lib/hooks/usePositionsData";
-import { usePositionHistory, PositionHistoryItem } from "@/lib/hooks/usePositionHistory";
-import { useVaultActivityData } from "@/lib/hooks/useVaultActivityData";
+import { usePositionHistory } from "@/lib/hooks/usePositionHistory";
 import { AnimatedTabs } from "../ui/animated-tabs";
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useMarginAccountInfoStore } from "@/store/margin-account-info-store";
@@ -83,7 +82,6 @@ export const Positionstable = ({ onRepayClick, onOpenPositionClick }: Positionst
 
   const { positions, isLoading, error, refetch } = usePositionsData();
   const { history, isLoading: historyLoading, error: historyError, refetch: refetchHistory } = usePositionHistory();
-  const { transactions: vaultTxs } = useVaultActivityData("ETH");
 
   const [activeTab, setActiveTab] = useState<string>("currentPositions");
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -97,26 +95,6 @@ export const Positionstable = ({ onRepayClick, onOpenPositionClick }: Positionst
       return positions.filter((pos: Position) => pos.isOpen === false);
     }
   }, [positions, activeTab]);
-
-  const combinedHistory = useMemo(() => {
-    if (history.length > 0) return history;
-    if (vaultTxs.length > 0) {
-      return vaultTxs.map((tx): PositionHistoryItem => ({
-        date: tx.date,
-        time: tx.time,
-        type: tx.type as any,
-        token: "",
-        tokenSymbol: tx.asset,
-        amount: tx.amount,
-        amountUsd: tx.amountUsd,
-        account: tx.fullAddress || tx.userAddress,
-        owner: tx.fullAddress || tx.userAddress,
-        txHash: tx.txHash,
-        blockNumber: BigInt(tx.blockNumber || "0"),
-      }));
-    }
-    return [];
-  }, [history, vaultTxs]);
 
   const totalPages = Math.ceil(filteredPositions.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -289,7 +267,7 @@ export const Positionstable = ({ onRepayClick, onOpenPositionClick }: Positionst
           )}
         </div>
 
-        {/* Leverage column */}
+        {/* LTV column */}
         <motion.div
           className={`flex flex-col justify-center w-full py-[16px] px-[12px] text-[14px] font-semibold ${
             isDark ? "text-white" : ""
@@ -299,9 +277,9 @@ export const Positionstable = ({ onRepayClick, onOpenPositionClick }: Positionst
           viewport={{ once: true }}
           transition={{ duration: 0.3, delay: idx * 0.08 + 0.2 }}
         >
-          {item.leverage > 0 ? (
-            <span className={item.leverage >= 5 ? "text-[#E53935]" : item.leverage >= 3 ? "text-[#F57F17]" : "text-[#2E7D32]"}>
-              {item.leverage}x
+          {item.ltv > 0 ? (
+            <span className={item.ltv >= 80 ? "text-[#E53935]" : item.ltv >= 60 ? "text-[#F57F17]" : "text-[#2E7D32]"}>
+              {item.ltv}%
             </span>
           ) : (
             <span className={isDark ? "text-[#666666]" : "text-[#A0A0A0]"}>-</span>
@@ -425,7 +403,7 @@ export const Positionstable = ({ onRepayClick, onOpenPositionClick }: Positionst
             <Button size="small" type="ghost" text="Retry" onClick={refetchHistory} disabled={false}/>
           </section>
         ) :
-        combinedHistory.length > 0 ? (
+        history.length > 0 ? (
           <section className="rounded-[12px] w-full">
             <ul className="flex" role="row">
               {HISTORY_TABLE_HEADINGS.map((item, idx) => (
@@ -445,7 +423,7 @@ export const Positionstable = ({ onRepayClick, onOpenPositionClick }: Positionst
             </ul>
 
             <section className="flex flex-col gap-[10px] max-h-[400px] overflow-y-auto pr-[4px] thin-scrollbar">
-              {combinedHistory.map((item, idx) => (
+              {history.map((item, idx) => (
                 <motion.article
                   key={`${item.txHash}-${idx}`}
                   className={`flex border-[1px] rounded-[12px] w-full ${

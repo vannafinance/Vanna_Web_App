@@ -6,7 +6,7 @@
 export const TABLE_ROW_HEADINGS = [
   "Collateral Deposited",
   "Borrowed Asset",
-  "Leverage",
+  "LTV",
   "Health",
   "Interest Accrued",
   "Action",
