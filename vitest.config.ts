@@ -6,7 +6,10 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: ["./tests/setup.ts"],
-    include: ["tests/**/*.test.ts"],
+    include: [
+      "tests/unit/**/*.test.ts",
+      "tests/integration/**/*.test.ts",
+    ],
     coverage: {
       provider: "v8",
       reporter: ["text", "html", "json-summary"],
@@ -14,6 +17,9 @@ export default defineConfig({
         "lib/utils/earn/calculations.ts",
         "lib/utils/earn/transactions.ts",
         "lib/utils/earn/earnMulticall.ts",
+        "lib/utils/margin/calculations.ts",
+        "lib/utils/margin/transactions.ts",
+        "lib/utils/margin/marginMulticall.ts",
         "lib/utils/web3/**/*.ts",
         "lib/utils/prices/priceFeed.ts",
         "store/**/*.ts",
