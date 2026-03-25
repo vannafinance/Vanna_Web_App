@@ -6,7 +6,8 @@
     "dev": "next dev --experimental-https",
     "build": "next build --webpack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "vercel-install": "npm install --force"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.78.0",

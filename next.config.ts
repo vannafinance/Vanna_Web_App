@@ -14,7 +14,6 @@ const nextConfig: NextConfig = {
   turbopack: {},
   // Webpack config for production builds (--webpack flag)
   webpack: (config) => {
-    // Handle Node.js module fallbacks for browser environment
     config.resolve.fallback = {
       ...config.resolve.fallback,
       fs: false,
@@ -25,7 +24,6 @@ const nextConfig: NextConfig = {
       "@react-native-async-storage/async-storage": false,
     };
 
-    // Ignore problematic files in node_modules (thread-stream test files)
     config.module.rules.push({
       test: /\.(md|zip|sh|yml)$/,
       include: /node_modules/,
@@ -39,7 +37,6 @@ const nextConfig: NextConfig = {
     unoptimized: false,
   },
   typescript: {
-    // Type errors are non-breaking (string indexing on Records) — safe to skip for deploy
     ignoreBuildErrors: true,
   },
   serverExternalPackages: [
