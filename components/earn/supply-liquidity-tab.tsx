@@ -15,6 +15,8 @@ import { useFetchUserWalletBalance, useFetchConvertToShares } from "@/lib/utils/
 import { useVaultData } from "@/lib/hooks/useVaultData";
 import { useNexus, useNexusBalanceBreakdown } from "@/lib/nexus";
 import { SUPPORTED_CHAIN_NAMES } from "@/lib/chains/chains";
+import { SwitchNetworkButton } from "@/components/ui/switch-network-button";
+import { useRequiredNetwork } from "@/lib/hooks/useRequiredNetwork";
 
 export const SupplyLiquidityTab = ({ asset }: { asset: EarnAsset }) => {
    const { isDark } = useTheme();
@@ -52,6 +54,8 @@ export const SupplyLiquidityTab = ({ asset }: { asset: EarnAsset }) => {
     isOpen: false,
     status: "pending",
   });
+
+  const { isWrongNetwork } = useRequiredNetwork();
 
   // ✅ Use vault data from store (already cached via multicall)
   const { vault } = useVaultData(selectedAsset);
@@ -372,13 +376,17 @@ export const SupplyLiquidityTab = ({ asset }: { asset: EarnAsset }) => {
         />
       </section>
 
-      <Button
-        text={getButtonText()}
-        size="large"
-        type="gradient"
-        disabled={isButtonDisabled}
-        onClick={handleSupply}
-      />
+      {isWrongNetwork ? (
+        <SwitchNetworkButton />
+      ) : (
+        <Button
+          text={getButtonText()}
+          size="large"
+          type="gradient"
+          disabled={isButtonDisabled}
+          onClick={handleSupply}
+        />
+      )}
 
 
 

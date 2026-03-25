@@ -161,7 +161,7 @@ const networkOptions = [
     id: "base",
     name: "Base",
     icon: "/icons/base-icon.svg",
-    chainId: 8453, // 0x2105 in hex
+    chainId: 8453,
     rpcUrl: "https://mainnet.base.org",
     blockExplorerUrl: "https://basescan.org",
   },

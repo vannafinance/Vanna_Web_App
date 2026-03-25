@@ -1,36 +1,32 @@
 /**
  * TEST SUITE: Margin Account Calculations
  *
- * Tests all margin protocol math utilities:
- *  - Health Factor (HF) calculation
- *  - Loan-to-Value (LTV) ratio
- *  - Leverage calculation
- *  - Liquidation price estimation
- *  - Max borrow / max withdraw limits
- *  - HF status warnings and colors
- *  - Position simulation (deposit, borrow, withdraw, repay)
- *  - Borrow/Withdraw validation
+ * Tests all margin protocol math utilities aligned with RiskEngine contract:
+ *   isAccountHealthy = getBalance(account) / getBorrows(account) > balanceToBorrowThreshold()
+ *   balanceToBorrowThreshold() default = 1.2
  *
- * These tests are critical for auditing to ensure:
- *  - Correct liquidation thresholds (90% collateral factor)
- *  - Safe position boundaries are enforced
- *  - Edge cases (zero collateral, zero debt, underwater positions) are handled
+ * Normalized HF = (collateral / debt) / threshold
+ *   HF > 1 = Safe, HF <= 1 = Liquidatable
+ *
+ * MAX_LTV = 1 / threshold = 1/1.2 ≈ 83.33%
  */
 
 import { describe, it, expect } from "vitest";
 import marginCalc from "@/lib/utils/margin/calculations";
+
+const THRESHOLD = 1.2;
 
 // ──────────────────────────────────────────────
 // 1. Protocol Constants
 // ──────────────────────────────────────────────
 
 describe("PROTOCOL_CONSTANTS", () => {
-  it("has correct collateral factor (90%)", () => {
-    expect(marginCalc.PROTOCOL_CONSTANTS.COLLATERAL_FACTOR).toBe(0.9);
+  it("has correct balanceToBorrowThreshold (1.2)", () => {
+    expect(marginCalc.PROTOCOL_CONSTANTS.BALANCE_TO_BORROW_THRESHOLD).toBe(1.2);
   });
 
-  it("has correct MAX_LTV (90%)", () => {
-    expect(marginCalc.PROTOCOL_CONSTANTS.MAX_LTV).toBe(0.9);
+  it("has correct MAX_LTV derived from threshold (1/1.2 ≈ 0.8333)", () => {
+    expect(marginCalc.PROTOCOL_CONSTANTS.MAX_LTV).toBeCloseTo(1 / 1.2, 5);
   });
 
   it("has correct liquidation bonus (5%)", () => {
@@ -65,8 +61,6 @@ describe("calcCollateralUsd", () => {
   });
 
   it("handles items with zero/undefined usd", () => {
-    const items = [{ usd: 100 }, { usd: 0 }, { usd: undefined as any }];
-    // usd: undefined → NaN, sum becomes NaN
     expect(marginCalc.calcCollateralUsd([{ usd: 100 }, { usd: 0 }])).toBe(100);
   });
 });
@@ -83,13 +77,13 @@ describe("calcBorrowUsd", () => {
 });
 
 // ──────────────────────────────────────────────
-// 3. Health Factor
+// 3. Health Factor (normalized: (coll/debt) / threshold)
 // ──────────────────────────────────────────────
 
 describe("calcHF", () => {
-  it("calculates HF correctly: (2000 * 0.9) / 1500 = 1.2", () => {
+  it("calculates normalized HF: (2000/1500) / 1.2 ≈ 1.111", () => {
     const hf = marginCalc.calcHF(2000, 1500);
-    expect(hf).toBeCloseTo(1.2, 5);
+    expect(hf).toBeCloseTo((2000 / 1500) / THRESHOLD, 5);
   });
 
   it("returns Infinity when debt is 0", () => {
@@ -105,19 +99,19 @@ describe("calcHF", () => {
   });
 
   it("HF = 1.0 exactly at liquidation boundary", () => {
-    // collateral * 0.9 / debt = 1 → collateral = debt / 0.9
-    const debt = 900;
-    const collateral = debt / 0.9; // 1000
+    // (coll / debt) / 1.2 = 1 → coll / debt = 1.2 → coll = debt * 1.2
+    const debt = 1000;
+    const collateral = debt * THRESHOLD; // 1200
     expect(marginCalc.calcHF(collateral, debt)).toBeCloseTo(1.0, 5);
   });
 
   it("HF < 1 means position is liquidatable", () => {
-    // $900 collateral, $1000 debt → HF = (900 * 0.9) / 1000 = 0.81
-    expect(marginCalc.calcHF(900, 1000)).toBeLessThan(1.0);
+    // $1100 coll, $1000 debt → rawRatio = 1.1, HF = 1.1/1.2 = 0.917
+    expect(marginCalc.calcHF(1100, 1000)).toBeLessThan(1.0);
   });
 
   it("HF > 1 means position is safe", () => {
-    // $5000 collateral, $2000 debt → HF = (5000 * 0.9) / 2000 = 2.25
+    // $5000 coll, $2000 debt → rawRatio = 2.5, HF = 2.5/1.2 = 2.083
     expect(marginCalc.calcHF(5000, 2000)).toBeGreaterThan(1.0);
   });
 });
@@ -164,17 +158,14 @@ describe("calcLTVPercent", () => {
 
 describe("calcLeverage", () => {
   it("1x leverage with no debt", () => {
-    // collateral = 1000, debt = 0, equity = 1000, leverage = 1000/1000 = 1
     expect(marginCalc.calcLeverage(1000, 0)).toBeCloseTo(1.0, 5);
   });
 
   it("2x leverage: collateral=2000, debt=1000", () => {
-    // equity = 2000 - 1000 = 1000, leverage = 2000/1000 = 2
     expect(marginCalc.calcLeverage(2000, 1000)).toBeCloseTo(2.0, 5);
   });
 
   it("5x leverage: collateral=5000, debt=4000", () => {
-    // equity = 1000, leverage = 5000/1000 = 5
     expect(marginCalc.calcLeverage(5000, 4000)).toBeCloseTo(5.0, 5);
   });
 
@@ -213,9 +204,9 @@ describe("calcLeverageFromLTV", () => {
 describe("calcLiquidationPrice", () => {
   it("calculates liquidation price correctly", () => {
     // debt=$1500, collateralAmount=1 ETH, currentPrice=$2000
-    // liqPrice = 1500 / (1 * 0.9) = 1666.67
+    // liqPrice = (1500 * 1.2) / 1 = 1800
     const liqPrice = marginCalc.calcLiquidationPrice(1500, 1, 2000);
-    expect(liqPrice).toBeCloseTo(1666.67, 1);
+    expect(liqPrice).toBeCloseTo(1800, 1);
   });
 
   it("returns 0 when no debt", () => {
@@ -234,10 +225,10 @@ describe("calcLiquidationPrice", () => {
 describe("calcLiquidationPriceDropPercent", () => {
   it("calculates percentage drop to liquidation", () => {
     // debt=$1500, collAmount=1 ETH, currentPrice=$2000
-    // liqPrice = 1666.67
-    // drop = ((2000 - 1666.67) / 2000) * 100 = 16.67%
+    // liqPrice = 1800
+    // drop = ((2000 - 1800) / 2000) * 100 = 10%
     const drop = marginCalc.calcLiquidationPriceDropPercent(1500, 1, 2000);
-    expect(drop).toBeCloseTo(16.67, 0);
+    expect(drop).toBeCloseTo(10, 0);
   });
 
   it("returns 100% buffer when no debt", () => {
@@ -246,9 +237,9 @@ describe("calcLiquidationPriceDropPercent", () => {
   });
 
   it("returns 0% when already at liquidation price", () => {
-    // debt=$900, collAmount=1 ETH, currentPrice=$1000
-    // liqPrice = 900 / (1 * 0.9) = 1000 → drop = 0%
-    const drop = marginCalc.calcLiquidationPriceDropPercent(900, 1, 1000);
+    // debt=$1000, collAmount=1 ETH, currentPrice=$1200
+    // liqPrice = (1000 * 1.2) / 1 = 1200 → drop = 0%
+    const drop = marginCalc.calcLiquidationPriceDropPercent(1000, 1, 1200);
     expect(drop).toBeCloseTo(0, 1);
   });
 });
@@ -259,23 +250,23 @@ describe("calcLiquidationPriceDropPercent", () => {
 
 describe("calcMaxBorrow", () => {
   it("calculates max additional borrowing", () => {
-    // collateral=$2000, debt=$1500, maxDebt = 2000*0.9 = 1800
-    // maxBorrow = 1800 - 1500 = 300
-    expect(marginCalc.calcMaxBorrow(2000, 1500)).toBeCloseTo(300, 2);
+    // collateral=$2000, debt=$1500, maxDebt = 2000/1.2 = 1666.67
+    // maxBorrow = 1666.67 - 1500 = 166.67
+    expect(marginCalc.calcMaxBorrow(2000, 1500)).toBeCloseTo(166.67, 1);
   });
 
   it("returns 0 when already at max LTV", () => {
-    // collateral=$1000, debt=$900 → maxDebt = 900, maxBorrow = 0
-    expect(marginCalc.calcMaxBorrow(1000, 900)).toBeCloseTo(0, 2);
+    // collateral=$1200, debt=$1000 → maxDebt = 1200/1.2 = 1000, maxBorrow = 0
+    expect(marginCalc.calcMaxBorrow(1200, 1000)).toBeCloseTo(0, 2);
   });
 
   it("returns full capacity when no debt", () => {
-    // collateral=$5000, debt=$0 → maxBorrow = 5000*0.9 = 4500
-    expect(marginCalc.calcMaxBorrow(5000, 0)).toBeCloseTo(4500, 2);
+    // collateral=$5000, debt=$0 → maxBorrow = 5000/1.2 = 4166.67
+    expect(marginCalc.calcMaxBorrow(5000, 0)).toBeCloseTo(5000 / THRESHOLD, 1);
   });
 
   it("returns 0 when over-leveraged", () => {
-    // collateral=$1000, debt=$1000 → maxDebt = 900, maxBorrow = max(0, 900-1000) = 0
+    // collateral=$1000, debt=$1000 → maxDebt = 833.33, maxBorrow = max(0, 833.33-1000) = 0
     expect(marginCalc.calcMaxBorrow(1000, 1000)).toBe(0);
   });
 });
@@ -283,9 +274,9 @@ describe("calcMaxBorrow", () => {
 describe("calcMaxWithdraw", () => {
   it("calculates max withdrawable collateral", () => {
     // collateral=$2000, debt=$900
-    // minCollateral = 900/0.9 = 1000
-    // maxWithdraw = 2000 - 1000 = 1000
-    expect(marginCalc.calcMaxWithdraw(2000, 900)).toBeCloseTo(1000, 2);
+    // minCollateral = 900 * 1.2 = 1080
+    // maxWithdraw = 2000 - 1080 = 920
+    expect(marginCalc.calcMaxWithdraw(2000, 900)).toBeCloseTo(920, 2);
   });
 
   it("returns full collateral when no debt", () => {
@@ -293,12 +284,12 @@ describe("calcMaxWithdraw", () => {
   });
 
   it("returns 0 when collateral equals minimum required", () => {
-    // collateral=$1000, debt=$900 → minColl = 1000, maxWithdraw = 0
-    expect(marginCalc.calcMaxWithdraw(1000, 900)).toBeCloseTo(0, 2);
+    // collateral=$1200, debt=$1000 → minColl = 1000*1.2 = 1200, maxWithdraw = 0
+    expect(marginCalc.calcMaxWithdraw(1200, 1000)).toBeCloseTo(0, 2);
   });
 
   it("returns 0 when under-collateralized", () => {
-    // collateral=$500, debt=$900 → minColl = 1000, maxWithdraw = max(0, -500) = 0
+    // collateral=$500, debt=$900 → minColl = 1080, maxWithdraw = max(0, -580) = 0
     expect(marginCalc.calcMaxWithdraw(500, 900)).toBe(0);
   });
 });
@@ -375,18 +366,19 @@ describe("simulatePosition", () => {
     // Start: coll=$2000, debt=$1500
     // Deposit $500 more → newColl=$2500, newDebt=$1500
     const result = marginCalc.simulatePosition(2000, 1500, 500, 0);
-    expect(result.newHF).toBeCloseTo((2500 * 0.9) / 1500, 5);
+    expect(result.newHF).toBeCloseTo((2500 / 1500) / THRESHOLD, 5);
     expect(result.newLTV).toBeCloseTo(1500 / 2500, 5);
     expect(result.newLeverage).toBeCloseTo(2500 / 1000, 5);
     expect(result.isLiquidatable).toBe(false);
-    expect(result.hfStatus).toBe("safe");
+    // HF ≈ 1.389 → 'caution' zone (1.3 <= HF < 1.5)
+    expect(result.hfStatus).toBe("caution");
   });
 
   it("simulates a borrow increasing debt", () => {
     // Start: coll=$2000, debt=$1000
     // Borrow $500 more → newColl=$2000, newDebt=$1500
     const result = marginCalc.simulatePosition(2000, 1000, 0, 500);
-    expect(result.newHF).toBeCloseTo((2000 * 0.9) / 1500, 5);
+    expect(result.newHF).toBeCloseTo((2000 / 1500) / THRESHOLD, 5);
     expect(result.newLTV).toBeCloseTo(1500 / 2000, 5);
     expect(result.isLiquidatable).toBe(false);
   });
@@ -395,7 +387,7 @@ describe("simulatePosition", () => {
     // Start: coll=$3000, debt=$1000
     // Withdraw $1000 → newColl=$2000
     const result = marginCalc.simulatePosition(3000, 1000, 0, 0, 1000);
-    expect(result.newHF).toBeCloseTo((2000 * 0.9) / 1000, 5);
+    expect(result.newHF).toBeCloseTo((2000 / 1000) / THRESHOLD, 5);
     expect(result.isLiquidatable).toBe(false);
   });
 
@@ -403,15 +395,15 @@ describe("simulatePosition", () => {
     // Start: coll=$2000, debt=$1800
     // Repay $800 → newDebt=$1000
     const result = marginCalc.simulatePosition(2000, 1800, 0, 0, 0, 800);
-    expect(result.newHF).toBeCloseTo((2000 * 0.9) / 1000, 5);
+    expect(result.newHF).toBeCloseTo((2000 / 1000) / THRESHOLD, 5);
     expect(result.newLTV).toBeCloseTo(1000 / 2000, 5);
     expect(result.hfStatus).toBe("safe");
   });
 
   it("detects liquidatable state after dangerous borrow", () => {
     // Start: coll=$1000, debt=$0
-    // Borrow $950 → HF = (1000*0.9)/950 = 0.947 < 1.0
-    const result = marginCalc.simulatePosition(1000, 0, 0, 950);
+    // Borrow $900 → rawRatio = 1000/900 = 1.111, HF = 1.111/1.2 = 0.926 < 1.0
+    const result = marginCalc.simulatePosition(1000, 0, 0, 900);
     expect(result.isLiquidatable).toBe(true);
     expect(result.hfStatus).toBe("liquidatable");
   });
@@ -420,10 +412,10 @@ describe("simulatePosition", () => {
     // Start: coll=$5000, debt=$2000
     // Deposit $1000 → newColl=$6000
     const result = marginCalc.simulatePosition(5000, 2000, 1000, 0);
-    // maxBorrow = 6000*0.9 - 2000 = 3400
-    expect(result.maxBorrow).toBeCloseTo(3400, 2);
-    // maxWithdraw = 6000 - 2000/0.9 = 6000 - 2222.22 = 3777.78
-    expect(result.maxWithdraw).toBeCloseTo(3777.78, 0);
+    // maxBorrow = 6000/1.2 - 2000 = 5000 - 2000 = 3000
+    expect(result.maxBorrow).toBeCloseTo(3000, 1);
+    // maxWithdraw = 6000 - 2000*1.2 = 6000 - 2400 = 3600
+    expect(result.maxWithdraw).toBeCloseTo(3600, 1);
   });
 
   it("clamps collateral and debt at 0 (no negative values)", () => {
@@ -441,7 +433,7 @@ describe("simulatePosition", () => {
 describe("validateBorrow", () => {
   it("allows valid borrow within LTV limit", () => {
     // coll=$2000, debt=$1000, borrow=$300
-    // newDebt=$1300, newLTV=1300/2000=0.65 < 0.9 ✓
+    // newDebt=$1300, newLTV=1300/2000=0.65 < 0.8333 ✓
     const result = marginCalc.validateBorrow(2000, 1000, 300);
     expect(result.valid).toBe(true);
     expect(result.error).toBeNull();
@@ -460,23 +452,23 @@ describe("validateBorrow", () => {
   });
 
   it("rejects borrow exceeding MAX_LTV", () => {
-    // coll=$1000, debt=$0, borrow=$950
-    // newLTV = 950/1000 = 0.95 > 0.9
-    const result = marginCalc.validateBorrow(1000, 0, 950);
+    // coll=$1000, debt=$0, borrow=$900
+    // newLTV = 900/1000 = 0.9 > 0.8333 (MAX_LTV = 1/1.2)
+    const result = marginCalc.validateBorrow(1000, 0, 900);
     expect(result.valid).toBe(false);
     expect(result.error).toContain("LTV");
   });
 
   it("rejects borrow that would make position liquidatable", () => {
-    // coll=$1000, debt=$800, borrow=$100
-    // newDebt=$900, HF=(1000*0.9)/900 = 1.0 → liquidatable
-    const result = marginCalc.validateBorrow(1000, 800, 100);
+    // coll=$1200, debt=$800, borrow=$200
+    // newDebt=$1000, rawRatio = 1200/1000 = 1.2, HF = 1.2/1.2 = 1.0 → liquidatable
+    const result = marginCalc.validateBorrow(1200, 800, 200);
     expect(result.valid).toBe(false);
   });
 
   it("provides newHF in result", () => {
     const result = marginCalc.validateBorrow(2000, 500, 200);
-    expect(result.newHF).toBeCloseTo((2000 * 0.9) / 700, 5);
+    expect(result.newHF).toBeCloseTo((2000 / 700) / THRESHOLD, 5);
   });
 });
 
@@ -487,7 +479,7 @@ describe("validateBorrow", () => {
 describe("validateWithdraw", () => {
   it("allows valid withdrawal maintaining safe HF", () => {
     // coll=$5000, debt=$1000, withdraw=$1000
-    // newColl=$4000, HF=(4000*0.9)/1000=3.6 > 1.0 ✓
+    // newColl=$4000, HF=(4000/1000)/1.2 = 3.333 > 1.0 ✓
     const result = marginCalc.validateWithdraw(5000, 1000, 1000);
     expect(result.valid).toBe(true);
     expect(result.error).toBeNull();
@@ -511,16 +503,16 @@ describe("validateWithdraw", () => {
   });
 
   it("rejects withdrawal that would trigger liquidation", () => {
-    // coll=$2000, debt=$1700, withdraw=$200
-    // newColl=$1800, HF=(1800*0.9)/1700 = 0.953 < 1.0
-    const result = marginCalc.validateWithdraw(2000, 1700, 200);
+    // coll=$2000, debt=$1500, withdraw=$300
+    // newColl=$1700, HF=(1700/1500)/1.2 = 0.944 < 1.0
+    const result = marginCalc.validateWithdraw(2000, 1500, 300);
     expect(result.valid).toBe(false);
     expect(result.error).toContain("liquidation");
   });
 
   it("provides newHF in result", () => {
     const result = marginCalc.validateWithdraw(3000, 1000, 500);
-    expect(result.newHF).toBeCloseTo((2500 * 0.9) / 1000, 5);
+    expect(result.newHF).toBeCloseTo((2500 / 1000) / THRESHOLD, 5);
   });
 });
 
@@ -533,12 +525,12 @@ describe("Edge Cases", () => {
     const largeColl = 1_000_000_000; // $1B collateral
     const largDebt = 500_000_000;    // $500M debt
     const hf = marginCalc.calcHF(largeColl, largDebt);
-    expect(hf).toBeCloseTo(1.8, 5);
+    expect(hf).toBeCloseTo((1_000_000_000 / 500_000_000) / THRESHOLD, 5);
   });
 
   it("handles very small values", () => {
     const hf = marginCalc.calcHF(0.001, 0.0005);
-    expect(hf).toBeCloseTo(1.8, 3);
+    expect(hf).toBeCloseTo((0.001 / 0.0005) / THRESHOLD, 3);
   });
 
   it("consistency: leverage from direct calc matches LTV-based calc", () => {

@@ -260,6 +260,7 @@ export function usePositionsData(): UsePositionsDataReturn {
           let isHealthy = true;
           let riskBalance = 0;
           let riskBorrows = 0;
+          let balanceToBorrowThreshold = 1.2; // Contract default
 
           try {
             const riskEngineCalls = [
@@ -281,6 +282,12 @@ export function usePositionsData(): UsePositionsDataReturn {
                 functionName: "getBorrows" as const,
                 args: [acc] as const,
               },
+              {
+                address: addressList.riskEngineContractAddress as `0x${string}`,
+                abi: RiskEngine.abi,
+                functionName: "balanceToBorrowThreshold" as const,
+                args: [] as const,
+              },
             ];
 
             const riskResults = await publicClient.multicall({
@@ -297,12 +304,18 @@ export function usePositionsData(): UsePositionsDataReturn {
             if (riskResults[2].status === "success") {
               riskBorrows = Number(formatUnits(riskResults[2].result as bigint, 18));
             }
+            if (riskResults[3].status === "success") {
+              balanceToBorrowThreshold = Number(formatUnits(riskResults[3].result as bigint, 18));
+            }
           } catch (riskErr) {
             console.warn(`[usePositionsData] RiskEngine read failed for ${acc}:`, riskErr);
           }
 
-          // Calculate health factor: balance / borrows (higher = safer)
-          const healthFactor = riskBorrows > 0 ? Math.round((riskBalance / riskBorrows) * 100) / 100 : 0;
+          // Normalized health factor: (balance/borrows) / threshold
+          // HF > 1 = safe, HF <= 1 = liquidatable (matches contract's isAccountHealthy)
+          const healthFactor = riskBorrows > 0
+            ? Math.round(((riskBalance / riskBorrows) / balanceToBorrowThreshold) * 100) / 100
+            : 0;
 
           // Skip truly empty accounts
           if (collateralUsdValue < 0.01 && totalBorrowUsd < 0.01) {

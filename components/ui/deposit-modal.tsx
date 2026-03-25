@@ -11,6 +11,7 @@ import { toast } from "sonner";
 
 import { useTheme } from "@/contexts/theme-context";
 import { useMarginAccountInfoStore } from "@/store/margin-account-info-store";
+import { useRequiredNetwork } from "@/lib/hooks/useRequiredNetwork";
 import { useNexus, useNexusBalanceBreakdown, useBridgeAndExecute } from "@/lib/nexus";
 import { iconPaths } from "@/lib/constants";
 import { SUPPORTED_CHAIN_NAMES } from "@/lib/chains/chains";
@@ -41,6 +42,7 @@ const PERCENTAGES = [25, 50, 75, 100] as const;
 
 export const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
   const { isDark } = useTheme();
+  const { isWrongNetwork, switchToBase, isSwitching: isSwitchingNetwork } = useRequiredNetwork();
   const { address: wagmiAddress, chainId: wagmiChainId } = useAccount();
   const { wallets: privyWallets } = useWallets();
   const { address: walletConnectionAddress } = useWalletConnection();
@@ -343,7 +345,7 @@ export const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
           {/* Main modal */}
           {(
             <motion.div
-              className={`relative z-10 w-[440px] max-w-[calc(100vw-32px)] rounded-[24px] overflow-hidden ${
+              className={`relative z-10 w-[440px] max-w-[calc(100vw-32px)] max-h-[calc(100vh-48px)] rounded-[24px] flex flex-col overflow-hidden ${
                 isDark
                   ? "bg-[#0C0C0C] border border-[#1E1E1E]"
                   : "bg-white border border-[#EBEBEB]"
@@ -361,7 +363,7 @@ export const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
               {/* Gradient top bar */}
               <div className="w-full h-[3px] bg-gradient" />
 
-              <div className="flex flex-col p-[24px] gap-[20px]">
+              <div className="flex flex-col p-[24px] gap-[20px] overflow-y-auto flex-1 min-h-0 thin-scrollbar">
                 {/* Header */}
                 <div className="flex items-center justify-between">
                   <h2
@@ -744,31 +746,44 @@ export const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
                       </div>
                     </div>
 
-                    {/* Deposit button */}
-                    <motion.button
-                      type="button"
-                      disabled={!isValid}
-                      onClick={handleDeposit}
-                      className={`w-full py-[16px] rounded-[14px] text-[15px] font-semibold cursor-pointer transition-all ${
-                        isValid
-                          ? "bg-gradient text-white hover:opacity-90"
-                          : isDark
-                          ? "bg-[#1A1A1A] text-[#444] cursor-not-allowed"
-                          : "bg-[#E8E8E8] text-[#AAA] cursor-not-allowed"
-                      }`}
-                      whileHover={isValid ? { scale: 1.01 } : {}}
-                      whileTap={isValid ? { scale: 0.99 } : {}}
-                    >
-                      {!hasMarginAccount
-                        ? "Create Margin Account First"
-                        : depositAmount <= 0
-                        ? "Enter Amount"
-                        : depositAmount > maxAvailable
-                        ? "Insufficient Balance"
-                        : needsBridging
-                        ? "Bridge & Deposit"
-                        : "Deposit"}
-                    </motion.button>
+                    {/* Deposit button — or Switch Network if wrong chain */}
+                    {isWrongNetwork ? (
+                      <motion.button
+                        type="button"
+                        onClick={switchToBase}
+                        disabled={isSwitchingNetwork}
+                        className="w-full py-[16px] rounded-[14px] text-[15px] font-semibold cursor-pointer transition-all bg-gradient text-white hover:opacity-90 disabled:opacity-60 flex items-center justify-center gap-2"
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                      >
+                        {isSwitchingNetwork ? "Switching..." : "Switch to Base Network"}
+                      </motion.button>
+                    ) : (
+                      <motion.button
+                        type="button"
+                        disabled={!isValid}
+                        onClick={handleDeposit}
+                        className={`w-full py-[16px] rounded-[14px] text-[15px] font-semibold cursor-pointer transition-all ${
+                          isValid
+                            ? "bg-gradient text-white hover:opacity-90"
+                            : isDark
+                            ? "bg-[#1A1A1A] text-[#444] cursor-not-allowed"
+                            : "bg-[#E8E8E8] text-[#AAA] cursor-not-allowed"
+                        }`}
+                        whileHover={isValid ? { scale: 1.01 } : {}}
+                        whileTap={isValid ? { scale: 0.99 } : {}}
+                      >
+                        {!hasMarginAccount
+                          ? "Create Margin Account First"
+                          : depositAmount <= 0
+                          ? "Enter Amount"
+                          : depositAmount > maxAvailable
+                          ? "Insufficient Balance"
+                          : needsBridging
+                          ? "Bridge & Deposit"
+                          : "Deposit"}
+                      </motion.button>
+                    )}
 
                   </>
                 )}

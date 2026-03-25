@@ -47,6 +47,8 @@ import { parseUnits } from "viem";
 import { useFetchAccountCheck, useFetchCollateralState, useFetchBorrowState, useFetchBorrowPositions, useFetchDirectBorrowBalances } from "@/lib/utils/margin/marginFetchers";
 import { useTheme } from "@/contexts/theme-context";
 import { TransactionModal } from "@/components/ui/transaction-modal";
+import { SwitchNetworkButton } from "@/components/ui/switch-network-button";
+import { useRequiredNetwork } from "@/lib/hooks/useRequiredNetwork";
 
 export const RepayLoanTab = () => {
   const { isDark } = useTheme();
@@ -61,7 +63,7 @@ export const RepayLoanTab = () => {
   const [txModalHash, setTxModalHash] = useState<string | undefined>(undefined);
 
   const supportedTokens = useMemo(() => {
-    return SUPPORTED_TOKENS_BY_CHAIN[chainId ?? 0] ?? [];
+    return SUPPORTED_TOKENS_BY_CHAIN[chainId ?? 0] ?? ["ETH", "USDC", "USDT"];
   }, [chainId]);
 
   const { data: walletClient } = useWalletClient();
@@ -441,6 +443,7 @@ export const RepayLoanTab = () => {
   };
 
   const { isConnected: isWalletConnected, login: privyLogin } = useWalletConnection();
+  const { isWrongNetwork } = useRequiredNetwork();
 
   return (
     <motion.section
@@ -641,7 +644,9 @@ export const RepayLoanTab = () => {
             whileHover={isDisabled ? {} : { scale: 1.02 }}
             whileTap={isDisabled ? {} : { scale: 0.98 }}
           >
-            {!isWalletConnected ? (
+            {isWrongNetwork ? (
+              <SwitchNetworkButton />
+            ) : !isWalletConnected ? (
               <button
                 onClick={privyLogin}
                 className="w-full py-[14px] rounded-[12px] text-[15px] font-semibold text-white bg-[#AAAAAA] hover:bg-[#999999] transition-all cursor-pointer"

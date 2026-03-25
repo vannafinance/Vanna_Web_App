@@ -11,6 +11,8 @@ import { EarnAsset } from "@/lib/types";
 import { withdraw } from "@/lib/utils/earn/transactions";
 import { useFetchUserVaultPosition, useFetchConvertToAssets } from "@/lib/utils/earn/earnFetchers";
 import { useVaultData } from "@/lib/hooks/useVaultData";
+import { SwitchNetworkButton } from "@/components/ui/switch-network-button";
+import { useRequiredNetwork } from "@/lib/hooks/useRequiredNetwork";
 
 export const WithdrawLiquidity = ({ asset }: { asset: EarnAsset }) => {
   const { isDark } = useTheme();
@@ -258,6 +260,8 @@ export const WithdrawLiquidity = ({ asset }: { asset: EarnAsset }) => {
     return "Withdraw Liquidity";
   };
 
+  const { isWrongNetwork } = useRequiredNetwork();
+
   // Button disabled state
   const isButtonDisabled =
     !isConnected ||
@@ -372,13 +376,15 @@ export const WithdrawLiquidity = ({ asset }: { asset: EarnAsset }) => {
         />
       </section>
 
-      <Button
-        text={getButtonText()}
-        size="large"
-        type="gradient"
-        disabled={isButtonDisabled}
-        onClick={handleWithdraw}
-      />
+      {isWrongNetwork ? <SwitchNetworkButton /> : (
+        <Button
+          text={getButtonText()}
+          size="large"
+          type="gradient"
+          disabled={isButtonDisabled}
+          onClick={handleWithdraw}
+        />
+      )}
 
       {/* Transaction Modal */}
       <TransactionModal

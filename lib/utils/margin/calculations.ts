@@ -1,15 +1,22 @@
 // calculations.ts - Margin calculation utilities
-// All formulas follow DeFi lending protocol standards
+// All formulas align with RiskEngine contract on-chain logic:
+//   isAccountHealthy = getBalance(account) / getBorrows(account) > balanceToBorrowThreshold()
+//   balanceToBorrowThreshold() default = 1.2
 
 // ============================================
-// CONFIGURABLE CONSTANTS
+// PROTOCOL CONSTANTS (from RiskEngine contract)
 // ============================================
-// TODO: These should be fetched from RiskEngine contract
 const PROTOCOL_CONSTANTS = {
-  COLLATERAL_FACTOR: 0.9,      // 90% - Liquidation threshold
-  MAX_LTV: 0.9,                // 90% - Maximum Loan-to-Value ratio
+  // balanceToBorrowThreshold from RiskEngine — the on-chain liquidation boundary.
+  // Account is healthy when: collateral / debt > this threshold.
+  BALANCE_TO_BORROW_THRESHOLD: 1.2,
+
+  // Derived: MAX_LTV = 1 / threshold = 1/1.2 ≈ 83.33%
+  // This is the maximum debt-to-collateral ratio allowed before liquidation.
+  MAX_LTV: 1 / 1.2,
+
   LIQUIDATION_BONUS: 0.05,    // 5% - Liquidator incentive
-  MIN_HEALTH_FACTOR: 1.0,     // Below this = liquidatable
+  MIN_HEALTH_FACTOR: 1.0,     // Below this (normalized) = liquidatable
   WARNING_HF_HIGH: 1.5,       // Safe zone threshold
   WARNING_HF_MEDIUM: 1.3,     // Caution zone threshold
   WARNING_HF_LOW: 1.1,        // Danger zone threshold
@@ -25,21 +32,17 @@ const calcBorrowUsd = (b: { usd: number }[]): number =>
   b.reduce((sum, item) => sum + (item.usd || 0), 0);
 
 // ============================================
-// HEALTH FACTOR
+// HEALTH FACTOR (normalized)
 // ============================================
-// Formula: HF = (Collateral × Collateral Factor) / Debt
-// HF > 1 = Safe, HF <= 1 = Liquidatable
-// User-1 :- 
-  //  2000 (collatral)
-  // liquidation threshold 90%=0.9
-  // debt = 1500
-// HF = (2000 * 0.9) / 1500 = 1.2 (safe)
-
+// On-chain: healthy = (collateral / debt) > balanceToBorrowThreshold (1.2)
+// Normalized HF = (collateral / debt) / threshold
+//   HF > 1 = Safe, HF <= 1 = Liquidatable
+// Example: $2000 coll, $1500 debt → rawRatio = 1.333, HF = 1.333 / 1.2 = 1.111 (safe)
 
 const calcHF = (collUsd: number, debtUsd: number): number => {
   if (debtUsd <= 0) return Infinity;
   if (collUsd <= 0) return 0;
-  return (collUsd * PROTOCOL_CONSTANTS.COLLATERAL_FACTOR) / debtUsd;
+  return (collUsd / debtUsd) / PROTOCOL_CONSTANTS.BALANCE_TO_BORROW_THRESHOLD;
 };
 
 // ============================================
@@ -91,13 +94,9 @@ const calcLeverageFromLTV = (ltv: number): number => {
 // ============================================
 // LIQUIDATION PRICE
 // ============================================
-// Formula: Liquidation Price = (Debt × Liquidation Threshold) / Collateral Amount
-// This calculates at what price the collateral would trigger liquidation
-
-
-
-// 1600/ (2000 * 0.9) = 0.8888 (88.88% of current price
-// If current price = $100, liquidation price = $88.88
+// On-chain liquidation when: (collAmount × price) / debt <= threshold (1.2)
+// So: price_liq = (debt × threshold) / collAmount
+// Example: debt=$1500, 1 ETH, threshold=1.2 → liqPrice = (1500 * 1.2) / 1 = $1800
 
 const calcLiquidationPrice = (
   debtUsd: number,
@@ -107,10 +106,10 @@ const calcLiquidationPrice = (
   if (collateralAmount <= 0 || currentPrice <= 0) return 0;
   if (debtUsd <= 0) return 0; // No debt = no liquidation risk
 
-  // Price at which HF = 1 (liquidation threshold)
-  // HF = (collAmount × price × CF) / debt = 1
-  // price = debt / (collAmount × CF)
-  const liqPrice = debtUsd / (collateralAmount * PROTOCOL_CONSTANTS.COLLATERAL_FACTOR);
+  // Price at which normalized HF = 1 (liquidation boundary)
+  // (collAmount × price / debt) / threshold = 1
+  // price = (debt × threshold) / collAmount
+  const liqPrice = (debtUsd * PROTOCOL_CONSTANTS.BALANCE_TO_BORROW_THRESHOLD) / collateralAmount;
   return liqPrice;
 };
 
@@ -131,28 +130,22 @@ const calcLiquidationPriceDropPercent = (
 // ============================================
 // MAX BORROW / WITHDRAW
 // ============================================
-// Max additional borrowing while staying under LTV limit
-
-// 2000 * 0.9 = 1800 max debt
-// current debt = 1500
-// max borrow = 1800 - 1500 = 300
+// Max additional borrowing while staying above threshold
+// maxDebt = collateral / threshold
+// Example: $2000 coll, threshold=1.2 → maxDebt = 2000/1.2 = 1666.67
 
 const calcMaxBorrow = (collUsd: number, debtUsd: number): number => {
-  const maxDebt = collUsd * PROTOCOL_CONSTANTS.MAX_LTV;
+  const maxDebt = collUsd / PROTOCOL_CONSTANTS.BALANCE_TO_BORROW_THRESHOLD;
   return Math.max(0, maxDebt - debtUsd);
 };
 
-// 1800 / 0.9 = 2000 (collateral needed to cover 1800 debt at 90% LTV)
-// current collateral = 2000
-// max withdraw = 2000 - 2000 = 0
-
-
 // Max withdrawable collateral while maintaining safe position
+// minCollateral = debt × threshold
+// Example: $1500 debt, threshold=1.2 → minColl = 1500*1.2 = 1800
+
 const calcMaxWithdraw = (collUsd: number, debtUsd: number): number => {
   if (debtUsd <= 0) return collUsd;
-  // Minimum collateral needed = debt / MAX_LTV
-
-  const minCollateral = debtUsd / PROTOCOL_CONSTANTS.MAX_LTV;
+  const minCollateral = debtUsd * PROTOCOL_CONSTANTS.BALANCE_TO_BORROW_THRESHOLD;
   return Math.max(0, collUsd - minCollateral);
 };
 
@@ -250,7 +243,7 @@ const validateBorrow = (
   }
 
   if (newLTV > PROTOCOL_CONSTANTS.MAX_LTV) {
-    return { valid: false, error: `Exceeds maximum LTV of ${PROTOCOL_CONSTANTS.MAX_LTV * 100}%`, newHF };
+    return { valid: false, error: `Exceeds maximum LTV of ${Math.round(PROTOCOL_CONSTANTS.MAX_LTV * 100)}%`, newHF };
   }
 
   if (newHF <= PROTOCOL_CONSTANTS.MIN_HEALTH_FACTOR) {

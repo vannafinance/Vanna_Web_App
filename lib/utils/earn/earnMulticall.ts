@@ -147,7 +147,7 @@ export function parseVaultMulticallResults(
       totalSupplyResult?.status === "failure" ||
       totalBorrowsResult?.status === "failure"
     ) {
-      console.error(`Failed to fetch data for ${asset}:`, {
+      console.warn(`Vault data unavailable for ${asset}:`, {
         totalAssets: totalAssetsResult?.error,
         totalSupply: totalSupplyResult?.error,
         totalBorrows: totalBorrowsResult?.error,

@@ -1,27 +1,79 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import {
   usePrivy,
   useWallets,
   getEmbeddedConnectedWallet,
   useExportWallet,
 } from "@privy-io/react-auth";
+import { useDisconnect } from "wagmi";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/contexts/theme-context";
+import { useUserStore } from "@/store/user";
+import { useMarginAccountInfoStore } from "@/store/margin-account-info-store";
+import { useMarginStore } from "@/store/margin-account-state";
 import { WalletSelector } from "./wallet-selector";
 
 export function UserMenu() {
   const { isDark } = useTheme();
   const { user, logout, linkEmail, linkGoogle, linkWallet } = usePrivy();
   const { wallets } = useWallets();
+  const { disconnect: disconnectWagmi } = useDisconnect();
   const embeddedWallet = getEmbeddedConnectedWallet(wallets);
   const { exportWallet } = useExportWallet();
+  const resetUserStore = useUserStore((s) => s.reset);
+  const resetMarginInfoStore = useMarginAccountInfoStore((s) => s.reset);
 
   const [isOpen, setIsOpen] = useState(false);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [showWallets, setShowWallets] = useState(false);
   const [copied, setCopied] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // Full disconnect: Privy logout + wagmi disconnect + clear all persisted stores
+  const handleDisconnect = useCallback(async () => {
+    if (isDisconnecting) return;
+    setIsDisconnecting(true);
+    setIsOpen(false);
+
+    try {
+      // 1. Disconnect wagmi (EOA wallets like MetaMask/Rabby)
+      disconnectWagmi();
+
+      // 2. Logout from Privy (clears embedded wallets + auth session)
+      await logout();
+
+      // 3. Reset all persisted Zustand stores so no stale user data remains
+      resetUserStore();
+      resetMarginInfoStore();
+
+      // 4. Reset non-persisted margin state
+      useMarginStore.setState({
+        marginState: null,
+        isLoading: false,
+        lastError: null,
+        fetchersReady: false,
+        lastFetchTime: 0,
+      });
+
+      // 5. Clear any Nexus cached balances from localStorage
+      if (typeof window !== "undefined") {
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith("nexus_bridge_balances_")) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach((key) => localStorage.removeItem(key));
+      }
+    } catch (err) {
+      console.error("[UserMenu] Disconnect failed:", err);
+    } finally {
+      setIsDisconnecting(false);
+    }
+  }, [isDisconnecting, disconnectWagmi, logout, resetUserStore, resetMarginInfoStore]);
 
   // Close menu on outside click
   useEffect(() => {
@@ -418,11 +470,9 @@ export function UserMenu() {
                   >
                     <MenuItem
                       isDark={isDark}
-                      label="Disconnect"
-                      onClick={() => {
-                        logout();
-                        setIsOpen(false);
-                      }}
+                      label={isDisconnecting ? "Disconnecting..." : "Disconnect"}
+                      onClick={handleDisconnect}
+                      disabled={isDisconnecting}
                       icon={
                         <svg
                           width="16"
@@ -482,6 +532,7 @@ function MenuItem({
   icon,
   hasArrow,
   danger,
+  disabled,
 }: {
   isDark: boolean;
   label: string;
@@ -490,11 +541,15 @@ function MenuItem({
   icon: React.ReactNode;
   hasArrow?: boolean;
   danger?: boolean;
+  disabled?: boolean;
 }) {
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium transition-colors cursor-pointer ${
+      disabled={disabled}
+      className={`w-full flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium transition-colors ${
+        disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+      } ${
         danger
           ? isDark
             ? "text-[#FC5457] hover:bg-[#FC5457]/10"

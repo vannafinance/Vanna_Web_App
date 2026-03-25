@@ -83,6 +83,9 @@ export const Navbar = (props: Navbar) => {
 
   // Wagmi hooks
   const { address, isConnected, chainId } = useAccount();
+
+  // Combined wallet check: connected via wagmi (Rabby/MetaMask) OR Privy (social/embedded)
+  const isWalletReady = (isConnected && !!address) || authenticated;
   const { data: walletClient } = useWalletClient();
   const publicClient = usePublicClient();
 
@@ -99,6 +102,8 @@ export const Navbar = (props: Navbar) => {
     }
   }, [isOAuthReturn, authenticated]);
 
+  const resetUserStore = useUserStore((state) => state.reset);
+
   // Sync wallet address and Privy user data to user store
   useEffect(() => {
     if (isConnected && address) {
@@ -110,7 +115,7 @@ export const Navbar = (props: Navbar) => {
     }
   }, [isConnected, address, authenticated, wallets, setUserAddress]);
 
-  // Sync Privy user info to store
+  // Sync Privy user info to store — full reset when not authenticated
   useEffect(() => {
     if (authenticated && user) {
       const authMethod = user.email
@@ -127,14 +132,11 @@ export const Navbar = (props: Navbar) => {
         authMethod,
         email: user.email?.address || user.google?.email || null,
       });
-    } else {
-      setUserAddress({
-        privyUserId: null,
-        authMethod: null,
-        email: null,
-      });
+    } else if (ready && !authenticated) {
+      // Privy is ready and user is NOT authenticated — clear persisted store
+      resetUserStore();
     }
-  }, [authenticated, user, setUserAddress]);
+  }, [ready, authenticated, user, setUserAddress, resetUserStore]);
 
   const groupedItems = {
     primary: props.items.filter((item) => item.group === "primary"),
@@ -469,8 +471,8 @@ export const Navbar = (props: Navbar) => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
         >
-          {/* Deposit button */}
-          {userAddress && (
+          {/* Deposit button — only when wallet connected */}
+          {isWalletReady && (
             <div className="hidden min-[550px]:block">
               <Button
                 size="small"
@@ -482,13 +484,13 @@ export const Navbar = (props: Navbar) => {
               ></Button>
             </div>
           )}
-          {/* Network dropdown */}
-          {userAddress && (
+          {/* Network dropdown — always visible when connected */}
+          {isWalletReady && (
             <div className="hidden lg:block">
               <NetworkDropdown />
             </div>
           )}
-          {/* Theme toggle button - hidden below lg, shown on lg+ */}
+          {/* Theme toggle */}
           <button
             type="button"
             className={`hidden lg:flex flex-col justify-center items-center rounded-[8px] py-[12px] px-[10px] h-[44px] border-[1px] cursor-pointer ${
@@ -512,7 +514,6 @@ export const Navbar = (props: Navbar) => {
               {isDark ? (
                 <SunIcon stroke="white" />
               ) : (
-                // Moon icon (light mode)
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="#FF007A"
@@ -533,7 +534,7 @@ export const Navbar = (props: Navbar) => {
             </motion.div>
           </button>
           {/* Login/User section - hidden below lg, shown on lg+ */}
-          {!authenticated ? (
+          {!isWalletReady ? (
             <div className="hidden lg:block">
               <Button
                 size="small"
@@ -558,7 +559,7 @@ export const Navbar = (props: Navbar) => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
         >
-          {userAddress && (
+          {isWalletReady && (
             <Button
               size="small"
               type="navbar"
@@ -568,7 +569,7 @@ export const Navbar = (props: Navbar) => {
               ariaLabel="Deposit to your account"
             ></Button>
           )}
-          {!authenticated ? (
+          {!isWalletReady ? (
             <Button
               size="small"
               type="gradient"

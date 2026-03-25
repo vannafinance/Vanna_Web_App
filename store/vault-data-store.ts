@@ -4,6 +4,7 @@ import { VaultStats, useFetchAllVaultsData } from "@/lib/utils/earn/earnFetchers
 import { EarnAsset } from "@/lib/types";
 import { fetchPrices, PriceData } from "@/lib/utils/prices/priceFeed";
 import { SUPPORTED_TOKENS_BY_CHAIN } from "@/lib/utils/web3/token";
+import { getAddressList } from "@/lib/utils/web3/addressList";
 
 // ============ TYPES ============
 
@@ -80,6 +81,12 @@ export const useVaultDataStore = create<VaultDataStore>((set, get) => ({
     // Skip if already loading
     if (state.loading) return;
 
+    // Skip entirely on unsupported chains — no contracts deployed there
+    if (!getAddressList(chainId)) {
+      set({ loading: false, vaults: [], error: null });
+      return;
+    }
+
     // Check if we need to refetch (only refetch if >10 seconds old or chain changed)
     const now = Date.now();
     const timeSinceLastFetch = now - state.lastFetchTime;
@@ -96,10 +103,10 @@ export const useVaultDataStore = create<VaultDataStore>((set, get) => ({
       // Fetch prices first (in parallel with vault data)
       const pricesPromise = get().fetchPrices();
 
-      // Get supported assets for current chain
-      const supportedAssets = (
-        SUPPORTED_TOKENS_BY_CHAIN[chainId] || ["ETH", "USDC", "USDT"]
-      ).filter((t): t is EarnAsset => ["ETH", "USDC", "USDT"].includes(t));
+      // Get supported assets for current chain (no fallback — guard above ensures chain is valid)
+      const supportedAssets = (SUPPORTED_TOKENS_BY_CHAIN[chainId] ?? []).filter(
+        (t): t is EarnAsset => ["ETH", "USDC", "USDT"].includes(t)
+      );
 
       // Fetch vault stats from blockchain
       const vaultStatsPromise = fetchAllVaultsStats(

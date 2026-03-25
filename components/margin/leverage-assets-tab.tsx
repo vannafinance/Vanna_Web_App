@@ -32,6 +32,8 @@ import { PoolTable } from "@/lib/utils/margin/types";
 import { baseAddressList, arbAddressList, opAddressList } from "@/lib/web3Constants";
 import { erc20Abi, formatUnits, parseEther, parseUnits, encodeFunctionData } from "viem";
 import { iconPaths } from "@/lib/constants";
+import { SwitchNetworkButton } from "@/components/ui/switch-network-button";
+import { useRequiredNetwork } from "@/lib/hooks/useRequiredNetwork";
 
 ///lib/utils/margim/calculation iumport
 import marginCalc from "@/lib/utils/margin/calculations"
@@ -89,16 +91,20 @@ export const LeverageAssetsTab = () => {
   const [mode, setMode] = useState<Modes>("Deposit");
   const [borrowItems, setBorrowItems] = useState<BorrowInfo[]>([]);
   const [borrowAsset, setBorrowAsset] = useState<string>("USDC");
+  // Tracks whether the dual-borrow box has exceeded max borrowable
+  const [isBorrowOverMax, setIsBorrowOverMax] = useState(false);
   const [leverage, setLeverage] = useState(2);
   const { login } = usePrivy();
   // Real-time connection state — not the persisted Zustand store
   const { isConnected: isWalletConnected, address } = useWalletConnection();
+  const { isWrongNetwork } = useRequiredNetwork();
   const marginState = useMarginStore((s) => s.marginState);
   const [marginAccountAddress, setMarginAccountAddress] = useState<`0x${string}` | undefined>(undefined);
-  // Initialize prices with stablecoin defaults
+  // Initialize prices with stablecoin defaults (ETH: 0 = "loading", not wrong $1)
   const [prices, setPrices] = useState<Record<string, number>>({
     USDC: 1,
     USDT: 1,
+    ETH: 0,
   });
 
   // Wagmi hooks
@@ -181,11 +187,12 @@ export const LeverageAssetsTab = () => {
         const res = await fetch("/api/prices");
         const data = await res.json();
 
-        // Ensure stablecoins always have $1 price if missing from API
+        // Ensure stablecoins always have $1; ETH gets real price from API
         const updatedPrices = {
-          USDC: data.USDC ?? 1,
-          USDT: data.USDT ?? 1,
-          ...data, // Spread other prices from API
+          ...data,
+          USDC: 1,
+          USDT: 1,
+          ETH: data.ETH && data.ETH > 0 ? data.ETH : prices.ETH,
         };
 
         setPrices(updatedPrices);
@@ -199,7 +206,7 @@ export const LeverageAssetsTab = () => {
   }, []);
 
   const supportedTokens = useMemo(() => {
-    return SUPPORTED_TOKENS_BY_CHAIN[chainId ?? 0] ?? [];
+    return SUPPORTED_TOKENS_BY_CHAIN[chainId ?? 0] ?? ["ETH", "USDC", "USDT"];
   }, [chainId]);
 
   const deposit = (asset: string, amount: string) => depositTx({
@@ -330,20 +337,9 @@ export const LeverageAssetsTab = () => {
     return { newHF, newLTV, projectedMaxBorrow, newCollateralUsd, newDebtUsd };
   }, []);
 
-  // New: HF signals (colors and warnings)
-  const getHFColor = (hf: number) => {
-    if (hf > 1.5) return 'green';
-    if (hf > 1.3) return 'yellow';
-    if (hf > 1.1) return 'orange';
-    return 'red';
-  };
-
-  const getHFWarning = (hf: number) => {
-    if (hf <= 1.0) return "Will liquidate";
-    if (hf < 1.1) return "High Liquidation Risk";
-    if (hf < 1.3) return "Low HF";
-    return null;
-  };
+  // HF signals — use centralized helpers from calculations.ts
+  const getHFColor = marginCalc.getHFColor;
+  const getHFWarning = marginCalc.getHFWarning;
 
   const normalizeBorrowUsd = (asset: string, amount: string): number => {
     const price = prices[asset] || 0;
@@ -1712,8 +1708,20 @@ export const LeverageAssetsTab = () => {
         }
       }
 
+      // --- MERGE SAME-ASSET BORROWS ---
+      // USDC+USDC → single tx; ETH+USDC → two separate txs
+      const mergedBorrowMap = new Map<string, number>();
+      for (const item of borrowsToExecute) {
+        mergedBorrowMap.set(item.asset, (mergedBorrowMap.get(item.asset) || 0) + parseFloat(item.amount));
+      }
+      const mergedBorrows = Array.from(mergedBorrowMap.entries()).map(([asset, amount]) => ({
+        asset,
+        amount: amount.toFixed(6),
+      }));
+
       // --- EXECUTE BORROWS ---
-      if (borrowsToExecute.length > 0) {
+      if (mergedBorrows.length > 0) {
+        borrowsToExecute = mergedBorrows;
         // Refresh state before borrowing to ensure we have latest collateral data
         setTxModalMessage("Refreshing account state before borrowing...");
         await reloadMarginState();
@@ -1754,7 +1762,7 @@ export const LeverageAssetsTab = () => {
       setTxModalMessage("Updating balances...");
 
       await Promise.all([
-        reloadMarginState(),
+        reloadMarginState(true), // forceRefresh=true bypasses the 15s cache
         useBalanceStore.getState().refreshBalances({
           chainId,
           address: address as `0x${string}`,
@@ -1762,10 +1770,6 @@ export const LeverageAssetsTab = () => {
           marginAccount: targetAccount
         })
       ]);
-
-      // --- UPDATE POSITIONS HISTORY ---
-      // TODO: Fill this later - Update the CollateralBorrowStore with the new position
-      console.log("Strategy executed. Position data ready for store update.");
 
       setHasMarginAccount({ hasMarginAccount: true });
 
@@ -1781,6 +1785,11 @@ export const LeverageAssetsTab = () => {
       );
 
       setActiveDialogue("none");
+
+      // Immediately refresh positions table and account state
+      // Dispatch twice: instantly (transaction is confirmed) + after 2s for indexing lag
+      window.dispatchEvent(new CustomEvent("vanna:position-update"));
+      setTimeout(() => window.dispatchEvent(new CustomEvent("vanna:position-update")), 2000);
 
       // Reset form
       setCurrentCollaterals([]);
@@ -2159,10 +2168,12 @@ export const LeverageAssetsTab = () => {
               totalDeposit={totalDeposit}
               onBorrowItemsChange={setBorrowItems}
               onAssetChange={setBorrowAsset}
+              onOverMaxChange={setIsBorrowOverMax}
               borrowAmount={calculatedBorrowAmount}
               maxBorrowAmount={maxBorrowAmount}
               assetPrice={prices[borrowAsset] || 0}
               supportedTokens={supportedTokens}
+              tokenPrices={prices}
             />
           </div>
         </motion.section>
@@ -2264,7 +2275,9 @@ export const LeverageAssetsTab = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.4, delay: 0.3, ease: "easeOut" }}
         >
-          {!isWalletConnected ? (
+          {isWrongNetwork ? (
+            <SwitchNetworkButton />
+          ) : !isWalletConnected ? (
             /* Disconnected — grey button matching reference UI pattern */
             <button
               onClick={login}
@@ -2276,7 +2289,15 @@ export const LeverageAssetsTab = () => {
             <Button
               disabled={loading}
               size="large"
-              text={loading ? "Processing..." : hasMarginAccount ? "Deposit & Earn" : "Create your Margin Account"}
+              text={
+                loading
+                  ? "Processing..."
+                  : !hasMarginAccount
+                  ? "Create your Margin Account"
+                  : isMBMode
+                  ? "Borrow"
+                  : "Deposit & Borrow"
+              }
               type="gradient"
               onClick={handlecreateAccount}
             />
@@ -2347,8 +2368,8 @@ export const LeverageAssetsTab = () => {
                 buttonOnClick={async () => {
                   await handleExecuteStrategy(); // Updated function call
                 }}
-                buttonText={loading ? "Processing..." : "Sign Agreement"}
-                buttonDisabled={loading}
+                buttonText={loading ? "Processing..." : isBorrowOverMax ? "Exceeds Max Borrowable" : "Sign Agreement"}
+                buttonDisabled={loading || isBorrowOverMax}
                 content={[
                   {
                     line: "Collateral Requirement",
@@ -2425,13 +2446,21 @@ export const LeverageAssetsTab = () => {
                 buttonOnClick={async () => {
                   await handleExecuteStrategy()
                 }}
-                buttonText="Proceed to Deposit & Earn"
-                content={[
-                  { line: "Your Margin Account is ready." },
-                  { line: "Deposit assets to start earning yields and borrowing." },
-                  { line: "Earn competitive rates on your deposited collaterals." },
-                ]}
-                heading="Deposit & Earn"
+                buttonText={isMBMode ? "Proceed to Borrow" : "Proceed to Deposit & Borrow"}
+                content={
+                  isMBMode
+                    ? [
+                        { line: "Your Margin Account is ready." },
+                        { line: "Borrow against your existing margin balance." },
+                        { line: "Monitor your health factor to avoid liquidation." },
+                      ]
+                    : [
+                        { line: "Your Margin Account is ready." },
+                        { line: "Deposit assets from your wallet and borrow against them." },
+                        { line: "Earn competitive rates on your deposited collaterals." },
+                      ]
+                }
+                heading={isMBMode ? "Borrow" : "Deposit & Borrow"}
                 onClose={() => {
                   setActiveDialogue("none");
                   setLoading(false);

@@ -4,62 +4,36 @@ import { networkOptions } from "@/lib/web3Constants";
 import { useBalanceStore } from "@/store/balance-store";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
-import { useEffect, useState, useMemo } from "react";
-import {
-  useSwitchChain,
-  useChainId,
-  useAccount,
-  usePublicClient,
-} from "wagmi";
+import { useEffect, useState } from "react";
+import { useAccount, usePublicClient } from "wagmi";
 import { useFetchAccountCheck } from "@/lib/utils/margin/marginFetchers";
 import { useMarginAccountInfoStore } from "@/store/margin-account-info-store";
 import { useTheme } from "@/contexts/theme-context";
 import { ChevronDownIcon } from "@/components/icons";
+import { useRequiredNetwork } from "@/lib/hooks/useRequiredNetwork";
+
+const BASE_NETWORK = networkOptions[0];
 
 export const NetworkDropdown = () => {
   const { isDark } = useTheme();
-
   const [isHover, setIsHover] = useState(false);
-  const [pendingNetwork, setPendingNetwork] =
-    useState<(typeof networkOptions)[number] | null>(null);
+  const [showTooltip, setShowTooltip] = useState(false);
 
-  const chainId = useChainId();
-  const { switchChain } = useSwitchChain();
-  const { address } = useAccount();
+  const { address, chainId } = useAccount();
   const publicClient = usePublicClient();
+  const { isWrongNetwork, switchToBase, isSwitching } = useRequiredNetwork();
 
   const { reset, refreshBalances } = useBalanceStore();
   const setHasMarginAccount = useMarginAccountInfoStore((s) => s.set);
 
-
-  const supportedNetwork = useMemo(
-    () => networkOptions.find((n) => n.chainId === chainId),
-    [chainId]
-  );
-
-  const isSupportedChain = !!supportedNetwork;
-
   const fetchAccountCheck = useFetchAccountCheck(
-    isSupportedChain ? chainId : undefined,
+    !isWrongNetwork ? chainId : undefined,
     address,
     publicClient
   );
 
-
-  const handleNetworkSelect =
-    (item: (typeof networkOptions)[number]) => () => {
-      if (item.chainId === chainId) {
-        setIsHover(false);
-        return;
-      }
-
-      setPendingNetwork(item);
-      setIsHover(false);
-    };
-
-
   useEffect(() => {
-    if (!isSupportedChain) {
+    if (isWrongNetwork) {
       reset();
       setHasMarginAccount({ hasMarginAccount: false });
       return;
@@ -74,179 +48,136 @@ export const NetworkDropdown = () => {
       if (cancelled) return;
 
       const marginAccount = accs?.[0] ?? null;
-
-      setHasMarginAccount({
-        hasMarginAccount: !!marginAccount,
-      });
-
+      setHasMarginAccount({ hasMarginAccount: !!marginAccount });
       reset();
-
-      await refreshBalances({
-        chainId,
-        publicClient,
-        address,
-        marginAccount,
-      });
+      await refreshBalances({ chainId, publicClient, address, marginAccount });
     })();
 
-    return () => {
-      cancelled = true;
-    };
-  }, [chainId, address, publicClient, isSupportedChain]);
+    return () => { cancelled = true; };
+  }, [chainId, address, publicClient, isWrongNetwork]);
 
-
-  return (
-    <>
+  // ── Wrong network: subtle warning icon with tooltip (Morpho-style) ──
+  if (isWrongNetwork) {
+    return (
       <div
-        onMouseEnter={() => setIsHover(true)}
-        onMouseLeave={() => setIsHover(false)}
-        className="relative inline-block"
+        className="relative inline-flex items-center"
+        onMouseEnter={() => setShowTooltip(true)}
+        onMouseLeave={() => setShowTooltip(false)}
       >
-        {/* Trigger */}
         <button
           type="button"
-          className={`rounded-[8px] py-[12px] pr-[12px] pl-[20px] font-semibold text-[14px]
-            flex gap-2 items-center cursor-pointer
-            ${isDark ? "bg-[#222222] text-white" : "bg-[#F5F5F5]"}
+          onClick={switchToBase}
+          disabled={isSwitching}
+          className={`relative w-[40px] h-[40px] rounded-full flex items-center justify-center
+            transition-all cursor-pointer
+            ${isDark
+              ? "bg-[#2A1A1A] hover:bg-[#3A2020] border border-red-500/30"
+              : "bg-red-50 hover:bg-red-100 border border-red-200"
+            }
+            disabled:opacity-60
           `}
-          aria-expanded={isHover}
-          aria-haspopup="listbox"
+          aria-label="Wrong network — click to switch to Base"
         >
-          {isSupportedChain ? (
-            <>
-              Network
-              <Image
-                src={supportedNetwork.icon}
-                alt={supportedNetwork.id}
-                width={20}
-                height={20}
-              />
-            </>
+          {isSwitching ? (
+            <svg className="animate-spin w-[18px] h-[18px] text-red-500" viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
           ) : (
-            <>Unsupported Network</>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-red-500">
+              <path
+                d="M12 9V13M12 17H12.01M10.29 3.86L1.82 18A2 2 0 003.64 21H20.36A2 2 0 0022.18 18L13.71 3.86A2 2 0 0010.29 3.86Z"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
           )}
 
-          <motion.div
-            aria-hidden="true"
-            animate={{ rotate: isHover ? 180 : 0 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-          >
-            <ChevronDownIcon className="size-5" />
-          </motion.div>
+          {/* Red dot indicator */}
+          <span className="absolute -top-[2px] -right-[2px] w-[10px] h-[10px] bg-red-500 rounded-full border-2 border-white dark:border-[#111]" />
         </button>
 
-        {/* Dropdown List */}
+        {/* Tooltip */}
         <AnimatePresence>
-          {isHover && (
+          {showTooltip && (
             <motion.div
-              initial={{ opacity: 0, y: -8 }}
+              initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2 }}
-              className={`absolute left-0 z-50 p-2 top-full mt-2 shadow-lg rounded-[6px]
-                ${isDark ? "bg-[#222222]" : "bg-white"}
+              exit={{ opacity: 0, y: 4 }}
+              transition={{ duration: 0.15 }}
+              className={`absolute top-full mt-2 right-0 z-50 px-3 py-2 rounded-lg text-[12px] font-medium whitespace-nowrap shadow-lg
+                ${isDark ? "bg-[#222] text-white border border-white/10" : "bg-[#1a1a1a] text-white"}
               `}
-              style={{ width: "max-content", minWidth: "100%" }}
-              role="listbox"
-              aria-label="Network selection"
             >
-              {networkOptions.map((item) => (
-                <motion.button
-                  key={item.id}
-                  type="button"
-                  whileTap={{ scale: 0.95 }}
-                  onClick={handleNetworkSelect(item)}
-                  className={`flex gap-[10px] items-center font-medium rounded-[6px]
-                    text-[14px] cursor-pointer p-[12px] w-full text-left
-                    ${
-                      isDark
-                        ? "text-white hover:bg-[#333333]"
-                        : "hover:bg-[#F2EBFE]"
-                    }
-                  `}
-                  role="option"
-                  aria-selected={supportedNetwork?.id === item.id}
-                >
-                  <Image
-                    src={item.icon}
-                    width={20}
-                    height={20}
-                    alt=""
-                    aria-hidden="true"
-                  />
-                  {item.name}
-                </motion.button>
-              ))}
+              You are connected to the wrong network
+              {/* Arrow */}
+              <div className={`absolute -top-[5px] right-4 w-[10px] h-[10px] rotate-45
+                ${isDark ? "bg-[#222] border-l border-t border-white/10" : "bg-[#1a1a1a]"}
+              `} />
             </motion.div>
           )}
         </AnimatePresence>
       </div>
+    );
+  }
 
+  // ── Correct network (Base): standard dropdown ──
+  return (
+    <div
+      onMouseEnter={() => setIsHover(true)}
+      onMouseLeave={() => setIsHover(false)}
+      className="relative inline-block"
+    >
+      <button
+        type="button"
+        className={`rounded-[8px] py-[12px] pr-[12px] pl-[20px] font-semibold text-[14px]
+          flex gap-2 items-center cursor-pointer
+          ${isDark ? "bg-[#222222] text-white" : "bg-[#F5F5F5]"}
+        `}
+        aria-expanded={isHover}
+        aria-haspopup="listbox"
+      >
+        Network
+        <Image src={BASE_NETWORK.icon} alt="Base" width={20} height={20} />
+        <motion.div
+          aria-hidden="true"
+          animate={{ rotate: isHover ? 180 : 0 }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+        >
+          <ChevronDownIcon className="size-5" />
+        </motion.div>
+      </button>
 
       <AnimatePresence>
-        {pendingNetwork && (
+        {isHover && (
           <motion.div
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+            className={`absolute left-0 z-50 p-2 top-full mt-2 shadow-lg rounded-[6px]
+              ${isDark ? "bg-[#222222]" : "bg-white"}
+            `}
+            style={{ width: "max-content", minWidth: "100%" }}
+            role="listbox"
           >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className={`w-[380px] rounded-xl p-6 shadow-xl
-                ${isDark ? "bg-[#1C1C1C] text-white" : "bg-white"}
+            <div
+              className={`flex gap-[10px] items-center font-medium rounded-[6px]
+                text-[14px] p-[12px] w-full
+                ${isDark ? "text-white bg-[#333333]" : "bg-[#F2EBFE]"}
               `}
+              role="option"
+              aria-selected="true"
             >
-              <h3 className="text-lg font-semibold">Switch Network</h3>
-
-              <p className="text-sm opacity-80 mt-2">
-                Please confirm switching your wallet network to:
-              </p>
-
-              <div className="flex items-center gap-3 mt-4 p-3 rounded-lg border">
-                <Image
-                  src={pendingNetwork.icon}
-                  width={24}
-                  height={24}
-                  alt=""
-                />
-                <span className="font-medium">
-                  {pendingNetwork.name}
-                </span>
-              </div>
-
-              <div className="flex gap-3 mt-6">
-                <button
-                  className="flex-1 py-2 rounded-lg border"
-                  onClick={() => setPendingNetwork(null)}
-                >
-                  Cancel
-                </button>
-
-                <button
-                  className="flex-1 py-2 rounded-lg bg-[#7C35F8] text-white"
-                  onClick={async () => {
-                    try {
-                      await switchChain({
-                        chainId: pendingNetwork.chainId,
-                      });
-                    } catch (err) {
-                      console.warn("Network switch failed", err);
-                    } finally {
-                      setPendingNetwork(null);
-                    }
-                  }}
-                >
-                  Switch
-                </button>
-              </div>
-            </motion.div>
+              <Image src={BASE_NETWORK.icon} width={20} height={20} alt="" aria-hidden="true" />
+              {BASE_NETWORK.name}
+              <span className="ml-auto text-[11px] text-green-500 font-medium">Active</span>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </div>
   );
 };

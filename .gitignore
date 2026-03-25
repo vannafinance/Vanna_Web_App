@@ -44,6 +44,7 @@ next-env.d.ts
 
 # IDE / editor
 .vscode/
+.cursor/
 .idea/
 *.swp
 *.swo
@@ -75,7 +76,6 @@ lightningcss-*
 Balancestore.md
 
 # docs / analysis files (not for production)
-docs/AERODROME_INTEGRATION_GUIDE.md
-docs/Morphov2integrationGuide.md
+docs/
 ListFunctionAbi.text
 STATE_MANAGEMENT_ANALYSIS.md

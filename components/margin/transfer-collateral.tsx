@@ -13,6 +13,8 @@ import { toast } from "sonner";
 import { useBalanceStore } from "@/store/balance-store";
 import { SUPPORTED_TOKENS_BY_CHAIN, TOKEN_DECIMALS } from "@/lib/utils/web3/token";
 import { useTheme } from "@/contexts/theme-context";
+import { SwitchNetworkButton } from "@/components/ui/switch-network-button";
+import { useRequiredNetwork } from "@/lib/hooks/useRequiredNetwork";
 import { TransactionModal } from "@/components/ui/transaction-modal";
 
 
@@ -30,8 +32,9 @@ export const TransferCollateral = () => {
   const [txModalMessage, setTxModalMessage] = useState("");
   const [txModalHash, setTxModalHash] = useState<string | undefined>(undefined);
   const { chainId, address } = useAccount();
+  const { isWrongNetwork } = useRequiredNetwork();
   const supportedTokens = useMemo(() => {
-    return SUPPORTED_TOKENS_BY_CHAIN[chainId ?? 0] ?? [];
+    return SUPPORTED_TOKENS_BY_CHAIN[chainId ?? 0] ?? ["ETH", "USDC", "USDT"];
   }, [chainId]);
 
   const [selectedCurrency, setSelectedCurrency] = useState<string>(supportedTokens[0] || "USDC");
@@ -516,13 +519,15 @@ export const TransferCollateral = () => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.3, delay: 0.45 }}
         >
-          <Button
-            text="Transfer"
-            size="large"
-            type="gradient"
-            disabled={!Number(valueInput) || isLoading}
-            onClick={handleTransferClick}
-          />
+          {isWrongNetwork ? <SwitchNetworkButton /> : (
+            <Button
+              text="Transfer"
+              size="large"
+              type="gradient"
+              disabled={!Number(valueInput) || isLoading}
+              onClick={handleTransferClick}
+            />
+          )}
         </motion.div>
         <motion.div
           initial={{ opacity: 0, x: -10 }}
