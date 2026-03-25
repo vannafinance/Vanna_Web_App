@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Chart } from "@/components/earn/chart";
+import { ReusableChart } from "@/components/ui/reusable-chart";
 import { Table, Column } from "@/components/ui/Table";
 import { useTheme } from "@/contexts/theme-context";
 import { Eye, Pencil, Trash2 } from "lucide-react";
@@ -145,6 +145,8 @@ const InfoIcon = ({ isDark }: { isDark: boolean }) => (
 export const SpotSection = () => {
   const { isDark } = useTheme();
   const [activeChartFilter, setActiveChartFilter] = useState("Total Equity");
+  const [timeFilter, setTimeFilter] = useState("All Time");
+  const [isTimeDropdownOpen, setIsTimeDropdownOpen] = useState(false);
   const [positionsTab, setPositionsTab] = useState("openOrders");
 
   // ── Positions table columns ──────────────────────────────────────────────
@@ -287,11 +289,11 @@ export const SpotSection = () => {
     <div className="w-full flex flex-col gap-[20px]">
 
       {/* ── Top row: Spot Info + Chart ── */}
-      <div className="w-full flex gap-[20px] h-[475px]">
+      <div className="w-full flex flex-col lg:flex-row gap-4 sm:gap-[20px] lg:h-[475px]">
 
         {/* Spot Info panel */}
         <div
-          className={`w-[422px] flex-shrink-0 flex flex-col gap-[20px] rounded-[16px] border-[1px] p-[20px] ${
+          className={`w-full lg:w-[422px] flex-shrink-0 flex flex-col gap-[20px] rounded-[16px] border-[1px] p-4 sm:p-[20px] ${
             isDark ? "bg-[#222222] border-[#333]" : "bg-[#f7f7f7] border-[#e2e2e2]"
           }`}
         >
@@ -327,18 +329,18 @@ export const SpotSection = () => {
 
         {/* Chart panel */}
         <div
-          className={`flex-1 flex flex-col rounded-[20px] border-[1px] p-[20px] min-w-0 ${
+          className={`flex-1 min-w-0 flex flex-col rounded-[16px] sm:rounded-[20px] border-[1px] p-3 sm:p-[20px] ${
             isDark ? "bg-[#222222] border-[#333]" : "bg-[#f7f7f7] border-[#e2e2e2]"
           }`}
         >
           <div
-            className={`flex-1 min-h-0 rounded-[20px] flex flex-col gap-[16px] p-[20px] ${
+            className={`flex-1 min-h-0 rounded-[16px] sm:rounded-[20px] flex flex-col gap-3 sm:gap-[16px] p-3 sm:p-[20px] ${
               isDark ? "bg-[#111111]" : "bg-white"
             }`}
           >
             {/* Chart filter tabs + All Time dropdown */}
-            <div className="flex items-center justify-between flex-shrink-0">
-              <div className="flex items-center gap-[4px]">
+            <div className="flex items-center justify-between flex-shrink-0 gap-2">
+              <div className="flex items-center gap-[4px] flex-wrap">
                 {CHART_FILTER_TABS.map((tab) => (
                   <button
                     key={tab}
@@ -357,25 +359,66 @@ export const SpotSection = () => {
                 ))}
               </div>
 
-              <button
-                type="button"
-                className={`h-[40px] pl-[8px] pr-[12px] flex items-center gap-[4px] rounded-[8px] border-[1px] text-[12px] font-semibold cursor-pointer transition ${
-                  isDark
-                    ? "bg-[#1a1a1a] border-[#333] text-white hover:bg-[#222]"
-                    : "bg-white border-[#e2e2e2] text-[#111] hover:bg-[#f7f7f7]"
-                }`}
-              >
-                All Time
-                <ChevronDown />
-              </button>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setIsTimeDropdownOpen(!isTimeDropdownOpen)}
+                  className={`h-[40px] pl-[8px] pr-[12px] flex items-center gap-[4px] rounded-[8px] border-[1px] text-[12px] font-semibold cursor-pointer transition ${
+                    isDark
+                      ? "bg-[#1a1a1a] border-[#333] text-white hover:bg-[#222]"
+                      : "bg-white border-[#e2e2e2] text-[#111] hover:bg-[#f7f7f7]"
+                  }`}
+                >
+                  {timeFilter}
+                  <ChevronDown />
+                </button>
+                {isTimeDropdownOpen && (
+                  <div className={`absolute right-0 top-[44px] z-10 rounded-[8px] border-[1px] py-[4px] min-w-[120px] ${
+                    isDark ? "bg-[#1a1a1a] border-[#333]" : "bg-white border-[#e2e2e2]"
+                  }`}>
+                    {["All Time", "3 Months", "6 Months", "1 Year"].map((f) => (
+                      <button
+                        key={f}
+                        type="button"
+                        onClick={() => { setTimeFilter(f); setIsTimeDropdownOpen(false); }}
+                        className={`w-full text-left px-[12px] py-[6px] text-[12px] font-medium cursor-pointer transition ${
+                          f === timeFilter
+                            ? "text-[#703ae6]"
+                            : isDark
+                              ? "text-white hover:bg-[#333]"
+                              : "text-[#111] hover:bg-[#f7f7f7]"
+                        }`}
+                      >
+                        {f}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Chart */}
-            <div className="flex-1 min-h-0">
-              <Chart
-                type="net-profit-loss"
-                containerHeight="h-full"
-                containerWidth="w-full"
+            <div className="flex-1 min-h-0 overflow-hidden">
+              <ReusableChart
+                data={{
+                  "2025-10-01": 1200,
+                  "2025-10-05": 1350,
+                  "2025-10-10": 1280,
+                  "2025-10-15": 1100,
+                  "2025-10-18": 700,
+                  "2025-10-20": 2800,
+                  "2025-10-22": 2500,
+                  "2025-10-25": 2200,
+                  "2025-10-28": 2000,
+                  "2025-10-30": 2100,
+                  "2025-11-01": 2300,
+                  "2025-11-03": 2200,
+                }}
+                gradientColors={["rgba(34, 197, 94, 0.25)", "rgba(34, 197, 94, 0.02)"]}
+                lineColor="#22c55e"
+                height={320}
+                showGrid={false}
+                textColor={isDark ? "#919191" : "#5c5b5b"}
               />
             </div>
           </div>
@@ -398,7 +441,7 @@ export const SpotSection = () => {
           }`}
         >
           {/* Sub-tabs row */}
-          <div className="flex items-center gap-[4px] p-[6px]">
+          <div className="flex items-center gap-[4px] p-[6px] overflow-x-auto">
             {POSITIONS_SUB_TABS.map((tab) => (
               <button
                 key={tab.id}

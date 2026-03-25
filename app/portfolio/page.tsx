@@ -17,12 +17,12 @@ export default function PortfolioPage() {
   const closeAccountModal = () => setAccountModalTab(null);
 
   return (
-    <div className="py-[80px] px-[40px] w-full h-fit">
+    <div className="py-6 px-4 sm:py-10 sm:px-6 lg:py-[80px] lg:px-[40px] w-full h-fit">
       <TransactionHistoryModal
         isOpen={isHistoryOpen}
         onClose={() => setIsHistoryOpen(false)}
       />
-      <Modal open={accountModalTab !== null} onClose={closeAccountModal}>
+      <Modal open={accountModalTab !== null} onClose={closeAccountModal} bottomSheet>
         {accountModalTab && (
           <AccountModal
             onClose={closeAccountModal}
@@ -30,13 +30,13 @@ export default function PortfolioPage() {
           />
         )}
       </Modal>
-      <div className="flex flex-col gap-[40px] w-full h-fit">
-        <div className="flex flex-col gap-[20px] w-full h-fit">
-          <div className="flex justify-between w-full items-center">
-            <div className="text-[24px] font-bold">Portfolio</div>
-            <div className="flex gap-[8px]">
+      <div className="flex flex-col gap-6 sm:gap-8 lg:gap-[40px] w-full h-fit">
+        <div className="flex flex-col gap-4 sm:gap-[20px] w-full h-fit">
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-between w-full sm:items-center">
+            <div className="text-[20px] sm:text-[24px] font-bold">Portfolio</div>
+            <div className="flex gap-[8px] w-full sm:w-auto">
               <Button
-                width="w-[79px]"
+                width="flex-1 sm:flex-none sm:w-[79px]"
                 text="Deposit"
                 size="small"
                 type="solid"
@@ -44,7 +44,7 @@ export default function PortfolioPage() {
                 onClick={() => openAccountModal("deposit")}
               />
               <Button
-                width="w-[79px]"
+                width="flex-1 sm:flex-none sm:w-[79px]"
                 text="Withdraw"
                 size="small"
                 type="solid"
@@ -52,7 +52,7 @@ export default function PortfolioPage() {
                 onClick={() => openAccountModal("withdraw")}
               />
               <Button
-                width="w-[79px]"
+                width="flex-1 sm:flex-none sm:w-[79px]"
                 text="Transfer"
                 size="small"
                 type="solid"
@@ -60,7 +60,7 @@ export default function PortfolioPage() {
                 onClick={() => openAccountModal("transfer")}
               />
               <Button
-                width="w-[79px]"
+                width="flex-1 sm:flex-none sm:w-[79px]"
                 text="History"
                 size="small"
                 type="solid"

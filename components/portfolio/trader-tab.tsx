@@ -1,12 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Chart } from "@/components/earn/chart";
-import { Table } from "@/components/earn/table";
-import { useCollateralBorrowStore } from "@/store/collateral-borrow-store";
-import { COIN_ICONS } from "@/lib/constants/margin";
+import { useState } from "react";
+import { ReusableChart } from "@/components/ui/reusable-chart";
+import { Positionstable } from "@/components/margin/positions-table";
 import { useTheme } from "@/contexts/theme-context";
-import { Position } from "@/lib/types";
 import { SpotSection } from "./spot-section";
 import { PerpsSection } from "./perps-section";
 import { FarmSection } from "./farm-section";
@@ -49,13 +46,6 @@ const MARGIN_INFO = [
 
 const CHART_FILTER_TABS = ["Total Equity", "Cumulative PnL", "PnL", "Return Percentage"] as const;
 
-const POSITIONS_TABLE_HEADINGS = [
-  { label: "Collateral Deposited", id: "collateral" },
-  { label: "Borrowed Assets", id: "borrowed" },
-  { label: "Leverage Taken", id: "leverage" },
-  { label: "Interest accrued till date", id: "interest" },
-  { label: "Action", id: "action" },
-];
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
@@ -78,7 +68,7 @@ const ChevronDown = () => (
 
 const MarginStatsGrid = ({ isDark }: { isDark: boolean }) => {
   const labelClass = `text-[12px] font-normal text-[#5c5b5b] leading-normal`;
-  const valueClass = `text-[28px] font-bold leading-[42px] ${isDark ? "text-white" : "text-[#111]"}`;
+  const valueClass = `text-[20px] sm:text-[24px] lg:text-[28px] font-bold leading-[30px] sm:leading-[36px] lg:leading-[42px] ${isDark ? "text-white" : "text-[#111]"}`;
 
   const renderCell = (stat: (typeof MARGIN_STATS)[number] & { special?: string }) => {
     if (stat.special === "gauge") {
@@ -163,7 +153,7 @@ const MarginStatsGrid = ({ isDark }: { isDark: boolean }) => {
   };
 
   return (
-    <div className={`w-full rounded-[16px] border-[1px] p-[20px] grid grid-cols-4 gap-[20px] ${
+    <div className={`w-full rounded-[16px] border-[1px] p-4 sm:p-[20px] grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-[20px] ${
       isDark ? "bg-[#222222] border-[#333]" : "bg-[#f7f7f7] border-[#e2e2e2]"
     }`}>
       {MARGIN_STATS.map((stat) => (
@@ -181,36 +171,10 @@ export const TraderTab = () => {
   const { isDark } = useTheme();
   const [activeSubTab, setActiveSubTab] = useState<TradeTab>("Margin");
   const [activeChartFilter, setActiveChartFilter] = useState("Total Equity");
-  const [positionsTab, setPositionsTab] = useState("currentPositions");
-  const positions = useCollateralBorrowStore((state) => state.position);
+  const [timeFilter, setTimeFilter] = useState("All Time");
+  const [isTimeDropdownOpen, setIsTimeDropdownOpen] = useState(false);
 
-  const positionsTableBody = useMemo(() => {
-    const filtered = positions.filter((pos: Position) =>
-      positionsTab === "currentPositions" ? pos.isOpen : !pos.isOpen
-    );
-    return {
-      rows: filtered.map((pos: Position) => ({
-        cell: [
-          {
-            icon: COIN_ICONS[pos.collateral.asset as keyof typeof COIN_ICONS],
-            title: `${pos.collateral.amount} ${pos.collateral.asset.replace("0x", "")}`,
-            description: `$${pos.collateralUsdValue}`,
-          },
-          ...pos.borrowed.map((b) => ({
-            icon: COIN_ICONS[b.assetData.asset as keyof typeof COIN_ICONS],
-            title: `${b.assetData.amount} ${b.assetData.asset.replace("0x", "")}`,
-            description: `$${b.usdValue}`,
-            tag: b.percentage ? `${b.percentage}%` : undefined,
-          })),
-          { title: `${pos.leverage}x` },
-          { title: `${pos.interestAccrued} USD` },
-          { title: pos.isOpen ? "Repay" : "Repaid" },
-        ],
-      })),
-    };
-  }, [positions, positionsTab]);
-
-  const subTabBase = `w-[101px] h-full rounded-[8px] px-[12px] py-[12px] text-[12px] font-semibold cursor-pointer transition`;
+  const subTabBase = `flex-1 sm:flex-none sm:w-[101px] h-full rounded-[8px] px-[8px] sm:px-[12px] py-[12px] text-[11px] sm:text-[12px] font-semibold cursor-pointer transition text-center`;
   const subTabActive = "bg-[#f1ebfd] text-[#703ae6]";
   const subTabInactive = isDark ? "text-white hover:bg-[#333]" : "text-[#111] hover:bg-[#f7f7f7]";
 
@@ -218,7 +182,7 @@ export const TraderTab = () => {
     <div className="w-full h-fit flex flex-col gap-[24px]">
 
       {/* ── Trade sub-tabs ── */}
-      <div className={`flex items-center rounded-[8px] border-[1px] p-[4px] gap-[4px] w-fit h-[47px] ${
+      <div className={`flex items-center rounded-[8px] border-[1px] p-[4px] gap-[4px] w-full sm:w-fit h-[47px] overflow-x-auto ${
         isDark ? "bg-[#1a1a1a] border-[#333]" : "bg-white border-[#e2e2e2]"
       }`}>
         {TRADE_TABS.map((tab) => (
@@ -241,10 +205,10 @@ export const TraderTab = () => {
           <MarginStatsGrid isDark={isDark} />
 
           {/* Margin Info + Chart row */}
-          <div className="w-full flex gap-[20px] h-[475px]">
+          <div className="w-full flex flex-col lg:flex-row gap-4 sm:gap-[20px] lg:h-[475px]">
 
             {/* Margin Info panel */}
-            <div className={`w-[422px] flex-shrink-0 flex flex-col gap-[20px] rounded-[16px] border-[1px] p-[20px] ${
+            <div className={`w-full lg:w-[422px] flex-shrink-0 flex flex-col gap-[20px] rounded-[16px] border-[1px] p-4 sm:p-[20px] ${
               isDark ? "bg-[#222222] border-[#333]" : "bg-[#f7f7f7] border-[#e2e2e2]"
             }`}>
               <h3 className={`text-[24px] font-bold flex-shrink-0 ${isDark ? "text-white" : "text-[#111]"}`}>
@@ -271,15 +235,15 @@ export const TraderTab = () => {
             </div>
 
             {/* Chart panel */}
-            <div className={`flex-1 flex flex-col rounded-[20px] border-[1px] p-[20px] ${
+            <div className={`flex-1 min-w-0 flex flex-col rounded-[20px] border-[1px] p-3 sm:p-[20px] ${
               isDark ? "bg-[#222222] border-[#333]" : "bg-[#f7f7f7] border-[#e2e2e2]"
             }`}>
-              <div className={`flex-1 min-h-0 rounded-[20px] flex flex-col gap-[16px] p-[20px] ${
+              <div className={`flex-1 min-h-0 rounded-[16px] sm:rounded-[20px] flex flex-col gap-3 sm:gap-[16px] p-3 sm:p-[20px] ${
                 isDark ? "bg-[#111111]" : "bg-white"
               }`}>
                 {/* Chart filter tabs + All Time dropdown */}
-                <div className="flex items-center justify-between flex-shrink-0">
-                  <div className="flex items-center gap-[4px]">
+                <div className="flex items-center justify-between flex-shrink-0 gap-2">
+                  <div className="flex items-center gap-[4px] flex-wrap">
                     {CHART_FILTER_TABS.map((tab) => (
                       <button
                         key={tab}
@@ -297,25 +261,66 @@ export const TraderTab = () => {
                       </button>
                     ))}
                   </div>
-                  <button
-                    type="button"
-                    className={`h-[40px] pl-[8px] pr-[12px] flex items-center gap-[4px] rounded-[8px] border-[1px] text-[12px] font-semibold cursor-pointer transition ${
-                      isDark
-                        ? "bg-[#1a1a1a] border-[#333] text-white hover:bg-[#222]"
-                        : "bg-white border-[#e2e2e2] text-[#111] hover:bg-[#f7f7f7]"
-                    }`}
-                  >
-                    All Time
-                    <ChevronDown />
-                  </button>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setIsTimeDropdownOpen(!isTimeDropdownOpen)}
+                      className={`h-[40px] pl-[8px] pr-[12px] flex items-center gap-[4px] rounded-[8px] border-[1px] text-[12px] font-semibold cursor-pointer transition ${
+                        isDark
+                          ? "bg-[#1a1a1a] border-[#333] text-white hover:bg-[#222]"
+                          : "bg-white border-[#e2e2e2] text-[#111] hover:bg-[#f7f7f7]"
+                      }`}
+                    >
+                      {timeFilter}
+                      <ChevronDown />
+                    </button>
+                    {isTimeDropdownOpen && (
+                      <div className={`absolute right-0 top-[44px] z-10 rounded-[8px] border-[1px] py-[4px] min-w-[120px] ${
+                        isDark ? "bg-[#1a1a1a] border-[#333]" : "bg-white border-[#e2e2e2]"
+                      }`}>
+                        {["All Time", "3 Months", "6 Months", "1 Year"].map((f) => (
+                          <button
+                            key={f}
+                            type="button"
+                            onClick={() => { setTimeFilter(f); setIsTimeDropdownOpen(false); }}
+                            className={`w-full text-left px-[12px] py-[6px] text-[12px] font-medium cursor-pointer transition ${
+                              f === timeFilter
+                                ? "text-[#703ae6]"
+                                : isDark
+                                  ? "text-white hover:bg-[#333]"
+                                  : "text-[#111] hover:bg-[#f7f7f7]"
+                            }`}
+                          >
+                            {f}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Chart */}
-                <div className="flex-1 min-h-0">
-                  <Chart
-                    type="net-profit-loss"
-                    containerHeight="h-full"
-                    containerWidth="w-full"
+                <div className="flex-1 min-h-0 overflow-hidden">
+                  <ReusableChart
+                    data={{
+                      "2025-10-01": 1200,
+                      "2025-10-05": 1350,
+                      "2025-10-10": 1280,
+                      "2025-10-15": 1100,
+                      "2025-10-18": 700,
+                      "2025-10-20": 2800,
+                      "2025-10-22": 2500,
+                      "2025-10-25": 2200,
+                      "2025-10-28": 2000,
+                      "2025-10-30": 2100,
+                      "2025-11-01": 2300,
+                      "2025-11-03": 2200,
+                    }}
+                    gradientColors={["rgba(34, 197, 94, 0.25)", "rgba(34, 197, 94, 0.02)"]}
+                    lineColor="#22c55e"
+                    height={320}
+                    showGrid={false}
+                    textColor={isDark ? "#919191" : "#5c5b5b"}
                   />
                 </div>
               </div>
@@ -323,20 +328,7 @@ export const TraderTab = () => {
           </div>
 
           {/* Positions Table */}
-          <Table
-            heading={{
-              heading: "Positions Table",
-              tabsItems: [
-                { id: "currentPositions", label: "Current Positions" },
-                { id: "positionsHistory", label: "Positions History" },
-              ],
-              tabType: "solid",
-            }}
-            activeTab={positionsTab}
-            onTabChange={setPositionsTab}
-            tableHeadings={POSITIONS_TABLE_HEADINGS}
-            tableBody={positionsTableBody}
-          />
+          <Positionstable />
         </div>
       ) : activeSubTab === "Spot" ? (
         <SpotSection />

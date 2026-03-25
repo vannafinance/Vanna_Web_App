@@ -212,7 +212,7 @@ export const Navbar = (props: Navbar) => {
   return (
     <div className={`${isDark ? "bg-[#111111]" : ""}`}>
       <motion.div
-        className="py-[12px] px-[40px] w-full h-fit flex justify-between items-center"
+        className="py-[12px] px-4 sm:px-6 lg:px-[40px] w-full h-fit flex justify-between items-center"
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
@@ -264,8 +264,8 @@ export const Navbar = (props: Navbar) => {
           />
         </motion.a>
 
-        {/* Navigation items */}
-        <div className="flex gap-[20px] items-center ">
+        {/* Navigation items — hidden below xl */}
+        <div className="hidden xl:flex gap-[20px] items-center">
           {groupedItems.primary.map((item, idx) => {
             const isActive = pathname === item.link;
             return (
@@ -557,14 +557,16 @@ export const Navbar = (props: Navbar) => {
           transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
         >
           {userAddress && (
-            <Button
-              size="small"
-              type="navbar"
-              disabled={false}
-              onClick={() => setDepositModalOpen(true)}
-              text="DEPOSIT"
-              ariaLabel="Deposit to your account"
-            ></Button>
+            <div className="hidden sm:block">
+              <Button
+                size="small"
+                type="navbar"
+                disabled={false}
+                onClick={() => setDepositModalOpen(true)}
+                text="DEPOSIT"
+                ariaLabel="Deposit to your account"
+              />
+            </div>
           )}
           {!authenticated ? (
             <Button
@@ -574,7 +576,7 @@ export const Navbar = (props: Navbar) => {
               onClick={() => setLoginModalOpen(true)}
               text="LOGIN"
               ariaLabel="Login to your account"
-            ></Button>
+            />
           ) : (
             <UserMenu />
           )}
@@ -620,6 +622,8 @@ export const Navbar = (props: Navbar) => {
           </motion.button>
         </motion.div>
       </motion.div>
+
+      {/* Desktop trade dropdown — hidden below xl */}
       <AnimatePresence>
         {isDropdownOpen && (
           <motion.div
@@ -633,7 +637,7 @@ export const Navbar = (props: Navbar) => {
             transition={{ duration: 0.22, ease: "easeOut" }}
             onMouseEnter={handleDropdownMouseEnter}
             onMouseLeave={handleDropdownMouseLeave}
-            className="w-full absolute border-t-[1px] border-[#F4F4F4] border-b-[1px] border-[#F4F4F4] py-[8px] flex justify-center gap-[4px] "
+            className="hidden xl:flex w-full absolute border-t-[1px] border-[#F4F4F4] border-b-[1px] border-[#F4F4F4] py-[8px] justify-center gap-[4px]"
           >
             {tradeItems.map((item, idx) => {
               const isActive = pathname === item.link;
@@ -667,6 +671,129 @@ export const Navbar = (props: Navbar) => {
                 </motion.div>
               );
             })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Mobile menu drawer (below xl) ── */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className={`xl:hidden overflow-hidden border-t-[1px] ${
+              isDark ? "bg-[#111111] border-[#333]" : "bg-white border-[#e2e2e2]"
+            }`}
+          >
+            <div className="flex flex-col px-4 sm:px-6 py-3 gap-1">
+              {/* All nav items */}
+              {props.items.map((item) => {
+                const isActive = isBorderedNavItemActive(pathname, item);
+                return (
+                  <div key={item.link}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (item.title !== "Trade") {
+                          router.push(item.link);
+                          setIsMobileMenuOpen(false);
+                        } else {
+                          setIsDropdownOpen((prev) => !prev);
+                        }
+                      }}
+                      className={`w-full flex items-center justify-between rounded-[8px] py-[10px] px-[12px] text-[14px] font-medium transition-colors ${
+                        isActive
+                          ? "bg-[#FFE6F2] text-[#FF007A]"
+                          : isDark
+                          ? "text-white hover:bg-[#222]"
+                          : "text-[#111] hover:bg-[#f7f7f7]"
+                      }`}
+                    >
+                      <span>{item.title}</span>
+                      {item.title === "Trade" && (
+                        <svg
+                          width="10"
+                          height="6"
+                          viewBox="0 0 10 6"
+                          fill="none"
+                          className={`transition-transform ${isDropdownOpen ? "rotate-180" : ""}`}
+                        >
+                          <path
+                            d="M1 1L5 5L9 1"
+                            stroke={isActive ? "#FF007A" : isDark ? "#fff" : "#111"}
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      )}
+                    </button>
+                    {/* Trade sub-items */}
+                    {item.title === "Trade" && (
+                      <AnimatePresence>
+                        {isDropdownOpen && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="overflow-hidden pl-4"
+                          >
+                            {tradeItems.map((tradeItem) => {
+                              const isTradeActive = pathname === tradeItem.link;
+                              return (
+                                <button
+                                  key={tradeItem.link}
+                                  type="button"
+                                  onClick={() => {
+                                    router.push(tradeItem.link);
+                                    setIsMobileMenuOpen(false);
+                                    setIsDropdownOpen(false);
+                                  }}
+                                  className={`w-full text-left rounded-[8px] py-[8px] px-[12px] text-[13px] font-medium transition-colors ${
+                                    isTradeActive
+                                      ? "bg-[#FFE6F2] text-[#FF007A]"
+                                      : isDark
+                                      ? "text-[#ccc] hover:bg-[#222]"
+                                      : "text-[#555] hover:bg-[#f7f7f7]"
+                                  }`}
+                                >
+                                  {tradeItem.title}
+                                </button>
+                              );
+                            })}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    )}
+                  </div>
+                );
+              })}
+
+              {/* Divider */}
+              <div className={`my-2 h-[1px] ${isDark ? "bg-[#333]" : "bg-[#e2e2e2]"}`} />
+
+              {/* Theme toggle + Network row */}
+              <div className="flex items-center gap-2 px-[12px] py-[8px]">
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  className={`flex items-center justify-center rounded-[8px] h-[40px] w-[40px] border-[1px] cursor-pointer ${
+                    isDark ? "border-[#333]" : "border-[#e2e2e2]"
+                  }`}
+                  aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
+                >
+                  {isDark ? <SunIcon /> : (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="#FF007A" viewBox="0 0 24 24" strokeWidth={1.5} stroke="#FF007A" width={16} height={16}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" />
+                    </svg>
+                  )}
+                </button>
+                {userAddress && <NetworkDropdown />}
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

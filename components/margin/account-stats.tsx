@@ -55,41 +55,39 @@ export const AccountStats = ({
 
   return (
     <>
-      {/* Mobile: horizontal scroll cards */}
-      <div className="sm:hidden w-full overflow-x-auto no-scrollbar -mx-4 px-4">
-        <div className="flex gap-3 w-max py-1">
-          {items.map((item, idx) => {
-            const displayValue = values[item.id] ?? "-";
-            const isLoading = displayValue === "⟳";
-            return (
-              <motion.article
-                key={item.id}
-                className={`flex-shrink-0 w-[160px] rounded-[16px] p-4 border-[1px] ${
-                  isDark ? `bg-[${darkBackgroundColor}]` : `bg-[${backgroundColor}]`
-                }`}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3, delay: idx * 0.08 }}
-              >
-                <div className={`w-[32px] h-[32px] flex items-center justify-center rounded-full mb-3 ${
-                  isDark ? "bg-black" : "bg-white"
-                }`}>
-                  <Image width={18} height={18} alt={item.id} src={item.icon} />
-                </div>
-                <p className={`text-[11px] font-medium mb-1 ${
-                  isDark ? "text-[#919191]" : "text-[#919191]"
-                }`}>
-                  {item.name}
-                </p>
-                <p className={`text-[20px] font-bold leading-tight ${
-                  isDark ? "text-white" : "text-neutral-800"
-                }`}>
-                  {isLoading ? renderLoadingSpinner() : displayValue}
-                </p>
-              </motion.article>
-            );
-          })}
-        </div>
+      {/* Mobile: 2x2 grid */}
+      <div className={`sm:hidden grid grid-cols-2 gap-3 w-full rounded-[16px] border-[1px] p-3 ${
+        isDark ? `bg-[${darkBackgroundColor}]` : `bg-[${backgroundColor}]`
+      }`}>
+        {items.map((item, idx) => {
+          const displayValue = values[item.id] ?? "-";
+          const isLoading = displayValue === "⟳";
+          return (
+            <motion.article
+              key={item.id}
+              className="flex flex-col gap-2 p-3"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: idx * 0.08 }}
+            >
+              <div className={`w-[32px] h-[32px] flex items-center justify-center rounded-full ${
+                isDark ? "bg-black" : "bg-white"
+              }`}>
+                <Image width={18} height={18} alt={item.id} src={item.icon} />
+              </div>
+              <p className={`text-[11px] font-medium ${
+                isDark ? "text-[#919191]" : "text-[#919191]"
+              }`}>
+                {item.name}
+              </p>
+              <p className={`text-[20px] font-bold leading-tight ${
+                isDark ? "text-white" : "text-neutral-800"
+              }`}>
+                {isLoading ? renderLoadingSpinner() : displayValue}
+              </p>
+            </motion.article>
+          );
+        })}
       </div>
 
       {/* Desktop/Tablet: grid layout */}
